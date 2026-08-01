@@ -1,0 +1,126 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" preserveAspectRatio="none">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#07100d"/>
+      <stop offset="1" stop-color="#020504"/>
+    </linearGradient>
+
+    <linearGradient id="grass" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#438b52"/>
+      <stop offset="1" stop-color="#1b5535"/>
+    </linearGradient>
+
+    <linearGradient id="dirt" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#a87945"/>
+      <stop offset="1" stop-color="#704827"/>
+    </linearGradient>
+
+    <pattern id="mow" width="160" height="160" patternUnits="userSpaceOnUse">
+      <rect width="80" height="160" fill="#ffffff" opacity=".021"/>
+      <rect x="80" width="80" height="160" fill="#000000" opacity=".023"/>
+    </pattern>
+  </defs>
+
+  <rect width="1600" height="1000" rx="28" fill="url(#bg)"/>
+
+  <!-- Flat top-down field -->
+  <path d="M120 790
+           L120 350
+           A680 300 0 0 1 1480 350
+           L1480 790
+           Z"
+        fill="url(#grass)"
+        stroke="#d8ad2d"
+        stroke-width="3"
+        stroke-opacity=".48"/>
+
+  <path d="M120 790
+           L120 350
+           A680 300 0 0 1 1480 350
+           L1480 790
+           Z"
+        fill="url(#mow)"/>
+
+  <!-- Flat outfield wall -->
+  <path d="M120 350 A680 300 0 0 1 1480 350"
+        fill="none"
+        stroke="#d8ad2d"
+        stroke-width="4"
+        stroke-opacity=".64"/>
+
+  <!-- Infield dirt shaped around the new SS/2B/3B/1B targets -->
+  <path d="M300 690
+           Q435 520 620 470
+           Q710 445 800 440
+           Q890 445 980 470
+           Q1165 520 1300 690
+           L1125 810
+           Q1005 742 905 716
+           Q850 704 800 700
+           Q750 704 695 716
+           Q595 742 475 810
+           Z"
+        fill="url(#dirt)"
+        stroke="#d8ad2d"
+        stroke-width="2"
+        stroke-opacity=".28"/>
+
+  <!-- Compact centered diamond; home plate is higher than before -->
+  <path d="M800 535 L1045 690 L800 800 L555 690 Z"
+        fill="#173f2b"
+        stroke="#ead8a4"
+        stroke-width="5"/>
+
+  <!-- Foul lines -->
+  <path d="M800 800 L120 350"
+        fill="none"
+        stroke="#f1ead9"
+        stroke-width="4"
+        stroke-opacity=".82"/>
+  <path d="M800 800 L1480 350"
+        fill="none"
+        stroke="#f1ead9"
+        stroke-width="4"
+        stroke-opacity=".82"/>
+
+  <!-- Bases -->
+  <g fill="#f7f3e9" stroke="#d8ad2d" stroke-width="2">
+    <rect x="788" y="523" width="24" height="24" transform="rotate(45 800 535)"/>
+    <rect x="543" y="678" width="24" height="24" transform="rotate(45 555 690)"/>
+    <rect x="1033" y="678" width="24" height="24" transform="rotate(45 1045 690)"/>
+  </g>
+
+  <!-- Mound -->
+  <ellipse cx="800" cy="650" rx="68" ry="35"
+           fill="url(#dirt)"
+           stroke="#d8ad2d"
+           stroke-width="2"
+           stroke-opacity=".42"/>
+
+  <!-- Home plate -->
+  <ellipse cx="800" cy="800" rx="76" ry="48"
+           fill="url(#dirt)"
+           stroke="#7d522e"
+           stroke-width="2"/>
+  <path d="M780 780 H820 V805 L800 822 L780 805 Z"
+        fill="#f7f3e9"
+        stroke="#d8ad2d"
+        stroke-width="2"/>
+
+  <!-- Deep flat foul ground between home plate and backstop -->
+  <rect x="120" y="790" width="1360" height="170"
+        fill="#123d29"/>
+
+  <!-- Backstop line -->
+  <path d="M170 955 H1430"
+        fill="none"
+        stroke="#d8ad2d"
+        stroke-width="3"
+        stroke-opacity=".42"/>
+
+  <rect x="2" y="2" width="1596" height="996" rx="26"
+        fill="none"
+        stroke="#d8ad2d"
+        stroke-width="2"
+        stroke-opacity=".28"/>
+</svg>

@@ -4,6 +4,7 @@ import {
   useState,
 } from 'react'
 import { useNavigate } from 'react-router-dom'
+import DefenseStage from '../components/DefenseStage'
 import {
   ACTIVE_SEASON,
   loadSeasonCards,
@@ -32,12 +33,17 @@ type DrawerSort =
   | 'ob'
   | 'control'
   | 'speed'
+  | 'hitterFatigue'
+  | 'pitcherFatigue'
+  | 'hitterOuts'
+  | 'pitcherOuts'
   | 'year'
   | 'name'
 
 type SortDirection =
   | 'asc'
   | 'desc'
+
 
 type Slot = {
   id: string
@@ -153,7 +159,7 @@ const LINEUP: Slot[] = Array.from(
 )
 
 const BENCH: Slot[] = Array.from(
-  { length: 7 },
+  { length: 8 },
   (_, index) => ({
     id: `bench-${index + 1}`,
     label: `BN${index + 1}`,
@@ -173,7 +179,7 @@ const ROTATION: Slot[] = Array.from(
 )
 
 const BULLPEN: Slot[] = Array.from(
-  { length: 5 },
+  { length: 8 },
   (_, index) => ({
     id: `bullpen-${index + 1}`,
     label: `P${index + 1}`,
@@ -394,11 +400,37 @@ function RosterPage() {
       () =>
         DEFENSE.filter((slot) =>
           useDh
-            ? slot.id !== 'defense-p'
+            ? true
             : slot.id !== 'defense-dh',
         ),
       [useDh],
     )
+
+  const requiredDefenseSlots =
+    useMemo(
+      () =>
+        activeDefenseSlots.filter(
+          (slot) =>
+            slot.id !== 'defense-p',
+        ),
+      [activeDefenseSlots],
+    )
+
+  const activeLineupSlots = LINEUP
+
+  const requiredLineupSlots =
+    useMemo(
+      () =>
+        useDh
+          ? LINEUP
+          : LINEUP.slice(0, 8),
+      [useDh],
+    )
+
+  const pitcherLimit =
+    rosterFormat === 'full'
+      ? 13
+      : playerLimit
 
   const cardMap = useMemo(
     () =>
@@ -539,7 +571,7 @@ function RosterPage() {
         ) {
           const usedBattingOrderCards =
             new Set(
-              LINEUP
+              activeLineupSlots
                 .map(
                   (slot) =>
                     assigned[
@@ -614,6 +646,7 @@ function RosterPage() {
         ) {
           return false
         }
+
 
         if (!cleaned) {
           return true
@@ -693,6 +726,26 @@ function RosterPage() {
               return (
                 card.hitter_baserunning ??
                 -999
+              )
+            case 'hitterFatigue':
+              return Number(
+                (card as unknown as Record<string, unknown>)
+                  .hitter_fatigue ?? -999,
+              )
+            case 'pitcherFatigue':
+              return Number(
+                (card as unknown as Record<string, unknown>)
+                  .pitcher_fatigue ?? -999,
+              )
+            case 'hitterOuts':
+              return Number(
+                (card as unknown as Record<string, unknown>)
+                  .hitter_outs ?? -999,
+              )
+            case 'pitcherOuts':
+              return Number(
+                (card as unknown as Record<string, unknown>)
+                  .pitcher_outs ?? -999,
               )
             case 'year':
               return (
@@ -778,6 +831,11 @@ function RosterPage() {
       0,
     )
 
+  const pitcherCount =
+    selectedCards.filter(
+      isPrimaryPitcher,
+    ).length
+
   const countFilled = (
     slots: Slot[],
   ) =>
@@ -787,12 +845,24 @@ function RosterPage() {
 
   const counts = {
     defense:
-      countFilled(activeDefenseSlots),
-    lineup: countFilled(LINEUP),
+      countFilled(requiredDefenseSlots),
+    lineup:
+      countFilled(requiredLineupSlots),
     bench: countFilled(BENCH),
     rotation: countFilled(ROTATION),
     bullpen: countFilled(BULLPEN),
   }
+
+  const sharedReserveCount =
+    counts.bench + counts.bullpen
+
+  const sharedReserveMaximum =
+    Math.max(
+      0,
+      playerLimit -
+        requiredDefenseSlots.length -
+        ROTATION.length,
+    )
 
   function getDefenseRating(
     slotId: string,
@@ -942,15 +1012,15 @@ function RosterPage() {
 
   const missingSections = [
     counts.defense <
-      activeDefenseSlots.length
+      requiredDefenseSlots.length
       ? `Defense ${
-          activeDefenseSlots.length -
+          requiredDefenseSlots.length -
           counts.defense
         }`
       : '',
-    counts.lineup < 9
+    counts.lineup < requiredLineupSlots.length
       ? `Batting Order ${
-          9 - counts.lineup
+          requiredLineupSlots.length - counts.lineup
         }`
       : '',
   ].filter(Boolean)
@@ -959,8 +1029,9 @@ function RosterPage() {
     totalPlayers === playerLimit &&
     totalPoints <= pointCap &&
     counts.defense ===
-      activeDefenseSlots.length &&
-    counts.lineup === 9
+      requiredDefenseSlots.length &&
+    counts.lineup ===
+      requiredLineupSlots.length
 
   const overPointCap =
     totalPoints > pointCap
@@ -971,15 +1042,15 @@ function RosterPage() {
     setUseDh(nextUseDh)
 
     setAssigned((current) => {
-      const next = { ...current }
-      const removedSlotId =
-        nextUseDh
-          ? 'defense-p'
-          : 'defense-dh'
-      const removedCard =
-        next[removedSlotId]
+      if (nextUseDh) {
+        return current
+      }
 
-      delete next[removedSlotId]
+      const next = { ...current }
+      const removedCard =
+        next['defense-dh']
+
+      delete next['defense-dh']
 
       if (removedCard) {
         for (const slot of LINEUP) {
@@ -1029,7 +1100,10 @@ function RosterPage() {
   function assignCard(
     card: CardRecord,
   ) {
-    if (!selectedSlot) {
+    if (
+      !selectedSlot ||
+      selectedSlot.id === 'defense-p'
+    ) {
       return
     }
 
@@ -1070,6 +1144,56 @@ function RosterPage() {
             ) as CardRecord,
           )
         : 0)
+
+    const projectedPitchers =
+      pitcherCount +
+      (isNewUniqueCard &&
+      isPrimaryPitcher(card)
+        ? 1
+        : 0) -
+      (replacingUniqueCard &&
+      existingCard &&
+      isPrimaryPitcher(
+        cardMap.get(
+          existingCard,
+        ) as CardRecord,
+      )
+        ? 1
+        : 0)
+
+    const reserveSlot =
+      selectedSlot.section === 'bench' ||
+      selectedSlot.section === 'bullpen'
+
+    const replacingReserveCard =
+      Boolean(existingCard)
+
+    const projectedReserveCount =
+      sharedReserveCount +
+      (reserveSlot &&
+      !replacingReserveCard
+        ? 1
+        : 0)
+
+    if (
+      projectedReserveCount >
+      sharedReserveMaximum
+    ) {
+      setMessage(
+        `Bench and bullpen share ${sharedReserveMaximum} roster spots`,
+      )
+      return
+    }
+
+    if (
+      projectedPitchers >
+      pitcherLimit
+    ) {
+      setMessage(
+        `${pitcherLimit}-pitcher limit reached`,
+      )
+      return
+    }
 
     if (
       projectedPlayers >
@@ -1199,39 +1323,67 @@ function RosterPage() {
     })
   }
 
-  function reorderBattingOrder(
-    targetSlotId: string,
+  function reorderRosterSlots(
+    targetSlot: Slot,
   ) {
     if (
       !draggedLineupSlotId ||
-      draggedLineupSlotId === targetSlotId
+      draggedLineupSlotId === targetSlot.id
     ) {
       setDraggedLineupSlotId(null)
       return
     }
 
+    const sourceSlot = ALL_SLOTS.find(
+      (slot) => slot.id === draggedLineupSlotId,
+    )
+
+    if (
+      !sourceSlot ||
+      sourceSlot.section !== targetSlot.section ||
+      !['lineup', 'bench', 'rotation', 'bullpen'].includes(
+        targetSlot.section,
+      )
+    ) {
+      setDraggedLineupSlotId(null)
+      return
+    }
+
+    const orderedSlots =
+      targetSlot.section === 'lineup'
+        ? activeLineupSlots
+        : targetSlot.section === 'bench'
+          ? BENCH
+          : targetSlot.section === 'rotation'
+            ? ROTATION
+            : BULLPEN
+
+    const sourceIndex = orderedSlots.findIndex(
+      (slot) => slot.id === draggedLineupSlotId,
+    )
+    const targetIndex = orderedSlots.findIndex(
+      (slot) => slot.id === targetSlot.id,
+    )
+
+    if (sourceIndex < 0 || targetIndex < 0) {
+      setDraggedLineupSlotId(null)
+      return
+    }
+
     setAssigned((current) => {
+      const values = orderedSlots.map(
+        (slot) => current[slot.id],
+      )
+      const [movedCard] = values.splice(sourceIndex, 1)
+      values.splice(targetIndex, 0, movedCard)
+
       const next = { ...current }
-      const draggedCard =
-        current[draggedLineupSlotId]
-      const targetCard =
-        current[targetSlotId]
 
-      if (draggedCard) {
-        next[targetSlotId] =
-          draggedCard
-      } else {
-        delete next[targetSlotId]
-      }
-
-      if (targetCard) {
-        next[draggedLineupSlotId] =
-          targetCard
-      } else {
-        delete next[
-          draggedLineupSlotId
-        ]
-      }
+      orderedSlots.forEach((slot, index) => {
+        const cardKey = values[index]
+        if (cardKey) next[slot.id] = cardKey
+        else delete next[slot.id]
+      })
 
       return next
     })
@@ -1247,6 +1399,14 @@ function RosterPage() {
       : null
     const pitcher =
       slot.eligibility === 'P'
+    const lockedPitcherSlot =
+      slot.id === 'defense-p'
+    const lockedLineupPitcher =
+      !useDh &&
+      slot.id === 'lineup-9'
+    const lockedSlot =
+      lockedPitcherSlot ||
+      lockedLineupPitcher
 
     return (
       <div
@@ -1254,6 +1414,9 @@ function RosterPage() {
           card
             ? 'roster-slot filled'
             : 'roster-slot',
+          ['lineup', 'bench', 'rotation', 'bullpen'].includes(slot.section)
+            ? 'reorderable-roster-slot'
+            : '',
           slot.section === 'lineup'
             ? 'batting-order-slot'
             : '',
@@ -1261,16 +1424,22 @@ function RosterPage() {
           slot.id
             ? 'is-dragging'
             : '',
+          lockedSlot
+            ? 'locked-pitcher-slot'
+            : '',
         ]
           .filter(Boolean)
           .join(' ')}
         draggable={
-          slot.section === 'lineup' &&
-          Boolean(card)
+          ['lineup', 'bench', 'rotation', 'bullpen'].includes(
+            slot.section,
+          ) &&
+          Boolean(card) &&
+          !lockedSlot
         }
         onDragStart={() => {
           if (
-            slot.section === 'lineup' &&
+            ['lineup', 'bench', 'rotation', 'bullpen'].includes(slot.section) &&
             card
           ) {
             setDraggedLineupSlotId(
@@ -1283,19 +1452,17 @@ function RosterPage() {
         }
         onDragOver={(event) => {
           if (
-            slot.section === 'lineup'
+            ['lineup', 'bench', 'rotation', 'bullpen'].includes(slot.section)
           ) {
             event.preventDefault()
           }
         }}
         onDrop={(event) => {
           if (
-            slot.section === 'lineup'
+            ['lineup', 'bench', 'rotation', 'bullpen'].includes(slot.section)
           ) {
             event.preventDefault()
-            reorderBattingOrder(
-              slot.id,
-            )
+            reorderRosterSlots(slot)
           }
         }}
         key={slot.id}
@@ -1303,7 +1470,12 @@ function RosterPage() {
         <button
           type="button"
           className="roster-slot-main"
+          disabled={lockedSlot}
           onClick={() => {
+            if (lockedSlot) {
+              return
+            }
+
             setSelectedSlotId(slot.id)
             setSearch('')
           }}
@@ -1312,8 +1484,7 @@ function RosterPage() {
             {slot.label}
           </span>
 
-          {slot.section ===
-            'lineup' &&
+          {['lineup', 'bench', 'rotation', 'bullpen'].includes(slot.section) &&
             card && (
               <span
                 className="batting-order-drag-handle"
@@ -1384,15 +1555,20 @@ function RosterPage() {
             </>
           ) : (
             <span className="empty-slot-copy">
-              {slot.section ===
-              'lineup'
-                ? 'Choose from Defense'
-                : 'Select a player'}
+              {lockedLineupPitcher
+                ? 'PITCHER'
+                : lockedPitcherSlot
+                  ? 'Pitcher'
+                  : slot.section ===
+                      'lineup'
+                    ? 'Choose from Defense'
+                    : 'Select a player'}
             </span>
           )}
         </button>
 
-        {card && (
+        {card &&
+          !lockedSlot && (
           <button
             type="button"
             className="remove-roster-card"
@@ -1404,6 +1580,83 @@ function RosterPage() {
             ×
           </button>
         )}
+      </div>
+    )
+  }
+
+  function renderFieldSlot(slot: Slot) {
+    if (slot.id === 'defense-p') {
+      return (
+        <div className="field-pitcher-placeholder" key="field-defense-p">
+          <span className="field-pitcher-space" aria-hidden="true" />
+          <span className="field-position-label">P</span>
+        </div>
+      )
+    }
+
+    const cardKey = assigned[slot.id]
+    const card = cardKey
+      ? cardMap.get(cardKey)
+      : null
+
+    if (!card) {
+      return (
+        <div className="field-empty-position" key={`field-${slot.id}`}>
+          <button
+            type="button"
+            className="field-empty-card"
+            onClick={() => {
+              setSelectedSlotId(slot.id)
+              setSearch('')
+            }}
+          >
+            <span>Select player</span>
+          </button>
+          <span className="field-position-label">{slot.label}</span>
+        </div>
+      )
+    }
+
+    return (
+      <div
+        className="roster-field-player-card"
+        key={`field-${slot.id}`}
+      >
+        <button
+          type="button"
+          className="roster-field-card-main"
+          onClick={() => {
+            setSelectedSlotId(slot.id)
+            setSearch('')
+          }}
+        >
+          <span className="roster-field-card-image">
+            {card.image_url ? (
+              <img
+                src={card.image_url}
+                alt={card.player_name}
+                referrerPolicy="no-referrer"
+              />
+            ) : (
+              <span>{card.player_name[0]}</span>
+            )}
+          </span>
+
+          <span className="roster-field-card-name">
+            {card.player_name}
+          </span>
+        </button>
+
+        <button
+          type="button"
+          className="remove-field-card"
+          onClick={() => removeCard(slot.id)}
+          aria-label={`Remove ${card.player_name}`}
+        >
+          ×
+        </button>
+
+        <span className="field-position-label">{slot.label}</span>
       </div>
     )
   }
@@ -1510,8 +1763,22 @@ function RosterPage() {
     title: string,
     slots: Slot[],
   ) {
+    const groupClass =
+      title === 'Batting Order'
+        ? 'lineup-card'
+        : ['Bench', 'Rotation', 'Bullpen'].includes(title)
+          ? 'vertical-roster-card'
+          : ''
+
     return (
-      <section className="roster-section-card">
+      <section
+        className={[
+          'roster-section-card',
+          groupClass,
+        ]
+          .filter(Boolean)
+          .join(' ')}
+      >
         <div className="roster-section-heading">
           <h2>{title}</h2>
           <span>
@@ -1524,6 +1791,26 @@ function RosterPage() {
           {slots.map(renderSlot)}
         </div>
       </section>
+    )
+  }
+
+
+  function renderDefenseField() {
+    const fieldSlots = activeDefenseSlots.filter(
+      (slot) => slot.id !== 'defense-dh',
+    )
+    const dhSlot = activeDefenseSlots.find(
+      (slot) => slot.id === 'defense-dh',
+    )
+
+    return (
+      <DefenseStage
+        filled={counts.defense}
+        required={requiredDefenseSlots.length}
+        slots={fieldSlots}
+        dhSlot={dhSlot}
+        renderSlot={renderFieldSlot}
+      />
     )
   }
 
@@ -1572,7 +1859,7 @@ function RosterPage() {
       </header>
 
       <main className="roster-page">
-        <section className="roster-summary">
+        <section className="roster-summary simplified-roster-summary">
           <label className="roster-name-field">
             <span>Roster Name</span>
             <input
@@ -1585,147 +1872,54 @@ function RosterPage() {
             />
           </label>
 
-          <div className="roster-summary-stat roster-limit-stat">
-            <span>
-              Players · Maximum {playerLimit}
-            </span>
+          <div className="roster-summary-stat roster-primary-stat">
+            <span>Players · Maximum {playerLimit}</span>
+            <strong>{totalPlayers}/{playerLimit}</strong>
+          </div>
 
+          <div className="roster-summary-stat roster-primary-stat">
+            <span>Points · Maximum {pointCap.toLocaleString()}</span>
             <strong>
-              {totalPlayers}/{playerLimit}
+              {totalPoints.toLocaleString()}/{pointCap.toLocaleString()}
             </strong>
+          </div>
 
-            <label className="inline-roster-format">
+          <div className="roster-compact-settings">
+            <label className="compact-setting-control">
               <span>Roster Format</span>
-
               <select
                 value={rosterFormat}
                 onChange={(event) =>
                   setRosterFormat(
-                    event.target
-                      .value as RosterFormat,
+                    event.target.value as RosterFormat,
                   )
                 }
               >
-                <option value="compact">
-                  18 / 4,000
-                </option>
-
-                <option value="full">
-                  26 / 6,000
-                </option>
+                <option value="compact">18 / 4,000</option>
+                <option value="full">26 / 6,000</option>
               </select>
             </label>
-          </div>
 
-          <div className="roster-summary-stat roster-limit-stat">
-            <span>
-              Points · Maximum{' '}
-              {pointCap.toLocaleString()}
-            </span>
-
-            <strong>
-              {totalPoints.toLocaleString()}/
-              {pointCap.toLocaleString()}
-            </strong>
-
-            <div className="inline-dh-setting">
-              <span>
-                Designated Hitter
-              </span>
-
+            <div className="compact-setting-control">
+              <span>Designated Hitter</span>
               <div className="inline-dh-toggle">
                 <button
                   type="button"
-                  className={
-                    useDh
-                      ? 'active'
-                      : ''
-                  }
-                  onClick={() =>
-                    changeDh(true)
-                  }
+                  className={useDh ? 'active' : ''}
+                  onClick={() => changeDh(true)}
                 >
                   On
                 </button>
-
                 <button
                   type="button"
-                  className={
-                    !useDh
-                      ? 'active'
-                      : ''
-                  }
-                  onClick={() =>
-                    changeDh(false)
-                  }
+                  className={!useDh ? 'active' : ''}
+                  onClick={() => changeDh(false)}
                 >
                   Off
                 </button>
               </div>
             </div>
           </div>
-
-          <div className="roster-summary-breakdown">
-            <span>
-              Defense
-              <strong>
-                {counts.defense}
-              </strong>
-            </span>
-            <span>
-              Batting Order
-              <strong>
-                {counts.lineup}
-              </strong>
-            </span>
-            <span>
-              Bench
-              <strong>
-                {counts.bench}
-              </strong>
-            </span>
-            <span>
-              Rotation
-              <strong>
-                {counts.rotation}
-              </strong>
-            </span>
-            <span>
-              Bullpen
-              <strong>
-                {counts.bullpen}
-              </strong>
-            </span>
-          </div>
-        </section>
-
-        <section
-          className={
-            teamComplete
-              ? 'team-completion-status complete'
-              : overPointCap
-                ? 'team-completion-status invalid'
-                : 'team-completion-status'
-          }
-        >
-          <strong>
-            {teamComplete
-              ? 'Team Complete'
-              : overPointCap
-                ? 'Point Cap Exceeded'
-                : `${playerLimit - totalPlayers} roster spot${playerLimit - totalPlayers === 1 ? '' : 's'} remaining`}
-          </strong>
-
-          {!teamComplete &&
-            missingSections.length >
-              0 && (
-              <span>
-                Missing:{' '}
-                {missingSections.join(
-                  ' · ',
-                )}
-              </span>
-            )}
         </section>
 
         {message && (
@@ -1817,15 +2011,12 @@ function RosterPage() {
             )}
 
             {section === 'defense' &&
-              renderGroup(
-                'Defense',
-                activeDefenseSlots,
-              )}
+              renderDefenseField()}
 
             {section === 'lineup' &&
               renderGroup(
                 'Batting Order',
-                LINEUP,
+                activeLineupSlots,
               )}
             {section === 'bench' &&
               renderGroup(
@@ -1968,7 +2159,7 @@ function RosterPage() {
 
               <div className="roster-advanced-sort-row">
                 <label>
-                  <span>Advanced Sort</span>
+                  <span>Attribute Sort</span>
 
                   <select
                     value={
@@ -1998,7 +2189,7 @@ function RosterPage() {
                     }}
                   >
                     <option value="">
-                      Select advanced sort
+                      Select an attribute
                     </option>
                     <option value="defense">
                       Defense
@@ -2011,6 +2202,18 @@ function RosterPage() {
                     </option>
                     <option value="speed">
                       Speed / BsR
+                    </option>
+                    <option value="hitterFatigue">
+                      Hitter FtG
+                    </option>
+                    <option value="pitcherFatigue">
+                      Pitcher FtG
+                    </option>
+                    <option value="hitterOuts">
+                      Hitter Outs
+                    </option>
+                    <option value="pitcherOuts">
+                      Pitcher Outs
                     </option>
                   </select>
                 </label>
