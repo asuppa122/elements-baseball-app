@@ -1,0 +1,702 @@
+/* =========================
+   REFINED CARD FILTERS
+   ========================= */
+
+.refined-filter-panel {
+  display: grid;
+  gap: 0;
+}
+
+.refined-filter-section {
+  padding: 21px 0;
+  border-top: 1px solid rgba(216, 173, 45, 0.15);
+}
+
+.refined-filter-section:first-of-type {
+  border-top: 0;
+}
+
+.refined-control-grid {
+  display: grid;
+  gap: 13px;
+}
+
+.three-column-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.two-column-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.handedness-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.mini-filter-label {
+  display: block;
+  margin-bottom: 9px;
+  color: #a9aaad;
+  font-size: 0.66rem;
+  font-weight: 900;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+
+.small-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.small-filter-chip {
+  min-width: 54px;
+  min-height: 39px;
+  padding: 8px 14px;
+  border: 1px solid #383a3e;
+  border-radius: 999px;
+  background: #0a0b0c;
+  color: #c4c5c7;
+  font-weight: 850;
+}
+
+.small-filter-chip:hover,
+.small-filter-chip.active {
+  border-color: var(--gold-bright);
+  color: var(--gold-bright);
+}
+
+.small-filter-chip.active {
+  background: var(--gold);
+  color: #111;
+}
+
+.ownership-choice-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.ownership-choice {
+  min-height: 50px;
+  padding: 10px 13px;
+  border: 1px solid #383a3e;
+  border-radius: 11px;
+  background: #0a0b0c;
+  color: #c4c5c7;
+  font-size: 0.78rem;
+  font-weight: 850;
+  line-height: 1.25;
+}
+
+.ownership-choice:hover,
+.ownership-choice.active {
+  border-color: var(--gold-bright);
+  color: var(--gold-bright);
+}
+
+.ownership-choice.active {
+  background: var(--gold-soft);
+  box-shadow: inset 0 0 0 1px rgba(241, 202, 69, 0.12);
+}
+
+.advanced-filter-section {
+  padding-top: 21px;
+  border-top: 1px solid rgba(216, 173, 45, 0.15);
+}
+
+.advanced-filter-toggle {
+  display: grid;
+  width: 100%;
+  min-height: 50px;
+  padding: 0 15px;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid rgba(216, 173, 45, 0.3);
+  border-radius: 11px;
+  background: #0a0b0c;
+  color: var(--cream);
+  font-weight: 900;
+  text-align: left;
+}
+
+.advanced-filter-toggle:hover,
+.advanced-filter-toggle.open {
+  border-color: var(--gold-bright);
+  background: var(--gold-soft);
+  color: var(--gold-bright);
+}
+
+.advanced-filter-toggle strong {
+  display: inline-flex;
+  min-width: 25px;
+  height: 25px;
+  padding: 0 7px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: var(--gold);
+  color: #111;
+  font-size: 0.72rem;
+}
+
+.advanced-filter-content {
+  display: grid;
+  margin-top: 12px;
+  padding: 18px;
+  gap: 22px;
+  border: 1px solid rgba(216, 173, 45, 0.18);
+  border-radius: 12px;
+  background: rgba(8, 9, 10, 0.72);
+}
+
+.advanced-defense-block {
+  padding-top: 18px;
+  border-top: 1px solid rgba(216, 173, 45, 0.14);
+}
+
+/* =========================
+   SIMPLIFIED CARD PROFILE
+   ========================= */
+
+.simplified-profile-page {
+  width: min(1120px, calc(100% - 40px));
+  margin: 0 auto;
+  padding: 44px 0 90px;
+}
+
+.simplified-profile-layout {
+  display: grid;
+  grid-template-columns: minmax(320px, 560px) minmax(260px, 1fr);
+  align-items: start;
+  gap: 42px;
+}
+
+.simplified-card-frame {
+  display: flex;
+  width: 100%;
+  aspect-ratio: 2.5 / 3.5;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border: 1px solid rgba(216, 173, 45, 0.3);
+  border-radius: 16px;
+  background: #070809;
+  box-shadow:
+    0 22px 48px rgba(0, 0, 0, 0.48),
+    0 0 0 1px rgba(216, 173, 45, 0.06);
+}
+
+.simplified-card-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.simplified-ownership-panel {
+  padding: 30px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background:
+    radial-gradient(
+      circle at 100% 0%,
+      rgba(216, 173, 45, 0.09),
+      transparent 20rem
+    ),
+    var(--panel);
+  box-shadow: 0 16px 34px rgba(0, 0, 0, 0.3);
+}
+
+.simplified-ownership-panel h1 {
+  margin: 0 0 22px;
+  color: var(--cream);
+  font-size: clamp(2rem, 4vw, 3rem);
+  letter-spacing: -0.035em;
+}
+
+.simplified-owner-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.simplified-owner-chip {
+  display: inline-flex;
+  min-height: 41px;
+  padding: 9px 13px;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--gold-muted);
+  border-radius: 999px;
+  background: var(--gold-soft);
+  color: var(--gold-bright);
+  font-weight: 850;
+}
+
+@media (max-width: 900px) {
+  .three-column-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .ownership-choice-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .simplified-profile-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .simplified-card-frame {
+    width: min(560px, 100%);
+    margin: 0 auto;
+  }
+}
+
+@media (max-width: 620px) {
+  .three-column-grid,
+  .two-column-grid,
+  .handedness-grid,
+  .ownership-choice-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .simplified-profile-page {
+    width: min(100% - 28px, 1120px);
+    padding-top: 28px;
+  }
+
+  .simplified-ownership-panel {
+    padding: 22px;
+  }
+}
+
+
+/* =========================
+   PLAYER PROFILE HEADER
+   ========================= */
+
+.player-profile-header {
+  position: relative;
+  display: grid;
+  width: min(1180px, calc(100% - 40px));
+  min-height: 210px;
+  margin: 0 auto;
+  padding: 34px 0;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  border-bottom: 1px solid var(--border);
+}
+
+.player-profile-header::before {
+  position: absolute;
+  inset: 0 -100vw;
+  z-index: -1;
+  background:
+    linear-gradient(
+      90deg,
+      #0a0b0c,
+      #16150f 50%,
+      #0a0b0c
+    );
+  content: '';
+}
+
+.player-profile-heading {
+  text-align: center;
+}
+
+.player-profile-heading h1 {
+  margin: 10px 0 0;
+  color: var(--cream);
+  font-size: clamp(2.5rem, 6vw, 4.5rem);
+  line-height: 0.95;
+  letter-spacing: -0.045em;
+}
+
+.profile-header-button {
+  display: inline-flex;
+  width: fit-content;
+  min-height: 48px;
+  padding: 11px 17px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: rgba(17, 18, 20, 0.92);
+  color: var(--gold-bright);
+  font-size: 0.95rem;
+  font-weight: 850;
+}
+
+.profile-header-button:hover {
+  border-color: var(--gold-bright);
+  background: var(--panel-light);
+  transform: translateY(-2px);
+}
+
+.profile-back-button {
+  justify-self: end;
+}
+
+@media (max-width: 720px) {
+  .player-profile-header {
+    width: min(100% - 28px, 1180px);
+    min-height: 180px;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+
+  .player-profile-heading {
+    grid-column: 1 / -1;
+    grid-row: 1;
+  }
+
+  .profile-header-button {
+    grid-row: 2;
+  }
+
+  .profile-back-button {
+    justify-self: end;
+  }
+}
+
+
+/* =========================
+   BACK BUTTON PLACEMENT
+   ========================= */
+
+.profile-header-spacer {
+  justify-self: end;
+  width: 112px;
+  height: 48px;
+}
+
+.back-to-cards-button {
+  display: inline-flex;
+  width: fit-content;
+  min-height: 44px;
+  margin-bottom: 18px;
+  padding: 10px 15px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: rgba(17, 18, 20, 0.92);
+  color: var(--gold-bright);
+  font-size: 0.92rem;
+  font-weight: 850;
+  transition:
+    transform 160ms ease,
+    border-color 160ms ease,
+    background 160ms ease;
+}
+
+.back-to-cards-button:hover {
+  border-color: var(--gold-bright);
+  background: var(--panel-light);
+  transform: translateY(-2px);
+}
+
+@media (max-width: 720px) {
+  .player-profile-header {
+    grid-template-columns: 1fr auto 1fr;
+  }
+
+  .player-profile-heading {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .profile-header-button {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .profile-header-spacer {
+    grid-column: 3;
+    grid-row: 1;
+    width: 48px;
+  }
+}
+
+
+/* =========================
+   HOME FEATURE CARDS
+   ========================= */
+
+.feature-card .feature-number {
+  display: none;
+}
+
+/* =========================
+   PLAYER PROFILE TABS
+   ========================= */
+
+.profile-tabs-layout {
+  display: grid;
+  grid-template-columns:
+    minmax(320px, 560px)
+    minmax(0, 1fr);
+  align-items: start;
+  gap: 42px;
+}
+
+.profile-tab-column {
+  min-width: 0;
+}
+
+.profile-tab-list {
+  display: grid;
+  margin-bottom: 12px;
+  grid-template-columns:
+    repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.profile-tab-button {
+  min-height: 48px;
+  padding: 10px 9px;
+  border: 1px solid #383a3e;
+  border-radius: 10px;
+  background: #0a0b0c;
+  color: #bcbdbf;
+  font-size: 0.78rem;
+  font-weight: 850;
+  line-height: 1.2;
+}
+
+.profile-tab-button:hover,
+.profile-tab-button.active {
+  border-color: var(--gold-bright);
+  color: var(--gold-bright);
+}
+
+.profile-tab-button.active {
+  background: var(--gold-soft);
+}
+
+.profile-tab-panel {
+  min-height: 390px;
+  padding: 28px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background:
+    radial-gradient(
+      circle at 100% 0%,
+      rgba(216, 173, 45, 0.09),
+      transparent 20rem
+    ),
+    var(--panel);
+  box-shadow:
+    0 16px 34px
+    rgba(0, 0, 0, 0.3);
+}
+
+.profile-tab-panel > h1 {
+  margin: 0 0 22px;
+  color: var(--cream);
+  font-size:
+    clamp(2rem, 4vw, 3rem);
+  letter-spacing: -0.035em;
+}
+
+.profile-stat-sections {
+  display: grid;
+  gap: 18px;
+}
+
+.profile-stat-section {
+  padding-top: 17px;
+  border-top:
+    1px solid
+    rgba(216, 173, 45, 0.14);
+}
+
+.profile-stat-section:first-child {
+  padding-top: 0;
+  border-top: 0;
+}
+
+.profile-stat-section h2 {
+  margin: 0 0 10px;
+  color: #a9aaad;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.profile-stat-grid {
+  display: grid;
+  grid-template-columns:
+    repeat(5, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.profile-stat-item {
+  display: grid;
+  min-height: 67px;
+  padding: 10px;
+  place-items: center;
+  border: 1px solid
+    rgba(216, 173, 45, 0.15);
+  border-radius: 9px;
+  background: rgba(8, 9, 10, 0.7);
+  text-align: center;
+}
+
+.profile-stat-item span {
+  color: #888a8e;
+  font-size: 0.65rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+}
+
+.profile-stat-item strong {
+  color: var(--cream);
+  font-size: 1.08rem;
+}
+
+@media (max-width: 1040px) {
+  .profile-stat-grid {
+    grid-template-columns:
+      repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 900px) {
+  .profile-tabs-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .profile-tab-column {
+    width: 100%;
+  }
+}
+
+@media (max-width: 660px) {
+  .profile-tab-list {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+
+  .profile-stat-grid {
+    grid-template-columns:
+      repeat(3, minmax(0, 1fr));
+  }
+
+  .profile-tab-panel {
+    padding: 21px;
+  }
+}
+
+@media (max-width: 430px) {
+  .profile-stat-grid {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+}
+
+
+/* =========================
+   CARD DATABASE SORT CHIPS
+   ========================= */
+
+.card-sort-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.card-sort-chip {
+  display: inline-flex;
+  min-height: 38px;
+  padding: 8px 12px;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border: 1px solid #383a3e;
+  border-radius: 999px;
+  background: #090a0b;
+  color: #bfc0c3;
+  font-size: 0.72rem;
+  font-weight: 850;
+  transition:
+    border-color 150ms ease,
+    background 150ms ease,
+    color 150ms ease,
+    transform 150ms ease;
+}
+
+.card-sort-chip:hover,
+.card-sort-chip.active {
+  border-color: var(--gold-bright);
+  color: var(--gold-bright);
+}
+
+.card-sort-chip:hover {
+  transform: translateY(-1px);
+}
+
+.card-sort-chip.active {
+  background: var(--gold-soft);
+  box-shadow:
+    inset 0 0 0 1px
+    rgba(241, 202, 69, 0.08);
+}
+
+.card-sort-chip span {
+  font-size: 0.9rem;
+  line-height: 1;
+}
+
+.card-sort-help {
+  margin: 10px 0 0;
+  color: var(--gray-muted);
+  font-size: 0.72rem;
+  line-height: 1.45;
+}
+
+
+/* =========================
+   COMPACT DETAILED SORT
+   ========================= */
+
+.card-more-sort-row {
+  display: grid;
+  margin-top: 14px;
+  grid-template-columns:
+    minmax(210px, 320px)
+    auto;
+  align-items: end;
+  gap: 10px;
+}
+
+.card-sort-direction-button {
+  min-height: 43px;
+  padding: 9px 13px;
+  border: 1px solid
+    rgba(216, 173, 45, 0.3);
+  border-radius: 9px;
+  background: #090a0b;
+  color: var(--gold-bright);
+  font-size: 0.74rem;
+  font-weight: 850;
+}
+
+.card-sort-direction-button:hover {
+  border-color: var(--gold-bright);
+  background: var(--gold-soft);
+}
+
+@media (max-width: 620px) {
+  .card-more-sort-row {
+    grid-template-columns: 1fr;
+  }
+}
