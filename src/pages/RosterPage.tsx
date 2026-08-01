@@ -2203,8 +2203,7 @@ function RosterPage() {
 
             <div className="roster-player-grid">
               {eligibleCards.map(
-                (card) => (
-                  {(() => {
+                (card) => {
                     const existingCard =
                       assigned[
                         selectedSlot.id
@@ -2346,8 +2345,7 @@ function RosterPage() {
                     </div>
                   </button>
                     )
-                  })()}
-                ),
+                  },
               )}
             </div>
 
