@@ -1,62 +1,40 @@
 /* =========================================================
-   USER-MARKED 2D DEFENSE LAYOUT
-   Card centers follow the white-chip locations from the
-   approved markup. The field is flat, top-down, and has
-   added foul-ground depth behind home plate.
+   ELEMENTS DEFENSE STAGE
+   The approved visual mockup is the field artwork. The real
+   interactive Elements cards are layered directly over its
+   player locations.
    ========================================================= */
 
 .elements-defense {
   width: 100%;
   min-width: 0;
-  padding: 18px;
   overflow: hidden;
-  border: 1px solid rgba(216, 173, 45, 0.34);
-  border-radius: 18px;
-  background: #0b0e0f;
-}
-
-.elements-defense__heading {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 14px;
-}
-
-.elements-defense__heading h2 {
-  margin: 0;
-  color: #f2c744;
-  font-size: 1rem;
-  font-weight: 500;
-  text-transform: uppercase;
-}
-
-.elements-defense__heading span {
-  color: #7e8188;
-  font-size: 0.82rem;
-  font-weight: 900;
+  border: 1px solid rgba(216, 173, 45, 0.5);
+  border-radius: 20px;
+  background: #050708;
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.34);
 }
 
 .elements-defense__viewport {
   width: 100%;
   overflow-x: auto;
   overflow-y: hidden;
-  border: 1px solid rgba(216, 173, 45, 0.28);
-  border-radius: 18px;
-  background: #040706;
+  background: #050708;
   scrollbar-width: thin;
-  scrollbar-color: rgba(216, 173, 45, 0.4) #070809;
+  scrollbar-color: rgba(216, 173, 45, 0.5) #080a0b;
 }
 
 .elements-defense__stage {
   position: relative;
   width: 100%;
-  min-width: 1040px;
-  aspect-ratio: 8 / 5;
+  min-width: 1100px;
+  aspect-ratio: 1269 / 1135;
   overflow: hidden;
   isolation: isolate;
+  background: #050708;
 }
 
-.elements-defense__field {
+.elements-defense__template {
   position: absolute;
   inset: 0;
   z-index: 0;
@@ -68,27 +46,46 @@
   user-select: none;
 }
 
+.elements-defense__count {
+  position: absolute;
+  z-index: 8;
+  top: 3.25%;
+  right: 2.05%;
+  display: grid;
+  place-items: center;
+  width: 7.8%;
+  min-width: 76px;
+  aspect-ratio: 1.78 / 1;
+  border: 1px solid rgba(216, 173, 45, 0.72);
+  border-radius: 999px;
+  background: #060809;
+  color: #f3c63d;
+  font-size: clamp(0.88rem, 1.45vw, 1.3rem);
+  font-weight: 950;
+  line-height: 1;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+}
+
 .elements-defense__slot {
   position: absolute;
   z-index: 5;
-  width: 7.2%;
+  width: 11.1%;
   transform: translate(-50%, -50%);
 }
 
-/* Exact chip targets from the user's marked-up image. */
-.elements-defense__slot--lf { left: 24.6%; top: 30.4%; }
-.elements-defense__slot--cf { left: 50%; top: 27.9%; }
-.elements-defense__slot--rf { left: 76.2%; top: 30.4%; }
+/* Coordinates measured directly from the approved template. */
+.elements-defense__slot--lf { left: 18.12%; top: 21.41%; }
+.elements-defense__slot--cf { left: 49.96%; top: 13.96%; }
+.elements-defense__slot--rf { left: 83.29%; top: 21.41%; }
 
-.elements-defense__slot--ss { left: 39.4%; top: 56.1%; }
-.elements-defense__slot--2b { left: 58.1%; top: 56.1%; }
+.elements-defense__slot--ss { left: 36.41%; top: 42.33%; }
+.elements-defense__slot--2b { left: 65.21%; top: 42.33%; }
 
-.elements-defense__slot--3b { left: 32.9%; top: 68.2%; }
-.elements-defense__slot--p  { left: 50%; top: 65.2%; width: auto; }
-.elements-defense__slot--1b { left: 66.5%; top: 68.2%; }
+.elements-defense__slot--3b { left: 22.06%; top: 60.70%; }
+.elements-defense__slot--1b { left: 78.80%; top: 60.70%; }
 
-.elements-defense__slot--dh { left: 24.5%; top: 91.5%; }
-.elements-defense__slot--c  { left: 50%; top: 91.5%; }
+.elements-defense__slot--c { left: 50.04%; top: 83.08%; }
+.elements-defense__slot--dh { left: 12.81%; top: 79.95%; }
 
 .elements-defense__slot .roster-field-player-card,
 .elements-defense__slot .field-empty-position {
@@ -97,12 +94,21 @@
 }
 
 .elements-defense__slot .roster-field-player-card {
-  border: 1px solid #e0b62d;
-  border-radius: 8px;
+  border: 2px solid #d8ad2d;
+  border-radius: 9px;
   background: #070809;
   box-shadow:
-    0 10px 18px rgba(0, 0, 0, 0.62),
-    0 0 0 2px rgba(216, 173, 45, 0.13);
+    0 14px 26px rgba(0, 0, 0, 0.74),
+    0 0 0 2px rgba(216, 173, 45, 0.16);
+  transition: transform 150ms ease, box-shadow 150ms ease;
+}
+
+.elements-defense__slot .roster-field-player-card:hover {
+  z-index: 12;
+  transform: translateY(-3px) scale(1.025);
+  box-shadow:
+    0 18px 32px rgba(0, 0, 0, 0.8),
+    0 0 0 4px rgba(216, 173, 45, 0.24);
 }
 
 .elements-defense__slot .roster-field-card-main {
@@ -130,91 +136,101 @@
   object-fit: contain;
 }
 
-.elements-defense__slot .roster-field-card-name {
+.elements-defense__slot .roster-field-card-name,
+.elements-defense__slot .field-position-label {
   display: none !important;
 }
 
 .elements-defense__slot .remove-field-card {
-  top: -7px;
-  right: -7px;
+  top: -8px;
+  left: -8px;
+  right: auto;
   bottom: auto;
-  width: 22px;
-  height: 22px;
-  border-color: #41444a;
-  background: rgba(8, 9, 10, 0.97);
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.48);
+  width: 24px;
+  height: 24px;
+  border-color: #55585e;
+  background: rgba(7, 8, 9, 0.98);
+  box-shadow: 0 5px 12px rgba(0, 0, 0, 0.55);
 }
 
-.elements-defense__slot .field-position-label {
-  display: block;
-  width: fit-content;
-  min-width: 30px;
-  margin: 5px auto 0;
-  padding: 3px 8px;
-  border: 1px solid rgba(216, 173, 45, 0.72);
-  border-radius: 999px;
-  background: rgba(5, 6, 7, 0.97);
-  color: #f3f0e8;
-  font-size: clamp(0.54rem, 0.6vw, 0.66rem);
-  font-weight: 950;
-  line-height: 1;
-  text-align: center;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.44);
-}
-
+/* The template already contains the empty cardholders and labels.
+   Keep the real button invisible but fully interactive over them. */
 .elements-defense__slot .field-empty-card {
   width: 100%;
   aspect-ratio: 2.5 / 3.5;
-  padding: 8px;
-  border: 1px dashed rgba(216, 173, 45, 0.62);
-  border-radius: 8px;
-  background: rgba(5, 6, 7, 0.86);
-  color: #8f9196;
-  font-size: 0.64rem;
-  font-weight: 800;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  background: transparent;
+  color: transparent;
+  box-shadow: none;
+  cursor: pointer;
 }
 
-.elements-defense__slot .field-pitcher-placeholder {
-  display: grid;
-  place-items: center;
+.elements-defense__slot .field-empty-card:hover,
+.elements-defense__slot .field-empty-card:focus-visible {
+  border-color: rgba(242, 199, 68, 0.9);
+  background: rgba(216, 173, 45, 0.08);
+  box-shadow: 0 0 0 3px rgba(216, 173, 45, 0.16);
+  outline: none;
 }
 
-.elements-defense__slot .field-pitcher-space {
-  display: none;
+@media (max-width: 1180px) {
+  .elements-defense__stage {
+    min-width: 1000px;
+  }
 }
 
-.elements-defense__slot--p .field-position-label {
-  margin: 0;
-  min-width: 38px;
-  padding-inline: 10px;
+@media (max-width: 820px) {
+  .elements-defense__stage {
+    min-width: 930px;
+  }
 }
 
-/* Marker placement follows the user's chips. */
-.elements-defense__slot--dh .field-position-label,
-.elements-defense__slot--c .field-position-label {
+/* The background template already includes the visible "Select player" copy.
+   Hide the duplicate text from the live interactive button while preserving
+   the full clickable/drop target. */
+.elements-defense__slot .field-empty-card span {
+  opacity: 0 !important;
+}
+
+/* Final proportional workspace behavior: scale the approved field, cards,
+   labels, and markers as one fixed-aspect stage so the full composition is
+   always visible inside the browser workspace. */
+.elements-defense {
+  height: 100%;
+  min-height: 0;
+  display: flex;
+}
+
+.elements-defense__viewport {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+.elements-defense__stage {
   position: absolute;
-  top: -30px;
+  top: 50%;
   left: 50%;
-  margin: 0;
-  transform: translateX(-50%);
+  min-width: 0 !important;
+  max-width: none;
+  max-height: none;
+  aspect-ratio: auto;
+  transform-origin: center center;
 }
 
-@media (max-width: 1120px) {
+@media (max-width: 1180px), (max-width: 820px) {
   .elements-defense__stage {
-    min-width: 960px;
-  }
-
-  .elements-defense__slot {
-    width: 7%;
+    min-width: 0 !important;
   }
 }
 
-@media (max-width: 760px) {
-  .elements-defense {
-    padding-inline: 10px;
-  }
-
-  .elements-defense__stage {
-    min-width: 880px;
-  }
+/* Fielding showcase sizing is controlled by the page viewport. The stage
+   continues to scale as one composition, while compact screens receive a
+   readable horizontally pannable canvas instead of microscopic cards. */
+.roster-workspace--defense .elements-defense__stage {
+  min-width: 0 !important;
 }

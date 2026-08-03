@@ -14,6 +14,7 @@ import type {
   OwnershipFilter,
   SortDirection,
   SortField,
+  ChartMode,
 } from '../components/FilterDrawer'
 import { supabase } from '../lib/supabase'
 import type {
@@ -24,9 +25,9 @@ import type {
 import {
   CARD_COLUMNS,
 } from '../types/card'
+import { useAuth } from '../auth/AuthContext'
 import {
   cleanSearchTerm,
-  CURRENT_MANAGER,
   normalizeImageUrl,
 } from '../utils/cardHelpers'
 
@@ -51,6 +52,7 @@ type SavedFilterState = {
   sortField: SortField
   sortDirection: SortDirection
   visibleCardCount: number
+  chartMode: ChartMode
 }
 
 function loadSavedFilterState(): Partial<SavedFilterState> {
@@ -85,6 +87,17 @@ const DEFENSE_COLUMNS: Record<
   cf: 'defense_cf',
   rf: 'defense_rf',
 }
+
+const DEFENSIVE_POSITIONS = new Set<DefensePosition>([
+  'c',
+  '1b',
+  '2b',
+  '3b',
+  'ss',
+  'lf',
+  'cf',
+  'rf',
+])
 
 const POSITION_COLUMNS: Record<
   string,
@@ -355,6 +368,7 @@ function matchesPosition(
 function matchesAttribute(
   card: CardRecord,
   attributeFilter: AttributeFilter,
+  chartMode: ChartMode,
   attributeOperator: AttributeOperator,
   attributeValue: string,
 ) {
@@ -426,10 +440,7 @@ function matchesAttribute(
 
     case 'outs':
       return matchesNumericValues(
-        [
-          card.hitter_outs,
-          card.pitcher_outs,
-        ],
+        [chartMode === 'batting' ? card.hitter_outs : card.pitcher_outs],
         numericValue,
         attributeOperator,
       )
@@ -443,50 +454,35 @@ function matchesAttribute(
 
     case 'k':
       return matchesChartValues(
-        [
-          card.hitter_k,
-          card.pitcher_k,
-        ],
+        [chartMode === 'batting' ? card.hitter_k : card.pitcher_k],
         numericValue,
         attributeOperator,
       )
 
     case 'gb':
       return matchesChartValues(
-        [
-          card.hitter_gb,
-          card.pitcher_gb,
-        ],
+        [chartMode === 'batting' ? card.hitter_gb : card.pitcher_gb],
         numericValue,
         attributeOperator,
       )
 
     case 'fb':
       return matchesChartValues(
-        [
-          card.hitter_fb,
-          card.pitcher_fb,
-        ],
+        [chartMode === 'batting' ? card.hitter_fb : card.pitcher_fb],
         numericValue,
         attributeOperator,
       )
 
     case 'bb':
       return matchesChartValues(
-        [
-          card.hitter_bb,
-          card.pitcher_bb,
-        ],
+        [chartMode === 'batting' ? card.hitter_bb : card.pitcher_bb],
         numericValue,
         attributeOperator,
       )
 
     case '1b':
       return matchesChartValues(
-        [
-          card.hitter_1b,
-          card.pitcher_1b,
-        ],
+        [chartMode === 'batting' ? card.hitter_1b : card.pitcher_1b],
         numericValue,
         attributeOperator,
       )
@@ -500,30 +496,21 @@ function matchesAttribute(
 
     case '2b':
       return matchesChartValues(
-        [
-          card.hitter_2b,
-          card.pitcher_2b,
-        ],
+        [chartMode === 'batting' ? card.hitter_2b : card.pitcher_2b],
         numericValue,
         attributeOperator,
       )
 
     case '3b':
       return matchesChartValues(
-        [
-          card.hitter_3b,
-          card.pitcher_3b,
-        ],
+        [chartMode === 'batting' ? card.hitter_3b : card.pitcher_3b],
         numericValue,
         attributeOperator,
       )
 
     case 'hr':
       return matchesChartValues(
-        [
-          card.hitter_hr,
-          card.pitcher_hr,
-        ],
+        [chartMode === 'batting' ? card.hitter_hr : card.pitcher_hr],
         numericValue,
         attributeOperator,
       )
@@ -557,6 +544,7 @@ function getSortValue(
   card: CardRecord,
   sortField: SortField,
   defensePosition: DefensePosition,
+  chartMode: ChartMode,
 ): number | string | null {
   switch (sortField) {
     case 'player_name':
@@ -595,28 +583,23 @@ function getSortValue(
       return card.pitcher_ip
     case 'k':
       return getChartRating([
-        card.hitter_k,
-        card.pitcher_k,
+        chartMode === 'batting' ? card.hitter_k : card.pitcher_k,
       ])
     case 'gb':
       return getChartRating([
-        card.hitter_gb,
-        card.pitcher_gb,
+        chartMode === 'batting' ? card.hitter_gb : card.pitcher_gb,
       ])
     case 'fb':
       return getChartRating([
-        card.hitter_fb,
-        card.pitcher_fb,
+        chartMode === 'batting' ? card.hitter_fb : card.pitcher_fb,
       ])
     case 'bb':
       return getChartRating([
-        card.hitter_bb,
-        card.pitcher_bb,
+        chartMode === 'batting' ? card.hitter_bb : card.pitcher_bb,
       ])
     case '1b':
       return getChartRating([
-        card.hitter_1b,
-        card.pitcher_1b,
+        chartMode === 'batting' ? card.hitter_1b : card.pitcher_1b,
       ])
     case '1b_plus':
       return getChartRating([
@@ -624,18 +607,15 @@ function getSortValue(
       ])
     case '2b':
       return getChartRating([
-        card.hitter_2b,
-        card.pitcher_2b,
+        chartMode === 'batting' ? card.hitter_2b : card.pitcher_2b,
       ])
     case '3b':
       return getChartRating([
-        card.hitter_3b,
-        card.pitcher_3b,
+        chartMode === 'batting' ? card.hitter_3b : card.pitcher_3b,
       ])
     case 'hr':
       return getChartRating([
-        card.hitter_hr,
-        card.pitcher_hr,
+        chartMode === 'batting' ? card.hitter_hr : card.pitcher_hr,
       ])
     case 'defense': {
       if (!defensePosition) {
@@ -716,6 +696,8 @@ function isSeasonEligible(
 }
 
 function CardsPage() {
+  const { profile } = useAuth()
+  const currentManager = profile?.manager_name ?? ''
   const navigate = useNavigate()
   const [savedFilters] = useState(
     loadSavedFilterState,
@@ -794,9 +776,7 @@ function CardsPage() {
   const [
     positionFilter,
     setPositionFilter,
-  ] = useState(
-    savedFilters.positionFilter ?? '',
-  )
+  ] = useState('')
 
   const [
     ownershipFilter,
@@ -819,6 +799,13 @@ function CardsPage() {
     setThrowsFilter,
   ] = useState(
     savedFilters.throwsFilter ?? '',
+  )
+
+  const [
+    chartMode,
+    setChartMode,
+  ] = useState<ChartMode>(
+    savedFilters.chartMode ?? 'batting',
   )
 
   const [
@@ -853,10 +840,7 @@ function CardsPage() {
     sortField,
     setSortField,
   ] =
-    useState<SortField>(
-      savedFilters.sortField ??
-        'points',
-    )
+    useState<SortField>('points')
 
   const [
     sortDirection,
@@ -867,6 +851,38 @@ function CardsPage() {
         'desc',
     )
 
+  const selectedDefensivePosition =
+    DEFENSIVE_POSITIONS.has(
+      positionFilter as DefensePosition,
+    )
+      ? (positionFilter as DefensePosition)
+      : ''
+
+  const effectiveDefensePosition =
+    selectedDefensivePosition ||
+    defensePosition
+
+  const handlePositionFilterChange = (
+    value: string,
+  ) => {
+    setPositionFilter(value)
+
+    if (
+      DEFENSIVE_POSITIONS.has(
+        value as DefensePosition,
+      )
+    ) {
+      setDefensePosition(
+        value as DefensePosition,
+      )
+      return
+    }
+
+    if (value && value !== 'multi') {
+      setDefensePosition('')
+      setDefenseRating('')
+    }
+  }
 
   useEffect(() => {
     const filterState:
@@ -885,6 +901,7 @@ function CardsPage() {
         sortField,
         sortDirection,
         visibleCardCount,
+        chartMode,
       }
 
     window.sessionStorage.setItem(
@@ -894,6 +911,7 @@ function CardsPage() {
   }, [
     attributeConditions,
     batsFilter,
+    chartMode,
     defensePosition,
     defenseRating,
     leagueFilter,
@@ -1182,6 +1200,22 @@ function CardsPage() {
       )
     }, [allCards])
 
+  const teamOptions =
+    useMemo(() => {
+      return Array.from(
+        new Set(
+          allCards
+            .flatMap((card) => [
+              card.hitter_team_code,
+              card.pitcher_team_code,
+              card.team_name,
+            ])
+            .map((team) => team?.trim())
+            .filter((team): team is string => Boolean(team)),
+        ),
+      ).sort((left, right) => left.localeCompare(right))
+    }, [allCards])
+
   const leagueOptions =
     useMemo(() => {
       return Array.from(
@@ -1309,7 +1343,7 @@ function CardsPage() {
               .some(
                 (owner) =>
                   owner.toLowerCase() ===
-                  CURRENT_MANAGER.toLowerCase(),
+                  currentManager.toLowerCase(),
               )
 
           const eligible =
@@ -1363,6 +1397,7 @@ function CardsPage() {
                 matchesAttribute(
                   card,
                   condition.attribute,
+                  chartMode,
                   condition.operator,
                   condition.value,
                 ),
@@ -1375,7 +1410,7 @@ function CardsPage() {
           }
 
           if (
-            defensePosition &&
+            effectiveDefensePosition &&
             defenseRating !== '' &&
             Number.isFinite(
               numericDefenseRating,
@@ -1383,7 +1418,7 @@ function CardsPage() {
           ) {
             const defenseColumn =
               DEFENSE_COLUMNS[
-                defensePosition
+                effectiveDefensePosition
               ]
 
             if (
@@ -1406,12 +1441,14 @@ function CardsPage() {
               getSortValue(
                 leftCard,
                 sortField,
-                defensePosition,
+                effectiveDefensePosition,
+                chartMode,
               ),
               getSortValue(
                 rightCard,
                 sortField,
-                defensePosition,
+                effectiveDefensePosition,
+                chartMode,
               ),
               sortDirection,
             )
@@ -1434,7 +1471,7 @@ function CardsPage() {
       batsFilter,
       debouncedSearchTerm,
       debouncedTeamFilter,
-      defensePosition,
+      effectiveDefensePosition,
       defenseRating,
       leagueFilter,
       ownershipFilter,
@@ -1452,6 +1489,7 @@ function CardsPage() {
   }, [
     attributeConditions,
     batsFilter,
+    chartMode,
     debouncedSearchTerm,
     debouncedTeamFilter,
     defensePosition,
@@ -1487,6 +1525,7 @@ function CardsPage() {
     setOwnershipFilter('')
     setBatsFilter('')
     setThrowsFilter('')
+    setChartMode('batting')
     setAttributeConditions([
       createInitialAttributeCondition(),
     ])
@@ -1529,10 +1568,6 @@ function CardsPage() {
             Card Database
           </h1>
 
-          <p className="page-description">
-            Browse every published
-            Elements card.
-          </p>
         </div>
 
         <div
@@ -1542,18 +1577,7 @@ function CardsPage() {
       </header>
 
       <main className="cards-page">
-        <section className="gallery-heading">
-          <div>
-            <p className="section-label">
-              Published Cards
-            </p>
-
-            <h2>
-              Find every published player,
-              team, and season.
-            </h2>
-          </div>
-
+        <section className="gallery-heading gallery-heading-compact">
           <div className="record-badge">
             {isLoading
               ? 'Loading cards'
@@ -1575,6 +1599,7 @@ function CardsPage() {
           onTeamFilterChange={
             setTeamFilter
           }
+          teamOptions={teamOptions}
           leagueFilter={leagueFilter}
           onLeagueFilterChange={
             setLeagueFilter
@@ -1584,7 +1609,7 @@ function CardsPage() {
             positionFilter
           }
           onPositionFilterChange={
-            setPositionFilter
+            handlePositionFilterChange
           }
           ownershipFilter={
             ownershipFilter
@@ -1599,6 +1624,8 @@ function CardsPage() {
           throwsFilter={
             throwsFilter
           }
+          chartMode={chartMode}
+          onChartModeChange={setChartMode}
           onThrowsFilterChange={
             setThrowsFilter
           }

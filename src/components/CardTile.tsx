@@ -1,10 +1,10 @@
 import { useNavigate } from 'react-router-dom'
 import type { CardRecord } from '../types/card'
 import {
-  CURRENT_MANAGER,
   getCardYear,
   isCardOwnedByManager,
 } from '../utils/cardHelpers'
+import { useAuth } from '../auth/AuthContext'
 
 type CardTileProps = {
   card: CardRecord
@@ -14,12 +14,13 @@ function CardTile({
   card,
 }: CardTileProps) {
   const navigate = useNavigate()
+  const { profile } = useAuth()
 
   const year = getCardYear(card)
 
   const owned = isCardOwnedByManager(
     card.ownership,
-    CURRENT_MANAGER,
+    profile?.manager_name ?? '',
   )
 
   return (

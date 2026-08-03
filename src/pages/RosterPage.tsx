@@ -3,7 +3,7 @@ import {
   useMemo,
   useState,
 } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import DefenseStage from '../components/DefenseStage'
 import {
   ACTIVE_SEASON,
@@ -12,12 +12,13 @@ import {
 import type { CardRecord } from '../types/card'
 import {
   cleanSearchTerm,
-  CURRENT_MANAGER,
   getCardPositions,
   getCardTeamCode,
   getCardYear,
   isCardOwnedByManager,
 } from '../utils/cardHelpers'
+import { useAuth } from '../auth/AuthContext'
+import { supabase } from '../lib/supabase'
 
 type Section =
   | 'overview'
@@ -30,13 +31,34 @@ type Section =
 type DrawerSort =
   | 'points'
   | 'defense'
-  | 'ob'
-  | 'control'
-  | 'speed'
-  | 'hitterFatigue'
-  | 'pitcherFatigue'
-  | 'hitterOuts'
-  | 'pitcherOuts'
+  | 'hitter_on_base'
+  | 'hitter_outs'
+  | 'hitter_baserunning'
+  | 'hitter_stolen_base'
+  | 'hitter_fatigue'
+  | 'hitter_pu'
+  | 'hitter_k'
+  | 'hitter_gb'
+  | 'hitter_fb'
+  | 'hitter_bb'
+  | 'hitter_1b'
+  | 'hitter_1b_plus'
+  | 'hitter_2b'
+  | 'hitter_3b'
+  | 'hitter_hr'
+  | 'pitcher_control'
+  | 'pitcher_outs'
+  | 'pitcher_ip'
+  | 'pitcher_fatigue'
+  | 'pitcher_pu'
+  | 'pitcher_k'
+  | 'pitcher_gb'
+  | 'pitcher_fb'
+  | 'pitcher_bb'
+  | 'pitcher_1b'
+  | 'pitcher_2b'
+  | 'pitcher_3b'
+  | 'pitcher_hr'
   | 'year'
   | 'name'
 
@@ -68,15 +90,83 @@ type RosterFormat =
   | 'compact'
   | 'full'
 
-type SavedRoster = {
+type SavedLineup = {
+  id: string
   name: string
   assigned: Record<string, string>
   rosterFormat: RosterFormat
   useDh: boolean
 }
 
-const STORAGE_KEY =
-  'elements-roster-builder-v1'
+
+
+
+function SidebarIcon({ section }: { section: Section }) {
+  const common = {
+    width: 22,
+    height: 22,
+    viewBox: '0 0 24 24',
+    fill: 'none',
+    stroke: 'currentColor',
+    strokeWidth: 1.8,
+    strokeLinecap: 'round' as const,
+    strokeLinejoin: 'round' as const,
+  }
+
+  // Active Roster: lineup card
+  if (section === 'overview') return (
+    <svg {...common}>
+      <rect x="5" y="3" width="14" height="18" rx="2" />
+      <path d="M8 7h8M8 11h2M12 11h4M8 15h2M12 15h4" />
+    </svg>
+  )
+
+  // Fielding: simple glove outline
+  if (section === 'defense') return (
+    <svg {...common}>
+      <path d="M6.5 11V7.2a1.5 1.5 0 0 1 3 0v2.7-4a1.45 1.45 0 0 1 2.9 0v3.8-3a1.45 1.45 0 0 1 2.9 0v4.7l1.5-1.4a1.65 1.65 0 0 1 2.3 2.4l-3.4 4.2A6 6 0 0 1 11 19H9.8a4.8 4.8 0 0 1-4.8-4.8v-1.7A1.55 1.55 0 0 1 6.5 11Z" />
+      <path d="M9.5 9.9v3M12.4 9.7v3M15.3 11.3v2" />
+    </svg>
+  )
+
+  // Batting Order: numbered lineup/list icon
+  if (section === 'lineup') return (
+    <svg {...common}>
+      <path d="M5 6h2M5 12h2M5 18h2" />
+      <path d="M10 6h9M10 12h9M10 18h9" />
+      <path d="M3.5 4.8v2.4M3 7.2h1" />
+      <path d="M3 10.9c.2-.5.6-.8 1.1-.8.6 0 1 .4 1 1 0 .9-1.9 1.2-2.1 2.1h2.2" />
+      <path d="M3 16.3h1.2c.6 0 1 .35 1 .85s-.4.85-1 .85H3m1.05-1.7c.55 0 .95-.32.95-.78s-.4-.77-.95-.77H3" />
+    </svg>
+  )
+
+  // Bench
+  if (section === 'bench') return (
+    <svg {...common}>
+      <path d="M4 10h16v4H4zM6 14v5M18 14v5M3 19h18" />
+      <path d="M7 6h10v4H7z" />
+    </svg>
+  )
+
+  // Rotation: standard baseball
+  if (section === 'rotation') return (
+    <svg {...common}>
+      <circle cx="12" cy="12" r="8" />
+      <path d="M8.2 5.1c1.25 1.45 1.9 3.15 1.9 5.05 0 1.9-.65 3.6-1.9 5.05M15.8 5.1c-1.25 1.45-1.9 3.15-1.9 5.05 0 1.9.65 3.6 1.9 5.05" />
+      <path d="m8.9 7.1-1.2-.6M9.7 9.2l-1.35-.35M9.8 12l-1.4.15M15.1 7.1l1.2-.6M14.3 9.2l1.35-.35M14.2 12l1.4.15" />
+    </svg>
+  )
+
+  // Bullpen: low, round pitcher's mound with rubber
+  return (
+    <svg {...common}>
+      <ellipse cx="12" cy="16" rx="8" ry="3.3" />
+      <path d="M5.6 15c1.3-3 3.4-4.6 6.4-4.6s5.1 1.6 6.4 4.6" />
+      <rect x="9.3" y="9.1" width="5.4" height="1.5" rx=".65" />
+      <path d="M7 16h10" />
+    </svg>
+  )
+}
 
 const TWO_WAY_NAMES = new Set([
   'earl gurley',
@@ -277,64 +367,16 @@ function isEligible(
   )
 }
 
-function loadSaved(): SavedRoster {
-  try {
-    const saved =
-      window.localStorage.getItem(
-        STORAGE_KEY,
-      )
-
-    if (!saved) {
-      return {
-        name: `${ACTIVE_SEASON} Team`,
-        assigned: {},
-        rosterFormat: 'full',
-        useDh: true,
-      }
-    }
-
-    const parsed =
-      JSON.parse(saved) as Partial<SavedRoster>
-
-    return {
-      name:
-        parsed.name ??
-        `${ACTIVE_SEASON} Team`,
-      assigned:
-        parsed.assigned ?? {},
-      rosterFormat:
-        parsed.rosterFormat ??
-        'full',
-      useDh:
-        parsed.useDh ?? true,
-    }
-  } catch {
-    return {
-      name: `${ACTIVE_SEASON} Team`,
-      assigned: {},
-      rosterFormat: 'full',
-      useDh: true,
-    }
-  }
-}
-
 function RosterPage() {
   const navigate = useNavigate()
-  const [initial] = useState(loadSaved)
-  const [name, setName] =
-    useState(initial.name)
-  const [assigned, setAssigned] =
-    useState<Record<string, string>>(
-      initial.assigned,
-    )
-  const [
-    rosterFormat,
-    setRosterFormat,
-  ] = useState<RosterFormat>(
-    initial.rosterFormat,
-  )
-  const [useDh, setUseDh] =
-    useState(initial.useDh)
+  const { lineupId } = useParams()
+  const { user, profile } = useAuth()
+  const currentManager = profile?.manager_name ?? ''
+  const [name, setName] = useState(`${ACTIVE_SEASON} Team`)
+  const [assigned, setAssigned] = useState<Record<string, string>>({})
+  const [rosterFormat, setRosterFormat] = useState<RosterFormat>('full')
+  const [useDh, setUseDh] = useState(true)
+  const [, setLineupLoaded] = useState(false)
   const [section, setSection] =
     useState<Section>('overview')
   const [selectedSlotId, setSelectedSlotId] =
@@ -359,6 +401,10 @@ function RosterPage() {
     useState('')
   const [armFilter, setArmFilter] =
     useState('')
+  const [drawerControlsOpen, setDrawerControlsOpen] =
+    useState(false)
+  const [previewCardKey, setPreviewCardKey] =
+    useState<string | null>(null)
   const [loading, setLoading] =
     useState(true)
   const [error, setError] =
@@ -384,6 +430,36 @@ function RosterPage() {
         setLoading(false),
       )
   }, [])
+
+
+  useEffect(() => {
+    if (!user || !lineupId) {
+      return
+    }
+
+    setLineupLoaded(false)
+    void supabase
+      .from('lineups')
+      .select('name, use_dh, roster_state')
+      .eq('id', lineupId)
+      .eq('user_id', user.id)
+      .single()
+      .then(({ data, error: lineupError }) => {
+        if (lineupError || !data) {
+          setError(lineupError?.message ?? 'Lineup could not be loaded.')
+          return
+        }
+
+        const state = (data.roster_state ?? {}) as Partial<SavedLineup>
+        setName(data.name)
+        setAssigned(state.assigned ?? {})
+        setRosterFormat(state.rosterFormat ?? 'full')
+        setUseDh(data.use_dh ?? state.useDh ?? true)
+        setLineupLoaded(true)
+      })
+  }, [lineupId, user?.id])
+
+
 
   const playerLimit =
     rosterFormat === 'compact'
@@ -416,7 +492,14 @@ function RosterPage() {
       [activeDefenseSlots],
     )
 
-  const activeLineupSlots = LINEUP
+  const activeLineupSlots = useMemo(
+    () => LINEUP.map((slot) =>
+      !useDh && slot.id === 'lineup-9'
+        ? { ...slot, label: 'P', eligibility: 'P' as const }
+        : slot,
+    ),
+    [useDh],
+  )
 
   const requiredLineupSlots =
     useMemo(
@@ -548,7 +631,7 @@ function RosterPage() {
         if (
           !isCardOwnedByManager(
             card.ownership,
-            CURRENT_MANAGER,
+            currentManager,
           )
         ) {
           return false
@@ -706,56 +789,47 @@ function RosterPage() {
             : -999
         }
 
+        const chartStart = (
+          value: string | null,
+        ) => {
+          if (!value) {
+            return -999
+          }
+
+          const match = value.match(/-?\d+(?:\.\d+)?/)
+          return match
+            ? Number(match[0])
+            : -999
+        }
+
         const numericValue = (
           card: CardRecord,
         ) => {
-          switch (drawerSort) {
-            case 'defense':
-              return defenseValue(card)
-            case 'ob':
-              return (
-                card.hitter_on_base ??
-                -999
-              )
-            case 'control':
-              return (
-                card.pitcher_control ??
-                -999
-              )
-            case 'speed':
-              return (
-                card.hitter_baserunning ??
-                -999
-              )
-            case 'hitterFatigue':
-              return Number(
-                (card as unknown as Record<string, unknown>)
-                  .hitter_fatigue ?? -999,
-              )
-            case 'pitcherFatigue':
-              return Number(
-                (card as unknown as Record<string, unknown>)
-                  .pitcher_fatigue ?? -999,
-              )
-            case 'hitterOuts':
-              return Number(
-                (card as unknown as Record<string, unknown>)
-                  .hitter_outs ?? -999,
-              )
-            case 'pitcherOuts':
-              return Number(
-                (card as unknown as Record<string, unknown>)
-                  .pitcher_outs ?? -999,
-              )
-            case 'year':
-              return (
-                getCardYear(card) ??
-                -999
-              )
-            case 'points':
-            default:
-              return getPoints(card)
+          if (drawerSort === 'defense') {
+            return defenseValue(card)
           }
+
+          if (drawerSort === 'year') {
+            return getCardYear(card) ?? -999
+          }
+
+          if (drawerSort === 'points') {
+            return getPoints(card)
+          }
+
+          const value = card[
+            drawerSort as keyof CardRecord
+          ]
+
+          if (typeof value === 'number') {
+            return value
+          }
+
+          if (typeof value === 'string') {
+            return chartStart(value)
+          }
+
+          return -999
         }
 
         if (drawerSort === 'name') {
@@ -1010,81 +1084,36 @@ function RosterPage() {
   const totalPlayers =
     rosterCardKeys.size
 
-  const missingSections = [
-    counts.defense <
-      requiredDefenseSlots.length
-      ? `Defense ${
-          requiredDefenseSlots.length -
-          counts.defense
-        }`
-      : '',
-    counts.lineup < requiredLineupSlots.length
-      ? `Batting Order ${
-          requiredLineupSlots.length - counts.lineup
-        }`
-      : '',
-  ].filter(Boolean)
 
-  const teamComplete =
-    totalPlayers === playerLimit &&
-    totalPoints <= pointCap &&
-    counts.defense ===
-      requiredDefenseSlots.length &&
-    counts.lineup ===
-      requiredLineupSlots.length
+  async function saveRoster() {
+    if (!user || !lineupId) {
+      return
+    }
 
-  const overPointCap =
-    totalPoints > pointCap
+    const { error: saveError } = await supabase
+      .from('lineups')
+      .update({
+        name: name.trim() || `${ACTIVE_SEASON} Team`,
+        use_dh: useDh,
+        player_count: totalPlayers,
+        total_points: totalPoints,
+        roster_state: {
+          assigned,
+          rosterFormat,
+          useDh,
+        },
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', lineupId)
+      .eq('user_id', user.id)
 
-  function changeDh(
-    nextUseDh: boolean,
-  ) {
-    setUseDh(nextUseDh)
+    if (saveError) {
+      setMessage(saveError.message)
+      return
+    }
 
-    setAssigned((current) => {
-      if (nextUseDh) {
-        return current
-      }
-
-      const next = { ...current }
-      const removedCard =
-        next['defense-dh']
-
-      delete next['defense-dh']
-
-      if (removedCard) {
-        for (const slot of LINEUP) {
-          if (
-            next[slot.id] ===
-            removedCard
-          ) {
-            delete next[slot.id]
-          }
-        }
-      }
-
-      return next
-    })
-  }
-
-  function saveRoster() {
-    window.localStorage.setItem(
-      STORAGE_KEY,
-      JSON.stringify({
-        name:
-          name.trim() ||
-          `${ACTIVE_SEASON} Team`,
-        assigned,
-        rosterFormat,
-        useDh,
-      }),
-    )
-
-    setMessage('Team saved')
-    window.setTimeout(
-      () => setMessage(''),
-      1600,
-    )
+    setMessage('Lineup saved')
+    window.setTimeout(() => setMessage(''), 1600)
   }
 
   function clearRoster() {
@@ -1392,21 +1421,17 @@ function RosterPage() {
   }
 
   function renderSlot(slot: Slot) {
-    const cardKey =
-      assigned[slot.id]
-    const card = cardKey
-      ? cardMap.get(cardKey)
-      : null
-    const pitcher =
-      slot.eligibility === 'P'
-    const lockedPitcherSlot =
-      slot.id === 'defense-p'
-    const lockedLineupPitcher =
-      !useDh &&
-      slot.id === 'lineup-9'
-    const lockedSlot =
-      lockedPitcherSlot ||
-      lockedLineupPitcher
+    const lockedPitcherSlot = slot.id === 'defense-p'
+    const lockedLineupPitcher = !useDh && slot.id === 'lineup-9'
+    const lockedSlot = lockedPitcherSlot || lockedLineupPitcher
+    const cardKey = lockedLineupPitcher ? undefined : assigned[slot.id]
+    const card = cardKey ? cardMap.get(cardKey) : null
+    const hasHittingChart =
+      card?.hitter_on_base !== null &&
+      card?.hitter_on_base !== undefined
+    const hasPitchingChart =
+      card?.pitcher_control !== null &&
+      card?.pitcher_control !== undefined
 
     return (
       <div
@@ -1520,32 +1545,45 @@ function RosterPage() {
                 </small>
               </span>
 
-              {pitcher ? (
-                <span className="pitcher-rating-pair">
-                  <span className="rating-diamond">
-                    <span>
-                      OB{' '}
-                      {card.hitter_on_base ??
-                        '—'}
-                    </span>
-                  </span>
-                  <span className="rating-diamond">
-                    <span>
-                      C{' '}
-                      {card.pitcher_control ??
-                        '—'}
-                    </span>
-                  </span>
-                </span>
-              ) : (
-                <span className="hitter-rating-diamond">
+              <span className="pitcher-rating-pair">
+                <span
+                  className={`hitter-rating-diamond${
+                    hasHittingChart
+                      ? ''
+                      : ' rating-diamond--empty'
+                  }`}
+                  aria-label={
+                    hasHittingChart
+                      ? `On Base ${card.hitter_on_base}`
+                      : 'No hitting chart'
+                  }
+                >
                   <span>
-                    OB{' '}
-                    {card.hitter_on_base ??
-                      '—'}
+                    {hasHittingChart
+                      ? `OB ${card.hitter_on_base}`
+                      : '—'}
                   </span>
                 </span>
-              )}
+
+                <span
+                  className={`rating-diamond${
+                    hasPitchingChart
+                      ? ''
+                      : ' rating-diamond--empty'
+                  }`}
+                  aria-label={
+                    hasPitchingChart
+                      ? `Control ${card.pitcher_control}`
+                      : 'No pitching chart'
+                  }
+                >
+                  <span>
+                    {hasPitchingChart
+                      ? `C ${card.pitcher_control}`
+                      : '—'}
+                  </span>
+                </span>
+              </span>
 
               <span className="roster-player-points">
                 {getPoints(
@@ -1668,93 +1706,35 @@ function RosterPage() {
       <section
         className={
           compact
-            ? 'defense-summary compact'
-            : 'defense-summary'
+            ? 'defense-summary compact defense-summary-inline'
+            : 'defense-summary defense-summary-inline'
         }
       >
-        <div className="defense-summary-block">
-          <span className="defense-summary-label">
-            Catcher Score
-          </span>
+        <span className="defense-inline-group">
+          <b>C DEF:</b>
+          <strong>{formatDefenseScore(catcherScore)}</strong>
+        </span>
 
-          <strong>
-            {formatDefenseScore(
-              catcherScore,
-            )}
-          </strong>
-        </div>
+        <span className="defense-inline-divider" aria-hidden="true">|</span>
 
-        <div className="defense-summary-block infield-summary-block">
-          <span className="defense-summary-label">
-            Infield Combos
-          </span>
-
-          <div className="infield-combo-scores">
-            {infieldCombinations.map(
-              (combination, index) => (
-                <span
-                  className="infield-combo-item"
-                  key={
-                    combination.label
-                  }
-                >
-                  <strong>
-                    #{index + 1}
-                  </strong>
-
-                  <span>
-                    {formatDefenseScore(
-                      combination.score,
-                    )}
-                  </span>
-
-                  {!compact && (
-                    <small>
-                      {
-                        combination.label
-                      }
-                    </small>
-                  )}
-                </span>
-              ),
-            )}
-          </div>
-        </div>
-
-        <div className="defense-summary-block">
-          <span className="defense-summary-label">
-            Outfield Defense
-          </span>
-
-          <div className="outfield-defense-values">
-            <span>
-              LF
-              <strong>
-                {formatDefenseScore(
-                  outfieldRatings.LF,
-                )}
-              </strong>
+        <span className="defense-inline-group defense-inline-infield">
+          <b>INF DEF:</b>
+          {infieldCombinations.map((combination) => (
+            <span className="defense-inline-combo" key={combination.label}>
+              <small>{combination.label}</small>
+              <strong>{formatDefenseScore(combination.score)}</strong>
             </span>
+          ))}
+        </span>
 
-            <span>
-              CF
-              <strong>
-                {formatDefenseScore(
-                  outfieldRatings.CF,
-                )}
-              </strong>
-            </span>
+        <span className="defense-inline-divider" aria-hidden="true">|</span>
 
-            <span>
-              RF
-              <strong>
-                {formatDefenseScore(
-                  outfieldRatings.RF,
-                )}
-              </strong>
-            </span>
-          </div>
-        </div>
+        <span className="defense-inline-group defense-inline-outfield">
+          <b>OF DEF:</b>
+          <span><small>LF</small><strong>{formatDefenseScore(outfieldRatings.LF)}</strong></span>
+          <span><small>CF</small><strong>{formatDefenseScore(outfieldRatings.CF)}</strong></span>
+          <span><small>RF</small><strong>{formatDefenseScore(outfieldRatings.RF)}</strong></span>
+        </span>
       </section>
     )
   }
@@ -1762,6 +1742,7 @@ function RosterPage() {
   function renderGroup(
     title: string,
     slots: Slot[],
+    occupiedOnly = false,
   ) {
     const groupClass =
       title === 'Batting Order'
@@ -1770,25 +1751,35 @@ function RosterPage() {
           ? 'vertical-roster-card'
           : ''
 
+    const overviewGroupClass = occupiedOnly
+      ? `overview-group overview-group-${title.toLowerCase().replace(/\s+/g, '-')}`
+      : ''
+
     return (
       <section
         className={[
           'roster-section-card',
           groupClass,
+          overviewGroupClass,
         ]
           .filter(Boolean)
           .join(' ')}
       >
-        <div className="roster-section-heading">
-          <h2>{title}</h2>
-          <span>
-            {countFilled(slots)}/
-            {slots.length}
-          </span>
-        </div>
+        {occupiedOnly && (
+          <div className="roster-section-heading roster-section-heading--overview">
+            <h2>{title}</h2>
+          </div>
+        )}
 
         <div className="roster-slot-list">
-          {slots.map(renderSlot)}
+          {(occupiedOnly
+            ? slots.filter(
+                (slot) =>
+                  slot.id !== 'defense-p' &&
+                  Boolean(assigned[slot.id]),
+              )
+            : slots
+          ).map(renderSlot)}
         </div>
       </section>
     )
@@ -1814,157 +1805,73 @@ function RosterPage() {
     )
   }
 
+  const sectionLabel = section === 'overview'
+    ? 'Active Roster'
+    : section === 'defense'
+      ? 'Fielding'
+      : section === 'lineup'
+        ? 'Batting Order'
+        : section.charAt(0).toUpperCase() + section.slice(1)
+
+  const currentCard = selectedSlot && assigned[selectedSlot.id]
+    ? cardMap.get(assigned[selectedSlot.id] as string) ?? null
+    : null
+  const previewCard = previewCardKey ? cardMap.get(previewCardKey) ?? null : null
+
   return (
-    <div className="app roster-app">
-      <header className="roster-header">
+    <div className={`app roster-app roster-workspace roster-workspace--${section}`}>
+      <aside className="roster-side-nav">
         <button
           type="button"
-          className="back-button"
-          onClick={() =>
-            navigate('/')
-          }
+          className="roster-side-back"
+          onClick={() => navigate('/lineup-builder')}
+          title="Back to lineups"
         >
-          ← Home
+          <span>←</span>
+          <strong>Lineup Builder</strong>
         </button>
 
-        <div className="roster-title-block">
-          <p className="eyebrow">
-            Elements Baseball
-          </p>
-
-          <h1>Team Builder</h1>
-
-          <p>
-            {ACTIVE_SEASON} Season
-          </p>
-
-        </div>
-
-        <div className="roster-header-actions">
-          <button
-            type="button"
-            className="roster-clear-button"
-            onClick={clearRoster}
-          >
-            Clear
-          </button>
-          <button
-            type="button"
-            className="roster-save-button"
-            onClick={saveRoster}
-          >
-            Save Team
-          </button>
-        </div>
-      </header>
-
-      <main className="roster-page">
-        <section className="roster-summary simplified-roster-summary">
-          <label className="roster-name-field">
-            <span>Roster Name</span>
-            <input
-              value={name}
-              onChange={(event) =>
-                setName(
-                  event.target.value,
-                )
-              }
-            />
-          </label>
-
-          <div className="roster-summary-stat roster-primary-stat">
-            <span>Players · Maximum {playerLimit}</span>
-            <strong>{totalPlayers}/{playerLimit}</strong>
-          </div>
-
-          <div className="roster-summary-stat roster-primary-stat">
-            <span>Points · Maximum {pointCap.toLocaleString()}</span>
-            <strong>
-              {totalPoints.toLocaleString()}/{pointCap.toLocaleString()}
-            </strong>
-          </div>
-
-          <div className="roster-compact-settings">
-            <label className="compact-setting-control">
-              <span>Roster Format</span>
-              <select
-                value={rosterFormat}
-                onChange={(event) =>
-                  setRosterFormat(
-                    event.target.value as RosterFormat,
-                  )
-                }
-              >
-                <option value="compact">18 / 4,000</option>
-                <option value="full">26 / 6,000</option>
-              </select>
-            </label>
-
-            <div className="compact-setting-control">
-              <span>Designated Hitter</span>
-              <div className="inline-dh-toggle">
-                <button
-                  type="button"
-                  className={useDh ? 'active' : ''}
-                  onClick={() => changeDh(true)}
-                >
-                  On
-                </button>
-                <button
-                  type="button"
-                  className={!useDh ? 'active' : ''}
-                  onClick={() => changeDh(false)}
-                >
-                  Off
-                </button>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {message && (
-          <div className="roster-save-message">
-            {message}
-          </div>
-        )}
-
-        <nav className="roster-tabs">
-          {(
-            [
-              'overview',
-              'defense',
-              'lineup',
-              'bench',
-              'rotation',
-              'bullpen',
-            ] as Section[]
-          ).map((value) => (
+        <nav>
+          {([
+            ['overview', 'Active Roster'],
+            ['defense', 'Fielding'],
+            ['lineup', 'Batting Order'],
+            ['bench', 'Bench'],
+            ['rotation', 'Rotation'],
+            ['bullpen', 'Bullpen'],
+          ] as Array<[Section, string]>).map(([value, label]) => (
             <button
               type="button"
-              className={
-                section === value
-                  ? 'active'
-                  : ''
-              }
-              onClick={() =>
-                setSection(value)
-              }
+              className={section === value ? 'active' : ''}
+              onClick={() => setSection(value)}
               key={value}
             >
-              {value === 'lineup'
-                ? 'Batting Order'
-                : value}
+              <SidebarIcon section={value} />
+              <span>{label}</span>
             </button>
           ))}
         </nav>
+      </aside>
 
+      <div className="roster-main-column">
+        <header className="roster-header roster-header-compact">
+          <div className="roster-title-block">
+            <p className="eyebrow">{name}</p>
+            <h1>{sectionLabel}</h1>
+          </div>
+
+          <div className="roster-header-actions">
+            <button type="button" className="roster-clear-button" onClick={clearRoster}>Clear</button>
+            <button type="button" className="roster-save-button" onClick={saveRoster}>Save Team</button>
+          </div>
+        </header>
+
+        <main className="roster-page roster-page-with-sidebar">
+          {message && <div className="roster-save-message">{message}</div>}
         {!loading &&
           !error &&
-          (section === 'overview' ||
-            section === 'defense') &&
-          renderDefenseSummary(
-            section === 'overview',
-          )}
+          section === 'overview' &&
+          renderDefenseSummary(true)}
 
         {loading && (
           <section className="status-panel">
@@ -1994,18 +1901,22 @@ function RosterPage() {
                   {renderGroup(
                     'Defense',
                     activeDefenseSlots,
-                  )}
-                  {renderGroup(
-                    'Rotation',
-                    ROTATION,
+                    true,
                   )}
                   {renderGroup(
                     'Bench',
                     BENCH,
+                    true,
+                  )}
+                  {renderGroup(
+                    'Rotation',
+                    ROTATION,
+                    true,
                   )}
                   {renderGroup(
                     'Bullpen',
                     BULLPEN,
+                    true,
                   )}
               </div>
             )}
@@ -2035,7 +1946,8 @@ function RosterPage() {
               )}
           </div>
         )}
-      </main>
+        </main>
+      </div>
 
       {selectedSlot && (
         <div
@@ -2055,6 +1967,7 @@ function RosterPage() {
               event.stopPropagation()
             }
           >
+            <div className="roster-drawer-sticky-controls">
             <div className="roster-drawer-heading">
               <div>
                 <p>
@@ -2092,6 +2005,38 @@ function RosterPage() {
               />
             </label>
 
+            {!drawerControlsOpen && (
+              <div className="roster-compact-toolbar">
+                <div className="roster-sort-chip-row">
+                  {([['points', 'Points'], ['year', 'Year'], ['name', 'Name']] as Array<[DrawerSort, string]>).map(([value, label]) => (
+                    <button
+                      type="button"
+                      className={drawerSort === value ? 'roster-sort-chip active' : 'roster-sort-chip'}
+                      onClick={() => {
+                        if (drawerSort === value) {
+                          setDrawerSortDirection((current) => current === 'desc' ? 'asc' : 'desc')
+                        } else {
+                          setDrawerSort(value)
+                          setDrawerSortDirection(value === 'name' ? 'asc' : 'desc')
+                        }
+                      }}
+                      key={value}
+                    >
+                      {label}{drawerSort === value && <span>{drawerSortDirection === 'desc' ? '↓' : '↑'}</span>}
+                    </button>
+                  ))}
+                </div>
+                <button type="button" className="roster-expand-controls" onClick={() => setDrawerControlsOpen(true)}>
+                  Filters & Sort +
+                </button>
+              </div>
+            )}
+
+            {drawerControlsOpen && (<>
+            <div className="roster-expanded-controls-heading">
+              <span>Filters & Sort</span>
+              <button type="button" onClick={() => setDrawerControlsOpen(false)}>Collapse −</button>
+            </div>
             <section className="roster-drawer-sort">
               <span className="roster-drawer-section-label">
                 Quick Sort
@@ -2191,30 +2136,39 @@ function RosterPage() {
                     <option value="">
                       Select an attribute
                     </option>
-                    <option value="defense">
-                      Defense
-                    </option>
-                    <option value="ob">
-                      On Base
-                    </option>
-                    <option value="control">
-                      Control
-                    </option>
-                    <option value="speed">
-                      Speed / BsR
-                    </option>
-                    <option value="hitterFatigue">
-                      Hitter FtG
-                    </option>
-                    <option value="pitcherFatigue">
-                      Pitcher FtG
-                    </option>
-                    <option value="hitterOuts">
-                      Hitter Outs
-                    </option>
-                    <option value="pitcherOuts">
-                      Pitcher Outs
-                    </option>
+                    <optgroup label="Hitter Attributes">
+                      <option value="hitter_on_base">On Base</option>
+                      <option value="hitter_outs">Outs</option>
+                      <option value="hitter_baserunning">Baserunning</option>
+                      <option value="hitter_stolen_base">Stolen Base</option>
+                      <option value="hitter_fatigue">Fatigue</option>
+                      <option value="hitter_pu">Pop Up</option>
+                      <option value="hitter_k">Strikeout</option>
+                      <option value="hitter_gb">Ground Ball</option>
+                      <option value="hitter_fb">Fly Ball</option>
+                      <option value="hitter_bb">Walk</option>
+                      <option value="hitter_1b">Single</option>
+                      <option value="hitter_1b_plus">Single Plus</option>
+                      <option value="hitter_2b">Double</option>
+                      <option value="hitter_3b">Triple</option>
+                      <option value="hitter_hr">Home Run</option>
+                    </optgroup>
+                    <optgroup label="Pitcher Attributes">
+                      <option value="pitcher_control">Control</option>
+                      <option value="pitcher_outs">Outs</option>
+                      <option value="pitcher_ip">Innings Pitched</option>
+                      <option value="pitcher_fatigue">Fatigue</option>
+                      <option value="pitcher_pu">Pop Up</option>
+                      <option value="pitcher_k">Strikeout</option>
+                      <option value="pitcher_gb">Ground Ball</option>
+                      <option value="pitcher_fb">Fly Ball</option>
+                      <option value="pitcher_bb">Walk</option>
+                      <option value="pitcher_1b">Single</option>
+                      <option value="pitcher_2b">Double</option>
+                      <option value="pitcher_3b">Triple</option>
+                      <option value="pitcher_hr">Home Run</option>
+                    </optgroup>
+                    <option value="defense">Defense at selected position</option>
                   </select>
                 </label>
 
@@ -2386,25 +2340,53 @@ function RosterPage() {
                 </button>
               </div>
             </section>
+            </>)}
 
-            <div className="roster-drawer-rules">
-              <span>Owned by Anthony</span>
-              <span>Season Eligible</span>
-              <span>Published</span>
-              <span>
-                {selectedSlot.eligibility ===
-                'BATTER'
-                  ? 'Defense Starters'
-                  : selectedSlot.eligibility}
-              </span>
             </div>
 
-            <p className="roster-player-count">
-              {eligibleCards.length}{' '}
-              eligible cards
-            </p>
+            <div className="roster-picker-content roster-picker-content-stacked">
+              {currentCard && (
+                <section className="roster-compare-strip">
+                  <div className="roster-compare-side">
+                    <span>Player being replaced</span>
+                    <div className="roster-compare-card">
+                      {currentCard.image_url ? <img src={currentCard.image_url} alt={`${currentCard.player_name} current card`} referrerPolicy="no-referrer" /> : <em>Image unavailable</em>}
+                    </div>
+                    <strong>{currentCard.player_name}</strong>
+                  </div>
+                  <div className="roster-compare-arrow">
+                    <span>Compare</span>
+                    <b>↔</b>
+                  </div>
+                  <div className="roster-compare-side">
+                    <span>{previewCard ? 'Hover sub' : 'Hover sub'}</span>
+                    <div className="roster-compare-card preview">
+                      {previewCard?.image_url ? <img src={previewCard.image_url} alt={`${previewCard.player_name} preview card`} referrerPolicy="no-referrer" /> : <em>Hover a card to compare</em>}
+                    </div>
+                    <strong>{previewCard?.player_name ?? 'Hover a card below'}</strong>
+                  </div>
+                </section>
+              )}
 
-            <div className="roster-player-grid">
+              <div className={`roster-replacement-browser roster-replacement-browser-${selectedSlot.section}`}>
+                <div className="roster-drawer-rules">
+                  <span>Owned by Anthony</span>
+                  <span>Season Eligible</span>
+                  <span>Published</span>
+                  <span>
+                    {selectedSlot.eligibility ===
+                    'BATTER'
+                      ? 'Defense Starters'
+                      : selectedSlot.eligibility}
+                  </span>
+                </div>
+
+                <p className="roster-player-count">
+                  {eligibleCards.length}{' '}
+                  eligible cards
+                </p>
+
+                <div className="roster-player-grid">
               {eligibleCards.map(
                 (card) => {
                     const existingCard =
@@ -2465,6 +2447,8 @@ function RosterPage() {
                     }
                     disabled={blocked}
                     aria-label={`Add ${card.player_name} to ${selectedSlot.label}`}
+                    onMouseEnter={() => setPreviewCardKey(card.card_key)}
+                    onFocus={() => setPreviewCardKey(card.card_key)}
                     onPointerUp={(event) => {
                       event.preventDefault()
                       event.stopPropagation()
@@ -2486,61 +2470,18 @@ function RosterPage() {
                       )}
                     </div>
 
-                    <div className="roster-card-copy">
-                      <strong>
-                        {card.player_name}
-                      </strong>
-                      <span>
-                        {getCardYear(card)} ·{' '}
-                        {getCardTeamCode(
-                          card,
-                        ) ??
-                          card.team_name ??
-                          '—'}
-                      </span>
-
-                      <div className="roster-card-footer">
-                        <span>
-                          {isTrueTwoWay(
-                            card,
-                          )
-                            ? 'Two-Way'
-                            : isPrimaryPitcher(
-                                  card,
-                                )
-                              ? 'Pitcher'
-                              : getCardPositions(
-                                    card,
-                                  ).join(
-                                    ', ',
-                                  ) ||
-                                'DH'}
-                        </span>
-                        <strong>
-                          {getPoints(
-                            card,
-                          )}{' '}
-                          pts
-                        </strong>
-                      </div>
-
+                    <div className="roster-card-copy roster-card-actions-only">
                       <div className="roster-card-projection">
-                        <span>
-                          After Add
-                        </span>
-
+                        <span>After Add</span>
                         <strong>
-                          {afterPlayers}/
-                          {playerLimit} ·{' '}
-                          {afterPoints.toLocaleString()}/
-                          {pointCap.toLocaleString()}
+                          {afterPlayers}/{playerLimit} ·{' '}
+                          {afterPoints.toLocaleString()}/{pointCap.toLocaleString()}
                         </strong>
                       </div>
 
                       <span className="roster-add-card-button">
                         {blocked
-                          ? afterPlayers >
-                            playerLimit
+                          ? afterPlayers > playerLimit
                             ? 'Roster Limit Reached'
                             : 'Over Point Cap'
                           : `Add to ${selectedSlot.label}`}
@@ -2550,10 +2491,10 @@ function RosterPage() {
                     )
                   },
               )}
-            </div>
+                </div>
 
-            {eligibleCards.length === 0 && (
-              <div className="roster-empty-drawer">
+                {eligibleCards.length === 0 && (
+                  <div className="roster-empty-drawer">
                 <h3>
                   No eligible cards found
                 </h3>
@@ -2563,8 +2504,10 @@ function RosterPage() {
                     ? 'Select the nine starters on the Defense page first.'
                     : 'Only owned, published, season-eligible cards that qualify for this slot appear here.'}
                 </p>
+                  </div>
+                )}
               </div>
-            )}
+            </div>
           </aside>
         </div>
       )}

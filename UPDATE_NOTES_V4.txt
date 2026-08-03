@@ -1,0 +1,14 @@
+Elements Baseball v4 update
+
+1. Fielding graphic
+- Updated public/elements-defense-template.png
+- Replaced the embedded title DEFENSE with FIELDING.
+
+2. Fixed chart-rating columns
+- Left diamond is always On Base (OB).
+- Right diamond is always Control (C).
+- Existing ratings show their label and value.
+- Missing ratings show a muted solid diamond with an em dash.
+- No dashed outlines.
+- Applied consistently to Batting Order, Bench, Rotation, and Bullpen rows.
+- Active Roster continues to hide rating diamonds.
