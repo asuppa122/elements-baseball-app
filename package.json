@@ -10,8 +10,7 @@
     "preview": "vite preview",
     "inspect:cards": "node scripts/inspect-gviz.mjs",
     "import:cards": "node scripts/import-cards.mjs",
-    "import:images": "node scripts/import-images.mjs",
-    "import:2025-images": "node scripts/import-2025-images.mjs"
+    "import:images": "node scripts/import-images.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.111.0",

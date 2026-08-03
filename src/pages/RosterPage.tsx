@@ -1565,13 +1565,14 @@ function RosterPage() {
           }
         }}
         key={slot.id}
+        data-section={slot.section}
       >
         <button
           type="button"
           className="roster-slot-main"
           disabled={lockedSlot}
           onClick={() => {
-            if (lockedSlot) {
+            if (lockedSlot || slot.section === 'lineup') {
               return
             }
 
@@ -1673,7 +1674,7 @@ function RosterPage() {
                   ? 'Pitcher'
                   : slot.section ===
                       'lineup'
-                    ? 'Choose from Defense'
+                    ? 'Choose from Fielding'
                     : 'Select a player'}
             </span>
           )}
@@ -1786,7 +1787,10 @@ function RosterPage() {
       >
         <span className="defense-inline-group">
           <b>C DEF:</b>
-          <strong>{formatDefenseScore(catcherScore)}</strong>
+          <span className="defense-inline-combo defense-inline-catcher">
+            <small>C</small>
+            <strong>{formatDefenseScore(catcherScore)}</strong>
+          </span>
         </span>
 
         <span className="defense-inline-divider" aria-hidden="true">|</span>
@@ -1978,7 +1982,7 @@ function RosterPage() {
             {section === 'overview' && (
               <div className="roster-overview-grid">
                   {renderGroup(
-                    'Defense',
+                    'Fielding',
                     activeDefenseSlots,
                     true,
                   )}
@@ -2247,7 +2251,7 @@ function RosterPage() {
                       <option value="pitcher_3b">Triple</option>
                       <option value="pitcher_hr">Home Run</option>
                     </optgroup>
-                    <option value="defense">Defense at selected position</option>
+                    <option value="defense">Fielding at selected position</option>
                   </select>
                 </label>
 
@@ -2427,15 +2431,16 @@ function RosterPage() {
               {currentCard && (
                 <section className="roster-compare-strip">
                   <div className="roster-compare-side">
-                    <span>Player being replaced</span>
+                    <span>Current</span>
                     <div className="roster-compare-card">
                       {currentCard.image_url ? <img src={currentCard.image_url} alt={`${currentCard.player_name} current card`} referrerPolicy="no-referrer" /> : <em>Image unavailable</em>}
                     </div>
                     <strong>{currentCard.player_name}</strong>
+                    <div className="roster-compare-action-slot" aria-hidden="true" />
                   </div>
                   <div className="roster-compare-arrow">
-                    <span>Compare</span>
-                    <b>↔</b>
+                    <span>Swap</span>
+                    <b>↓</b>
                   </div>
                   <div className="roster-compare-side">
                     <span>Substitute</span>
@@ -2443,7 +2448,9 @@ function RosterPage() {
                       {previewCard?.image_url ? <img src={previewCard.image_url} alt={`${previewCard.player_name} preview card`} referrerPolicy="no-referrer" /> : <em>Tap or hover a card to compare</em>}
                     </div>
                     <strong>{previewCard?.player_name ?? 'Select a card below'}</strong>
-                    {previewCard && <button type="button" className="roster-confirm-swap" onClick={() => assignCard(previewCard)}>Make Swap</button>}
+                    <div className="roster-compare-action-slot">
+                      {previewCard && <button type="button" className="roster-confirm-swap" onClick={() => assignCard(previewCard)}>Make Swap</button>}
+                    </div>
                   </div>
                 </section>
               )}
@@ -2456,7 +2463,7 @@ function RosterPage() {
                   <span>
                     {selectedSlot.eligibility ===
                     'BATTER'
-                      ? 'Defense Starters'
+                      ? 'Fielding Starters'
                       : selectedSlot.eligibility}
                   </span>
                 </div>
@@ -2585,7 +2592,7 @@ function RosterPage() {
                 <p>
                   {selectedSlot.section ===
                   'lineup'
-                    ? 'Select the nine starters on the Defense page first.'
+                    ? 'Select the nine starters on the Fielding page first.'
                     : 'Only owned, published, season-eligible cards that qualify for this slot appear here.'}
                 </p>
                   </div>

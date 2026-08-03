@@ -47,9 +47,7 @@ export default function FilterDrawer(p:Props){
   p.leagueFilter&&`League: ${p.leagueFilter}`,
   p.batsFilter&&`Bats: ${p.batsFilter}`,
   p.throwsFilter&&`Throws: ${p.throwsFilter}`,
-  p.ownershipFilter&&`Ownership: ${p.ownershipFilter}`,
-  p.seasonEligibleOnly&&'Season Eligible',
- ].filter(Boolean) as string[],[p.positionFilter,p.yearFrom,p.yearTo,p.teamFilter,p.leagueFilter,p.batsFilter,p.throwsFilter,p.ownershipFilter,p.seasonEligibleOnly,p.lockedYear])
+ ].filter(Boolean) as string[],[p.positionFilter,p.yearFrom,p.yearTo,p.teamFilter,p.leagueFilter,p.batsFilter,p.throwsFilter,p.lockedYear])
  const update=(id:string,changes:Partial<AttributeCondition>)=>p.onAttributeConditionsChange(p.attributeConditions.map(c=>c.id===id?{...c,...changes}:c))
  const remove=(id:string)=>p.onAttributeConditionsChange(p.attributeConditions.filter(c=>c.id!==id))
  const add=()=>p.onAttributeConditionsChange([...p.attributeConditions,{id:`f-${Date.now()}`,attribute:'',operator:'eq',value:''}])

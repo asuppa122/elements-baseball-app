@@ -3433,7 +3433,7 @@ span {
   isolation: isolate !important;
   border: 1px solid rgba(216, 173, 45, 0.34) !important;
   border-radius: 28px !important;
-  background: #08090a url('/elements-field.svg') center / 100% 100% no-repeat !important;
+  background: #08090a url('/elements-defense-template.png') center / 100% 100% no-repeat !important;
 }
 
 .baseball-field::before,
@@ -3639,7 +3639,7 @@ span {
   border-radius: 20px !important;
   background:
     linear-gradient(rgba(3, 5, 6, 0.05), rgba(3, 5, 6, 0.14)),
-    url('/elements-defense-field.webp') center / cover no-repeat !important;
+    url('/elements-defense-template.png') center / cover no-repeat !important;
   box-shadow:
     inset 0 0 90px rgba(0, 0, 0, 0.64),
     0 20px 45px rgba(0, 0, 0, 0.28) !important;
@@ -4205,7 +4205,7 @@ span {
   border-radius: 18px !important;
   background:
     linear-gradient(to bottom, rgba(3,4,5,.18), rgba(3,4,5,.04) 34%, rgba(3,4,5,.22) 100%),
-    url('/elements-defense-field.webp') center 48% / cover no-repeat !important;
+    url('/elements-defense-template.png') center 48% / cover no-repeat !important;
   box-shadow:
     inset 0 0 90px rgba(0,0,0,.7),
     0 18px 40px rgba(0,0,0,.28) !important;
@@ -4610,7 +4610,7 @@ span {
   border-radius: 22px !important;
   background:
     linear-gradient(180deg, rgba(3, 5, 5, 0.10), rgba(3, 5, 5, 0.34)),
-    url('/elements-defense-field.webp') center / cover no-repeat !important;
+    url('/elements-defense-template.png') center / cover no-repeat !important;
 }
 
 /* Remove all leftover CSS field drawings. */
@@ -4838,7 +4838,7 @@ span {
       rgba(3, 5, 5, 0.18) 57%,
       rgba(3, 5, 5, 0.50) 100%
     ),
-    url('/elements-defense-field.webp') center / 100% 100% no-repeat !important;
+    url('/elements-defense-template.png') center / 100% 100% no-repeat !important;
 }
 
 /* Cards remain flat and readable while the artwork supplies the perspective. */
@@ -5334,7 +5334,7 @@ span {
   border-radius: 24px !important;
   background:
     linear-gradient(180deg, rgba(2,3,3,.02), rgba(2,3,3,.16)),
-    url('/elements-defense-field-final.svg') center / 100% 100% no-repeat !important;
+    url('/elements-defense-template.png') center / 100% 100% no-repeat !important;
 }
 
 .baseball-field::before,
@@ -5520,7 +5520,7 @@ span {
   border-radius: 24px !important;
   background:
     linear-gradient(180deg, rgba(2,3,3,.01), rgba(2,3,3,.10)),
-    url('/elements-defense-field-final.svg') center / 100% 100% no-repeat !important;
+    url('/elements-defense-template.png') center / 100% 100% no-repeat !important;
 }
 
 /* Keep the approved card positions exactly as they are. */
@@ -5576,7 +5576,7 @@ span {
   overflow: visible !important;
   isolation: isolate !important;
   border-radius: 24px !important;
-  background: url('/elements-defense-stage.webp') center / 100% 100% no-repeat !important;
+  background: url('/elements-defense-template.png') center / 100% 100% no-repeat !important;
 }
 
 .baseball-field::before,
@@ -5675,7 +5675,7 @@ span {
   overflow: visible !important;
   isolation: isolate !important;
   border-radius: 22px !important;
-  background: url('/elements-defense-approved.webp') center / 100% 100% no-repeat !important;
+  background: url('/elements-defense-template.png') center / 100% 100% no-repeat !important;
 }
 
 .baseball-field::before,
@@ -5777,7 +5777,7 @@ span {
   margin: 0 auto !important;
   overflow: visible !important;
   border-radius: 22px !important;
-  background: url('/elements-defense-field.svg') center / 100% 100% no-repeat !important;
+  background: url('/elements-defense-template.png') center / 100% 100% no-repeat !important;
 }
 
 .baseball-field::before,
@@ -5826,7 +5826,7 @@ span {
   margin: 0 auto !important;
   overflow: visible !important;
   border-radius: 22px !important;
-  background: url('/elements-defense-field.svg') center / 100% 100% no-repeat !important;
+  background: url('/elements-defense-template.png') center / 100% 100% no-repeat !important;
 }
 
 .baseball-field::before,
@@ -5905,7 +5905,7 @@ span {
   overflow: hidden !important;
   isolation: isolate !important;
   border-radius: 22px !important;
-  background: url('/elements-defense-scene.svg') center / 100% 100% no-repeat !important;
+  background: url('/elements-defense-template.png') center / 100% 100% no-repeat !important;
 }
 
 .baseball-field::before,
@@ -9792,4 +9792,816 @@ span {
     min-width: 58px !important;
   }
   .roster-picker-content-stacked .roster-replacement-browser { padding: 0 5px 10px !important; }
+}
+
+
+/* =========================================================
+   2026-08-03 SUBSTITUTE WORKSPACE — SIDEBAR + CARD-FIRST GRID
+   Shared by production and Demo Mode. Desktop uses a compact
+   CURRENT/SUBSTITUTE rail while search controls stay shallow and
+   the eligible-card grid receives most of the viewport.
+   ========================================================= */
+
+/* DEF pill text: positions are readable white; numeric scores remain gold. */
+.defense-summary-inline .defense-inline-combo small,
+.defense-summary-inline .defense-inline-outfield small {
+  color: #f4f0e7 !important;
+  opacity: .96 !important;
+}
+.defense-summary-inline .defense-inline-combo strong,
+.defense-summary-inline .defense-inline-outfield strong,
+.defense-summary-inline .defense-inline-group:first-child > strong {
+  color: #f0c94e !important;
+}
+
+/* Keep the search / quick-sort / filter chrome much smaller than card rows. */
+.roster-drawer-sticky-controls {
+  padding-top: 5px !important;
+  padding-bottom: 5px !important;
+}
+.roster-drawer-sticky-controls .roster-drawer-heading {
+  min-height: 27px !important;
+  padding-bottom: 2px !important;
+}
+.roster-drawer-sticky-controls .roster-drawer-heading p {
+  font-size: .46rem !important;
+}
+.roster-drawer-sticky-controls .roster-drawer-heading h2 {
+  font-size: 1.05rem !important;
+}
+.roster-drawer-sticky-controls .roster-drawer-heading button {
+  width: 29px !important;
+  height: 29px !important;
+}
+.roster-drawer-sticky-controls .roster-player-search {
+  margin: 2px 0 !important;
+}
+.roster-drawer-sticky-controls .roster-player-search input {
+  height: 29px !important;
+  min-height: 29px !important;
+  font-size: .72rem !important;
+}
+.roster-compact-toolbar {
+  min-height: 29px !important;
+  padding-block: 2px !important;
+}
+.roster-compact-toolbar .roster-sort-chip,
+.roster-compact-toolbar .roster-expand-controls {
+  min-height: 27px !important;
+  height: 27px !important;
+  padding-block: 2px !important;
+  font-size: .65rem !important;
+}
+
+@media (min-width: 721px) {
+  .roster-picker-content.roster-picker-content-stacked {
+    display: grid !important;
+    grid-template-columns: clamp(190px, 15vw, 235px) minmax(0, 1fr) !important;
+    grid-template-rows: minmax(0, 1fr) !important;
+    gap: 12px !important;
+    height: calc(100dvh - 122px) !important;
+    min-height: 520px !important;
+    padding: 8px 12px 12px !important;
+    overflow: hidden !important;
+    align-items: stretch !important;
+  }
+
+  .roster-picker-content-stacked .roster-compare-strip {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    width: 100% !important;
+    height: 100% !important;
+    max-height: none !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 12px 10px !important;
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    grid-template-rows: minmax(0, 1fr) auto minmax(0, 1fr) !important;
+    gap: 8px !important;
+    align-items: center !important;
+    border-radius: 12px !important;
+    overflow: hidden !important;
+  }
+
+  .roster-picker-content-stacked .roster-compare-side {
+    min-height: 0 !important;
+    height: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 5px !important;
+  }
+
+  .roster-picker-content-stacked .roster-compare-side > span {
+    font-size: .62rem !important;
+    letter-spacing: .14em !important;
+  }
+
+  .roster-picker-content-stacked .roster-compare-card {
+    width: min(128px, 100%) !important;
+    max-width: 128px !important;
+    min-width: 82px !important;
+    max-height: 31vh !important;
+    aspect-ratio: 5 / 7 !important;
+  }
+
+  .roster-picker-content-stacked .roster-compare-side > strong {
+    max-width: 100% !important;
+    font-size: .74rem !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+
+  .roster-picker-content-stacked .roster-compare-arrow {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-height: 46px !important;
+  }
+  .roster-picker-content-stacked .roster-compare-arrow > span {
+    display: none !important;
+  }
+  .roster-picker-content-stacked .roster-compare-arrow b {
+    font-size: 2rem !important;
+    line-height: 1 !important;
+  }
+
+  .roster-picker-content-stacked .roster-confirm-swap {
+    min-height: 32px !important;
+    padding: 5px 12px !important;
+    font-size: .72rem !important;
+  }
+
+  .roster-picker-content-stacked .roster-replacement-browser {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    height: 100% !important;
+    padding: 0 4px 12px !important;
+    overflow-y: auto !important;
+    overscroll-behavior: contain !important;
+  }
+
+  .roster-picker-content-stacked .roster-drawer-rules {
+    margin: 0 0 4px !important;
+  }
+  .roster-picker-content-stacked .roster-player-count {
+    margin: 2px 0 5px !important;
+    font-size: .66rem !important;
+  }
+
+  /* Six across on normal desktops; cards remain the dominant visual. */
+  .roster-picker-content-stacked .roster-player-grid {
+    grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+    align-items: start !important;
+  }
+}
+
+@media (min-width: 721px) and (max-width: 1250px) {
+  .roster-picker-content-stacked .roster-player-grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+  }
+}
+
+/* Tablet/mobile: no hover dependency. CURRENT and SUBSTITUTE sit side-by-side,
+   then the independently scrolling card rows receive the remaining height. */
+@media (max-width: 720px) {
+  .roster-picker-content.roster-picker-content-stacked {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    grid-template-rows: auto minmax(0, 1fr) !important;
+    height: calc(100dvh - 104px) !important;
+    min-height: 500px !important;
+    gap: 5px !important;
+    padding: 4px 5px 8px !important;
+    overflow: hidden !important;
+  }
+  .roster-picker-content-stacked .roster-compare-strip {
+    width: 100% !important;
+    height: auto !important;
+    max-height: 178px !important;
+    margin: 0 !important;
+    padding: 6px !important;
+    grid-template-columns: minmax(0, 1fr) 30px minmax(0, 1fr) !important;
+    grid-template-rows: 1fr !important;
+    gap: 4px !important;
+  }
+  .roster-picker-content-stacked .roster-compare-card {
+    width: min(70px, 20vw) !important;
+    min-width: 52px !important;
+  }
+  .roster-picker-content-stacked .roster-compare-side > span {
+    font-size: .48rem !important;
+  }
+  .roster-picker-content-stacked .roster-compare-side > strong {
+    max-width: 100% !important;
+    font-size: .58rem !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+  .roster-picker-content-stacked .roster-compare-arrow > span {
+    display: none !important;
+  }
+  .roster-picker-content-stacked .roster-compare-arrow b {
+    transform: rotate(-90deg) !important;
+    font-size: 1.25rem !important;
+  }
+  .roster-picker-content-stacked .roster-confirm-swap {
+    min-height: 27px !important;
+    padding: 3px 7px !important;
+    font-size: .6rem !important;
+  }
+  .roster-picker-content-stacked .roster-replacement-browser {
+    min-height: 0 !important;
+    height: 100% !important;
+    padding: 0 3px 8px !important;
+    overflow-y: auto !important;
+  }
+  .roster-picker-content-stacked .roster-drawer-rules {
+    margin: 0 0 3px !important;
+  }
+  .roster-picker-content-stacked .roster-player-count {
+    margin: 2px 0 4px !important;
+    font-size: .58rem !important;
+  }
+  .roster-picker-content-stacked .roster-player-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 5px !important;
+  }
+}
+
+/* =========================================================
+   FINAL SUBSTITUTE WORKSPACE + BATTING ORDER BEHAVIOR
+   Shared by production and demo; desktop and mobile included.
+   ========================================================= */
+
+/* Keep the catcher row visually consistent with INF/OF pills. */
+.defense-inline-catcher small {
+  color: #f5f2e8 !important;
+  font-weight: 800 !important;
+}
+
+/* Batting Order is reorder-only. Rows remain draggable, but no player picker opens. */
+.roster-slot[data-section="lineup"] .roster-slot-main {
+  cursor: grab;
+}
+.roster-slot[data-section="lineup"] .roster-slot-main:active {
+  cursor: grabbing;
+}
+
+@media (min-width: 721px) {
+  /* The substitute workspace uses the full browser width below the global header. */
+  .roster-drawer-backdrop {
+    inset: 60px 0 0 !important;
+    justify-content: stretch !important;
+  }
+
+  .roster-player-drawer {
+    width: 100vw !important;
+    max-width: none !important;
+    height: calc(100dvh - 60px) !important;
+    padding: 0 !important;
+    border-left: 0 !important;
+    overflow: hidden !important;
+  }
+
+  .roster-drawer-sticky-controls {
+    margin: 0 !important;
+    padding: 7px 18px 6px !important;
+  }
+
+  .roster-picker-content.roster-picker-content-stacked {
+    width: 100% !important;
+    max-width: none !important;
+    height: calc(100dvh - 167px) !important;
+    min-height: 0 !important;
+    grid-template-columns: 250px minmax(0, 1fr) !important;
+    gap: 10px !important;
+    padding: 8px 14px 12px !important;
+  }
+
+  .roster-picker-content-stacked .roster-compare-strip {
+    padding: 10px 8px !important;
+  }
+
+  .roster-picker-content-stacked .roster-compare-card {
+    width: min(145px, 100%) !important;
+    max-width: 145px !important;
+    max-height: 30vh !important;
+  }
+
+  .roster-picker-content-stacked .roster-replacement-browser {
+    padding: 0 2px 10px !important;
+  }
+
+  .roster-picker-content-stacked .roster-drawer-rules {
+    margin: 0 0 3px !important;
+  }
+
+  .roster-picker-content-stacked .roster-player-count {
+    margin: 1px 0 4px !important;
+  }
+
+  /* Five larger cards across at all desktop widths. */
+  .roster-picker-content-stacked .roster-player-grid,
+  .roster-picker-content-stacked .roster-replacement-browser .roster-player-grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+  }
+}
+
+@media (max-width: 720px) {
+  /* Mobile remains tap-to-preview + Make Swap, with two readable cards per row. */
+  .roster-drawer-backdrop {
+    inset: 52px 0 0 !important;
+  }
+
+  .roster-player-drawer {
+    width: 100vw !important;
+    max-width: none !important;
+    height: calc(100dvh - 52px) !important;
+    padding: 0 !important;
+    border-left: 0 !important;
+  }
+
+  .roster-drawer-sticky-controls {
+    margin: 0 !important;
+    padding-inline: 7px !important;
+  }
+
+  .roster-picker-content.roster-picker-content-stacked {
+    height: calc(100dvh - 145px) !important;
+  }
+
+  .roster-picker-content-stacked .roster-player-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+/* =========================================================
+   CURRENT / SUBSTITUTE EMPHASIS PASS
+   Make the comparison cards the visual focus without reducing
+   the desktop replacement grid below five columns. Shared by
+   production and Demo Mode.
+   ========================================================= */
+
+@media (min-width: 721px) {
+  .roster-picker-content.roster-picker-content-stacked {
+    grid-template-columns: clamp(300px, 20vw, 360px) minmax(0, 1fr) !important;
+    gap: 14px !important;
+  }
+
+  .roster-picker-content-stacked .roster-compare-strip {
+    padding: 14px 12px !important;
+    gap: 10px !important;
+  }
+
+  .roster-picker-content-stacked .roster-compare-side {
+    gap: 7px !important;
+  }
+
+  .roster-picker-content-stacked .roster-compare-side > span {
+    font-size: .72rem !important;
+    letter-spacing: .17em !important;
+  }
+
+  .roster-picker-content-stacked .roster-compare-card {
+    width: clamp(175px, 13vw, 215px) !important;
+    max-width: 215px !important;
+    min-width: 175px !important;
+    max-height: 37vh !important;
+  }
+
+  .roster-picker-content-stacked .roster-compare-side > strong {
+    font-size: .88rem !important;
+  }
+
+  .roster-picker-content-stacked .roster-confirm-swap {
+    min-height: 36px !important;
+    padding: 7px 16px !important;
+    font-size: .78rem !important;
+  }
+
+  /* Preserve five comfortably sized choices across. */
+  .roster-picker-content-stacked .roster-player-grid,
+  .roster-picker-content-stacked .roster-replacement-browser .roster-player-grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+    gap: 11px !important;
+  }
+}
+
+@media (max-width: 720px) {
+  .roster-picker-content.roster-picker-content-stacked {
+    grid-template-rows: auto minmax(0, 1fr) !important;
+  }
+
+  .roster-picker-content-stacked .roster-compare-strip {
+    max-height: 300px !important;
+    min-height: 245px !important;
+    padding: 10px 8px !important;
+    grid-template-columns: minmax(0, 1fr) 34px minmax(0, 1fr) !important;
+    gap: 7px !important;
+  }
+
+  .roster-picker-content-stacked .roster-compare-card {
+    width: min(132px, 32vw) !important;
+    max-width: 132px !important;
+    min-width: 102px !important;
+  }
+
+  .roster-picker-content-stacked .roster-compare-side > span {
+    font-size: .58rem !important;
+    letter-spacing: .14em !important;
+  }
+
+  .roster-picker-content-stacked .roster-compare-side > strong {
+    font-size: .7rem !important;
+  }
+
+  .roster-picker-content-stacked .roster-confirm-swap {
+    min-height: 31px !important;
+    padding: 5px 10px !important;
+    font-size: .68rem !important;
+  }
+
+  /* Keep replacement options readable while comparison remains primary. */
+  .roster-picker-content-stacked .roster-player-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 7px !important;
+  }
+}
+
+@media (max-width: 420px) {
+  .roster-picker-content-stacked .roster-compare-strip {
+    min-height: 225px !important;
+    max-height: 270px !important;
+  }
+
+  .roster-picker-content-stacked .roster-compare-card {
+    width: min(116px, 31vw) !important;
+    max-width: 116px !important;
+    min-width: 92px !important;
+  }
+}
+
+/* =========================================================
+   2026-08-03 HORIZONTAL SWAP WORKSPACE
+   CURRENT | SUBSTITUTE stay fixed while COLLECTION scrolls.
+   Desktop: 2 comparison columns + 3 collection columns.
+   Mobile: 2 comparison columns + 1 collection column.
+   Shared by production and Demo Mode.
+   ========================================================= */
+
+@media (min-width: 721px) {
+  .roster-picker-content.roster-picker-content-stacked {
+    grid-template-columns: minmax(430px, 2fr) minmax(600px, 3fr) !important;
+    gap: 12px !important;
+    align-items: stretch !important;
+    overflow: hidden !important;
+  }
+
+  /* Two fixed comparison cards, centered vertically in their region. */
+  .roster-picker-content-stacked .roster-compare-strip {
+    position: relative !important;
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    grid-template-rows: minmax(0, 1fr) !important;
+    align-items: center !important;
+    justify-items: center !important;
+    gap: 18px !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    padding: 18px 20px !important;
+    overflow: hidden !important;
+  }
+
+  .roster-picker-content-stacked .roster-compare-side {
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+  }
+
+  .roster-picker-content-stacked .roster-compare-side > span {
+    font-size: .72rem !important;
+    letter-spacing: .17em !important;
+  }
+
+  .roster-picker-content-stacked .roster-compare-card {
+    width: min(100%, 255px) !important;
+    max-width: 255px !important;
+    min-width: 170px !important;
+    max-height: min(62vh, 520px) !important;
+    aspect-ratio: 5 / 7 !important;
+  }
+
+  .roster-picker-content-stacked .roster-compare-side > strong {
+    max-width: 100% !important;
+    font-size: .9rem !important;
+  }
+
+  /* Turn the old down arrow into a compact left-to-right direction marker. */
+  .roster-picker-content-stacked .roster-compare-arrow {
+    position: absolute !important;
+    left: 50% !important;
+    top: 50% !important;
+    width: 38px !important;
+    height: 38px !important;
+    min-height: 0 !important;
+    transform: translate(-50%, -50%) !important;
+    z-index: 2 !important;
+    display: grid !important;
+    place-items: center !important;
+    pointer-events: none !important;
+  }
+
+  .roster-picker-content-stacked .roster-compare-arrow b {
+    font-size: 0 !important;
+  }
+
+  .roster-picker-content-stacked .roster-compare-arrow b::after {
+    content: '→';
+    color: #f0c94e;
+    font-size: 2.25rem;
+    line-height: 1;
+    font-weight: 900;
+  }
+
+  .roster-picker-content-stacked .roster-confirm-swap {
+    min-height: 38px !important;
+    padding: 7px 18px !important;
+    font-size: .8rem !important;
+  }
+
+  /* Collection owns the only vertical scrollbar and uses three large columns. */
+  .roster-picker-content-stacked .roster-replacement-browser {
+    min-width: 0 !important;
+    height: 100% !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    padding: 0 4px 12px !important;
+    overscroll-behavior: contain !important;
+  }
+
+  .roster-picker-content-stacked .roster-player-grid,
+  .roster-picker-content-stacked .roster-replacement-browser .roster-player-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 12px !important;
+    align-items: start !important;
+  }
+}
+
+/* Keep the same Current | Substitute | Collection mental model on phones.
+   The collection becomes one column, so the viewport still reads as three
+   card-width columns across. */
+@media (max-width: 720px) {
+  .roster-picker-content.roster-picker-content-stacked {
+    display: grid !important;
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) !important;
+    grid-template-rows: minmax(0, 1fr) !important;
+    gap: 5px !important;
+    height: calc(100dvh - 145px) !important;
+    min-height: 0 !important;
+    padding: 5px !important;
+    overflow: hidden !important;
+  }
+
+  .roster-picker-content-stacked .roster-compare-strip {
+    position: relative !important;
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    grid-template-rows: minmax(0, 1fr) !important;
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    gap: 5px !important;
+    margin: 0 !important;
+    padding: 6px 4px !important;
+    align-items: center !important;
+    overflow: hidden !important;
+  }
+
+  .roster-picker-content-stacked .roster-compare-side {
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    justify-content: center !important;
+    gap: 4px !important;
+  }
+
+  .roster-picker-content-stacked .roster-compare-card {
+    width: min(100%, 132px) !important;
+    max-width: 132px !important;
+    min-width: 0 !important;
+    max-height: min(43vh, 250px) !important;
+    aspect-ratio: 5 / 7 !important;
+  }
+
+  .roster-picker-content-stacked .roster-compare-side > span {
+    font-size: .47rem !important;
+    letter-spacing: .1em !important;
+  }
+
+  .roster-picker-content-stacked .roster-compare-side > strong {
+    width: 100% !important;
+    font-size: .56rem !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+
+  .roster-picker-content-stacked .roster-compare-arrow {
+    position: absolute !important;
+    left: 50% !important;
+    top: 50% !important;
+    width: 22px !important;
+    height: 22px !important;
+    min-height: 0 !important;
+    transform: translate(-50%, -50%) !important;
+    z-index: 2 !important;
+    display: grid !important;
+    place-items: center !important;
+    pointer-events: none !important;
+  }
+
+  .roster-picker-content-stacked .roster-compare-arrow b {
+    font-size: 0 !important;
+    transform: none !important;
+  }
+
+  .roster-picker-content-stacked .roster-compare-arrow b::after {
+    content: '→';
+    color: #f0c94e;
+    font-size: 1.35rem;
+    line-height: 1;
+    font-weight: 900;
+  }
+
+  .roster-picker-content-stacked .roster-confirm-swap {
+    min-height: 27px !important;
+    padding: 3px 6px !important;
+    font-size: .56rem !important;
+  }
+
+  .roster-picker-content-stacked .roster-replacement-browser {
+    min-width: 0 !important;
+    min-height: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    padding: 0 2px 8px !important;
+    overscroll-behavior: contain !important;
+  }
+
+  .roster-picker-content-stacked .roster-drawer-rules {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 3px !important;
+    margin: 0 0 4px !important;
+  }
+
+  .roster-picker-content-stacked .roster-drawer-rules span {
+    width: 100% !important;
+    min-width: 0 !important;
+    padding: 3px 2px !important;
+    font-size: .42rem !important;
+    text-align: center !important;
+    white-space: normal !important;
+  }
+
+  .roster-picker-content-stacked .roster-player-count {
+    margin: 2px 0 4px !important;
+    font-size: .48rem !important;
+  }
+
+  .roster-picker-content-stacked .roster-player-grid,
+  .roster-picker-content-stacked .roster-replacement-browser .roster-player-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 7px !important;
+  }
+}
+
+@media (max-width: 430px) {
+  .roster-picker-content.roster-picker-content-stacked {
+    grid-template-columns: minmax(0, 2.08fr) minmax(0, .92fr) !important;
+  }
+
+  .roster-picker-content-stacked .roster-compare-card {
+    max-height: min(40vh, 220px) !important;
+  }
+}
+
+
+/* =========================================================
+   FINAL FEEDBACK FIXES — 2026-08-03
+   Keep Current and Substitute cards aligned when a preview
+   and Make Swap button appear. Shared by app and Demo Mode.
+   ========================================================= */
+.roster-picker-content-stacked .roster-compare-action-slot {
+  width: 100%;
+  min-height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.roster-picker-content-stacked .roster-compare-action-slot .roster-confirm-swap {
+  margin: 0 !important;
+}
+
+@media (max-width: 720px) {
+  .roster-picker-content-stacked .roster-compare-action-slot {
+    min-height: 27px;
+  }
+}
+
+/* =========================================================
+   v10 Active Roster overview placard restoration
+   Restore the compact player card thumbnail while preserving
+   player identity, points, remove control, and responsive fit.
+   ========================================================= */
+.roster-overview-grid .roster-player-thumb {
+  display: grid !important;
+  width: 34px !important;
+  height: 42px !important;
+  flex: 0 0 34px !important;
+}
+
+.roster-overview-grid .roster-player-copy {
+  display: block !important;
+  min-width: 0 !important;
+  overflow: hidden !important;
+}
+
+.roster-overview-grid .overview-group-defense .roster-slot-main {
+  grid-template-columns: 30px 34px minmax(90px, 1fr) 42px !important;
+  column-gap: 8px !important;
+  padding: 5px 38px 5px 8px !important;
+}
+
+.roster-overview-grid .overview-group-bench .roster-slot-main,
+.roster-overview-grid .overview-group-rotation .roster-slot-main,
+.roster-overview-grid .overview-group-bullpen .roster-slot-main {
+  grid-template-columns: 34px 12px 34px minmax(90px, 1fr) 42px !important;
+  column-gap: 7px !important;
+  padding: 5px 38px 5px 8px !important;
+}
+
+.roster-overview-grid .roster-player-copy strong {
+  font-size: .76rem !important;
+  line-height: 1.08 !important;
+}
+
+.roster-overview-grid .roster-player-copy small {
+  margin-top: 2px !important;
+  font-size: .6rem !important;
+  line-height: 1 !important;
+}
+
+@media (max-width: 1180px) {
+  .roster-overview-grid .overview-group-defense .roster-slot-main {
+    grid-template-columns: 28px 31px minmax(72px, 1fr) 38px !important;
+  }
+
+  .roster-overview-grid .overview-group-bench .roster-slot-main,
+  .roster-overview-grid .overview-group-rotation .roster-slot-main,
+  .roster-overview-grid .overview-group-bullpen .roster-slot-main {
+    grid-template-columns: 31px 10px 31px minmax(72px, 1fr) 38px !important;
+  }
+
+  .roster-overview-grid .roster-player-thumb {
+    width: 31px !important;
+    height: 39px !important;
+  }
+}
+
+@media (max-width: 760px) {
+  .roster-overview-grid .roster-player-thumb {
+    width: 36px !important;
+    height: 45px !important;
+  }
+
+  .roster-overview-grid .overview-group-defense .roster-slot-main {
+    grid-template-columns: 30px 36px minmax(0, 1fr) 42px !important;
+  }
+
+  .roster-overview-grid .overview-group-bench .roster-slot-main,
+  .roster-overview-grid .overview-group-rotation .roster-slot-main,
+  .roster-overview-grid .overview-group-bullpen .roster-slot-main {
+    grid-template-columns: 34px 12px 36px minmax(0, 1fr) 42px !important;
+  }
 }
