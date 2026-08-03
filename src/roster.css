@@ -9575,3 +9575,71 @@ span {
     --global-app-header-height: 56px;
   }
 }
+
+/* =========================================================
+   MOBILE LINEUP BUILDER CLEANUP
+   - Keep DEF summary inside the same mobile content width
+   - Stack C / INF / OF groups so the strip cannot force overflow
+   - Hide OB and Control diamonds visually on phones only
+   ========================================================= */
+@media (max-width: 768px) {
+  .roster-page-with-sidebar .defense-summary.defense-summary-inline,
+  .roster-page-with-sidebar .defense-summary.compact.defense-summary-inline {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    margin: 0 0 8px !important;
+    padding: 10px !important;
+    gap: 9px !important;
+    overflow: hidden !important;
+    box-sizing: border-box !important;
+  }
+
+  .defense-summary-inline .defense-inline-divider {
+    display: none !important;
+  }
+
+  .defense-summary-inline .defense-inline-group,
+  .defense-summary-inline .defense-inline-infield,
+  .defense-summary-inline .defense-inline-outfield {
+    display: flex !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    gap: 7px !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    flex-wrap: wrap !important;
+    border: 0 !important;
+  }
+
+  .defense-summary-inline .defense-inline-group + .defense-inline-group {
+    padding-top: 9px !important;
+    border-top: 1px solid rgba(216, 173, 45, .2) !important;
+  }
+
+  .defense-summary-inline .defense-inline-group > b {
+    flex: 0 0 62px !important;
+    min-width: 62px !important;
+    margin: 0 !important;
+    white-space: nowrap !important;
+  }
+
+  .defense-summary-inline .defense-inline-combo,
+  .defense-summary-inline .defense-inline-outfield > span,
+  .defense-summary-inline .defense-inline-group:first-child > strong {
+    flex: 0 1 auto !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    white-space: nowrap !important;
+  }
+
+  .roster-page-with-sidebar .rating-diamond,
+  .roster-page-with-sidebar .hitter-rating-diamond {
+    display: none !important;
+  }
+}

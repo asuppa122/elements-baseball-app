@@ -32,6 +32,14 @@ function ProtectedApp() {
           <Route path="/rules" element={<ComingSoonPage title="Rules" description="The official Elements Baseball rulebook will live here." />} />
           <Route path="/statistics" element={<ComingSoonPage title="Statistics" description="League and individual statistics will be built from your Elements game data." />} />
           <Route path="/games" element={<ComingSoonPage title="Games" description="Head-to-head gameplay and resumable games are coming next." />} />
+          <Route path="/demo" element={<HomePage />} />
+          <Route path="/demo/cards" element={<CardsPage />} />
+          <Route path="/demo/cards/:cardKey" element={<CardProfilePage />} />
+          <Route path="/demo/lineup-builder" element={<LineupSelectorPage />} />
+          <Route path="/demo/lineup-builder/:lineupId" element={<RosterPage />} />
+          <Route path="/demo/rules" element={<ComingSoonPage title="Rules" description="The official Elements Baseball rulebook will live here." />} />
+          <Route path="/demo/statistics" element={<ComingSoonPage title="Statistics" description="League and individual statistics will be built from your Elements game data." />} />
+          <Route path="/demo/games" element={<ComingSoonPage title="Games" description="Head-to-head gameplay and resumable games are coming next." />} />
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </AppShell>

@@ -4,9 +4,9 @@ import LoginPage from '../pages/LoginPage'
 import ManagerClaimPage from '../pages/ManagerClaimPage'
 
 export default function AuthGate({ children }: { children: ReactNode }) {
-  const { user, profile, loading, profileLoading } = useAuth()
+  const { user, profile, loading, profileLoading, isDemo } = useAuth()
 
-  if (loading || profileLoading) {
+  if (!isDemo && (loading || profileLoading)) {
     return (
       <div className="auth-screen auth-loading-screen">
         <div className="auth-loading-card">
@@ -17,7 +17,7 @@ export default function AuthGate({ children }: { children: ReactNode }) {
     )
   }
 
-  if (!user) return <LoginPage />
-  if (!profile) return <ManagerClaimPage />
+  if (!isDemo && !user) return <LoginPage />
+  if (!isDemo && !profile) return <ManagerClaimPage />
   return children
 }

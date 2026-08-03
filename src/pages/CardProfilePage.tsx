@@ -6,6 +6,8 @@ import {
   useNavigate,
   useParams,
 } from 'react-router-dom'
+import { useAuth } from '../auth/AuthContext'
+import { appPath } from '../lib/appPaths'
 import {
   loadCardByKey,
 } from '../services/cardDatabase'
@@ -204,6 +206,7 @@ function StatSections({
 
 function CardProfilePage() {
   const navigate = useNavigate()
+  const { isDemo } = useAuth()
   const { cardKey } = useParams()
 
   const [card, setCard] =
@@ -310,7 +313,7 @@ function CardProfilePage() {
               type="button"
               className="profile-return-button"
               onClick={() =>
-                navigate('/cards')
+                navigate(appPath('/cards', isDemo))
               }
             >
               Return to Cards
@@ -353,7 +356,7 @@ function CardProfilePage() {
           type="button"
           className="profile-header-button"
           onClick={() =>
-            navigate('/')
+            navigate(appPath('/', isDemo))
           }
         >
           <span aria-hidden="true">

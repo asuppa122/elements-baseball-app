@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import logo from '../assets/elements-baseball-logo.png'
 import { useAuth } from '../auth/AuthContext'
+import { appPath } from '../lib/appPaths'
 
 const FEATURES = [
   {
@@ -42,17 +43,18 @@ const FEATURES = [
 
 export default function HomePage() {
   const navigate = useNavigate()
-  const { profile } = useAuth()
+  const { profile, isDemo } = useAuth()
 
   return (
     <main className="home-hub">
       <section className="home-hero">
         <img src={logo} alt="Elements Baseball" className="home-hero-logo" />
         <div className="home-hero-copy">
-          <p className="eyebrow">Welcome, {profile?.manager_name}</p>
+          <p className="eyebrow">{isDemo ? 'Public Demo' : `Welcome, ${profile?.manager_name}`}</p>
           <p className="home-hero-summary">
-            Build lineups, manage your collection, track statistics, and play
-            Elements Baseball from one account.
+            {isDemo
+              ? 'Explore the Elements Baseball experience. Demo changes reset when the page refreshes.'
+              : 'Build lineups, manage your collection, track statistics, and play Elements Baseball from one account.'}
           </p>
         </div>
       </section>
@@ -62,7 +64,7 @@ export default function HomePage() {
           <button
             type="button"
             className="home-feature-card"
-            onClick={() => navigate(feature.route)}
+            onClick={() => navigate(appPath(feature.route, isDemo))}
             key={feature.title}
           >
             <span className="home-feature-icon" aria-hidden="true">{feature.icon}</span>

@@ -25,6 +25,8 @@ type Props = {
   sortField:SortField; onSortFieldChange:(v:SortField)=>void
   sortDirection:SortDirection; onSortDirectionChange:(v:SortDirection)=>void
   onClearFilters:()=>void
+  hideOwnership?:boolean
+  lockedYear?:string
 }
 
 const positions=[['','All'],['p','P'],['c','C'],['1b','1B'],['2b','2B'],['3b','3B'],['ss','SS'],['lf','LF'],['cf','CF'],['rf','RF'],['dh','DH']]
@@ -39,14 +41,14 @@ export default function FilterDrawer(p:Props){
  const attrs=p.chartMode==='batting'?batting:pitching
  const active=useMemo(()=>[
   p.positionFilter&&`Position: ${p.positionFilter.toUpperCase()}`,
-  p.yearFilter&&`Year: ${p.yearFilter}`,
+  (p.lockedYear || p.yearFilter)&&`Year: ${p.lockedYear || p.yearFilter}`,
   p.teamFilter&&`Team: ${p.teamFilter}`,
   p.leagueFilter&&`League: ${p.leagueFilter}`,
   p.batsFilter&&`Bats: ${p.batsFilter}`,
   p.throwsFilter&&`Throws: ${p.throwsFilter}`,
   p.ownershipFilter&&`Ownership: ${p.ownershipFilter}`,
   `${p.chartMode==='batting'?'Batting':'Pitching'} Chart`,
- ].filter(Boolean) as string[],[p.positionFilter,p.yearFilter,p.teamFilter,p.leagueFilter,p.batsFilter,p.throwsFilter,p.ownershipFilter,p.chartMode])
+ ].filter(Boolean) as string[],[p.positionFilter,p.yearFilter,p.teamFilter,p.leagueFilter,p.batsFilter,p.throwsFilter,p.ownershipFilter,p.chartMode,p.lockedYear])
  const update=(id:string,changes:Partial<AttributeCondition>)=>p.onAttributeConditionsChange(p.attributeConditions.map(c=>c.id===id?{...c,...changes}:c))
  const remove=(id:string)=>p.onAttributeConditionsChange(p.attributeConditions.filter(c=>c.id!==id))
  const add=()=>{p.onAttributeConditionsChange([...p.attributeConditions,{id:`f-${Date.now()}`,attribute:'',operator:'eq',value:''}]);setAdding(true)}
@@ -65,14 +67,14 @@ export default function FilterDrawer(p:Props){
    <div className="uf-row uf-name-row"><label><span>Name</span><input value={p.searchTerm} onChange={e=>p.onSearchChange(e.target.value)} placeholder="Player name" /></label><button className="clear-filters-button" onClick={p.onClearFilters}>Clear All</button></div>
    <div className="uf-row uf-grid-4">
     <label><span>Position</span><select value={p.positionFilter} onChange={e=>p.onPositionFilterChange(e.target.value)}>{positions.map(([v,l])=><option key={v||'all'} value={v}>{l}</option>)}</select></label>
-    <label><span>Year</span><select value={p.yearFilter} onChange={e=>p.onYearFilterChange(e.target.value)}><option value="">All years</option>{p.yearOptions.map(y=><option key={y}>{y}</option>)}</select></label>
+    <label><span>Year</span>{p.lockedYear ? <div className="uf-locked-value">{p.lockedYear}</div> : <select value={p.yearFilter} onChange={e=>p.onYearFilterChange(e.target.value)}><option value="">All years</option>{p.yearOptions.map(y=><option key={y}>{y}</option>)}</select>}</label>
     <label><span>Team</span><select value={p.teamFilter} onChange={e=>p.onTeamFilterChange(e.target.value)}><option value="">All teams</option>{p.teamOptions.map(t=><option key={t}>{t}</option>)}</select></label>
     <label><span>League</span><select value={p.leagueFilter} onChange={e=>p.onLeagueFilterChange(e.target.value)}><option value="">All leagues</option>{p.leagueOptions.map(l=><option key={l}>{l}</option>)}</select></label>
    </div>
    <div className="uf-row uf-grid-4">
     <label><span>Bats</span><select value={p.batsFilter} onChange={e=>p.onBatsFilterChange(e.target.value)}><option value="">All</option><option>R</option><option>L</option><option>S</option></select></label>
     <label><span>Throws</span><select value={p.throwsFilter} onChange={e=>p.onThrowsFilterChange(e.target.value)}><option value="">All</option><option>R</option><option>L</option></select></label>
-    <label><span>Ownership</span><select value={p.ownershipFilter} onChange={e=>p.onOwnershipFilterChange(e.target.value as OwnershipFilter)}><option value="">All Published</option><option value="owned-eligible">Owned — Season Eligible</option><option value="owned-ineligible">Owned — Not Season Eligible</option><option value="not-collected">Not Collected</option></select></label>
+    {!p.hideOwnership && <label><span>Ownership</span><select value={p.ownershipFilter} onChange={e=>p.onOwnershipFilterChange(e.target.value as OwnershipFilter)}><option value="">All Published</option><option value="owned-eligible">Owned — Season Eligible</option><option value="owned-ineligible">Owned — Not Season Eligible</option><option value="not-collected">Not Collected</option></select></label>}
     <label><span>Chart</span><select value={p.chartMode} onChange={e=>p.onChartModeChange(e.target.value as ChartMode)}><option value="batting">Batting Chart</option><option value="pitching">Pitching Chart</option></select></label>
    </div>
    <div className="uf-row uf-sort-row">

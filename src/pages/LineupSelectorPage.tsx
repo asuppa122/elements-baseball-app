@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
 import { supabase } from '../lib/supabase'
+import { appPath } from '../lib/appPaths'
 
 export type LineupRecord = {
   id: string
@@ -23,13 +24,28 @@ const MAX_LINEUPS = 3
 
 export default function LineupSelectorPage() {
   const navigate = useNavigate()
-  const { user } = useAuth()
+  const { user, isDemo } = useAuth()
   const [lineups, setLineups] = useState<LineupRecord[]>([])
   const [loading, setLoading] = useState(true)
   const [working, setWorking] = useState(false)
   const [error, setError] = useState('')
 
   async function loadLineups() {
+    if (isDemo) {
+      setLineups([{
+        id: 'sample',
+        name: '2025 Elements Demo',
+        is_active: true,
+        sort_order: 0,
+        use_dh: true,
+        player_count: 26,
+        total_points: 5999,
+        roster_state: { assigned: {}, rosterFormat: 'full', useDh: true },
+        updated_at: new Date(0).toISOString(),
+      }])
+      setLoading(false)
+      return
+    }
     if (!user) return
     setLoading(true)
     const { data, error: loadError } = await supabase
@@ -97,7 +113,7 @@ export default function LineupSelectorPage() {
 
   useEffect(() => {
     void loadLineups()
-  }, [user?.id])
+  }, [user?.id, isDemo])
 
   async function createLineup() {
     if (!user || lineups.length >= MAX_LINEUPS) return
@@ -138,7 +154,7 @@ export default function LineupSelectorPage() {
       setError(createError.message)
       return
     }
-    navigate(`/lineup-builder/${data.id}`)
+    navigate(appPath(`/lineup-builder/${data.id}`, isDemo))
   }
 
 
@@ -160,6 +176,8 @@ export default function LineupSelectorPage() {
       },
     } : item))
 
+    if (isDemo) return
+
     const { error: updateError } = await supabase
       .from('lineups')
       .update({
@@ -179,6 +197,10 @@ export default function LineupSelectorPage() {
   }
 
   async function openLineup(lineup: LineupRecord) {
+    if (isDemo) {
+      navigate('/demo/lineup-builder/sample')
+      return
+    }
     if (!lineup.is_active) {
       await supabase.rpc('set_active_lineup', { lineup_record_id: lineup.id })
     }
@@ -186,6 +208,7 @@ export default function LineupSelectorPage() {
   }
 
   async function deleteLineup(lineup: LineupRecord) {
+    if (isDemo) return
     if (!window.confirm(`Delete ${lineup.name}?`)) return
     setWorking(true)
     const { error: deleteError } = await supabase
@@ -213,7 +236,7 @@ export default function LineupSelectorPage() {
           <h1>Lineup Builder</h1>
           <p>Choose a current, past, or future build. You may save up to three lineups.</p>
         </div>
-        <button type="button" className="back-button" onClick={() => navigate('/')}>
+        <button type="button" className="back-button" onClick={() => navigate(appPath('/', isDemo))}>
           ← Home
         </button>
       </div>
@@ -271,12 +294,12 @@ export default function LineupSelectorPage() {
               })()}
               <div className="lineup-card-actions">
                 <button type="button" onClick={() => void openLineup(lineup)}>Open</button>
-                <button type="button" className="danger" disabled={working} onClick={() => void deleteLineup(lineup)}>Delete</button>
+                {!isDemo && <button type="button" className="danger" disabled={working} onClick={() => void deleteLineup(lineup)}>Delete</button>}
               </div>
             </article>
           ))}
 
-          <button
+          {!isDemo && <button
             type="button"
             className="lineup-create-card"
             onClick={() => void createLineup()}
@@ -289,7 +312,7 @@ export default function LineupSelectorPage() {
                 ? 'Maximum of three lineups reached'
                 : `${MAX_LINEUPS - lineups.length} lineup slot${MAX_LINEUPS - lineups.length === 1 ? '' : 's'} available`}
             </small>
-          </button>
+          </button>}
         </section>
       )}
     </main>

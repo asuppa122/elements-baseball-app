@@ -28,6 +28,7 @@ type AuthContextValue = {
   refreshProfile: () => Promise<void>
   signInWithDiscord: () => Promise<void>
   signOut: () => Promise<void>
+  isDemo: boolean
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
@@ -61,6 +62,7 @@ function getDiscordMetadata(user: User) {
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const isDemo = window.location.pathname === '/demo' || window.location.pathname.startsWith('/demo/')
   const [session, setSession] = useState<Session | null>(null)
   const [profile, setProfile] = useState<ManagerProfile | null>(null)
   const [loading, setLoading] = useState(true)
@@ -133,18 +135,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await supabase.auth.signOut({ scope: 'local' })
   }
 
+  const demoProfile: ManagerProfile = {
+    user_id: 'demo',
+    manager_name: 'Anthony',
+    discord_id: null,
+    discord_username: 'demo',
+    discord_display_name: 'Demo Mode',
+    avatar_url: null,
+    is_admin: false,
+  }
+
   const value = useMemo<AuthContextValue>(
     () => ({
       session,
-      user: session?.user ?? null,
-      profile,
+      user: isDemo ? ({ id: 'demo' } as User) : session?.user ?? null,
+      profile: isDemo ? demoProfile : profile,
       loading,
       profileLoading,
       refreshProfile,
       signInWithDiscord,
       signOut,
+      isDemo,
     }),
-    [session, profile, loading, profileLoading],
+    [session, profile, loading, profileLoading, isDemo],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

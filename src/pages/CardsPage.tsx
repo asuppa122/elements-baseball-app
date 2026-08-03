@@ -26,6 +26,7 @@ import {
   CARD_COLUMNS,
 } from '../types/card'
 import { useAuth } from '../auth/AuthContext'
+import { appPath } from '../lib/appPaths'
 import {
   cleanSearchTerm,
   normalizeImageUrl,
@@ -696,7 +697,7 @@ function isSeasonEligible(
 }
 
 function CardsPage() {
-  const { profile } = useAuth()
+  const { profile, isDemo } = useAuth()
   const currentManager = profile?.manager_name ?? ''
   const navigate = useNavigate()
   const [savedFilters] = useState(
@@ -749,7 +750,7 @@ function CardsPage() {
     yearFilter,
     setYearFilter,
   ] = useState(
-    savedFilters.yearFilter ?? '',
+    isDemo ? '2025' : (savedFilters.yearFilter ?? ''),
   )
 
   const [
@@ -783,8 +784,8 @@ function CardsPage() {
     setOwnershipFilter,
   ] =
     useState<OwnershipFilter>(
-      savedFilters.ownershipFilter ??
-        '',
+      isDemo ? '' : (savedFilters.ownershipFilter ??
+        ''),
     )
 
   const [
@@ -1350,6 +1351,7 @@ function CardsPage() {
             isSeasonEligible(card)
 
           if (
+            !isDemo &&
             ownershipFilter ===
               'owned-eligible' &&
             (!ownedByManager ||
@@ -1359,6 +1361,7 @@ function CardsPage() {
           }
 
           if (
+            !isDemo &&
             ownershipFilter ===
               'owned-ineligible' &&
             (!ownedByManager ||
@@ -1368,6 +1371,7 @@ function CardsPage() {
           }
 
           if (
+            !isDemo &&
             ownershipFilter ===
               'not-collected' &&
             ownedByManager
@@ -1517,7 +1521,7 @@ function CardsPage() {
   const clearFilters = () => {
     setSearchTerm('')
     setDebouncedSearchTerm('')
-    setYearFilter('')
+    setYearFilter(isDemo ? '2025' : '')
     setTeamFilter('')
     setDebouncedTeamFilter('')
     setLeagueFilter('')
@@ -1549,7 +1553,7 @@ function CardsPage() {
           type="button"
           className="back-button"
           onClick={() =>
-            navigate('/')
+            navigate(appPath('/', isDemo))
           }
         >
           <span aria-hidden="true">
@@ -1592,8 +1596,9 @@ function CardsPage() {
           }
           yearFilter={yearFilter}
           onYearFilterChange={
-            setYearFilter
+            isDemo ? () => {} : setYearFilter
           }
+          lockedYear={isDemo ? '2025' : undefined}
           yearOptions={yearOptions}
           teamFilter={teamFilter}
           onTeamFilterChange={
@@ -1615,8 +1620,9 @@ function CardsPage() {
             ownershipFilter
           }
           onOwnershipFilterChange={
-            setOwnershipFilter
+            isDemo ? () => {} : setOwnershipFilter
           }
+          hideOwnership={isDemo}
           batsFilter={batsFilter}
           onBatsFilterChange={
             setBatsFilter

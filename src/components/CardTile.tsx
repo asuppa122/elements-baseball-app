@@ -5,6 +5,7 @@ import {
   isCardOwnedByManager,
 } from '../utils/cardHelpers'
 import { useAuth } from '../auth/AuthContext'
+import { appPath } from '../lib/appPaths'
 
 type CardTileProps = {
   card: CardRecord
@@ -14,7 +15,7 @@ function CardTile({
   card,
 }: CardTileProps) {
   const navigate = useNavigate()
-  const { profile } = useAuth()
+  const { profile, isDemo } = useAuth()
 
   const year = getCardYear(card)
 
@@ -29,9 +30,9 @@ function CardTile({
       className="database-card"
       onClick={() =>
         navigate(
-          `/cards/${encodeURIComponent(
+          appPath(`/cards/${encodeURIComponent(
             card.card_key,
-          )}`,
+          )}`, isDemo),
         )
       }
       aria-label={`Open ${card.player_name} card profile`}
@@ -90,7 +91,7 @@ function CardTile({
           {year ?? 'Unknown'}
         </span>
 
-        <span
+        {!isDemo && <span
           className={
             owned
               ? 'ownership-badge owned'
@@ -105,7 +106,7 @@ function CardTile({
           {owned
             ? 'Owned'
             : 'Not Owned'}
-        </span>
+        </span>}
       </footer>
     </button>
   )
