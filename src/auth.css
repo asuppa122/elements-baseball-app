@@ -631,3 +631,93 @@
     width: 100%;
   }
 }
+
+/* 2026-08-03 shared production/demo density pass */
+.global-app-header {
+  height: 50px !important;
+  min-height: 50px !important;
+  padding: 4px 14px !important;
+}
+.global-brand { gap: 9px !important; }
+.global-brand img {
+  width: 42px !important;
+  height: 40px !important;
+  object-fit: contain !important;
+}
+.global-brand span { font-size: 1rem !important; }
+.global-user-menu { margin-left: auto !important; }
+.profile-menu-trigger {
+  min-height: 40px !important;
+  padding: 3px 7px !important;
+  gap: 8px !important;
+}
+.global-user-avatar { width: 30px !important; height: 30px !important; }
+.profile-menu-trigger-copy { min-width: 0; }
+.profile-menu-trigger-copy strong { font-size: .92rem; line-height: 1.05; }
+.profile-menu-trigger-copy span { font-size: .68rem; line-height: 1.05; }
+
+/* Team Builder scales to a future 5x4 roster library. */
+.lineup-selector-page {
+  min-height: calc(100dvh - 50px) !important;
+  padding: 18px 20px 48px !important;
+}
+.lineup-selector-heading {
+  width: min(1540px, 100%) !important;
+  margin-bottom: 14px !important;
+}
+.lineup-selector-heading h1 { font-size: clamp(1.8rem, 3vw, 2.6rem) !important; }
+.lineup-selector-heading p:last-child { font-size: .84rem !important; }
+.lineup-selector-grid {
+  width: min(1540px, 100%) !important;
+  grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+  gap: 10px !important;
+}
+.lineup-selector-card,
+.lineup-create-card {
+  min-height: 0 !important;
+  padding: 11px !important;
+  border-radius: 12px !important;
+}
+.lineup-card-topline { font-size: .64rem !important; }
+.lineup-name-display { min-width: 0; }
+.lineup-name-display > span {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.lineup-name-edit-button { transform: scale(.86); transform-origin: center; }
+.lineup-card-stats.lineup-card-stats-four { gap: 5px !important; }
+.lineup-card-stats div { padding: 6px !important; min-height: 49px; gap: 2px !important; }
+.lineup-card-stats span { font-size: .59rem !important; }
+.lineup-card-stats strong { font-size: .84rem !important; }
+.lineup-card-settings { margin-top: 6px !important; gap: 5px !important; }
+.lineup-card-settings label { gap: 2px !important; font-size: .56rem !important; }
+.lineup-card-settings select { min-height: 28px !important; padding: 3px 5px !important; font-size: .72rem; }
+.lineup-card-actions { margin-top: 7px !important; gap: 5px !important; }
+.lineup-card-actions button { padding: 6px 5px !important; font-size: .73rem; }
+.lineup-create-card { min-height: 178px !important; }
+.lineup-create-card span { font-size: 2rem !important; }
+.lineup-create-card strong { font-size: .85rem; }
+.lineup-create-card small { font-size: .62rem; text-align: center; }
+
+@media (max-width: 1350px) {
+  .lineup-selector-grid { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; }
+}
+@media (max-width: 1050px) {
+  .lineup-selector-grid { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
+}
+@media (max-width: 760px) {
+  .global-app-header { height: 46px !important; min-height: 46px !important; padding: 3px 8px !important; }
+  .global-brand img { width: 34px !important; height: 34px !important; }
+  .global-brand span { font-size: .84rem !important; }
+  .profile-menu-trigger-copy { display: flex !important; }
+  .profile-menu-trigger-copy strong { font-size: .76rem; }
+  .profile-menu-trigger-copy span { font-size: .58rem; max-width: 92px; overflow: hidden; text-overflow: ellipsis; }
+  .profile-menu-chevron { display: inline !important; font-size: .78rem; }
+  .global-user-avatar { width: 27px !important; height: 27px !important; }
+  .lineup-selector-page { min-height: calc(100dvh - 46px) !important; padding: 14px 10px 44px !important; }
+  .lineup-selector-grid { grid-template-columns: 1fr !important; gap: 9px !important; }
+  .lineup-selector-card, .lineup-create-card { padding: 10px !important; }
+}

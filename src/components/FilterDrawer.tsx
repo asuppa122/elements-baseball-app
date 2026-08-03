@@ -54,16 +54,16 @@ export default function FilterDrawer(p:Props){
  const remove=(id:string)=>p.onAttributeConditionsChange(p.attributeConditions.filter(c=>c.id!==id))
  const add=()=>p.onAttributeConditionsChange([...p.attributeConditions,{id:`f-${Date.now()}`,attribute:'',operator:'eq',value:''}])
  return <section className="universal-filter-shell">
-  <div className="cards-primary-toggles">
-   {!p.hideOwnership && <button type="button" className={p.ownershipFilter==='owned'?'primary-filter-chip active':'primary-filter-chip'} onClick={()=>p.onOwnershipFilterChange(p.ownershipFilter==='owned'?'':'owned')}>Owned by Me</button>}
-   <button type="button" className={p.seasonEligibleOnly?'primary-filter-chip active':'primary-filter-chip'} onClick={()=>p.onSeasonEligibleOnlyChange(!p.seasonEligibleOnly)}>Season Eligible</button>
-  </div>
   {!open ? <>
    <div className="uf-compact-toolbar">
     <label className="uf-compact-name"><span>Name</span><input value={p.searchTerm} onChange={e=>p.onSearchChange(e.target.value)} placeholder="Player name" /></label>
     <label><span>Sort By</span><select value={p.sortField} onChange={e=>p.onSortFieldChange(e.target.value as SortField)}>{sortGeneral.map(([v,l])=><option key={v} value={v}>{l}</option>)}<optgroup label={p.chartMode==='batting'?'Batting Chart':'Pitching Chart'}>{attrs.map(([v,l])=><option key={v} value={v as SortField}>{l}</option>)}</optgroup></select></label>
     <label><span>Order</span><select value={p.sortDirection} onChange={e=>p.onSortDirectionChange(e.target.value as SortDirection)}><option value="desc">{p.sortField==='player_name'?'Z → A':'High → Low'}</option><option value="asc">{p.sortField==='player_name'?'A → Z':'Low → High'}</option></select></label>
     <button className="universal-filter-toggle compact" onClick={()=>setOpen(true)}><span>Filters</span><span>+</span></button>
+   </div>
+   <div className="cards-primary-toggles">
+    {!p.hideOwnership && <button type="button" className={p.ownershipFilter==='owned'?'primary-filter-chip active':'primary-filter-chip'} onClick={()=>p.onOwnershipFilterChange(p.ownershipFilter==='owned'?'':'owned')}>Owned by Me</button>}
+    <button type="button" className={p.seasonEligibleOnly?'primary-filter-chip active':'primary-filter-chip'} onClick={()=>p.onSeasonEligibleOnlyChange(!p.seasonEligibleOnly)}>Season Eligible</button>
    </div>
    <div className="uf-chip-row uf-compact-chips">{active.map(chip=><span className="uf-chip" key={chip}>{chip}</span>)}{p.attributeConditions.filter(c=>c.attribute&&c.value!=='').map(c=><span className="uf-chip" key={`chip-${c.id}`}>{attrs.find(a=>a[0]===c.attribute)?.[1]||c.attribute} {operators.find(o=>o[0]===c.operator)?.[1]} {c.value}<button onClick={()=>remove(c.id)}>×</button></span>)}</div>
   </> : <>
@@ -99,6 +99,10 @@ export default function FilterDrawer(p:Props){
     <strong>Fielding Score</strong>
     <label><span>Position</span><select value={p.defensePosition} onChange={e=>p.onDefensePositionChange(e.target.value as DefensePosition)}><option value="">Highest score</option>{positions.filter(([v])=>['c','1b','2b','3b','ss','lf','cf','rf'].includes(v)).map(([v,l])=><option key={v} value={v}>{l}</option>)}</select></label>
     <label><span>Minimum DEF</span><input value={p.defenseRating} onChange={e=>p.onDefenseRatingChange(e.target.value)} placeholder="e.g. 2" inputMode="numeric" /></label>
+   </div>
+   <div className="cards-primary-toggles">
+    {!p.hideOwnership && <button type="button" className={p.ownershipFilter==='owned'?'primary-filter-chip active':'primary-filter-chip'} onClick={()=>p.onOwnershipFilterChange(p.ownershipFilter==='owned'?'':'owned')}>Owned by Me</button>}
+    <button type="button" className={p.seasonEligibleOnly?'primary-filter-chip active':'primary-filter-chip'} onClick={()=>p.onSeasonEligibleOnlyChange(!p.seasonEligibleOnly)}>Season Eligible</button>
    </div>
    <div className="uf-chip-row">{active.map(chip=><span className="uf-chip" key={chip}>{chip}</span>)}{p.attributeConditions.filter(c=>c.attribute&&c.value!=='').map(c=><span className="uf-chip" key={`chip-${c.id}`}>{attrs.find(a=>a[0]===c.attribute)?.[1]||c.attribute} {operators.find(o=>o[0]===c.operator)?.[1]} {c.value}<button onClick={()=>remove(c.id)}>×</button></span>)}</div>
   </div>

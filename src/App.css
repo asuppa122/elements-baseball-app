@@ -1535,3 +1535,24 @@ input {
     padding: 8px 8px 50px !important;
   }
 }
+
+/* Card Database: toolbar first, primary chips immediately above cards. */
+.cards-primary-toggles {
+  margin: 7px 0 2px !important;
+  padding: 0 2px !important;
+}
+.universal-filter-shell { padding-bottom: 7px !important; }
+.uf-compact-toolbar { margin-bottom: 0 !important; }
+.uf-compact-chips:empty { display: none !important; }
+.cards-page { padding-top: 6px !important; }
+.topbar {
+  min-height: 88px !important;
+  padding-block: 10px !important;
+}
+.topbar .page-heading h1 { font-size: clamp(1.8rem, 3vw, 2.65rem) !important; }
+@media (max-width: 720px) {
+  .cards-primary-toggles { margin-top: 6px !important; gap: 6px !important; }
+  .primary-filter-chip { padding: 6px 9px !important; font-size: .72rem; }
+  .topbar { min-height: 68px !important; padding: 7px 8px !important; }
+  .topbar .page-heading h1 { font-size: 1.35rem !important; }
+}
