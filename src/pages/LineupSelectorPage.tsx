@@ -14,7 +14,7 @@ export type LineupRecord = {
   total_points: number
   roster_state: {
     assigned?: Record<string, string>
-    rosterFormat?: 'compact' | 'full'
+    rosterFormat?: 'compact' | 'standard25' | 'full'
     useDh?: boolean
   } | null
   updated_at: string
@@ -29,6 +29,8 @@ export default function LineupSelectorPage() {
   const [loading, setLoading] = useState(true)
   const [working, setWorking] = useState(false)
   const [error, setError] = useState('')
+  const [editingLineupId, setEditingLineupId] = useState<string | null>(null)
+  const [editingName, setEditingName] = useState('')
 
   async function loadLineups() {
     if (isDemo) {
@@ -72,7 +74,7 @@ export default function LineupSelectorPage() {
             id: string
             name: string
             assigned: Record<string, string>
-            rosterFormat: 'compact' | 'full'
+            rosterFormat: 'compact' | 'standard25' | 'full'
             useDh: boolean
           }>
         } : null
@@ -134,7 +136,7 @@ export default function LineupSelectorPage() {
       .from('lineups')
       .insert({
         user_id: user.id,
-        name: `Lineup ${nextNumber}`,
+        name: nextNumber === 1 ? 'Elements Baseball' : `Elements Baseball ${nextNumber}`,
         is_active: lineups.length === 0,
         sort_order: nextSortOrder,
         use_dh: true,
@@ -160,7 +162,7 @@ export default function LineupSelectorPage() {
 
   async function updateLineupSettings(
     lineup: LineupRecord,
-    changes: { useDh?: boolean; rosterFormat?: 'compact' | 'full' },
+    changes: { useDh?: boolean; rosterFormat?: 'compact' | 'standard25' | 'full' },
   ) {
     const nextUseDh = changes.useDh ?? lineup.use_dh
     const currentFormat = lineup.roster_state?.rosterFormat ?? 'full'
@@ -192,6 +194,32 @@ export default function LineupSelectorPage() {
 
     if (updateError) {
       setError(updateError.message)
+      await loadLineups()
+    }
+  }
+
+  async function saveLineupName(lineup: LineupRecord) {
+    const nextName = editingName.trim() || 'Elements Baseball'
+
+    setLineups((current) =>
+      current.map((item) =>
+        item.id === lineup.id
+          ? { ...item, name: nextName }
+          : item,
+      ),
+    )
+    setEditingLineupId(null)
+    setEditingName('')
+
+    if (isDemo) return
+
+    const { error: renameError } = await supabase
+      .from('lineups')
+      .update({ name: nextName })
+      .eq('id', lineup.id)
+
+    if (renameError) {
+      setError(renameError.message)
       await loadLineups()
     }
   }
@@ -233,8 +261,8 @@ export default function LineupSelectorPage() {
       <div className="lineup-selector-heading">
         <div>
           <p className="eyebrow">Elements Baseball</p>
-          <h1>Lineup Builder</h1>
-          <p>Choose a current, past, or future build. You may save up to three lineups.</p>
+          <h1>Team Builder</h1>
+          <p>Build and manage your teams. Choose your roster rules and customize your team at any time.</p>
         </div>
         <button type="button" className="back-button" onClick={() => navigate(appPath('/', isDemo))}>
           ← Home
@@ -250,13 +278,62 @@ export default function LineupSelectorPage() {
           {lineups.map((lineup) => (
             <article className={lineup.is_active ? 'lineup-selector-card active' : 'lineup-selector-card'} key={lineup.id}>
               <div className="lineup-card-topline">
-                <span>{lineup.name}</span>
+                {editingLineupId === lineup.id ? (
+                  <div className="lineup-name-editor">
+                    <input
+                      type="text"
+                      value={editingName}
+                      maxLength={50}
+                      autoFocus
+                      onChange={(event) => setEditingName(event.target.value)}
+                      onKeyDown={(event) => {
+                        if (event.key === 'Enter') void saveLineupName(lineup)
+                        if (event.key === 'Escape') {
+                          setEditingLineupId(null)
+                          setEditingName('')
+                        }
+                      }}
+                      aria-label="Team name"
+                    />
+                    <button type="button" onClick={() => void saveLineupName(lineup)}>
+                      Save
+                    </button>
+                  </div>
+                ) : (
+                  <div className="lineup-name-display">
+                    <span>{lineup.name}</span>
+                    {!isDemo && (
+                      <button
+                        type="button"
+                        className="lineup-name-edit-button"
+                        onClick={() => {
+                          setEditingLineupId(lineup.id)
+                          setEditingName(lineup.name)
+                        }}
+                        aria-label={`Edit ${lineup.name} team name`}
+                        title="Edit team name"
+                      >
+                        ✎
+                      </button>
+                    )}
+                  </div>
+                )}
                 {lineup.is_active && <strong>Active</strong>}
               </div>
               {(() => {
                 const rosterFormat = lineup.roster_state?.rosterFormat ?? 'full'
-                const playerLimit = rosterFormat === 'compact' ? 18 : 26
-                const pointCap = rosterFormat === 'compact' ? 4000 : 6000
+                const playerLimit =
+                  rosterFormat === 'compact'
+                    ? 18
+                    : rosterFormat === 'standard25'
+                      ? 25
+                      : 26
+                const pointCap =
+                  rosterFormat === 'compact'
+                    ? 4000
+                    : rosterFormat === 'standard25'
+                      ? 5500
+                      : 6000
 
                 return (
                   <>
@@ -282,9 +359,10 @@ export default function LineupSelectorPage() {
                         <span>Roster</span>
                         <select
                           value={rosterFormat}
-                          onChange={(event) => void updateLineupSettings(lineup, { rosterFormat: event.target.value as 'compact' | 'full' })}
+                          onChange={(event) => void updateLineupSettings(lineup, { rosterFormat: event.target.value as 'compact' | 'standard25' | 'full' })}
                         >
                           <option value="compact">18 / 4,000</option>
+                          <option value="standard25">25 / 5,500</option>
                           <option value="full">26 / 6,000</option>
                         </select>
                       </label>

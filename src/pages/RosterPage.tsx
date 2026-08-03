@@ -89,6 +89,7 @@ type Slot = {
 
 type RosterFormat =
   | 'compact'
+  | 'standard25'
   | 'full'
 
 type SavedLineup = {
@@ -522,12 +523,16 @@ function RosterPage() {
   const playerLimit =
     rosterFormat === 'compact'
       ? 18
-      : 26
+      : rosterFormat === 'standard25'
+        ? 25
+        : 26
 
   const pointCap =
     rosterFormat === 'compact'
       ? 4000
-      : 6000
+      : rosterFormat === 'standard25'
+        ? 5500
+        : 6000
 
   const activeDefenseSlots =
     useMemo(
@@ -1897,7 +1902,7 @@ function RosterPage() {
           title="Back to lineups"
         >
           <span>←</span>
-          <strong>Lineup Builder</strong>
+          <strong>Team Builder</strong>
         </button>
 
         <nav>
@@ -2433,7 +2438,7 @@ function RosterPage() {
                     <b>↔</b>
                   </div>
                   <div className="roster-compare-side">
-                    <span>Potential replacement</span>
+                    <span>Substitute</span>
                     <div className="roster-compare-card preview">
                       {previewCard?.image_url ? <img src={previewCard.image_url} alt={`${previewCard.player_name} preview card`} referrerPolicy="no-referrer" /> : <em>Tap or hover a card to compare</em>}
                     </div>

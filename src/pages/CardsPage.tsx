@@ -1612,13 +1612,6 @@ function CardsPage() {
       </header>
 
       <main className="cards-page">
-        <section className="gallery-heading gallery-heading-compact">
-          <div className="record-badge">
-            {isLoading
-              ? 'Loading cards'
-              : `${visibleCards.length.toLocaleString()} of ${filteredCards.length.toLocaleString()}`}
-          </div>
-        </section>
 
         <FilterDrawer
           searchTerm={searchTerm}

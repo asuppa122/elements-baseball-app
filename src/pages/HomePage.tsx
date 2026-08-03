@@ -12,8 +12,8 @@ const FEATURES = [
     icon: '▣',
   },
   {
-    title: 'Lineup Builder',
-    description: 'Build, save, and manage up to three complete Elements lineups.',
+    title: 'Team Builder',
+    description: 'Build, save, and manage up to three complete Elements teams.',
     route: '/lineup-builder',
     status: 'Available',
     icon: '♟',

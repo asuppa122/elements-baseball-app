@@ -9647,3 +9647,76 @@ span {
 @media (max-width:768px){
  .rating-diamond,.on-base-diamond,.control-diamond,.roster-rating-diamond{display:none!important}
 }
+
+
+/* Replacement screen: compact top-half comparison + scrollable bottom-half choices */
+.roster-picker-content-stacked {
+  display: grid !important;
+  grid-template-rows: minmax(250px, 44vh) minmax(0, 1fr) !important;
+  height: calc(100vh - 142px);
+  min-height: 620px;
+  overflow: hidden;
+}
+
+.roster-picker-content-stacked .roster-compare-strip {
+  width: min(860px, calc(100% - 28px));
+  height: calc(100% - 18px);
+  max-height: 430px;
+  margin: 9px auto;
+  padding: 14px 24px;
+  grid-template-columns: minmax(150px, 1fr) 90px minmax(150px, 1fr);
+  align-self: center;
+}
+
+.roster-picker-content-stacked .roster-compare-card {
+  width: min(145px, 15vh);
+  min-width: 96px;
+  max-width: 145px;
+}
+
+.roster-picker-content-stacked .roster-replacement-browser {
+  min-height: 0;
+  padding: 0 14px 18px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.roster-picker-content-stacked .roster-player-grid {
+  align-items: start;
+}
+
+@media (max-width: 720px) {
+  .roster-picker-content-stacked {
+    display: grid !important;
+    grid-template-rows: auto minmax(0, 1fr) !important;
+    height: calc(100dvh - 132px);
+    min-height: 560px;
+  }
+
+  .roster-picker-content-stacked .roster-compare-strip {
+    width: calc(100% - 12px);
+    height: auto;
+    max-height: none;
+    margin: 6px;
+    padding: 9px 8px;
+    grid-template-columns: minmax(0, 1fr) 42px minmax(0, 1fr);
+    gap: 6px;
+  }
+
+  .roster-picker-content-stacked .roster-compare-card {
+    width: min(92px, 26vw);
+    min-width: 66px;
+  }
+
+  .roster-picker-content-stacked .roster-compare-arrow > span {
+    display: none;
+  }
+
+  .roster-picker-content-stacked .roster-compare-arrow b {
+    font-size: 1.45rem;
+  }
+
+  .roster-picker-content-stacked .roster-replacement-browser {
+    padding: 0 7px 16px;
+  }
+}
