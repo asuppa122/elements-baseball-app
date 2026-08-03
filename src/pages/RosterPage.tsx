@@ -405,7 +405,9 @@ function RosterPage() {
     useState('')
   const [drawerControlsOpen, setDrawerControlsOpen] =
     useState(false)
-  const [previewCardKey, setPreviewCardKey] =
+  const [hoverCardKey, setHoverCardKey] =
+    useState<string | null>(null)
+  const [selectedSubstituteKey, setSelectedSubstituteKey] =
     useState<string | null>(null)
   const [loading, setLoading] =
     useState(true)
@@ -434,6 +436,11 @@ function RosterPage() {
       )
   }, [])
 
+
+  useEffect(() => {
+    setHoverCardKey(null)
+    setSelectedSubstituteKey(null)
+  }, [selectedSlotId])
 
   useEffect(() => {
     if (!isDemo || cards.length === 0) return
@@ -932,6 +939,12 @@ function RosterPage() {
     yearFilter,
   ])
 
+  useEffect(() => {
+    if (!selectedSubstituteKey) return
+    const remainsEligible = eligibleCards.some((card) => card.card_key === selectedSubstituteKey)
+    if (!remainsEligible) setSelectedSubstituteKey(null)
+  }, [eligibleCards, selectedSubstituteKey])
+
   const rosterSlots = [
     ...activeDefenseSlots,
     ...BENCH,
@@ -1190,14 +1203,40 @@ function RosterPage() {
     window.setTimeout(() => setMessage(''), 1600)
   }
 
-  function clearRoster() {
+  function clearTeam() {
+    if (!window.confirm('Clear the entire team? This removes every player from Fielding, Batting Order, Bench, Rotation, and Bullpen.')) return
     setAssigned({})
     setSelectedSlotId(null)
-    setMessage('Team cleared')
-    window.setTimeout(
-      () => setMessage(''),
-      1600,
-    )
+    setMessage('Entire team cleared')
+    window.setTimeout(() => setMessage(''), 1600)
+  }
+
+  function clearCurrentPage() {
+    if (section === 'overview') {
+      clearTeam()
+      return
+    }
+
+    const linkedSlots = section === 'defense'
+      ? [...DEFENSE, ...LINEUP]
+      : ALL_SLOTS.filter((slot) => slot.section === section)
+
+    const pageName = section === 'defense'
+      ? 'Fielding and its connected Batting Order'
+      : section === 'lineup'
+        ? 'Batting Order'
+        : section.charAt(0).toUpperCase() + section.slice(1)
+
+    if (!window.confirm(`Clear ${pageName}?`)) return
+
+    setAssigned((current) => {
+      const next = { ...current }
+      for (const slot of linkedSlots) delete next[slot.id]
+      return next
+    })
+    setSelectedSlotId(null)
+    setMessage(`${pageName} cleared`)
+    window.setTimeout(() => setMessage(''), 1600)
   }
 
   function assignCard(
@@ -1205,8 +1244,10 @@ function RosterPage() {
   ) {
     if (
       !selectedSlot ||
-      selectedSlot.id === 'defense-p'
+      selectedSlot.id === 'defense-p' ||
+      !isEligible(card, selectedSlot)
     ) {
+      setMessage('That card is not eligible for this roster slot')
       return
     }
 
@@ -1392,6 +1433,8 @@ function RosterPage() {
 
       return next
     })
+    setHoverCardKey(null)
+    setSelectedSubstituteKey(null)
     setSelectedSlotId(null)
     setSearch('')
   }
@@ -1894,7 +1937,9 @@ function RosterPage() {
   const currentCard = selectedSlot && assigned[selectedSlot.id]
     ? cardMap.get(assigned[selectedSlot.id] as string) ?? null
     : null
-  const previewCard = previewCardKey ? cardMap.get(previewCardKey) ?? null : null
+  const selectedSubstituteCard = selectedSubstituteKey ? cardMap.get(selectedSubstituteKey) ?? null : null
+  const hoverCard = hoverCardKey ? cardMap.get(hoverCardKey) ?? null : null
+  const previewCard = selectedSubstituteCard ?? hoverCard
 
   return (
     <div className={`app roster-app roster-workspace roster-workspace--${section}`}>
@@ -1940,7 +1985,8 @@ function RosterPage() {
 
           <div className="roster-header-actions">
             <div className="roster-points-status"><strong>{totalPoints.toLocaleString()} / {pointCap.toLocaleString()}</strong><span>{Math.max(pointCap-totalPoints,0).toLocaleString()} remaining</span></div>
-            <button type="button" className="roster-clear-button" onClick={clearRoster}>Clear</button>
+            <button type="button" className="roster-clear-button" onClick={clearCurrentPage}>Clear Page</button>
+            <button type="button" className="roster-clear-button roster-clear-team-button" onClick={clearTeam}>Clear Team</button>
             {isDemo ? (
               <button type="button" className="roster-save-button demo-disabled-save" onClick={saveRoster}>Demo — Not Saved</button>
             ) : (
@@ -2040,6 +2086,8 @@ function RosterPage() {
               event.currentTarget ===
               event.target
             ) {
+              setHoverCardKey(null)
+              setSelectedSubstituteKey(null)
               setSelectedSlotId(null)
             }
           }}
@@ -2065,9 +2113,11 @@ function RosterPage() {
               </div>
               <button
                 type="button"
-                onClick={() =>
+                onClick={() => {
+                  setHoverCardKey(null)
+                  setSelectedSubstituteKey(null)
                   setSelectedSlotId(null)
-                }
+                }}
               >
                 ×
               </button>
@@ -2428,32 +2478,54 @@ function RosterPage() {
             </div>
 
             <div className="roster-picker-content roster-picker-content-stacked">
-              {currentCard && (
-                <section className="roster-compare-strip">
-                  <div className="roster-compare-side">
-                    <span>Current</span>
-                    <div className="roster-compare-card">
-                      {currentCard.image_url ? <img src={currentCard.image_url} alt={`${currentCard.player_name} current card`} referrerPolicy="no-referrer" /> : <em>Image unavailable</em>}
-                    </div>
-                    <strong>{currentCard.player_name}</strong>
-                    <div className="roster-compare-action-slot" aria-hidden="true" />
+              <section className="roster-compare-strip">
+                <div className="roster-compare-side">
+                  <span>Current</span>
+                  <div className="roster-compare-card">
+                    {currentCard?.image_url ? (
+                      <img
+                        src={currentCard.image_url}
+                        alt={`${currentCard.player_name} current card`}
+                        referrerPolicy="no-referrer"
+                      />
+                    ) : (
+                      <em>Empty {selectedSlot.label} slot</em>
+                    )}
                   </div>
-                  <div className="roster-compare-arrow">
-                    <span>Swap</span>
-                    <b>↓</b>
+                  <strong>{currentCard?.player_name ?? `No player at ${selectedSlot.label}`}</strong>
+                </div>
+                <div className="roster-compare-side">
+                  <span>{currentCard ? 'Substitute' : 'Add Player'}</span>
+                  <div className="roster-compare-card preview">
+                    {previewCard?.image_url ? (
+                      <img
+                        src={previewCard.image_url}
+                        alt={`${previewCard.player_name} preview card`}
+                        referrerPolicy="no-referrer"
+                      />
+                    ) : (
+                      <em>Tap or click a card to select</em>
+                    )}
                   </div>
-                  <div className="roster-compare-side">
-                    <span>Substitute</span>
-                    <div className="roster-compare-card preview">
-                      {previewCard?.image_url ? <img src={previewCard.image_url} alt={`${previewCard.player_name} preview card`} referrerPolicy="no-referrer" /> : <em>Tap or hover a card to compare</em>}
-                    </div>
-                    <strong>{previewCard?.player_name ?? 'Select a card below'}</strong>
-                    <div className="roster-compare-action-slot">
-                      {previewCard && <button type="button" className="roster-confirm-swap" onClick={() => assignCard(previewCard)}>Make Swap</button>}
-                    </div>
-                  </div>
-                </section>
-              )}
+                  <strong>{previewCard?.player_name ?? 'Select a card below'}</strong>
+                </div>
+                <div className="roster-compare-shared-action">
+                  <button
+                    type="button"
+                    className="roster-confirm-swap"
+                    disabled={!selectedSubstituteCard}
+                    onClick={() => selectedSubstituteCard && assignCard(selectedSubstituteCard)}
+                  >
+                    {selectedSubstituteCard
+                      ? currentCard
+                        ? 'Confirm Swap'
+                        : `Confirm Add to ${selectedSlot.label}`
+                      : currentCard
+                        ? 'Select a Substitute'
+                        : 'Select a Player'}
+                  </button>
+                </div>
+              </section>
 
               <div className={`roster-replacement-browser roster-replacement-browser-${selectedSlot.section}`}>
                 <div className="roster-drawer-rules">
@@ -2534,16 +2606,15 @@ function RosterPage() {
                     }
                     disabled={blocked}
                     aria-label={`Add ${card.player_name} to ${selectedSlot.label}`}
-                    onMouseEnter={() => setPreviewCardKey(card.card_key)}
-                    onFocus={() => setPreviewCardKey(card.card_key)}
-                    onPointerUp={(event) => {
+                    onMouseEnter={() => setHoverCardKey(card.card_key)}
+                    onMouseLeave={() => setHoverCardKey(null)}
+                    onFocus={() => setHoverCardKey(card.card_key)}
+                    onBlur={() => setHoverCardKey(null)}
+                    onClick={(event) => {
                       event.preventDefault()
                       event.stopPropagation()
-                      if (window.matchMedia('(max-width: 768px)').matches && currentCard) {
-                        setPreviewCardKey(card.card_key)
-                        return
-                      }
-                      assignCard(card)
+                      setSelectedSubstituteKey(card.card_key)
+                      setHoverCardKey(null)
                     }}
                     key={card.card_key}
                   >

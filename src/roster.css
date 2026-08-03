@@ -10682,3 +10682,80 @@ span {
     grid-column: 1 / -1 !important;
   }
 }
+
+/* =========================================================
+   v1.1 SUBSTITUTE ACTION POLISH
+   Remove the directional arrow and center one wider primary
+   action beneath Current and Substitute on every screen size.
+   ========================================================= */
+.roster-picker-content-stacked .roster-compare-arrow {
+  display: none !important;
+}
+
+.roster-picker-content-stacked .roster-compare-strip {
+  grid-template-rows: minmax(0, 1fr) auto !important;
+}
+
+.roster-picker-content-stacked .roster-compare-side {
+  grid-row: 1 !important;
+  align-self: center !important;
+}
+
+.roster-picker-content-stacked .roster-compare-shared-action {
+  grid-column: 1 / -1 !important;
+  grid-row: 2 !important;
+  width: 100% !important;
+  min-height: 46px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding-top: 4px !important;
+}
+
+.roster-picker-content-stacked .roster-compare-shared-action .roster-confirm-swap {
+  width: min(250px, 72%) !important;
+  min-height: 42px !important;
+  margin: 0 !important;
+  padding: 8px 24px !important;
+  font-size: .84rem !important;
+}
+
+@media (max-width: 720px) {
+  .roster-picker-content-stacked .roster-compare-strip {
+    grid-template-rows: minmax(0, 1fr) auto !important;
+  }
+
+  .roster-picker-content-stacked .roster-compare-shared-action {
+    min-height: 34px !important;
+    padding-top: 2px !important;
+  }
+
+  .roster-picker-content-stacked .roster-compare-shared-action .roster-confirm-swap {
+    width: min(160px, 86%) !important;
+    min-height: 29px !important;
+    padding: 4px 10px !important;
+    font-size: .58rem !important;
+  }
+}
+
+/* v1.1.1 roster confirmation and clear controls */
+.roster-clear-team-button {
+  border-color: rgba(209, 77, 77, .58);
+  color: #f2c8c8;
+}
+
+.roster-confirm-swap:disabled {
+  cursor: not-allowed;
+  opacity: .48;
+  filter: saturate(.45);
+}
+
+@media (max-width: 760px) {
+  .roster-header-actions {
+    flex-wrap: wrap;
+  }
+  .roster-clear-button,
+  .roster-clear-team-button {
+    min-height: 38px;
+  }
+}
