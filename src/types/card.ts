@@ -56,7 +56,7 @@ export type CardRow = {
   pitcher_3b: string | null
   pitcher_hr: string | null
 
-  source_yes_field: number | null
+  source_yes_field: string | number | null
   source_row: number | null
   source_hash: string | null
   first_synced_at: string | null

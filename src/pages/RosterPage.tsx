@@ -412,6 +412,7 @@ function RosterPage() {
     useState('')
   const [message, setMessage] =
     useState('')
+  const [savingRoster, setSavingRoster] = useState(false)
   const [
     draggedLineupSlotId,
     setDraggedLineupSlotId,
@@ -1149,9 +1150,12 @@ function RosterPage() {
       window.setTimeout(() => setMessage(''), 1800)
       return
     }
-    if (!user || !lineupId) {
+    if (!user || !lineupId || savingRoster) {
       return
     }
+
+    setSavingRoster(true)
+    setMessage('Saving team…')
 
     const { error: saveError } = await supabase
       .from('lineups')
@@ -1172,10 +1176,12 @@ function RosterPage() {
 
     if (saveError) {
       setMessage(saveError.message)
+      setSavingRoster(false)
       return
     }
 
-    setMessage('Lineup saved')
+    setSavingRoster(false)
+    setMessage('Team saved')
     window.setTimeout(() => setMessage(''), 1600)
   }
 
@@ -1924,11 +1930,12 @@ function RosterPage() {
           </div>
 
           <div className="roster-header-actions">
+            <div className="roster-points-status"><strong>{totalPoints.toLocaleString()} / {pointCap.toLocaleString()}</strong><span>{Math.max(pointCap-totalPoints,0).toLocaleString()} remaining</span></div>
             <button type="button" className="roster-clear-button" onClick={clearRoster}>Clear</button>
             {isDemo ? (
               <button type="button" className="roster-save-button demo-disabled-save" onClick={saveRoster}>Demo — Not Saved</button>
             ) : (
-              <button type="button" className="roster-save-button" onClick={saveRoster}>Save Team</button>
+              <button type="button" className="roster-save-button" onClick={saveRoster} disabled={savingRoster}>{savingRoster ? 'Saving…' : 'Save Team'}</button>
             )}
           </div>
         </header>
@@ -2426,11 +2433,12 @@ function RosterPage() {
                     <b>↔</b>
                   </div>
                   <div className="roster-compare-side">
-                    <span>{previewCard ? 'Hover sub' : 'Hover sub'}</span>
+                    <span>Potential replacement</span>
                     <div className="roster-compare-card preview">
-                      {previewCard?.image_url ? <img src={previewCard.image_url} alt={`${previewCard.player_name} preview card`} referrerPolicy="no-referrer" /> : <em>Hover a card to compare</em>}
+                      {previewCard?.image_url ? <img src={previewCard.image_url} alt={`${previewCard.player_name} preview card`} referrerPolicy="no-referrer" /> : <em>Tap or hover a card to compare</em>}
                     </div>
-                    <strong>{previewCard?.player_name ?? 'Hover a card below'}</strong>
+                    <strong>{previewCard?.player_name ?? 'Select a card below'}</strong>
+                    {previewCard && <button type="button" className="roster-confirm-swap" onClick={() => assignCard(previewCard)}>Make Swap</button>}
                   </div>
                 </section>
               )}
@@ -2519,6 +2527,10 @@ function RosterPage() {
                     onPointerUp={(event) => {
                       event.preventDefault()
                       event.stopPropagation()
+                      if (window.matchMedia('(max-width: 768px)').matches && currentCard) {
+                        setPreviewCardKey(card.card_key)
+                        return
+                      }
                       assignCard(card)
                     }}
                     key={card.card_key}

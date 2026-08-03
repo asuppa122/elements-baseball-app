@@ -9643,3 +9643,7 @@ span {
     display: none !important;
   }
 }
+
+@media (max-width:768px){
+ .rating-diamond,.on-base-diamond,.control-diamond,.roster-rating-diamond{display:none!important}
+}

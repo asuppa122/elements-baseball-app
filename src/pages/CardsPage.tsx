@@ -40,11 +40,13 @@ const FILTER_STORAGE_KEY =
 
 type SavedFilterState = {
   searchTerm: string
-  yearFilter: string
+  yearFrom: string
+  yearTo: string
   teamFilter: string
   leagueFilter: string
   positionFilter: string
   ownershipFilter: OwnershipFilter
+  seasonEligibleOnly: boolean
   batsFilter: string
   throwsFilter: string
   attributeConditions: AttributeCondition[]
@@ -318,6 +320,10 @@ function matchesPosition(
 ) {
   if (!positionFilter) {
     return true
+  }
+
+  if (positionFilter === 'hitters') {
+    return card.hitter_on_base !== null || card.hitter_year !== null
   }
 
   const positionColumn =
@@ -747,10 +753,17 @@ function CardsPage() {
   )
 
   const [
-    yearFilter,
-    setYearFilter,
+    yearFrom,
+    setYearFrom,
   ] = useState(
-    isDemo ? '2025' : (savedFilters.yearFilter ?? ''),
+    isDemo ? '2025' : (savedFilters.yearFrom ?? ''),
+  )
+
+  const [
+    yearTo,
+    setYearTo,
+  ] = useState(
+    isDemo ? '2025' : (savedFilters.yearTo ?? ''),
   )
 
   const [
@@ -787,6 +800,13 @@ function CardsPage() {
       isDemo ? '' : (savedFilters.ownershipFilter ??
         ''),
     )
+
+  const [
+    seasonEligibleOnly,
+    setSeasonEligibleOnly,
+  ] = useState(
+    savedFilters.seasonEligibleOnly ?? false,
+  )
 
   const [
     batsFilter,
@@ -889,11 +909,13 @@ function CardsPage() {
     const filterState:
       SavedFilterState = {
         searchTerm,
-        yearFilter,
+        yearFrom,
+        yearTo,
         teamFilter,
         leagueFilter,
         positionFilter,
         ownershipFilter,
+        seasonEligibleOnly,
         batsFilter,
         throwsFilter,
         attributeConditions,
@@ -917,6 +939,7 @@ function CardsPage() {
     defenseRating,
     leagueFilter,
     ownershipFilter,
+    seasonEligibleOnly,
     positionFilter,
     searchTerm,
     sortDirection,
@@ -924,7 +947,8 @@ function CardsPage() {
     teamFilter,
     throwsFilter,
     visibleCardCount,
-    yearFilter,
+    yearFrom,
+    yearTo,
   ])
 
   const imageMap = useMemo(() => {
@@ -1249,8 +1273,8 @@ function CardsPage() {
           debouncedTeamFilter,
         ).toLowerCase()
 
-      const numericYear =
-        Number(yearFilter)
+      const numericYearFrom = Number(yearFrom)
+      const numericYearTo = Number(yearTo)
 
       const numericDefenseRating =
         Number(defenseRating)
@@ -1286,16 +1310,15 @@ function CardsPage() {
             }
           }
 
-          if (
-            yearFilter &&
-            Number.isFinite(
-              numericYear,
-            ) &&
-            card.hitter_year !==
-              numericYear &&
-            card.pitcher_year !==
-              numericYear
-          ) {
+          const cardYears = [card.hitter_year, card.pitcher_year].filter(
+            (year): year is number => year !== null && Number.isFinite(year),
+          )
+
+          if (yearFrom && Number.isFinite(numericYearFrom) && !cardYears.some((year) => year >= numericYearFrom)) {
+            return false
+          }
+
+          if (yearTo && Number.isFinite(numericYearTo) && !cardYears.some((year) => year <= numericYearTo)) {
             return false
           }
 
@@ -1349,6 +1372,14 @@ function CardsPage() {
 
           const eligible =
             isSeasonEligible(card)
+
+          if (!isDemo && ownershipFilter === 'owned' && !ownedByManager) {
+            return false
+          }
+
+          if (seasonEligibleOnly && !eligible) {
+            return false
+          }
 
           if (
             !isDemo &&
@@ -1413,25 +1444,19 @@ function CardsPage() {
             return false
           }
 
-          if (
-            effectiveDefensePosition &&
-            defenseRating !== '' &&
-            Number.isFinite(
-              numericDefenseRating,
-            )
-          ) {
-            const defenseColumn =
-              DEFENSE_COLUMNS[
-                effectiveDefensePosition
-              ]
+          if (defenseRating !== '' && Number.isFinite(numericDefenseRating)) {
+            if (!effectiveDefensePosition) {
+              const highestDefense = Math.max(
+                ...DEFENSE_COLUMN_LIST.map((column) => Number(card[column] ?? Number.NEGATIVE_INFINITY)),
+              )
+              if (!Number.isFinite(highestDefense) || highestDefense < numericDefenseRating) return false
+            } else {
+              const defenseColumn = DEFENSE_COLUMNS[effectiveDefensePosition]
+              const defenseValue = card[defenseColumn]
 
-            if (
-              card[
-                defenseColumn
-              ] !==
-              numericDefenseRating
-            ) {
-              return false
+              if (defenseValue === null || Number(defenseValue) < numericDefenseRating) {
+                return false
+              }
             }
           }
 
@@ -1479,11 +1504,13 @@ function CardsPage() {
       defenseRating,
       leagueFilter,
       ownershipFilter,
+      seasonEligibleOnly,
       positionFilter,
       sortDirection,
       sortField,
       throwsFilter,
-      yearFilter,
+      yearFrom,
+      yearTo,
     ])
 
   useEffect(() => {
@@ -1500,11 +1527,13 @@ function CardsPage() {
     defenseRating,
     leagueFilter,
     ownershipFilter,
+    seasonEligibleOnly,
     positionFilter,
     sortDirection,
     sortField,
     throwsFilter,
-    yearFilter,
+    yearFrom,
+    yearTo,
   ])
 
   const visibleCards =
@@ -1521,12 +1550,14 @@ function CardsPage() {
   const clearFilters = () => {
     setSearchTerm('')
     setDebouncedSearchTerm('')
-    setYearFilter(isDemo ? '2025' : '')
+    setYearFrom(isDemo ? '2025' : '')
+    setYearTo(isDemo ? '2025' : '')
     setTeamFilter('')
     setDebouncedTeamFilter('')
     setLeagueFilter('')
     setPositionFilter('')
     setOwnershipFilter('')
+    setSeasonEligibleOnly(false)
     setBatsFilter('')
     setThrowsFilter('')
     setChartMode('batting')
@@ -1594,10 +1625,10 @@ function CardsPage() {
           onSearchChange={
             setSearchTerm
           }
-          yearFilter={yearFilter}
-          onYearFilterChange={
-            isDemo ? () => {} : setYearFilter
-          }
+          yearFrom={yearFrom}
+          onYearFromChange={isDemo ? () => {} : setYearFrom}
+          yearTo={yearTo}
+          onYearToChange={isDemo ? () => {} : setYearTo}
           lockedYear={isDemo ? '2025' : undefined}
           yearOptions={yearOptions}
           teamFilter={teamFilter}
@@ -1616,9 +1647,9 @@ function CardsPage() {
           onPositionFilterChange={
             handlePositionFilterChange
           }
-          ownershipFilter={
-            ownershipFilter
-          }
+          ownershipFilter={ownershipFilter}
+          seasonEligibleOnly={seasonEligibleOnly}
+          onSeasonEligibleOnlyChange={setSeasonEligibleOnly}
           onOwnershipFilterChange={
             isDemo ? () => {} : setOwnershipFilter
           }
