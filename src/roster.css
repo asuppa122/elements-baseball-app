@@ -10605,3 +10605,80 @@ span {
     grid-template-columns: 34px 12px 36px minmax(0, 1fr) 42px !important;
   }
 }
+
+/* v1.0 balanced DEF strip: independent C / INF / OF regions */
+.roster-page-with-sidebar .defense-summary.defense-summary-inline,
+.roster-page-with-sidebar .defense-summary.compact.defense-summary-inline {
+  display: grid !important;
+  grid-template-columns: minmax(150px, 1fr) minmax(540px, 3fr) minmax(250px, 1.35fr) !important;
+  align-items: center !important;
+  gap: 14px !important;
+  padding: 12px 18px !important;
+}
+.defense-summary-inline .defense-inline-divider {
+  display: none !important;
+}
+.defense-summary-inline .defense-inline-group,
+.defense-summary-inline .defense-inline-infield,
+.defense-summary-inline .defense-inline-outfield {
+  width: 100% !important;
+  min-width: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 12px !important;
+  margin: 0 !important;
+}
+.defense-summary-inline .defense-inline-group > b {
+  flex: 0 0 auto !important;
+  white-space: nowrap !important;
+  margin: 0 !important;
+}
+.defense-summary-inline .defense-inline-combo,
+.defense-summary-inline .defense-inline-outfield > span {
+  flex: 0 0 auto !important;
+  white-space: nowrap !important;
+}
+@media (max-width: 1120px) {
+  .roster-page-with-sidebar .defense-summary.defense-summary-inline,
+  .roster-page-with-sidebar .defense-summary.compact.defense-summary-inline {
+    grid-template-columns: 1fr !important;
+    gap: 9px !important;
+    padding: 12px !important;
+  }
+  .defense-summary-inline .defense-inline-group,
+  .defense-summary-inline .defense-inline-infield,
+  .defense-summary-inline .defense-inline-outfield {
+    flex-wrap: wrap !important;
+  }
+}
+@media (max-width: 620px) {
+  .roster-page-with-sidebar .defense-summary.defense-summary-inline,
+  .roster-page-with-sidebar .defense-summary.compact.defense-summary-inline {
+    padding: 10px 8px !important;
+    gap: 10px !important;
+  }
+  .defense-summary-inline .defense-inline-group,
+  .defense-summary-inline .defense-inline-infield,
+  .defense-summary-inline .defense-inline-outfield {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    justify-items: center !important;
+    gap: 7px !important;
+  }
+  .defense-summary-inline .defense-inline-infield {
+    grid-template-columns: repeat(2, minmax(0, auto)) !important;
+  }
+  .defense-summary-inline .defense-inline-infield > b {
+    grid-column: 1 / -1 !important;
+  }
+  .defense-summary-inline .defense-inline-infield .defense-inline-combo:last-child {
+    grid-column: 1 / -1 !important;
+  }
+  .defense-summary-inline .defense-inline-outfield {
+    grid-template-columns: repeat(3, minmax(0, auto)) !important;
+  }
+  .defense-summary-inline .defense-inline-outfield > b {
+    grid-column: 1 / -1 !important;
+  }
+}

@@ -351,21 +351,7 @@ function CardProfilePage() {
 
   return (
     <div className="app">
-      <header className="player-profile-header">
-        <button
-          type="button"
-          className="profile-header-button"
-          onClick={() =>
-            navigate(appPath('/', isDemo))
-          }
-        >
-          <span aria-hidden="true">
-            ←
-          </span>
-
-          <span>Home</span>
-        </button>
-
+      <header className="player-profile-header player-profile-header-with-global-navigation">
         <div className="player-profile-heading">
           <p className="eyebrow">
             Elements Baseball
@@ -374,10 +360,6 @@ function CardProfilePage() {
           <h1>Player Profile</h1>
         </div>
 
-        <div
-          className="profile-header-spacer"
-          aria-hidden="true"
-        />
       </header>
 
       <main className="simplified-profile-page">

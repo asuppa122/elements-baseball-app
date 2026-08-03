@@ -1556,3 +1556,14 @@ input {
   .topbar { min-height: 68px !important; padding: 7px 8px !important; }
   .topbar .page-heading h1 { font-size: 1.35rem !important; }
 }
+
+/* v1.0 page headers rely on universal header navigation */
+.topbar-with-global-navigation,
+.player-profile-header-with-global-navigation {
+  display: flex !important;
+  justify-content: center !important;
+}
+.topbar-with-global-navigation .page-heading,
+.player-profile-header-with-global-navigation .player-profile-heading {
+  text-align: center !important;
+}

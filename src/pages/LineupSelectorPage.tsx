@@ -264,9 +264,6 @@ export default function LineupSelectorPage() {
           <h1>Team Builder</h1>
           <p>Build and manage your teams. Choose your roster rules and customize your team at any time.</p>
         </div>
-        <button type="button" className="back-button" onClick={() => navigate(appPath('/', isDemo))}>
-          ← Home
-        </button>
       </div>
 
       {error && <div className="auth-error">{error}</div>}

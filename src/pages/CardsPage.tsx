@@ -3,7 +3,6 @@ import {
   useMemo,
   useState,
 } from 'react'
-import { useNavigate } from 'react-router-dom'
 import CardGrid from '../components/CardGrid'
 import FilterDrawer from '../components/FilterDrawer'
 import type {
@@ -26,7 +25,6 @@ import {
   CARD_COLUMNS,
 } from '../types/card'
 import { useAuth } from '../auth/AuthContext'
-import { appPath } from '../lib/appPaths'
 import {
   cleanSearchTerm,
   normalizeImageUrl,
@@ -705,7 +703,6 @@ function isSeasonEligible(
 function CardsPage() {
   const { profile, isDemo } = useAuth()
   const currentManager = profile?.manager_name ?? ''
-  const navigate = useNavigate()
   const [savedFilters] = useState(
     loadSavedFilterState,
   )
@@ -1579,21 +1576,7 @@ function CardsPage() {
 
   return (
     <div className="app">
-      <header className="topbar">
-        <button
-          type="button"
-          className="back-button"
-          onClick={() =>
-            navigate(appPath('/', isDemo))
-          }
-        >
-          <span aria-hidden="true">
-            ←
-          </span>
-
-          <span>Home</span>
-        </button>
-
+      <header className="topbar topbar-with-global-navigation">
         <div className="page-heading">
           <p className="eyebrow">
             Elements Baseball
@@ -1605,10 +1588,6 @@ function CardsPage() {
 
         </div>
 
-        <div
-          className="header-spacer"
-          aria-hidden="true"
-        />
       </header>
 
       <main className="cards-page">

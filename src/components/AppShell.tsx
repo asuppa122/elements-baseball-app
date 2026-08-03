@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
 import logo from '../assets/elements-baseball-logo.png'
 import { appPath } from '../lib/appPaths'
 
 export default function AppShell({ children }: { children: ReactNode }) {
   const navigate = useNavigate()
+  const location = useLocation()
   const { profile, signOut, isDemo } = useAuth()
   const [profileOpen, setProfileOpen] = useState(false)
   const profileMenuRef = useRef<HTMLDivElement | null>(null)
@@ -19,13 +20,32 @@ export default function AppShell({ children }: { children: ReactNode }) {
     return () => window.removeEventListener('mousedown', close)
   }, [profileOpen])
 
+  const homePath = appPath('/', isDemo)
+  const isHome = location.pathname === homePath
+
+  function goBack() {
+    if (location.key !== 'default') {
+      navigate(-1)
+      return
+    }
+
+    navigate(homePath)
+  }
+
   return (
     <div className="authenticated-app">
       <header className="global-app-header">
-        <button type="button" className="global-brand" onClick={() => navigate(appPath('/', isDemo))}>
+        <div className="global-header-navigation">
+          {!isHome && (
+            <button type="button" className="global-back-button" onClick={goBack} aria-label="Go back">
+              <span aria-hidden="true">←</span>
+            </button>
+          )}
+        <button type="button" className="global-brand" onClick={() => navigate(homePath)}>
           <img src={logo} alt="Elements Baseball" />
           <span>Elements Baseball</span>
         </button>
+        </div>
 
         <div className="global-user-menu">
           {isDemo ? (
