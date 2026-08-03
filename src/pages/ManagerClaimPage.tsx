@@ -21,6 +21,15 @@ export default function ManagerClaimPage() {
     [user],
   )
 
+  const normalizedDiscordUsername = useMemo(
+    () =>
+      identity?.username
+        ?.trim()
+        .replace(/#\d{1,4}$/, '')
+        .toLowerCase() ?? '',
+    [identity?.username],
+  )
+
   useEffect(() => {
     async function loadManagers() {
       const { data, error: loadError } = await supabase
@@ -34,27 +43,32 @@ export default function ManagerClaimPage() {
       } else {
         const rows = (data ?? []) as AvailableManager[]
         setManagers(rows)
-        const username = identity?.username?.toLowerCase()
+
         const match = rows.find(
-          (row) => row.expected_discord_username?.toLowerCase() === username,
+          (row) =>
+            row.expected_discord_username?.trim().toLowerCase() ===
+            normalizedDiscordUsername,
         )
+
         setSelectedId(match?.id ?? null)
       }
+
       setLoading(false)
     }
 
     void loadManagers()
-  }, [identity?.username])
+  }, [normalizedDiscordUsername])
 
   async function claimManager() {
-    if (!user || !selectedId || !identity) return
+    if (!user || !selectedId || !identity || !normalizedDiscordUsername) return
+
     setSaving(true)
     setError('')
 
     const { error: claimError } = await supabase.rpc('claim_elements_manager', {
       manager_record_id: selectedId,
       discord_account_id: identity.discordId,
-      discord_username_value: identity.username,
+      discord_username_value: normalizedDiscordUsername,
       discord_display_name_value: identity.displayName,
       avatar_url_value: identity.avatarUrl,
     })
@@ -75,8 +89,11 @@ export default function ManagerClaimPage() {
         <p className="eyebrow">First-time setup</p>
         <h1>Claim your Elements manager</h1>
         <p>
-          Signed in as <strong>{identity?.username ?? identity?.displayName ?? 'Discord user'}</strong>.
-          Select the manager account that belongs to you. This connects your
+          Signed in as{' '}
+          <strong>
+            {identity?.username ?? identity?.displayName ?? 'Discord user'}
+          </strong>
+          . Select the manager account that belongs to you. This connects your
           existing cards and future lineups to your Discord account.
         </p>
 
@@ -87,25 +104,42 @@ export default function ManagerClaimPage() {
             {managers.map((manager) => (
               <button
                 type="button"
-                className={selectedId === manager.id ? 'manager-claim active' : 'manager-claim'}
+                className={
+                  selectedId === manager.id
+                    ? 'manager-claim active'
+                    : 'manager-claim'
+                }
                 onClick={() => setSelectedId(manager.id)}
                 key={manager.id}
               >
                 <strong>{manager.manager_name}</strong>
-                <span>{manager.expected_discord_username ?? 'Pre-approved manager'}</span>
+                <span>
+                  {manager.expected_discord_username ??
+                    'Pre-approved manager'}
+                </span>
               </button>
             ))}
           </div>
         )}
 
         <div className="claim-actions">
-          <button type="button" className="secondary" onClick={() => void signOut()}>
+          <button
+            type="button"
+            className="secondary"
+            onClick={() => void signOut()}
+          >
             Use another Discord account
           </button>
-          <button type="button" onClick={claimManager} disabled={!selectedId || saving}>
+
+          <button
+            type="button"
+            onClick={claimManager}
+            disabled={!selectedId || saving}
+          >
             {saving ? 'Claiming…' : 'Confirm manager'}
           </button>
         </div>
+
         {error && <div className="auth-error">{error}</div>}
       </section>
     </main>
