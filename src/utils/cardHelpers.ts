@@ -2,15 +2,7 @@ import type {
   CardRow,
 } from '../types/card'
 
-export const CURRENT_MANAGER =
-  'Anthony'
-
-export type CardType =
-  | 'hitter'
-  | 'pitcher'
-  | 'two-way'
-
-export function getGoogleDriveFileId(
+function getGoogleDriveFileId(
   url: string,
 ): string | null {
   try {
@@ -98,7 +90,7 @@ export function cleanSearchTerm(
     .replace(/\s+/g, ' ')
 }
 
-export function normalizeManagerName(
+function normalizeManagerName(
   managerName: string,
 ): string {
   return managerName
@@ -157,67 +149,6 @@ export function getCardTeamCode(
     card.hitter_team_code ??
     card.pitcher_team_code
   )
-}
-
-export function isHitterCard(
-  card: CardRow,
-): boolean {
-  return (
-    card.hitter_on_base !== null ||
-    card.hitter_year !== null
-  )
-}
-
-export function isPitcherCard(
-  card: CardRow,
-): boolean {
-  return (
-    card.pitcher_control !== null ||
-    card.pitcher_ip !== null
-  )
-}
-
-export function getCardType(
-  card: CardRow,
-): CardType {
-  const hitter =
-    isHitterCard(card)
-
-  const pitcher =
-    isPitcherCard(card)
-
-  if (hitter && pitcher) {
-    return 'two-way'
-  }
-
-  if (pitcher) {
-    return 'pitcher'
-  }
-
-  return 'hitter'
-}
-
-export function getCardTypeLabel(
-  card: CardRow,
-): string {
-  const cardType =
-    getCardType(card)
-
-  if (cardType === 'two-way') {
-    return 'Two-Way'
-  }
-
-  if (cardType === 'pitcher') {
-    return 'Pitcher'
-  }
-
-  return 'Hitter'
-}
-
-export function getCardPoints(
-  card: CardRow,
-): number {
-  return card.hitter_points ?? 0
 }
 
 export function getCardPositions(

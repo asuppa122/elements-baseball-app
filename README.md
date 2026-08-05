@@ -1,16 +1,43 @@
-# Elements Baseball
+Elements Baseball
+Version: v1.1 Stable Public Beta
 
-Start with [`START_HERE.md`](START_HERE.md).
+Date
+August 3, 2026
 
-This complete handoff includes:
+Stable Features
+---------------
+✓ Discord Login
+✓ Guest Demo
+✓ Cards Database
+✓ Team Builder
+✓ Active Roster
+✓ Fielding
+✓ Batting Order
+✓ Bench
+✓ Rotation
+✓ Bullpen
+✓ Home Dashboard
+✓ Mobile Responsive
+✓ Save Teams
+✓ Roster Swapping
+✓ Clear Page
+✓ Clear Team
 
-- the full current React/Vite project;
-- production and Demo Mode routes;
-- Supabase migrations and import scripts;
-- cleanup audit;
-- automatic Mac update script;
-- local testing script;
-- GitHub/Vercel deployment script;
-- `.env.example` for reference.
+Roadmap
+-------
+Phase 2
+- Home tile styling
+- Season Milestones page
+- Theme selector (Light/Dark)
+- Create Team wizard
+- File/code cleanup
 
-Local secrets are intentionally excluded. `APPLY_UPDATE.command` preserves the existing `.env`, `.git`, `node_modules`, and `json.txt` inside `~/Desktop/elements-baseball-app` automatically.
+Phase 3
+- Cloudflare R2 image migration
+- Image optimization
+- Generated fallback cards
+- Performance improvements
+
+Notes
+-----
+This is the first stable public beta release before beginning the major image infrastructure upgrade.
