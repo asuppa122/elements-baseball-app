@@ -321,7 +321,20 @@ function matchesPosition(
   }
 
   if (positionFilter === 'hitters') {
-    return card.hitter_on_base !== null || card.hitter_year !== null
+    return [
+      card.hitter_on_base,
+      card.hitter_outs,
+      card.hitter_pu,
+      card.hitter_k,
+      card.hitter_gb,
+      card.hitter_fb,
+      card.hitter_bb,
+      card.hitter_1b,
+      card.hitter_1b_plus,
+      card.hitter_2b,
+      card.hitter_3b,
+      card.hitter_hr,
+    ].some((value) => value !== null && value !== undefined && value !== '')
   }
 
   const positionColumn =
@@ -361,9 +374,23 @@ function matchesPosition(
   if (
     positionFilter === 'p'
   ) {
-    return (
-      card.pitcher_control !== null ||
-      card.pitcher_year !== null
+    return [
+      card.pitcher_control,
+      card.pitcher_outs,
+      card.pitcher_pu,
+      card.pitcher_k,
+      card.pitcher_gb,
+      card.pitcher_fb,
+      card.pitcher_bb,
+      card.pitcher_1b,
+      card.pitcher_2b,
+      card.pitcher_3b,
+      card.pitcher_hr,
+    ].some(
+      (value) =>
+        value !== null &&
+        value !== undefined &&
+        value !== '',
     )
   }
 
@@ -1429,7 +1456,7 @@ function CardsPage() {
                 matchesAttribute(
                   card,
                   condition.attribute,
-                  chartMode,
+                  condition.chartMode ?? chartMode,
                   condition.operator,
                   condition.value,
                 ),
@@ -1576,20 +1603,6 @@ function CardsPage() {
 
   return (
     <div className="app">
-      <header className="topbar topbar-with-global-navigation">
-        <div className="page-heading">
-          <p className="eyebrow">
-            Elements Baseball
-          </p>
-
-          <h1>
-            Card Database
-          </h1>
-
-        </div>
-
-      </header>
-
       <main className="cards-page">
 
         <FilterDrawer

@@ -5,6 +5,7 @@ import {
 } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import DefenseStage from '../components/DefenseStage'
+import UniversalFilterDrawer from '../components/UniversalFilterDrawer'
 import {
   ACTIVE_SEASON,
   loadSeasonCards,
@@ -66,6 +67,45 @@ type DrawerSort =
 type SortDirection =
   | 'asc'
   | 'desc'
+
+type AttributeOperator = 'eq' | 'neq' | 'lt' | 'lte' | 'gt' | 'gte'
+type AttributeCondition = {
+  id: string
+  attribute: DrawerSort | ''
+  operator: AttributeOperator
+  value: string
+}
+type DefensePosition = '' | 'c' | '1b' | '2b' | '3b' | 'ss' | 'lf' | 'cf' | 'rf'
+
+const attributeOperators: Array<[AttributeOperator, string]> = [
+  ['eq', '='], ['neq', '≠'], ['lt', '<'], ['lte', '≤'], ['gt', '>'], ['gte', '≥'],
+]
+
+function numericCardValue(card: CardRecord, attribute: DrawerSort): number | null {
+  if (attribute === 'points') return getPoints(card)
+  if (attribute === 'year') return getCardYear(card)
+  if (attribute === 'name' || attribute === 'defense') return null
+  const value = card[attribute as keyof CardRecord]
+  if (typeof value === 'number') return value
+  if (typeof value === 'string') {
+    const match = value.match(/-?\d+(?:\.\d+)?/)
+    return match ? Number(match[0]) : null
+  }
+  return null
+}
+
+function matchesAttributeCondition(card: CardRecord, condition: AttributeCondition): boolean {
+  if (!condition.attribute || condition.value.trim() === '') return true
+  const actual = numericCardValue(card, condition.attribute)
+  const expected = Number(condition.value)
+  if (actual === null || Number.isNaN(expected)) return false
+  if (condition.operator === 'eq') return actual === expected
+  if (condition.operator === 'neq') return actual !== expected
+  if (condition.operator === 'lt') return actual < expected
+  if (condition.operator === 'lte') return actual <= expected
+  if (condition.operator === 'gt') return actual > expected
+  return actual >= expected
+}
 
 
 type Slot = {
@@ -403,6 +443,11 @@ function RosterPage() {
     useState('')
   const [armFilter, setArmFilter] =
     useState('')
+  const [attributeConditions, setAttributeConditions] = useState<AttributeCondition[]>([
+    { id: 'attribute-1', attribute: '', operator: 'eq', value: '' },
+  ])
+  const [defensePosition, setDefensePosition] = useState<DefensePosition>('')
+  const [defenseRating, setDefenseRating] = useState('')
   const [drawerControlsOpen, setDrawerControlsOpen] =
     useState(false)
   const [hoverCardKey, setHoverCardKey] =
@@ -801,6 +846,25 @@ function RosterPage() {
           return false
         }
 
+        if (!attributeConditions.every((condition) => matchesAttributeCondition(card, condition))) {
+          return false
+        }
+
+        if (defenseRating.trim() !== '') {
+          const minimum = Number(defenseRating)
+          if (!Number.isNaN(minimum)) {
+            const positions = defensePosition
+              ? [defensePosition]
+              : ['c', '1b', '2b', '3b', 'ss', 'lf', 'cf', 'rf']
+            const best = Math.max(
+              ...positions.map((position) => {
+                const value = card[`defense_${position}` as keyof CardRecord]
+                return typeof value === 'number' ? value : -999
+              }),
+            )
+            if (best < minimum) return false
+          }
+        }
 
         if (!cleaned) {
           return true
@@ -926,6 +990,9 @@ function RosterPage() {
   }, [
     activeDefenseSlots,
     armFilter,
+    attributeConditions,
+    defensePosition,
+    defenseRating,
     assigned,
     batsFilter,
     cards,
@@ -2093,7 +2160,7 @@ function RosterPage() {
           }}
         >
           <aside
-            className="roster-player-drawer"
+            className="roster-player-drawer universal-filter-surface universal-filter-surface--overlay"
             onPointerDown={(event) =>
               event.stopPropagation()
             }
@@ -2123,357 +2190,278 @@ function RosterPage() {
               </button>
             </div>
 
-            <label className="roster-player-search">
-              <span>⌕</span>
-              <input
-                type="search"
-                value={search}
-                onChange={(event) =>
-                  setSearch(
-                    event.target.value,
+            <UniversalFilterDrawer
+              open={drawerControlsOpen}
+              onOpenChange={setDrawerControlsOpen}
+              searchValue={search}
+              onSearchChange={setSearch}
+              searchPlaceholder="Search eligible players"
+              quickSortOptions={[
+                { value: 'points' as DrawerSort, label: 'Points' },
+                { value: 'year' as DrawerSort, label: 'Year' },
+                { value: 'name' as DrawerSort, label: 'Name' },
+              ]}
+              sortValue={drawerSort}
+              sortDirection={drawerSortDirection}
+              onQuickSort={(value) => {
+                if (drawerSort === value) {
+                  setDrawerSortDirection((current) =>
+                    current === 'desc' ? 'asc' : 'desc',
                   )
+                } else {
+                  setDrawerSort(value)
+                  setDrawerSortDirection(value === 'name' ? 'asc' : 'desc')
                 }
-                placeholder="Search eligible players"
-                autoFocus
-              />
-            </label>
+              }}
+              attributeSortValue={
+                ['points', 'year', 'name'].includes(drawerSort)
+                  ? ''
+                  : drawerSort
+              }
+              attributeSortOptions={
+                <>
+                  <option value="">Select an attribute</option>
+                  <optgroup label="Hitter Attributes">
+                    <option value="hitter_on_base">On Base</option>
+                    <option value="hitter_outs">Outs</option>
+                    <option value="hitter_baserunning">Baserunning</option>
+                    <option value="hitter_stolen_base">Stolen Base</option>
+                    <option value="hitter_fatigue">Fatigue</option>
+                    <option value="hitter_pu">Pop Up</option>
+                    <option value="hitter_k">Strikeout</option>
+                    <option value="hitter_gb">Ground Ball</option>
+                    <option value="hitter_fb">Fly Ball</option>
+                    <option value="hitter_bb">Walk</option>
+                    <option value="hitter_1b">Single</option>
+                    <option value="hitter_1b_plus">Single Plus</option>
+                    <option value="hitter_2b">Double</option>
+                    <option value="hitter_3b">Triple</option>
+                    <option value="hitter_hr">Home Run</option>
+                  </optgroup>
+                  <optgroup label="Pitcher Attributes">
+                    <option value="pitcher_control">Control</option>
+                    <option value="pitcher_outs">Outs</option>
+                    <option value="pitcher_ip">Innings Pitched</option>
+                    <option value="pitcher_fatigue">Fatigue</option>
+                    <option value="pitcher_pu">Pop Up</option>
+                    <option value="pitcher_k">Strikeout</option>
+                    <option value="pitcher_gb">Ground Ball</option>
+                    <option value="pitcher_fb">Fly Ball</option>
+                    <option value="pitcher_bb">Walk</option>
+                    <option value="pitcher_1b">Single</option>
+                    <option value="pitcher_2b">Double</option>
+                    <option value="pitcher_3b">Triple</option>
+                    <option value="pitcher_hr">Home Run</option>
+                  </optgroup>
+                  <option value="defense">Fielding at selected position</option>
+                </>
+              }
+              onAttributeSortChange={(value) => {
+                if (!value) return
+                setDrawerSort(value as DrawerSort)
+                setDrawerSortDirection('desc')
+              }}
+              onDirectionToggle={() =>
+                setDrawerSortDirection((current) =>
+                  current === 'desc' ? 'asc' : 'desc',
+                )
+              }
+              filterFields={[
+                {
+                  label: 'Year',
+                  value: yearFilter,
+                  options: [
+                    { value: '', label: 'All years' },
+                    ...drawerYearOptions.map((year) => ({
+                      value: String(year),
+                      label: String(year),
+                    })),
+                  ],
+                  onChange: setYearFilter,
+                },
+                {
+                  label: 'Team',
+                  value: teamFilter,
+                  kind: 'search',
+                  placeholder: 'Team',
+                  onChange: setTeamFilter,
+                },
+                {
+                  label: 'League',
+                  value: leagueFilter,
+                  options: [
+                    { value: '', label: 'All leagues' },
+                    ...drawerLeagueOptions.map((league) => ({
+                      value: league,
+                      label: league,
+                    })),
+                  ],
+                  onChange: setLeagueFilter,
+                },
+                {
+                  label: 'Bats',
+                  value: batsFilter,
+                  options: [
+                    { value: '', label: 'All' },
+                    { value: 'R', label: 'R' },
+                    { value: 'L', label: 'L' },
+                    { value: 'S', label: 'S' },
+                  ],
+                  onChange: setBatsFilter,
+                },
+                {
+                  label: 'Arm',
+                  value: armFilter,
+                  options: [
+                    { value: '', label: 'All' },
+                    { value: 'R', label: 'R' },
+                    { value: 'L', label: 'L' },
+                  ],
+                  onChange: setArmFilter,
+                },
+              ]}
+              onClearFilters={() => {
+                setSearch('')
+                setYearFilter('')
+                setTeamFilter('')
+                setLeagueFilter('')
+                setBatsFilter('')
+                setArmFilter('')
+                setDrawerSort('points')
+                setDrawerSortDirection('desc')
+              }}
+             >
+               <section className="tb-attribute-filters">
+                 <div className="tb-attribute-heading">
+                   <span>Attribute Filters</span>
+                   <button type="button" onClick={() =>
+                     setAttributeConditions((current) => [
+                       ...current,
+                       { id: `attribute-${Date.now()}`, attribute: '', operator: 'eq', value: '' },
+                     ])
+                   }>
+                     + Add Filter
+                   </button>
+                 </div>
 
-            {!drawerControlsOpen && (
-              <div className="roster-compact-toolbar">
-                <div className="roster-sort-chip-row">
-                  {([['points', 'Points'], ['year', 'Year'], ['name', 'Name']] as Array<[DrawerSort, string]>).map(([value, label]) => (
-                    <button
-                      type="button"
-                      className={drawerSort === value ? 'roster-sort-chip active' : 'roster-sort-chip'}
-                      onClick={() => {
-                        if (drawerSort === value) {
-                          setDrawerSortDirection((current) => current === 'desc' ? 'asc' : 'desc')
-                        } else {
-                          setDrawerSort(value)
-                          setDrawerSortDirection(value === 'name' ? 'asc' : 'desc')
-                        }
-                      }}
-                      key={value}
-                    >
-                      {label}{drawerSort === value && <span>{drawerSortDirection === 'desc' ? '↓' : '↑'}</span>}
-                    </button>
-                  ))}
-                </div>
-                <button type="button" className="roster-expand-controls" onClick={() => setDrawerControlsOpen(true)}>
-                  Filters & Sort +
-                </button>
-              </div>
-            )}
+                 <div className="tb-attribute-layout">
+                   <div className="tb-attribute-condition-list">
+                     {attributeConditions.map((condition) => (
+                       <div className="tb-attribute-condition" key={condition.id}>
+                         <select
+                           value={condition.attribute}
+                           onChange={(event) =>
+                             setAttributeConditions((current) =>
+                               current.map((item) =>
+                                 item.id === condition.id
+                                   ? { ...item, attribute: event.target.value as DrawerSort | '' }
+                                   : item,
+                               ),
+                             )
+                           }
+                         >
+                           <option value="">Select an attribute</option>
+                           <optgroup label="Hitter Attributes">
+                             <option value="hitter_on_base">On Base</option>
+                             <option value="hitter_outs">Outs</option>
+                             <option value="hitter_baserunning">Baserunning</option>
+                             <option value="hitter_stolen_base">Stolen Base</option>
+                             <option value="hitter_fatigue">Fatigue</option>
+                             <option value="hitter_pu">Pop Up</option>
+                             <option value="hitter_k">Strikeout</option>
+                             <option value="hitter_gb">Ground Ball</option>
+                             <option value="hitter_fb">Fly Ball</option>
+                             <option value="hitter_bb">Walk</option>
+                             <option value="hitter_1b">Single</option>
+                             <option value="hitter_1b_plus">Single Plus</option>
+                             <option value="hitter_2b">Double</option>
+                             <option value="hitter_3b">Triple</option>
+                             <option value="hitter_hr">Home Run</option>
+                           </optgroup>
+                           <optgroup label="Pitcher Attributes">
+                             <option value="pitcher_control">Control</option>
+                             <option value="pitcher_outs">Outs</option>
+                             <option value="pitcher_ip">Innings Pitched</option>
+                             <option value="pitcher_fatigue">Fatigue</option>
+                             <option value="pitcher_pu">Pop Up</option>
+                             <option value="pitcher_k">Strikeout</option>
+                             <option value="pitcher_gb">Ground Ball</option>
+                             <option value="pitcher_fb">Fly Ball</option>
+                             <option value="pitcher_bb">Walk</option>
+                             <option value="pitcher_1b">Single</option>
+                             <option value="pitcher_2b">Double</option>
+                             <option value="pitcher_3b">Triple</option>
+                             <option value="pitcher_hr">Home Run</option>
+                           </optgroup>
+                         </select>
+                         <select
+                           value={condition.operator}
+                           onChange={(event) =>
+                             setAttributeConditions((current) =>
+                               current.map((item) =>
+                                 item.id === condition.id
+                                   ? { ...item, operator: event.target.value as AttributeOperator }
+                                   : item,
+                               ),
+                             )
+                           }
+                         >
+                           {attributeOperators.map(([value, label]) => (
+                             <option value={value} key={value}>{label}</option>
+                           ))}
+                         </select>
+                         <input
+                           value={condition.value}
+                           onChange={(event) =>
+                             setAttributeConditions((current) =>
+                               current.map((item) =>
+                                 item.id === condition.id ? { ...item, value: event.target.value } : item,
+                               ),
+                             )
+                           }
+                           placeholder="Value"
+                           inputMode="decimal"
+                         />
+                         <button type="button" aria-label="Remove filter" onClick={() =>
+                           setAttributeConditions((current) =>
+                             current.length === 1
+                               ? [{ id: 'attribute-1', attribute: '', operator: 'eq', value: '' }]
+                               : current.filter((item) => item.id !== condition.id),
+                           )
+                         }>
+                           ×
+                         </button>
+                       </div>
+                     ))}
+                   </div>
 
-            {drawerControlsOpen && (<>
-            <div className="roster-expanded-controls-heading">
-              <span>Filters & Sort</span>
-              <button type="button" onClick={() => setDrawerControlsOpen(false)}>Collapse −</button>
-            </div>
-            <section className="roster-drawer-sort">
-              <span className="roster-drawer-section-label">
-                Quick Sort
-              </span>
-
-              <div className="roster-sort-chip-row">
-                {(
-                  [
-                    ['points', 'Points'],
-                    ['year', 'Year'],
-                    ['name', 'Name'],
-                  ] as Array<
-                    [DrawerSort, string]
-                  >
-                ).map(
-                  ([value, label]) => (
-                    <button
-                      type="button"
-                      className={
-                        drawerSort ===
-                        value
-                          ? 'roster-sort-chip active'
-                          : 'roster-sort-chip'
-                      }
-                      onClick={() => {
-                        if (
-                          drawerSort ===
-                          value
-                        ) {
-                          setDrawerSortDirection(
-                            (current) =>
-                              current ===
-                              'desc'
-                                ? 'asc'
-                                : 'desc',
-                          )
-                        } else {
-                          setDrawerSort(
-                            value,
-                          )
-                          setDrawerSortDirection(
-                            value === 'name'
-                              ? 'asc'
-                              : 'desc',
-                          )
-                        }
-                      }}
-                      key={value}
-                    >
-                      {label}
-
-                      {drawerSort ===
-                        value && (
-                        <span>
-                          {drawerSortDirection ===
-                          'desc'
-                            ? '↓'
-                            : '↑'}
-                        </span>
-                      )}
-                    </button>
-                  ),
-                )}
-              </div>
-
-              <div className="roster-advanced-sort-row">
-                <label>
-                  <span>Attribute Sort</span>
-
-                  <select
-                    value={
-                      [
-                        'points',
-                        'year',
-                        'name',
-                      ].includes(
-                        drawerSort,
-                      )
-                        ? ''
-                        : drawerSort
-                    }
-                    onChange={(event) => {
-                      const value =
-                        event.target
-                          .value as DrawerSort
-
-                      if (!value) {
-                        return
-                      }
-
-                      setDrawerSort(value)
-                      setDrawerSortDirection(
-                        'desc',
-                      )
-                    }}
-                  >
-                    <option value="">
-                      Select an attribute
-                    </option>
-                    <optgroup label="Hitter Attributes">
-                      <option value="hitter_on_base">On Base</option>
-                      <option value="hitter_outs">Outs</option>
-                      <option value="hitter_baserunning">Baserunning</option>
-                      <option value="hitter_stolen_base">Stolen Base</option>
-                      <option value="hitter_fatigue">Fatigue</option>
-                      <option value="hitter_pu">Pop Up</option>
-                      <option value="hitter_k">Strikeout</option>
-                      <option value="hitter_gb">Ground Ball</option>
-                      <option value="hitter_fb">Fly Ball</option>
-                      <option value="hitter_bb">Walk</option>
-                      <option value="hitter_1b">Single</option>
-                      <option value="hitter_1b_plus">Single Plus</option>
-                      <option value="hitter_2b">Double</option>
-                      <option value="hitter_3b">Triple</option>
-                      <option value="hitter_hr">Home Run</option>
-                    </optgroup>
-                    <optgroup label="Pitcher Attributes">
-                      <option value="pitcher_control">Control</option>
-                      <option value="pitcher_outs">Outs</option>
-                      <option value="pitcher_ip">Innings Pitched</option>
-                      <option value="pitcher_fatigue">Fatigue</option>
-                      <option value="pitcher_pu">Pop Up</option>
-                      <option value="pitcher_k">Strikeout</option>
-                      <option value="pitcher_gb">Ground Ball</option>
-                      <option value="pitcher_fb">Fly Ball</option>
-                      <option value="pitcher_bb">Walk</option>
-                      <option value="pitcher_1b">Single</option>
-                      <option value="pitcher_2b">Double</option>
-                      <option value="pitcher_3b">Triple</option>
-                      <option value="pitcher_hr">Home Run</option>
-                    </optgroup>
-                    <option value="defense">Fielding at selected position</option>
-                  </select>
-                </label>
-
-                <button
-                  type="button"
-                  className="roster-sort-direction-button"
-                  onClick={() =>
-                    setDrawerSortDirection(
-                      (current) =>
-                        current === 'desc'
-                          ? 'asc'
-                          : 'desc',
-                    )
-                  }
-                >
-                  {drawerSortDirection ===
-                  'desc'
-                    ? 'High to Low ↓'
-                    : 'Low to High ↑'}
-                </button>
-              </div>
-            </section>
-
-            <section className="roster-drawer-filter-section">
-              <span className="roster-drawer-section-label">
-                Filters
-              </span>
-
-              <div className="roster-drawer-filter-grid">
-                <label>
-                  <span>Year</span>
-
-                  <select
-                    value={yearFilter}
-                    onChange={(event) =>
-                      setYearFilter(
-                        event.target.value,
-                      )
-                    }
-                  >
-                    <option value="">
-                      All years
-                    </option>
-
-                    {drawerYearOptions.map(
-                      (year) => (
-                        <option
-                          value={year}
-                          key={year}
-                        >
-                          {year}
-                        </option>
-                      ),
-                    )}
-                  </select>
-                </label>
-
-                <label>
-                  <span>Team</span>
-
-                  <input
-                    type="search"
-                    value={teamFilter}
-                    onChange={(event) =>
-                      setTeamFilter(
-                        event.target.value,
-                      )
-                    }
-                    placeholder="Team"
-                  />
-                </label>
-
-                <label>
-                  <span>League</span>
-
-                  <select
-                    value={leagueFilter}
-                    onChange={(event) =>
-                      setLeagueFilter(
-                        event.target.value,
-                      )
-                    }
-                  >
-                    <option value="">
-                      All leagues
-                    </option>
-
-                    {drawerLeagueOptions.map(
-                      (league) => (
-                        <option
-                          value={league}
-                          key={league}
-                        >
-                          {league}
-                        </option>
-                      ),
-                    )}
-                  </select>
-                </label>
-
-                <label>
-                  <span>Bats</span>
-
-                  <select
-                    value={batsFilter}
-                    onChange={(event) =>
-                      setBatsFilter(
-                        event.target.value,
-                      )
-                    }
-                  >
-                    <option value="">
-                      All
-                    </option>
-                    <option value="R">
-                      R
-                    </option>
-                    <option value="L">
-                      L
-                    </option>
-                    <option value="S">
-                      S
-                    </option>
-                  </select>
-                </label>
-
-                <label>
-                  <span>Arm</span>
-
-                  <select
-                    value={armFilter}
-                    onChange={(event) =>
-                      setArmFilter(
-                        event.target.value,
-                      )
-                    }
-                  >
-                    <option value="">
-                      All
-                    </option>
-                    <option value="R">
-                      R
-                    </option>
-                    <option value="L">
-                      L
-                    </option>
-                  </select>
-                </label>
-
-                <button
-                  type="button"
-                  className="roster-clear-drawer-filters"
-                  onClick={() => {
-                    setSearch('')
-                    setYearFilter('')
-                    setTeamFilter('')
-                    setLeagueFilter('')
-                    setBatsFilter('')
-                    setArmFilter('')
-                    setDrawerSort(
-                      'points',
-                    )
-                    setDrawerSortDirection(
-                      'desc',
-                    )
-                  }}
-                >
-                  Clear Filters
-                </button>
-              </div>
-            </section>
-            </>)}
+                   <div className="tb-defense-filters">
+                     <label>
+                       <span>Fielding Position</span>
+                       <select value={defensePosition} onChange={(event) =>
+                         setDefensePosition(event.target.value as DefensePosition)
+                       }>
+                         <option value="">Highest score</option>
+                         <option value="c">C</option>
+                         <option value="1b">1B</option>
+                         <option value="2b">2B</option>
+                         <option value="3b">3B</option>
+                         <option value="ss">SS</option>
+                         <option value="lf">LF</option>
+                         <option value="cf">CF</option>
+                         <option value="rf">RF</option>
+                       </select>
+                     </label>
+                     <label>
+                       <span>Minimum DEF</span>
+                       <input value={defenseRating} onChange={(event) =>
+                         setDefenseRating(event.target.value)
+                       } placeholder="e.g. 2" inputMode="numeric" />
+                     </label>
+                   </div>
+                 </div>
+               </section>
+             </UniversalFilterDrawer>
 
             </div>
 

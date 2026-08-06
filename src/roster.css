@@ -10759,3 +10759,1621 @@ span {
     min-height: 38px;
   }
 }
+
+
+/* v1.2.2 — Card Database uses the Lineup Builder drawer system */
+.card-database-drawer {
+  margin: 8px 0 18px;
+  padding: 14px 16px 16px;
+  border: 1px solid rgba(216, 173, 45, 0.28);
+  border-radius: 14px;
+  background:
+    radial-gradient(circle at 82% 12%, rgba(216, 173, 45, 0.06), transparent 30%),
+    linear-gradient(180deg, rgba(12, 13, 14, 0.98), rgba(7, 8, 9, 0.98));
+}
+
+.card-database-position-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.card-database-search {
+  margin: 12px 0;
+}
+
+.card-database-compact-toolbar {
+  margin-top: 4px;
+}
+
+.card-database-clear-button {
+  align-self: end;
+  min-height: 40px;
+}
+
+.card-database-attribute-filters {
+  margin-top: 15px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(216, 173, 45, 0.16);
+}
+
+.card-database-attribute-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 9px;
+}
+
+.card-database-attribute-heading .roster-drawer-section-label {
+  margin-bottom: 0;
+}
+
+.card-database-condition {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) 96px 130px 40px;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.card-database-condition select,
+.card-database-condition input,
+.card-database-defense-row select,
+.card-database-defense-row input {
+  width: 100%;
+  min-height: 40px;
+  padding: 8px 10px;
+  border: 1px solid #36383c;
+  border-radius: 8px;
+  background: #090a0b;
+  color: #f3f0e6;
+  font: inherit;
+}
+
+.card-database-condition > button {
+  min-height: 40px;
+  border: 1px solid rgba(216, 173, 45, 0.34);
+  border-radius: 8px;
+  background: #0b0b0b;
+  color: #f2cd55;
+  cursor: pointer;
+}
+
+.card-database-defense-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(180px, 1fr));
+  gap: 9px;
+  margin-top: 10px;
+}
+
+.card-database-defense-row label > span {
+  display: block;
+  margin-bottom: 6px;
+  color: #87898e;
+  font-size: 0.61rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.card-database-drawer .cards-primary-toggles,
+.card-database-drawer .uf-chip-row {
+  margin-top: 14px;
+}
+
+@media (max-width: 760px) {
+  .card-database-condition,
+  .card-database-defense-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+
+.universal-position-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-bottom: 2px;
+}
+
+/* v1.2.8 — one shared outer filter surface for Team Builder and Cards */
+.universal-filter-surface {
+  box-sizing: border-box;
+  width: min(1100px, 62vw);
+  padding: 22px;
+  border: 1px solid var(--gold-muted);
+  background:
+    radial-gradient(
+      circle at 100% 0%,
+      rgba(216, 173, 45, 0.11),
+      transparent 29rem
+    ),
+    #101113;
+  box-shadow: -24px 0 48px rgba(0, 0, 0, 0.48);
+}
+
+.universal-filter-surface--overlay {
+  height: 100%;
+  border-top: 0;
+  border-right: 0;
+  border-bottom: 0;
+}
+
+.universal-filter-surface--embedded {
+  margin: 0 auto 18px;
+}
+
+.universal-filter-surface .roster-player-search,
+.universal-filter-surface .roster-compact-toolbar,
+.universal-filter-surface .roster-expanded-controls-heading,
+.universal-filter-surface .roster-drawer-sort,
+.universal-filter-surface .roster-drawer-filter-section {
+  width: 100%;
+}
+
+.universal-position-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-bottom: 2px;
+}
+
+@media (max-width: 1200px) {
+  .universal-filter-surface {
+    width: min(860px, 78vw);
+  }
+}
+
+@media (max-width: 760px) {
+  .universal-filter-surface {
+    width: 100%;
+    padding: 16px 12px;
+  }
+}
+
+
+
+/* v1.2.9 — independent Cards Filter Drawer
+   Team Builder styles above are frozen and untouched. */
+.cards-filter-surface {
+  box-sizing: border-box;
+  width: 100%;
+  margin: 0 0 18px;
+  padding: 22px;
+  border: 1px solid var(--gold-muted);
+  border-radius: 12px;
+  background:
+    radial-gradient(
+      circle at 100% 0%,
+      rgba(216, 173, 45, 0.11),
+      transparent 29rem
+    ),
+    #101113;
+  box-shadow: 0 16px 34px rgba(0, 0, 0, 0.32);
+}
+
+.cards-filter-position-chip-row,
+.cards-filter-sort-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.cards-filter-position-chip-row {
+  margin-bottom: 2px;
+}
+
+.cards-filter-sort-chip {
+  display: inline-flex;
+  min-height: 35px;
+  padding: 7px 10px;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid #383a3e;
+  border-radius: 999px;
+  background: #090a0b;
+  color: #bfc0c3;
+  font-size: 0.7rem;
+  font-weight: 850;
+}
+
+.cards-filter-sort-chip:hover,
+.cards-filter-sort-chip.active {
+  border-color: var(--gold-bright);
+  color: var(--gold-bright);
+}
+
+.cards-filter-sort-chip.active {
+  background: var(--gold-soft);
+}
+
+.cards-filter-player-search {
+  display: flex;
+  width: 100%;
+  margin: 16px 0 12px;
+  padding: 0 13px;
+  align-items: center;
+  gap: 9px;
+  border: 1px solid rgba(216, 173, 45, 0.3);
+  border-radius: 10px;
+  background: #08090a;
+}
+
+.cards-filter-player-search span {
+  color: var(--gold-bright);
+}
+
+.cards-filter-player-search input {
+  width: 100%;
+  min-height: 46px;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--cream);
+}
+
+.cards-filter-compact-toolbar {
+  display: flex;
+  margin-top: 4px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.cards-filter-expand-controls,
+.cards-filter-expanded-controls-heading button {
+  min-height: 32px;
+  padding: 0 10px;
+  border: 1px solid rgba(207, 167, 54, 0.38);
+  border-radius: 7px;
+  background: #0b0b0b;
+  color: #f2cd55;
+  font-size: 0.64rem;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.cards-filter-expanded-controls-heading {
+  display: flex;
+  margin-top: 4px;
+  align-items: center;
+  justify-content: space-between;
+  color: #c9c9c9;
+  font-size: 0.56rem;
+  font-weight: 900;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.cards-filter-sort-section,
+.cards-filter-filter-section,
+.card-database-attribute-filters {
+  margin-top: 15px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(216, 173, 45, 0.16);
+}
+
+.cards-filter-section-label {
+  display: block;
+  margin-bottom: 9px;
+  color: #a9aaad;
+  font-size: 0.66rem;
+  font-weight: 900;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+
+.cards-filter-advanced-sort-row {
+  display: grid;
+  margin-top: 13px;
+  grid-template-columns: minmax(260px, 1fr) auto;
+  align-items: end;
+  gap: 9px;
+}
+
+.cards-filter-advanced-sort-row label > span,
+.cards-filter-grid label > span {
+  display: block;
+  margin-bottom: 6px;
+  color: #87898e;
+  font-size: 0.61rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.cards-filter-advanced-sort-row select,
+.cards-filter-sort-direction-button,
+.cards-filter-grid input,
+.cards-filter-grid select,
+.cards-filter-clear-button {
+  width: 100%;
+  min-height: 40px;
+  padding: 8px 10px;
+  border: 1px solid #36383c;
+  border-radius: 8px;
+  outline: 0;
+  background: #08090a;
+  color: var(--cream);
+  font-size: 0.74rem;
+}
+
+.cards-filter-sort-direction-button {
+  width: auto;
+  border-color: rgba(216, 173, 45, 0.32);
+  color: var(--gold-bright);
+  font-weight: 850;
+}
+
+.cards-filter-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 9px;
+}
+
+.cards-filter-clear-button {
+  align-self: end;
+  border-color: rgba(216, 173, 45, 0.32);
+  color: var(--gold-bright);
+  font-weight: 850;
+}
+
+.cards-filter-advanced-sort-row select:focus,
+.cards-filter-grid input:focus,
+.cards-filter-grid select:focus {
+  border-color: var(--gold-bright);
+  box-shadow: 0 0 0 3px var(--gold-soft);
+}
+
+.cards-filter-sort-direction-button:hover,
+.cards-filter-clear-button:hover,
+.cards-filter-expand-controls:hover,
+.cards-filter-expanded-controls-heading button:hover {
+  border-color: var(--gold-bright);
+  background: var(--gold-soft);
+}
+
+.cards-filter-surface .card-database-attribute-heading {
+  margin-bottom: 9px;
+}
+
+.cards-filter-surface .cards-primary-toggles,
+.cards-filter-surface .uf-chip-row {
+  margin-top: 14px;
+}
+
+@media (max-width: 900px) {
+  .cards-filter-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 620px) {
+  .cards-filter-surface {
+    padding: 16px 12px;
+  }
+
+  .cards-filter-compact-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .cards-filter-expand-controls,
+  .cards-filter-sort-direction-button {
+    width: 100%;
+  }
+
+  .cards-filter-advanced-sort-row,
+  .cards-filter-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+/* v1.2.10 — Team Builder: two approved refinements only */
+.roster-drawer-sort-layout {
+  display: grid;
+  grid-template-columns: auto minmax(320px, 1fr);
+  align-items: end;
+  gap: 14px;
+}
+
+.roster-quick-sort-group {
+  min-width: 245px;
+}
+
+.roster-quick-sort-group .roster-drawer-section-label,
+.roster-advanced-sort-row label > span {
+  margin-bottom: 7px;
+  color: #93959a;
+  font-size: 0.61rem;
+  font-weight: 900;
+  letter-spacing: 0.09em;
+  line-height: 1;
+}
+
+.roster-drawer-sort-layout .roster-advanced-sort-row {
+  margin-top: 0;
+}
+
+/* v1.2.10 — Cards-only compact database drawer */
+.cards-filter-surface {
+  margin-bottom: 12px;
+  padding: 12px 14px 13px;
+  border-radius: 10px;
+}
+
+.cards-filter-position-chip-row {
+  gap: 5px;
+  margin-bottom: 0;
+}
+
+.cards-filter-sort-chip {
+  min-height: 30px;
+  padding: 5px 8px;
+  font-size: 0.64rem;
+}
+
+.cards-filter-player-search {
+  margin: 8px 0 7px;
+  padding-inline: 10px;
+  border-radius: 8px;
+}
+
+.cards-filter-player-search input {
+  min-height: 37px;
+  font-size: 0.72rem;
+}
+
+.cards-filter-expanded-controls-heading {
+  margin-top: 0;
+  min-height: 28px;
+}
+
+.cards-filter-expanded-controls-heading button,
+.cards-filter-expand-controls {
+  min-height: 28px;
+  padding-inline: 9px;
+  font-size: 0.59rem;
+}
+
+.cards-filter-sort-section,
+.cards-filter-filter-section,
+.cards-filter-surface .card-database-attribute-filters {
+  margin-top: 7px;
+  padding-top: 8px;
+}
+
+.cards-filter-sort-layout {
+  display: grid;
+  grid-template-columns: auto minmax(420px, 1fr);
+  align-items: end;
+  gap: 12px;
+}
+
+.cards-filter-quick-sort-group {
+  min-width: 210px;
+}
+
+.cards-filter-section-label,
+.cards-filter-advanced-sort-row label > span,
+.cards-filter-grid label > span,
+.cards-filter-surface .card-database-defense-row label > span {
+  margin-bottom: 4px;
+  font-size: 0.56rem;
+  letter-spacing: 0.08em;
+  line-height: 1;
+}
+
+.cards-filter-advanced-sort-row {
+  margin-top: 0;
+  grid-template-columns: minmax(260px, 1fr) auto;
+  gap: 7px;
+}
+
+.cards-filter-advanced-sort-row select,
+.cards-filter-sort-direction-button,
+.cards-filter-grid input,
+.cards-filter-grid select,
+.cards-filter-clear-button,
+.cards-filter-surface .card-database-condition select,
+.cards-filter-surface .card-database-condition input,
+.cards-filter-surface .card-database-defense-row select,
+.cards-filter-surface .card-database-defense-row input {
+  min-height: 34px;
+  padding: 6px 8px;
+  border-radius: 7px;
+  font-size: 0.68rem;
+}
+
+.cards-filter-grid {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.cards-filter-surface .card-database-attribute-heading {
+  margin-bottom: 5px;
+}
+
+.cards-filter-surface .card-database-attribute-heading .add-filter-button {
+  min-height: 30px;
+  padding: 5px 10px;
+  font-size: 0.64rem;
+}
+
+.cards-filter-surface .card-database-condition {
+  grid-template-columns: minmax(260px, 1fr) 82px 110px 34px;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.cards-filter-surface .card-database-condition > button {
+  min-height: 34px;
+  border-radius: 7px;
+}
+
+.cards-filter-surface .card-database-defense-row {
+  grid-template-columns: repeat(2, minmax(180px, 1fr));
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.cards-filter-surface .cards-primary-toggles,
+.cards-filter-surface .uf-chip-row {
+  margin-top: 7px;
+}
+
+.cards-filter-surface .primary-filter-chip {
+  min-height: 30px;
+  padding: 5px 9px;
+  font-size: 0.66rem;
+}
+
+.cards-filter-surface .uf-chip {
+  padding: 4px 7px;
+  font-size: 0.58rem;
+}
+
+@media (max-width: 1100px) {
+  .roster-drawer-sort-layout,
+  .cards-filter-sort-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .cards-filter-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 700px) {
+  .cards-filter-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .cards-filter-surface .card-database-condition,
+  .cards-filter-surface .card-database-defense-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+/* v1.2.11 — compact filter drawer spacing only
+   No filtering, sorting, or interaction behavior changes. */
+
+/* -------------------------
+   TEAM BUILDER FILTER DRAWER
+   ------------------------- */
+
+.roster-player-drawer {
+  padding: 12px 16px;
+}
+
+.roster-drawer-sticky-controls {
+  padding-bottom: 8px;
+}
+
+.roster-drawer-heading {
+  padding-bottom: 7px;
+}
+
+.roster-drawer-heading p {
+  margin-bottom: 2px;
+  font-size: 0.58rem;
+}
+
+.roster-drawer-heading h2 {
+  font-size: 1.35rem;
+  line-height: 1;
+}
+
+.roster-drawer-heading button {
+  width: 32px;
+  height: 32px;
+  font-size: 1.15rem;
+}
+
+.roster-player-search {
+  margin: 7px 0 5px;
+  padding-inline: 9px;
+  border-radius: 7px;
+}
+
+.roster-player-search input {
+  min-height: 32px;
+  font-size: 0.7rem;
+}
+
+.roster-expanded-controls-heading {
+  min-height: 24px;
+  margin-top: 0;
+}
+
+.roster-expanded-controls-heading button,
+.roster-expand-controls {
+  min-height: 25px;
+  padding: 3px 8px;
+  font-size: 0.57rem;
+}
+
+.roster-drawer-sort,
+.roster-drawer-filter-section {
+  margin-top: 5px;
+  padding-top: 6px;
+}
+
+.roster-drawer-sort-layout {
+  grid-template-columns: 205px minmax(300px, 1fr);
+  gap: 8px;
+}
+
+.roster-quick-sort-group {
+  min-width: 0;
+}
+
+.roster-drawer-section-label,
+.roster-advanced-sort-row label > span,
+.roster-drawer-filter-grid label > span {
+  margin-bottom: 3px;
+  font-size: 0.53rem;
+  letter-spacing: 0.075em;
+}
+
+.roster-sort-chip-row {
+  gap: 5px;
+}
+
+.roster-sort-chip {
+  min-height: 28px;
+  padding: 4px 8px;
+  font-size: 0.62rem;
+}
+
+.roster-advanced-sort-row {
+  gap: 6px;
+}
+
+.roster-advanced-sort-row select,
+.roster-sort-direction-button,
+.roster-drawer-filter-grid input,
+.roster-drawer-filter-grid select,
+.roster-clear-drawer-filters {
+  min-height: 32px;
+  padding: 5px 8px;
+  border-radius: 6px;
+  font-size: 0.67rem;
+}
+
+.roster-drawer-filter-grid {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.roster-clear-drawer-filters {
+  align-self: end;
+}
+
+.roster-picker-content {
+  margin-top: 4px;
+}
+
+/* -------------------------
+   CARD DATABASE FILTER DRAWER
+   ------------------------- */
+
+.cards-filter-surface {
+  width: min(1320px, calc(100% - 32px));
+  margin: 0 auto 10px;
+  padding: 9px 11px 10px;
+  border-radius: 8px;
+}
+
+.cards-filter-position-chip-row {
+  gap: 4px;
+}
+
+.cards-filter-sort-chip {
+  min-height: 25px;
+  padding: 3px 7px;
+  font-size: 0.59rem;
+}
+
+.cards-filter-player-search {
+  margin: 5px 0 4px;
+  padding-inline: 8px;
+  border-radius: 6px;
+}
+
+.cards-filter-player-search input {
+  min-height: 29px;
+  font-size: 0.66rem;
+}
+
+.cards-filter-expanded-controls-heading {
+  min-height: 22px;
+}
+
+.cards-filter-expanded-controls-heading button,
+.cards-filter-expand-controls {
+  min-height: 24px;
+  padding: 2px 7px;
+  font-size: 0.55rem;
+}
+
+.cards-filter-sort-section,
+.cards-filter-filter-section,
+.cards-filter-surface .card-database-attribute-filters {
+  margin-top: 4px;
+  padding-top: 5px;
+}
+
+.cards-filter-sort-layout {
+  grid-template-columns: 195px minmax(360px, 1fr);
+  gap: 7px;
+}
+
+.cards-filter-quick-sort-group {
+  min-width: 0;
+}
+
+.cards-filter-section-label,
+.cards-filter-advanced-sort-row label > span,
+.cards-filter-grid label > span,
+.cards-filter-surface .card-database-defense-row label > span {
+  margin-bottom: 2px;
+  font-size: 0.51rem;
+  letter-spacing: 0.07em;
+}
+
+.cards-filter-sort-chip-row {
+  gap: 4px;
+}
+
+.cards-filter-advanced-sort-row {
+  grid-template-columns: minmax(240px, 1fr) auto;
+  gap: 5px;
+}
+
+.cards-filter-advanced-sort-row select,
+.cards-filter-sort-direction-button,
+.cards-filter-grid input,
+.cards-filter-grid select,
+.cards-filter-clear-button,
+.cards-filter-surface .card-database-condition select,
+.cards-filter-surface .card-database-condition input,
+.cards-filter-surface .card-database-defense-row select,
+.cards-filter-surface .card-database-defense-row input {
+  min-height: 29px;
+  padding: 4px 7px;
+  border-radius: 6px;
+  font-size: 0.63rem;
+}
+
+.cards-filter-grid {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 5px;
+}
+
+.cards-filter-surface .card-database-attribute-heading {
+  margin-bottom: 3px;
+}
+
+.cards-filter-surface .card-database-attribute-heading .add-filter-button {
+  min-height: 26px;
+  padding: 3px 8px;
+  font-size: 0.58rem;
+}
+
+.cards-filter-surface .card-database-condition {
+  grid-template-columns: minmax(260px, 1fr) 72px 96px 29px;
+  gap: 5px;
+  margin-bottom: 4px;
+}
+
+.cards-filter-surface .card-database-condition > button {
+  min-height: 29px;
+  border-radius: 6px;
+}
+
+.cards-filter-surface .card-database-defense-row {
+  gap: 5px;
+  margin-top: 4px;
+}
+
+.cards-filter-surface .cards-primary-toggles,
+.cards-filter-surface .uf-chip-row {
+  margin-top: 4px;
+}
+
+.cards-filter-surface .primary-filter-chip {
+  min-height: 26px;
+  padding: 3px 8px;
+  font-size: 0.6rem;
+}
+
+.cards-filter-surface .uf-chip {
+  padding: 3px 6px;
+  font-size: 0.54rem;
+}
+
+@media (max-width: 1100px) {
+  .roster-drawer-sort-layout,
+  .cards-filter-sort-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .roster-drawer-filter-grid,
+  .cards-filter-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 700px) {
+  .roster-drawer-filter-grid,
+  .cards-filter-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+
+/* v1.2.12 — Card Database density refinements only */
+.cards-page {
+  padding-top: 8px !important;
+}
+
+.cards-filter-surface {
+  margin-top: 0;
+  margin-bottom: 8px;
+  padding-top: 8px;
+  padding-bottom: 8px;
+}
+
+.cards-filter-surface .card-database-attribute-filters {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: end;
+  gap: 6px 10px;
+  margin-top: 3px;
+  padding-top: 4px;
+}
+
+.cards-filter-surface .card-database-attribute-heading {
+  grid-column: 1 / -1;
+  margin-bottom: 1px;
+}
+
+.cards-filter-surface .card-database-attribute-layout {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: minmax(480px, 1.65fr) minmax(330px, 1fr);
+  align-items: end;
+  gap: 6px;
+}
+
+.cards-filter-surface .card-database-condition-list {
+  min-width: 0;
+}
+
+.cards-filter-surface .card-database-condition {
+  grid-template-columns: minmax(230px, 1fr) 70px 96px 29px;
+  margin-bottom: 0;
+}
+
+.cards-filter-surface .card-database-defense-row {
+  grid-template-columns: minmax(190px, 1fr) minmax(110px, 0.75fr);
+  margin-top: 0;
+}
+
+.cards-filter-surface .card-database-condition select,
+.cards-filter-surface .card-database-condition input,
+.cards-filter-surface .card-database-defense-row select,
+.cards-filter-surface .card-database-defense-row input {
+  min-height: 28px;
+}
+
+.cards-filter-surface .cards-primary-toggles,
+.cards-filter-surface .uf-chip-row {
+  margin-top: 3px;
+}
+
+.cards-filter-surface + .gallery-heading,
+.cards-filter-surface ~ .gallery-heading {
+  margin-top: 0;
+}
+
+@media (max-width: 1050px) {
+  .cards-filter-surface .card-database-attribute-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+/* v1.2.13 — Team Builder filter drawer compact two-row layout only */
+.roster-player-drawer .roster-drawer-sticky-controls {
+  padding-bottom: 4px !important;
+}
+
+.roster-player-drawer .roster-drawer-heading {
+  min-height: 34px !important;
+  padding-bottom: 4px !important;
+}
+
+.roster-player-drawer .roster-drawer-heading p {
+  margin: 0 0 1px !important;
+  font-size: 0.52rem !important;
+}
+
+.roster-player-drawer .roster-drawer-heading h2 {
+  margin: 0 !important;
+  font-size: 1.12rem !important;
+}
+
+.roster-player-drawer .roster-drawer-heading button {
+  width: 29px !important;
+  height: 29px !important;
+}
+
+.roster-player-drawer .roster-player-search {
+  margin: 3px 0 !important;
+}
+
+.roster-player-drawer .roster-player-search input {
+  min-height: 28px !important;
+}
+
+.roster-player-drawer .roster-expanded-controls-heading {
+  min-height: 22px !important;
+  margin: 0 !important;
+}
+
+.roster-player-drawer .roster-drawer-sort,
+.roster-player-drawer .roster-drawer-filter-section {
+  margin-top: 2px !important;
+  padding-top: 4px !important;
+}
+
+.roster-player-drawer .roster-drawer-sort-layout {
+  display: grid !important;
+  grid-template-columns: 210px minmax(0, 1fr) !important;
+  align-items: end !important;
+  gap: 7px !important;
+}
+
+.roster-player-drawer .roster-quick-sort-group {
+  min-width: 0 !important;
+}
+
+.roster-player-drawer .roster-drawer-section-label,
+.roster-player-drawer .roster-advanced-sort-row label > span,
+.roster-player-drawer .roster-drawer-filter-grid label > span {
+  margin-bottom: 2px !important;
+  font-size: 0.5rem !important;
+  line-height: 1 !important;
+}
+
+.roster-player-drawer .roster-sort-chip-row {
+  gap: 4px !important;
+}
+
+.roster-player-drawer .roster-sort-chip {
+  min-height: 26px !important;
+  padding: 3px 7px !important;
+  font-size: 0.59rem !important;
+}
+
+.roster-player-drawer .roster-advanced-sort-row {
+  display: grid !important;
+  grid-template-columns: minmax(230px, 1fr) auto !important;
+  margin: 0 !important;
+  gap: 5px !important;
+}
+
+.roster-player-drawer .roster-advanced-sort-row select,
+.roster-player-drawer .roster-sort-direction-button,
+.roster-player-drawer .roster-drawer-filter-grid input,
+.roster-player-drawer .roster-drawer-filter-grid select,
+.roster-player-drawer .roster-clear-drawer-filters {
+  min-height: 28px !important;
+  padding: 3px 7px !important;
+  border-radius: 6px !important;
+  font-size: 0.62rem !important;
+}
+
+.roster-player-drawer .roster-drawer-filter-grid {
+  display: grid !important;
+  grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+  gap: 5px !important;
+}
+
+.roster-player-drawer .roster-picker-content {
+  margin-top: 2px !important;
+}
+
+@media (max-width: 1100px) {
+  .roster-player-drawer .roster-drawer-sort-layout {
+    grid-template-columns: 1fr !important;
+  }
+
+  .roster-player-drawer .roster-drawer-filter-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+}
+
+
+/* v1.2.14 — Team Builder filter drawer reference layout */
+.roster-player-drawer .roster-drawer-sticky-controls {
+  padding-bottom: 5px !important;
+}
+
+.roster-player-drawer .roster-drawer-heading {
+  min-height: 36px !important;
+  padding: 0 0 5px !important;
+}
+
+.roster-player-drawer .roster-player-search {
+  margin: 4px 0 !important;
+}
+
+.roster-player-drawer .roster-expanded-controls-heading {
+  min-height: 23px !important;
+  margin: 0 !important;
+}
+
+.roster-player-drawer .roster-drawer-sort {
+  margin-top: 2px !important;
+  padding-top: 5px !important;
+}
+
+.roster-player-drawer .roster-drawer-sort-layout {
+  display: grid !important;
+  grid-template-columns: 265px minmax(340px, 1fr) !important;
+  align-items: end !important;
+  gap: 18px !important;
+}
+
+.roster-player-drawer .roster-quick-sort-group {
+  min-width: 0 !important;
+}
+
+.roster-player-drawer .roster-advanced-sort-row {
+  display: grid !important;
+  grid-template-columns: minmax(250px, 1fr) auto !important;
+  align-items: end !important;
+  gap: 6px !important;
+  margin: 0 !important;
+}
+
+.roster-player-drawer .roster-drawer-filter-section {
+  margin-top: 4px !important;
+  padding-top: 5px !important;
+}
+
+.roster-player-drawer .roster-drawer-filter-grid {
+  display: grid !important;
+  grid-template-columns:
+    minmax(120px, 1fr)
+    minmax(180px, 1.35fr)
+    minmax(130px, 1fr)
+    minmax(90px, 0.72fr)
+    minmax(90px, 0.72fr)
+    minmax(150px, 1fr) !important;
+  gap: 6px !important;
+  align-items: end !important;
+}
+
+.roster-player-drawer .roster-drawer-section-label,
+.roster-player-drawer .roster-advanced-sort-row label > span,
+.roster-player-drawer .roster-drawer-filter-grid label > span {
+  margin-bottom: 3px !important;
+}
+
+.roster-player-drawer .roster-sort-chip-row {
+  gap: 5px !important;
+}
+
+.roster-player-drawer .roster-sort-chip {
+  min-height: 28px !important;
+  padding: 4px 8px !important;
+}
+
+.roster-player-drawer .roster-advanced-sort-row select,
+.roster-player-drawer .roster-sort-direction-button,
+.roster-player-drawer .roster-drawer-filter-grid input,
+.roster-player-drawer .roster-drawer-filter-grid select,
+.roster-player-drawer .roster-clear-drawer-filters {
+  min-height: 30px !important;
+  padding: 4px 7px !important;
+}
+
+@media (max-width: 1100px) {
+  .roster-player-drawer .roster-drawer-sort-layout {
+    grid-template-columns: 1fr !important;
+    gap: 6px !important;
+  }
+
+  .roster-player-drawer .roster-drawer-filter-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+}
+
+
+/* v1.2.20 — restore the approved Team Builder filter organization */
+.roster-player-drawer .roster-drawer-sort-layout {
+  display: grid !important;
+  grid-template-columns: 300px 430px !important;
+  justify-content: start !important;
+  align-items: end !important;
+  column-gap: 26px !important;
+  row-gap: 6px !important;
+}
+
+.roster-player-drawer .roster-quick-sort-group {
+  width: 300px !important;
+  min-width: 0 !important;
+}
+
+.roster-player-drawer .roster-advanced-sort-row {
+  width: 430px !important;
+  display: grid !important;
+  grid-template-columns: minmax(260px, 1fr) 118px !important;
+  align-items: end !important;
+  gap: 8px !important;
+  margin: 0 !important;
+}
+
+.roster-player-drawer .roster-drawer-filter-grid {
+  display: grid !important;
+  grid-template-columns:
+    minmax(130px, 0.95fr)
+    minmax(190px, 1.35fr)
+    minmax(145px, 1fr)
+    minmax(105px, 0.78fr)
+    minmax(105px, 0.78fr)
+    minmax(170px, 1.15fr) !important;
+  align-items: end !important;
+  gap: 7px !important;
+}
+
+.roster-player-drawer .roster-drawer-sort,
+.roster-player-drawer .roster-drawer-filter-section {
+  width: 100% !important;
+}
+
+@media (max-width: 980px) {
+  .roster-player-drawer .roster-drawer-sort-layout {
+    grid-template-columns: 250px minmax(360px, 1fr) !important;
+    column-gap: 16px !important;
+  }
+
+  .roster-player-drawer .roster-quick-sort-group {
+    width: 250px !important;
+  }
+
+  .roster-player-drawer .roster-advanced-sort-row {
+    width: auto !important;
+    grid-template-columns: minmax(220px, 1fr) 112px !important;
+  }
+
+  .roster-player-drawer .roster-drawer-filter-grid {
+    grid-template-columns:
+      minmax(115px, 1fr)
+      minmax(170px, 1.3fr)
+      minmax(125px, 1fr)
+      minmax(95px, 0.8fr)
+      minmax(95px, 0.8fr)
+      minmax(145px, 1fr) !important;
+  }
+}
+
+@media (max-width: 760px) {
+  .roster-player-drawer .roster-drawer-sort-layout {
+    grid-template-columns: 1fr !important;
+    row-gap: 7px !important;
+  }
+
+  .roster-player-drawer .roster-quick-sort-group,
+  .roster-player-drawer .roster-advanced-sort-row {
+    width: 100% !important;
+  }
+
+  .roster-player-drawer .roster-drawer-filter-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+
+/* v1.2.21 — authoritative Team Builder filter drawer
+   Dedicated namespace prevents all historical drawer overrides from interfering. */
+
+.tb-filter-search {
+  display: flex;
+  width: 100%;
+  margin: 6px 0 5px;
+  padding: 0 10px;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid rgba(216, 173, 45, 0.34);
+  border-radius: 7px;
+  background: #08090a;
+}
+
+.tb-filter-search > span {
+  flex: 0 0 auto;
+  color: var(--gold-bright);
+}
+
+.tb-filter-search input {
+  width: 100%;
+  min-width: 0;
+  min-height: 34px;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--cream);
+  font-size: 0.72rem;
+}
+
+.tb-filter-heading {
+  display: flex;
+  min-height: 29px;
+  margin-top: 1px;
+  padding-bottom: 5px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  border-bottom: 1px solid rgba(216, 173, 45, 0.16);
+  color: #c9c9c9;
+  font-size: 0.6rem;
+  font-weight: 900;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.tb-filter-heading button,
+.tb-filter-expand-button {
+  min-height: 27px;
+  padding: 3px 9px;
+  border: 1px solid rgba(207, 167, 54, 0.42);
+  border-radius: 7px;
+  background: #0b0b0b;
+  color: #f2cd55;
+  font-size: 0.59rem;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.tb-filter-sort-section {
+  margin-top: 6px;
+  padding-bottom: 7px;
+  border-bottom: 1px solid rgba(216, 173, 45, 0.16);
+}
+
+.tb-filter-sort-layout {
+  display: grid;
+  grid-template-columns: 300px 430px;
+  align-items: end;
+  justify-content: start;
+  gap: 26px;
+}
+
+.tb-filter-quick-group,
+.tb-filter-attribute-group label {
+  min-width: 0;
+}
+
+.tb-filter-section-label,
+.tb-filter-attribute-group label > span,
+.tb-filter-fields-grid label > span {
+  display: block;
+  margin-bottom: 4px;
+  color: #93959a;
+  font-size: 0.56rem;
+  font-weight: 900;
+  letter-spacing: 0.09em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.tb-filter-sort-chip-row,
+.tb-filter-position-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.tb-filter-sort-chip {
+  display: inline-flex;
+  min-height: 31px;
+  padding: 5px 9px;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  border: 1px solid #383a3e;
+  border-radius: 999px;
+  background: #090a0b;
+  color: #bfc0c3;
+  font-size: 0.64rem;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.tb-filter-sort-chip:hover,
+.tb-filter-sort-chip.active {
+  border-color: var(--gold-bright);
+  color: var(--gold-bright);
+}
+
+.tb-filter-sort-chip.active {
+  background: var(--gold-soft);
+}
+
+.tb-filter-attribute-group {
+  display: grid;
+  grid-template-columns: minmax(260px, 1fr) 118px;
+  align-items: end;
+  gap: 8px;
+}
+
+.tb-filter-attribute-group select,
+.tb-filter-direction-button,
+.tb-filter-fields-grid input,
+.tb-filter-fields-grid select,
+.tb-filter-clear-button,
+.tb-filter-fields-grid .uf-locked-value {
+  width: 100%;
+  min-width: 0;
+  min-height: 34px;
+  padding: 6px 9px;
+  border: 1px solid #36383c;
+  border-radius: 7px;
+  outline: 0;
+  background: #08090a;
+  color: var(--cream);
+  font-size: 0.68rem;
+}
+
+.tb-filter-direction-button,
+.tb-filter-clear-button {
+  border-color: rgba(216, 173, 45, 0.35);
+  color: var(--gold-bright);
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.tb-filter-fields-section {
+  margin-top: 7px;
+}
+
+.tb-filter-fields-grid {
+  display: grid;
+  grid-template-columns:
+    minmax(125px, 0.95fr)
+    minmax(190px, 1.35fr)
+    minmax(140px, 1fr)
+    minmax(95px, 0.72fr)
+    minmax(95px, 0.72fr)
+    minmax(165px, 1.15fr);
+  align-items: end;
+  gap: 7px;
+}
+
+.tb-filter-clear-button {
+  align-self: end;
+}
+
+.tb-filter-compact-toolbar {
+  display: flex;
+  margin-top: 5px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.tb-filter-direction-button:hover,
+.tb-filter-clear-button:hover,
+.tb-filter-heading button:hover,
+.tb-filter-expand-button:hover {
+  border-color: var(--gold-bright);
+  background: var(--gold-soft);
+}
+
+.tb-filter-attribute-group select:focus,
+.tb-filter-fields-grid input:focus,
+.tb-filter-fields-grid select:focus {
+  border-color: var(--gold-bright);
+  box-shadow: 0 0 0 3px var(--gold-soft);
+}
+
+/* Medium desktop: preserve the same organization with smaller proportions. */
+@media (max-width: 1180px) {
+  .tb-filter-sort-layout {
+    grid-template-columns: 250px minmax(360px, 1fr);
+    gap: 16px;
+  }
+
+  .tb-filter-attribute-group {
+    grid-template-columns: minmax(220px, 1fr) 112px;
+  }
+
+  .tb-filter-fields-grid {
+    grid-template-columns:
+      minmax(110px, 0.95fr)
+      minmax(165px, 1.35fr)
+      minmax(120px, 1fr)
+      minmax(88px, 0.72fr)
+      minmax(88px, 0.72fr)
+      minmax(140px, 1.15fr);
+  }
+}
+
+/* Narrow desktop: controlled two-row fallback rather than arbitrary wrapping. */
+@media (max-width: 900px) {
+  .tb-filter-sort-layout {
+    grid-template-columns: 1fr;
+    gap: 7px;
+  }
+
+  .tb-filter-quick-group {
+    width: max-content;
+  }
+
+  .tb-filter-attribute-group {
+    width: min(100%, 500px);
+  }
+
+  .tb-filter-fields-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .tb-filter-fields-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+
+/* v1.2.22 — Team Builder attribute and defense filters */
+.tb-attribute-filters {
+  margin-top: 8px;
+  padding-top: 7px;
+  border-top: 1px solid rgba(216, 173, 45, 0.16);
+}
+
+.tb-attribute-heading {
+  display: flex;
+  margin-bottom: 6px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.tb-attribute-heading > span,
+.tb-defense-filters label > span {
+  color: #93959a;
+  font-size: 0.56rem;
+  font-weight: 900;
+  letter-spacing: 0.09em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.tb-attribute-heading button {
+  min-height: 29px;
+  padding: 4px 10px;
+  border: 1px solid var(--gold-bright);
+  border-radius: 7px;
+  background: var(--gold-bright);
+  color: #080808;
+  font-size: 0.62rem;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.tb-attribute-layout {
+  display: grid;
+  grid-template-columns: minmax(500px, 1.7fr) minmax(360px, 1fr);
+  align-items: end;
+  gap: 8px;
+}
+
+.tb-attribute-condition-list {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.tb-attribute-condition {
+  display: grid;
+  grid-template-columns: minmax(260px, 1fr) 82px 120px 34px;
+  gap: 6px;
+  min-width: 0;
+}
+
+.tb-defense-filters {
+  display: grid;
+  grid-template-columns: minmax(190px, 1fr) minmax(130px, 0.75fr);
+  align-items: end;
+  gap: 7px;
+}
+
+.tb-defense-filters label {
+  min-width: 0;
+}
+
+.tb-defense-filters label > span {
+  display: block;
+  margin-bottom: 4px;
+  text-align: center;
+}
+
+.tb-attribute-condition select,
+.tb-attribute-condition input,
+.tb-defense-filters select,
+.tb-defense-filters input {
+  width: 100%;
+  min-width: 0;
+  min-height: 34px;
+  padding: 6px 9px;
+  border: 1px solid #36383c;
+  border-radius: 7px;
+  outline: 0;
+  background: #08090a;
+  color: var(--cream);
+  font-size: 0.68rem;
+}
+
+.tb-attribute-condition > button {
+  min-height: 34px;
+  border: 1px solid rgba(216, 173, 45, 0.42);
+  border-radius: 7px;
+  background: #090a0b;
+  color: var(--gold-bright);
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.tb-attribute-condition select:focus,
+.tb-attribute-condition input:focus,
+.tb-defense-filters select:focus,
+.tb-defense-filters input:focus {
+  border-color: var(--gold-bright);
+  box-shadow: 0 0 0 3px var(--gold-soft);
+}
+
+@media (max-width: 1050px) {
+  .tb-attribute-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .tb-defense-filters {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 700px) {
+  .tb-attribute-condition,
+  .tb-defense-filters {
+    grid-template-columns: 1fr;
+  }
+}

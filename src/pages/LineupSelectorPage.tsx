@@ -256,14 +256,16 @@ export default function LineupSelectorPage() {
     setWorking(false)
   }
 
+  const showCreateSlot = !isDemo && lineups.length < MAX_LINEUPS
+  const reservedPlaceholderCount = Math.max(
+    0,
+    20 - lineups.length - (showCreateSlot ? 1 : 0),
+  )
+
   return (
     <main className="lineup-selector-page">
-      <div className="lineup-selector-heading">
-        <div>
-          <p className="eyebrow">Elements Baseball</p>
-          <h1>Team Builder</h1>
-          <p>Build and manage your teams. Choose your roster rules and customize your team at any time.</p>
-        </div>
+      <div className="lineup-selector-heading lineup-selector-heading-simplified">
+        <p>Build and manage your teams. Choose your roster rules and customize your team at any time.</p>
       </div>
 
       {error && <div className="auth-error">{error}</div>}
@@ -310,7 +312,13 @@ export default function LineupSelectorPage() {
                         aria-label={`Edit ${lineup.name} team name`}
                         title="Edit team name"
                       >
-                        ✎
+                        <svg
+                          viewBox="0 0 24 24"
+                          aria-hidden="true"
+                          focusable="false"
+                        >
+                          <path d="M4 16.75V20h3.25L17.81 9.44l-3.25-3.25L4 16.75Zm16.71-9.04a1 1 0 0 0 0-1.42l-3-3a1 1 0 0 0-1.42 0l-1.73 1.73 3.25 3.25 1.9-1.56Z" />
+                        </svg>
                       </button>
                     )}
                   </div>
@@ -334,11 +342,23 @@ export default function LineupSelectorPage() {
 
                 return (
                   <>
-                    <div className="lineup-card-stats lineup-card-stats-four">
-                      <div><span>Players</span><strong>{lineup.player_count}/{playerLimit}</strong></div>
-                      <div><span>Points</span><strong>{lineup.total_points.toLocaleString()}/{pointCap.toLocaleString()}</strong></div>
-                      <div><span>DH</span><strong>{lineup.use_dh ? 'On' : 'Off'}</strong></div>
-                      <div><span>Roster Size</span><strong>{playerLimit}/{pointCap.toLocaleString()}</strong></div>
+                    <div className="lineup-card-summary">
+                      <div>
+                        <span>Players</span>
+                        <strong>{lineup.player_count}/{playerLimit}</strong>
+                      </div>
+                      <div>
+                        <span>Points</span>
+                        <strong>{lineup.total_points.toLocaleString()}/{pointCap.toLocaleString()}</strong>
+                      </div>
+                      <div>
+                        <span>DH</span>
+                        <strong>{lineup.use_dh ? 'On' : 'Off'}</strong>
+                      </div>
+                      <div>
+                        <span>Roster</span>
+                        <strong>{playerLimit}/{pointCap.toLocaleString()}</strong>
+                      </div>
                     </div>
 
                     <div className="lineup-card-settings">
@@ -374,20 +394,40 @@ export default function LineupSelectorPage() {
             </article>
           ))}
 
-          {!isDemo && <button
-            type="button"
-            className="lineup-create-card"
-            onClick={() => void createLineup()}
-            disabled={lineups.length >= MAX_LINEUPS || working}
-          >
-            <span>+</span>
-            <strong>Create New</strong>
-            <small>
-              {lineups.length >= MAX_LINEUPS
-                ? 'Maximum of three lineups reached'
-                : `${MAX_LINEUPS - lineups.length} lineup slot${MAX_LINEUPS - lineups.length === 1 ? '' : 's'} available`}
-            </small>
-          </button>}
+          {showCreateSlot && (
+            <button
+              type="button"
+              className="lineup-create-card"
+              onClick={() => void createLineup()}
+              disabled={working}
+            >
+              <span>+</span>
+              <strong>Create New</strong>
+              <small>
+                {`${MAX_LINEUPS - lineups.length} lineup slot${MAX_LINEUPS - lineups.length === 1 ? '' : 's'} available`}
+              </small>
+            </button>
+          )}
+
+          {Array.from({ length: reservedPlaceholderCount }, (_, index) => {
+            const slotNumber =
+              lineups.length +
+              (showCreateSlot ? 1 : 0) +
+              index +
+              1
+
+            return (
+              <article
+                className="lineup-reserved-card"
+                key={`reserved-lineup-slot-${slotNumber}`}
+                aria-label={`Reserved roster slot ${slotNumber}`}
+              >
+                <span>Roster {slotNumber}</span>
+                <strong>Reserved</strong>
+                <small>Future roster slot</small>
+              </article>
+            )
+          })}
         </section>
       )}
     </main>

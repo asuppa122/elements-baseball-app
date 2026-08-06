@@ -1,0 +1,8 @@
+public/.DS_Store
+public/elements-squad-field.svg
+public/favicon.svg
+public/icons.svg
+src/assets/elements-baseball-logo.png
+src/assets/hero.png
+src/assets/react.svg
+src/assets/vite.svg
