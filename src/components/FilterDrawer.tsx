@@ -148,7 +148,7 @@ function sortSelection(sortField: SortField, chartMode: ChartMode): string {
 }
 
 export default function FilterDrawer(props: Props) {
-  const [open, setOpen] = useState(true)
+  const [open, setOpen] = useState(false)
 
   const activeFilters = useMemo(
     () =>

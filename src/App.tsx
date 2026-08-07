@@ -17,6 +17,7 @@ import './App.css'
 import './auth.css'
 import './cards-final-cleanup.css'
 import './roster.css'
+import './responsive-v1.2.23.css'
 
 function ProtectedApp() {
   return (
