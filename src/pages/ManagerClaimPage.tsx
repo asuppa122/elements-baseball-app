@@ -2,6 +2,14 @@ import { useEffect, useMemo, useState } from 'react'
 import { discordIdentityFromUser, useAuth } from '../auth/AuthContext'
 import { supabase } from '../lib/supabase'
 
+function normalizeDiscordClaimUsername(value: string | null | undefined) {
+  return (value ?? '')
+    .trim()
+    .replace(/#\d{1,4}$/, '')
+    .replace(/_\d{4,6}$/, '')
+    .toLowerCase()
+}
+
 type AvailableManager = {
   id: number
   manager_name: string
@@ -22,11 +30,7 @@ export default function ManagerClaimPage() {
   )
 
   const normalizedDiscordUsername = useMemo(
-    () =>
-      identity?.username
-        ?.trim()
-        .replace(/#\d{1,4}$/, '')
-        .toLowerCase() ?? '',
+    () => normalizeDiscordClaimUsername(identity?.username),
     [identity?.username],
   )
 
@@ -46,7 +50,7 @@ export default function ManagerClaimPage() {
 
         const match = rows.find(
           (row) =>
-            row.expected_discord_username?.trim().toLowerCase() ===
+            normalizeDiscordClaimUsername(row.expected_discord_username) ===
             normalizedDiscordUsername,
         )
 

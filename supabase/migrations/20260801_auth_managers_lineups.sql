@@ -55,7 +55,7 @@ values
   ('Chuck', 'jolly_tom'),
   ('Eric', 'atlboyz'),
   ('James', 'boldmane'),
-  ('Jeremiah', 'ozzmandiaas2_57470'),
+  ('Jeremiah', 'ozzmandias2_57470'),
   ('John', 'jflocas2400'),
   ('Matt', 'mp0797mp'),
   ('Nate', 'sasshampoo'),

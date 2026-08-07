@@ -1,9 +1,10 @@
 #!/bin/bash
 set -e
-TARGET="$HOME/Desktop/elements-baseball-app"
+TARGET="$(cd "$(dirname "$0")" && pwd)"
 
 if [ ! -d "$TARGET/.git" ]; then
   echo "Git repository not found at $TARGET/.git"
+  echo "Run RESTORE_GIT.command once, then retry."
   read -n 1 -s -r -p "Press any key to close..."
   exit 1
 fi
@@ -13,14 +14,14 @@ echo "Current Git status:"
 git status
 
 echo
-read -r -p "Have you tested both the normal app and /demo locally? Type YES to continue: " CONFIRM
+read -r -p "Have you tested desktop + mobile and both normal app + /demo locally? Type YES to continue: " CONFIRM
 if [ "$CONFIRM" != "YES" ]; then
   echo "Push cancelled."
   read -n 1 -s -r -p "Press any key to close..."
   exit 0
 fi
 
-DEFAULT_MSG="Clean project and finalize feedback fixes"
+DEFAULT_MSG="Publish v1.3.2 mobile parity and home cleanup"
 read -r -p "Commit message [$DEFAULT_MSG]: " MSG
 MSG=${MSG:-$DEFAULT_MSG}
 

@@ -1605,6 +1605,27 @@ function CardsPage() {
     <div className="app">
       <main className="cards-page">
 
+        <div className="cards-quick-filter-bar" aria-label="Quick card filters">
+          {!isDemo && (
+            <button
+              type="button"
+              className={ownershipFilter === 'owned' ? 'primary-filter-chip active' : 'primary-filter-chip'}
+              aria-pressed={ownershipFilter === 'owned'}
+              onClick={() => setOwnershipFilter(ownershipFilter === 'owned' ? '' : 'owned')}
+            >
+              Owned by Me
+            </button>
+          )}
+          <button
+            type="button"
+            className={seasonEligibleOnly ? 'primary-filter-chip active' : 'primary-filter-chip'}
+            aria-pressed={seasonEligibleOnly}
+            onClick={() => setSeasonEligibleOnly(!seasonEligibleOnly)}
+          >
+            Season Eligible
+          </button>
+        </div>
+
         <FilterDrawer
           searchTerm={searchTerm}
           onSearchChange={

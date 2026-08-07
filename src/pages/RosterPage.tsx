@@ -465,6 +465,22 @@ function RosterPage() {
     draggedLineupSlotId,
     setDraggedLineupSlotId,
   ] = useState<string | null>(null)
+  const [
+    tapReorderSlotId,
+    setTapReorderSlotId,
+  ] = useState<string | null>(null)
+  const [
+    tapReorderMode,
+    setTapReorderMode,
+  ] = useState(false)
+
+  useEffect(() => {
+    const query = window.matchMedia('(pointer: coarse), (max-width: 820px)')
+    const syncMode = () => setTapReorderMode(query.matches)
+    syncMode()
+    query.addEventListener?.('change', syncMode)
+    return () => query.removeEventListener?.('change', syncMode)
+  }, [])
 
   useEffect(() => {
     void loadSeasonCards()
@@ -486,6 +502,10 @@ function RosterPage() {
     setHoverCardKey(null)
     setSelectedSubstituteKey(null)
   }, [selectedSlotId])
+
+  useEffect(() => {
+    setTapReorderSlotId(null)
+  }, [section])
 
   useEffect(() => {
     if (!isDemo || cards.length === 0) return
@@ -1538,17 +1558,19 @@ function RosterPage() {
 
   function reorderRosterSlots(
     targetSlot: Slot,
+    sourceSlotId = draggedLineupSlotId,
   ) {
     if (
-      !draggedLineupSlotId ||
-      draggedLineupSlotId === targetSlot.id
+      !sourceSlotId ||
+      sourceSlotId === targetSlot.id
     ) {
       setDraggedLineupSlotId(null)
+      setTapReorderSlotId(null)
       return
     }
 
     const sourceSlot = ALL_SLOTS.find(
-      (slot) => slot.id === draggedLineupSlotId,
+      (slot) => slot.id === sourceSlotId,
     )
 
     if (
@@ -1559,6 +1581,7 @@ function RosterPage() {
       )
     ) {
       setDraggedLineupSlotId(null)
+      setTapReorderSlotId(null)
       return
     }
 
@@ -1572,7 +1595,7 @@ function RosterPage() {
             : BULLPEN
 
     const sourceIndex = orderedSlots.findIndex(
-      (slot) => slot.id === draggedLineupSlotId,
+      (slot) => slot.id === sourceSlotId,
     )
     const targetIndex = orderedSlots.findIndex(
       (slot) => slot.id === targetSlot.id,
@@ -1580,6 +1603,7 @@ function RosterPage() {
 
     if (sourceIndex < 0 || targetIndex < 0) {
       setDraggedLineupSlotId(null)
+      setTapReorderSlotId(null)
       return
     }
 
@@ -1602,6 +1626,37 @@ function RosterPage() {
     })
 
     setDraggedLineupSlotId(null)
+    setTapReorderSlotId(null)
+  }
+
+  function handleReorderableSlotTap(slot: Slot, hasCard: boolean) {
+    if (!tapReorderMode) {
+      if (slot.section !== 'lineup') {
+        setSelectedSlotId(slot.id)
+        setSearch('')
+      }
+      return
+    }
+
+    if (tapReorderSlotId) {
+      if (tapReorderSlotId === slot.id) {
+        setTapReorderSlotId(null)
+        return
+      }
+
+      reorderRosterSlots(slot, tapReorderSlotId)
+      return
+    }
+
+    if (hasCard) {
+      setTapReorderSlotId(slot.id)
+      return
+    }
+
+    if (slot.section !== 'lineup') {
+      setSelectedSlotId(slot.id)
+      setSearch('')
+    }
   }
 
   function renderSlot(slot: Slot) {
@@ -1632,6 +1687,15 @@ function RosterPage() {
           draggedLineupSlotId ===
           slot.id
             ? 'is-dragging'
+            : '',
+          tapReorderSlotId === slot.id
+            ? 'is-tap-selected'
+            : '',
+          tapReorderSlotId &&
+          tapReorderSlotId !== slot.id &&
+          ALL_SLOTS.find((candidate) => candidate.id === tapReorderSlotId)?.section === slot.section &&
+          ['lineup', 'bench', 'rotation', 'bullpen'].includes(slot.section)
+            ? 'is-tap-target'
             : '',
           lockedSlot
             ? 'locked-pitcher-slot'
@@ -1682,7 +1746,12 @@ function RosterPage() {
           className="roster-slot-main"
           disabled={lockedSlot}
           onClick={() => {
-            if (lockedSlot || slot.section === 'lineup') {
+            if (lockedSlot) {
+              return
+            }
+
+            if (['lineup', 'bench', 'rotation', 'bullpen'].includes(slot.section)) {
+              handleReorderableSlotTap(slot, Boolean(card))
               return
             }
 
@@ -1958,6 +2027,13 @@ function RosterPage() {
             <h2>{title}</h2>
           </div>
         )}
+
+        {tapReorderMode && tapReorderSlotId &&
+          slots.some((slot) => slot.id === tapReorderSlotId) && (
+            <div className="tap-reorder-hint" role="status">
+              Player selected — tap another spot to move
+            </div>
+          )}
 
         <div className="roster-slot-list">
           {(occupiedOnly

@@ -917,3 +917,190 @@ input[type='radio'] {
     font-size: .54rem !important;
   }
 }
+
+/* v1.3.2 — mobile parity, quick filters, simplified home */
+
+/* Keep the signed-in profile control available on mobile. Older auth CSS hid the
+   entire profile wrapper below 850px, which made Log out unreachable. */
+@media (max-width: 850px) {
+  .global-user-menu > .profile-menu-wrap {
+    display: block !important;
+  }
+}
+
+/* Home: preserve the exact global header and replace image-heavy artwork with
+   a simple 4x2 icon dashboard. */
+.home-recreation.home-icon-dashboard {
+  width: min(100%, 1733px) !important;
+  height: calc(100dvh - var(--eb-header-height, 50px)) !important;
+  min-height: 0 !important;
+  margin: 0 auto !important;
+  padding: 14px 16px 18px !important;
+  display: block !important;
+  overflow: hidden !important;
+  background: #050505 !important;
+}
+
+.home-icon-grid {
+  height: 100% !important;
+  min-height: 0 !important;
+  display: grid !important;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  grid-template-rows: repeat(2, minmax(0, 1fr)) !important;
+  gap: 14px !important;
+}
+
+.home-recreation-tile.home-icon-tile,
+.home-recreation-tile.home-icon-tile:nth-child(-n + 4),
+.home-recreation-tile.home-icon-tile:nth-child(n + 5) {
+  width: 100% !important;
+  height: 100% !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  aspect-ratio: auto !important;
+  padding: clamp(18px, 2vw, 30px) !important;
+  border: 1px solid rgba(205, 161, 48, .48) !important;
+  border-radius: 14px !important;
+  background-image: none !important;
+  background-color: #0a0a09 !important;
+  background: radial-gradient(circle at 50% 35%, rgba(205, 161, 48, .045), transparent 46%), #0a0a09 !important;
+  color: #d9a92f !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: clamp(12px, 1.6vw, 20px) !important;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.012) !important;
+}
+
+.home-recreation-tile.home-icon-tile:hover {
+  filter: none !important;
+  transform: translateY(-1px) !important;
+  border-color: rgba(226, 181, 60, .86) !important;
+  background: radial-gradient(circle at 50% 35%, rgba(205, 161, 48, .085), transparent 50%), #0b0b0a !important;
+}
+
+.home-icon {
+  display: grid;
+  place-items: center;
+  width: clamp(64px, 6vw, 96px);
+  height: clamp(64px, 6vw, 96px);
+  color: #d6a52e;
+}
+
+.home-icon svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.home-icon-title {
+  color: #f1ead9;
+  font-size: clamp(1rem, 1.35vw, 1.38rem);
+  font-weight: 900;
+  letter-spacing: .02em;
+  line-height: 1.08;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+/* Card database quick filters stay visible before the drawer is opened. */
+.cards-quick-filter-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 8px 0 10px;
+  padding: 0 2px;
+}
+
+.cards-quick-filter-bar .primary-filter-chip {
+  min-height: 38px;
+  padding: 8px 14px;
+  font-size: .78rem;
+  letter-spacing: .015em;
+}
+
+/* Mobile/touch reorder: selected source + valid destinations. */
+.reorderable-roster-slot.is-tap-selected {
+  border-color: #e0b43b !important;
+  box-shadow: 0 0 0 2px rgba(224, 180, 59, .2), 0 0 22px rgba(224, 180, 59, .12) !important;
+  background: rgba(224, 180, 59, .06) !important;
+}
+
+.reorderable-roster-slot.is-tap-target {
+  border-color: rgba(224, 180, 59, .46) !important;
+}
+
+.tap-reorder-hint {
+  margin: 0 0 9px;
+  padding: 8px 10px;
+  border: 1px solid rgba(224, 180, 59, .4);
+  border-radius: 8px;
+  background: rgba(224, 180, 59, .08);
+  color: #ecd285;
+  font-size: .72rem;
+  font-weight: 800;
+  text-align: center;
+}
+
+@media (max-width: 900px) {
+  .home-recreation.home-icon-dashboard {
+    height: auto !important;
+    min-height: calc(100dvh - var(--eb-header-height, 52px)) !important;
+    padding: 10px !important;
+    overflow: visible !important;
+  }
+
+  .home-icon-grid {
+    height: auto !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    grid-template-rows: repeat(4, minmax(180px, 1fr)) !important;
+    gap: 10px !important;
+  }
+
+  .home-recreation-tile.home-icon-tile,
+  .home-recreation-tile.home-icon-tile:nth-child(-n + 4),
+  .home-recreation-tile.home-icon-tile:nth-child(n + 5) {
+    min-height: 180px !important;
+    aspect-ratio: auto !important;
+    padding: 18px 10px !important;
+  }
+
+  .home-icon {
+    width: clamp(58px, 14vw, 76px);
+    height: clamp(58px, 14vw, 76px);
+  }
+
+  .home-icon-title {
+    font-size: clamp(.82rem, 3vw, 1rem);
+  }
+
+  .cards-quick-filter-bar {
+    margin-top: 6px;
+    gap: 6px;
+  }
+
+  .cards-quick-filter-bar .primary-filter-chip {
+    min-height: 36px;
+    padding: 7px 10px !important;
+    font-size: .72rem !important;
+  }
+}
+
+@media (max-width: 390px) {
+  .global-brand span {
+    max-width: 165px;
+  }
+
+  .home-icon-grid {
+    gap: 8px !important;
+    grid-template-rows: repeat(4, minmax(156px, 1fr)) !important;
+  }
+
+  .home-recreation-tile.home-icon-tile,
+  .home-recreation-tile.home-icon-tile:nth-child(-n + 4),
+  .home-recreation-tile.home-icon-tile:nth-child(n + 5) {
+    min-height: 156px !important;
+  }
+}

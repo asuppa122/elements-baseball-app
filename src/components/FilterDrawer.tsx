@@ -331,43 +331,13 @@ export default function FilterDrawer(props: Props) {
         filterFields={filterFields}
         onClearFilters={props.onClearFilters}
         footer={
-          <>
-            <div className="cards-primary-toggles">
-              {!props.hideOwnership && (
-                <button
-                  type="button"
-                  className={
-                    props.ownershipFilter === 'owned'
-                      ? 'primary-filter-chip active'
-                      : 'primary-filter-chip'
-                  }
-                  onClick={() =>
-                    props.onOwnershipFilterChange(props.ownershipFilter === 'owned' ? '' : 'owned')
-                  }
-                >
-                  Owned by Me
-                </button>
-              )}
-              <button
-                type="button"
-                className={
-                  props.seasonEligibleOnly
-                    ? 'primary-filter-chip active'
-                    : 'primary-filter-chip'
-                }
-                onClick={() => props.onSeasonEligibleOnlyChange(!props.seasonEligibleOnly)}
-              >
-                Season Eligible
-              </button>
-            </div>
-            <div className="uf-chip-row">
-              {activeFilters.map((chip) => (
-                <span className="uf-chip" key={chip}>
-                  {chip}
-                </span>
-              ))}
-            </div>
-          </>
+          <div className="uf-chip-row">
+            {activeFilters.map((chip) => (
+              <span className="uf-chip" key={chip}>
+                {chip}
+              </span>
+            ))}
+          </div>
         }
       >
         <section className="card-database-attribute-filters">

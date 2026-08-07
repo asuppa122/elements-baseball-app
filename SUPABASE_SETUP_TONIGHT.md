@@ -1,7 +1,10 @@
 # Elements Baseball setup — tonight
 
 1. Open Supabase → SQL Editor.
-2. Paste and run `supabase/migrations/20260801_auth_managers_lineups.sql`.
+2. Run the Supabase migrations in order:
+   - `supabase/migrations/20260801_auth_managers_lineups.sql`
+   - `supabase/migrations/20260802_phase1_auth_hardening.sql`
+   - `supabase/migrations/20260807_discord_claim_username_compat.sql`
 3. Confirm Discord remains enabled under Authentication → Providers.
 4. Restart the local app after replacing the project folder.
 5. Log out and log back in with Discord.
