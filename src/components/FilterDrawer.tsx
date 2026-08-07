@@ -283,6 +283,30 @@ export default function FilterDrawer(props: Props) {
           { value: 'year' as SortField, label: 'Year' },
           { value: 'player_name' as SortField, label: 'Name' },
         ]}
+        quickFilterControls={
+          <>
+            {!props.hideOwnership && (
+              <button
+                type="button"
+                className={props.ownershipFilter === 'owned' ? 'cards-filter-sort-chip active' : 'cards-filter-sort-chip'}
+                aria-pressed={props.ownershipFilter === 'owned'}
+                onClick={() =>
+                  props.onOwnershipFilterChange(props.ownershipFilter === 'owned' ? '' : 'owned')
+                }
+              >
+                Owned by Me
+              </button>
+            )}
+            <button
+              type="button"
+              className={props.seasonEligibleOnly ? 'cards-filter-sort-chip active' : 'cards-filter-sort-chip'}
+              aria-pressed={props.seasonEligibleOnly}
+              onClick={() => props.onSeasonEligibleOnlyChange(!props.seasonEligibleOnly)}
+            >
+              Season Eligible
+            </button>
+          </>
+        }
         sortValue={props.sortField}
         sortDirection={props.sortDirection}
         onQuickSort={quickSort}

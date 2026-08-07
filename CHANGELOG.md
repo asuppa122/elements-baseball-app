@@ -1,3 +1,11 @@
+# Elements Baseball Change Log
+
+## v1.3.3 — Unified Card Quick Controls
+- Moved **Owned by Me** and **Season Eligible** into the same quick-control row as **Points**, **Year**, and **Name**.
+- Removed the separate duplicate quick-filter chip row above the Cards filter surface.
+- The two controls remain toggle filters while Points/Year/Name remain sort controls.
+- The shared quick-control row wraps cleanly on narrow/mobile screens.
+
 # Elements Baseball — Change Log
 
 ## v1.3.2 — Mobile Parity + Simplified Home

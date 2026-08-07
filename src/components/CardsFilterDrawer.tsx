@@ -29,6 +29,7 @@ type Props<TSort extends string> = {
   activePosition?: string
   onPositionChange?: (value: string) => void
   quickSortOptions: Array<UniversalSortOption<TSort>>
+  quickFilterControls?: ReactNode
   sortValue: TSort
   sortDirection: 'asc' | 'desc'
   onQuickSort: (value: TSort) => void
@@ -52,6 +53,7 @@ export default function CardsFilterDrawer<TSort extends string>({
   activePosition,
   onPositionChange,
   quickSortOptions,
+  quickFilterControls,
   sortValue,
   sortDirection,
   onQuickSort,
@@ -77,6 +79,7 @@ export default function CardsFilterDrawer<TSort extends string>({
           {sortValue === value && <span>{sortDirection === 'desc' ? '↓' : '↑'}</span>}
         </button>
       ))}
+      {quickFilterControls}
     </div>
   )
 
