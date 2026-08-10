@@ -1,3 +1,22 @@
+# v1.3.7 — Compact Attribute Row + Player Profile + Season Eligibility
+
+- Condensed the Cards Attribute Filters builder into one horizontal desktop row.
+- Reduced Player Profile header height and constrained the desktop profile to the viewport with internal content scrolling.
+- Centralized Season Eligible logic across Cards and Team Builder.
+- Current Elements season is 1925: every 1925 card is season eligible.
+- Other-year cards are season eligible only when `source_yes_field` is `yes` or a recognized current manager name.
+- Removed the stale 2025 current-season constant that caused 2025 cards to be treated as automatically eligible.
+
+# v1.3.5 — Cards Picture 2 Filter Layout
+
+- Reorganized the Cards controls to match the approved Picture 2 structure: Filters, Stat Type, Quick Sort, and Sort By across the top.
+- Renamed the Stats Context visual header to Stat Type while preserving the existing ALL / HITTING / PITCHING logic.
+- Moved detailed search, position, year, team, league, bats, arm, attribute, and defense controls into a dedicated expandable Filters area.
+- Added a persistent Applied Filters panel beside the card grid with removable active-filter chips and Clear All.
+- Preserved existing filtering, sorting, Quick Sort, card results, and interactions; this update restructures presentation rather than the filter engine.
+- Added responsive behavior so Applied Filters moves above the card grid on narrower screens/mobile.
+- Packaging note: node_modules is intentionally excluded from the update ZIP; run npm install after replacing the project if dependencies are not already installed.
+
 # Elements Baseball Change Log
 
 ## v1.3.3 — Unified Card Quick Controls
@@ -1230,3 +1249,21 @@ No other Home tile artwork or application functionality was intentionally change
 ## Validation
 - `npx tsc -b` passes.
 - Full Vite build was blocked only by the copied node_modules Rollup optional-dependency issue. Reinstall dependencies locally with `npm install` if needed.
+
+## v1.3.4 — Cards Stats Context + Lineup Builder Years
+- Reduced Cards gallery tile density so two complete rows are easier to view on desktop without redesigning the cards.
+- Kept Quick Sort in one horizontal row when Filters & Sort is expanded; narrow views can scroll the row horizontally instead of stacking it vertically.
+- Added `Stats Context: ALL | HITTING | PITCHING` to separate overlapping batting and pitching attributes, including two-way-player cases.
+- Attribute Sort and Attribute Filters now respect Stats Context; ALL clearly labels Hitting vs Pitching attributes.
+- Preserved explicit High-to-Low / Low-to-High attribute sorting.
+- Updated the Lineup Builder card loader to retrieve all published cards and card images with stable `card_key` pagination instead of hard-coding the 2025 dataset. Existing season-eligibility and ownership rules still determine which cards can be selected.
+- Demo-mode year locking remains unchanged.
+
+## v1.3.6 — Cards sizing + Team Builder all-years toggle
+- Increased Cards gallery sizing to target six cards across on full desktop while preserving responsive breakpoints.
+- Renamed Cards "Stat Type" to "Chart Type" without changing behavior.
+- Renamed Cards "Minimum DEF" to "DEF" and compacted the attribute/DEF filter row.
+- Added a shared Team Builder "Season Eligible" ON/OFF control across Active Roster, Fielding, Batting Order, Bench, Rotation, and Bullpen.
+- Season Eligible ON preserves the existing season-eligibility filter; OFF exposes owned published cards from all loaded years.
+- Saved lineups persist the Season Eligible toggle in roster_state; existing lineups default to ON.
+- Switching eligibility does not delete players already assigned to a roster.

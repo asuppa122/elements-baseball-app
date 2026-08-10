@@ -14,6 +14,7 @@ import type {
   SortDirection,
   SortField,
   ChartMode,
+  StatsContext,
 } from '../components/FilterDrawer'
 import { supabase } from '../lib/supabase'
 import type {
@@ -27,11 +28,46 @@ import {
 import { useAuth } from '../auth/AuthContext'
 import {
   cleanSearchTerm,
+  isSeasonEligibleCard,
   normalizeImageUrl,
 } from '../utils/cardHelpers'
 
 const PAGE_SIZE = 100
 const DATABASE_BATCH_SIZE = 1000
+
+
+const ATTRIBUTE_FILTER_LABELS: Partial<Record<AttributeFilter, string>> = {
+  points: 'Points',
+  hitter_fatigue: 'Hitting Fatigue',
+  hitter_on_base: 'On Base',
+  hitter_baserunning: 'Baserunning',
+  hitter_stolen_base: 'Stolen Base',
+  pitcher_fatigue: 'Pitching Fatigue',
+  pitcher_control: 'Control',
+  outs: 'Outs',
+  pitcher_ip: 'Innings Pitched',
+  k: 'Strikeout',
+  gb: 'Ground Ball',
+  fb: 'Fly Ball',
+  bb: 'Walk',
+  '1b': 'Single',
+  '1b_plus': 'Single Plus',
+  '2b': 'Double',
+  '3b': 'Triple',
+  hr: 'Home Run',
+}
+
+const ATTRIBUTE_OPERATOR_LABELS: Record<AttributeOperator, string> = {
+  eq: '=',
+  neq: '≠',
+  lt: '<',
+  lte: '≤',
+  gt: '>',
+  gte: '≥',
+  includes: 'includes',
+  starts_at: 'starts at',
+  ends_at: 'ends at',
+}
 
 const FILTER_STORAGE_KEY =
   'elements-card-database-filters'
@@ -54,6 +90,7 @@ type SavedFilterState = {
   sortDirection: SortDirection
   visibleCardCount: number
   chartMode: ChartMode
+  statsContext: StatsContext
 }
 
 function loadSavedFilterState(): Partial<SavedFilterState> {
@@ -397,6 +434,28 @@ function matchesPosition(
   return true
 }
 
+function hasHittingStats(card: CardRecord): boolean {
+  return [
+    card.hitter_on_base, card.hitter_outs, card.hitter_pu, card.hitter_k,
+    card.hitter_gb, card.hitter_fb, card.hitter_bb, card.hitter_1b,
+    card.hitter_1b_plus, card.hitter_2b, card.hitter_3b, card.hitter_hr,
+  ].some((value) => value !== null && value !== undefined && value !== '')
+}
+
+function hasPitchingStats(card: CardRecord): boolean {
+  return [
+    card.pitcher_control, card.pitcher_outs, card.pitcher_ip, card.pitcher_pu,
+    card.pitcher_k, card.pitcher_gb, card.pitcher_fb, card.pitcher_bb,
+    card.pitcher_1b, card.pitcher_2b, card.pitcher_3b, card.pitcher_hr,
+  ].some((value) => value !== null && value !== undefined && value !== '')
+}
+
+function matchesStatsContext(card: CardRecord, statsContext: StatsContext): boolean {
+  if (statsContext === 'hitting') return hasHittingStats(card)
+  if (statsContext === 'pitching') return hasPitchingStats(card)
+  return true
+}
+
 function matchesAttribute(
   card: CardRecord,
   attributeFilter: AttributeFilter,
@@ -715,18 +774,6 @@ function compareSortValues(
   )
 }
 
-function isSeasonEligible(
-  card: CardRecord,
-): boolean {
-  return (
-    String(
-      card.source_yes_field ?? '',
-    )
-      .trim()
-      .toLowerCase() === 'yes'
-  )
-}
-
 function CardsPage() {
   const { profile, isDemo } = useAuth()
   const currentManager = profile?.manager_name ?? ''
@@ -854,6 +901,13 @@ function CardsPage() {
   )
 
   const [
+    statsContext,
+    setStatsContext,
+  ] = useState<StatsContext>(
+    savedFilters.statsContext ?? 'all',
+  )
+
+  const [
     attributeConditions,
     setAttributeConditions,
   ] = useState<AttributeCondition[]>(
@@ -929,6 +983,34 @@ function CardsPage() {
     }
   }
 
+  const handleStatsContextChange = (nextContext: StatsContext) => {
+    if (nextContext === statsContext) return
+
+    setStatsContext(nextContext)
+    if (nextContext === 'hitting') setChartMode('batting')
+    if (nextContext === 'pitching') setChartMode('pitching')
+    setAttributeConditions([createInitialAttributeCondition()])
+
+    const hittingSorts = new Set<SortField>([
+      'hitter_fatigue', 'hitter_on_base', 'hitter_outs',
+      'hitter_baserunning', 'hitter_stolen_base', '1b_plus',
+    ])
+    const pitchingSorts = new Set<SortField>([
+      'pitcher_fatigue', 'pitcher_control', 'pitcher_outs', 'pitcher_ip',
+    ])
+    const chartSorts = new Set<SortField>(['k', 'gb', 'fb', 'bb', '1b', '2b', '3b', 'hr'])
+
+    if (
+      (nextContext === 'hitting' && pitchingSorts.has(sortField)) ||
+      (nextContext === 'pitching' && hittingSorts.has(sortField))
+    ) {
+      setSortField('points')
+      setSortDirection('desc')
+    } else if (chartSorts.has(sortField)) {
+      setChartMode(nextContext === 'pitching' ? 'pitching' : 'batting')
+    }
+  }
+
   useEffect(() => {
     const filterState:
       SavedFilterState = {
@@ -949,6 +1031,7 @@ function CardsPage() {
         sortDirection,
         visibleCardCount,
         chartMode,
+        statsContext,
       }
 
     window.sessionStorage.setItem(
@@ -959,6 +1042,7 @@ function CardsPage() {
     attributeConditions,
     batsFilter,
     chartMode,
+    statsContext,
     defensePosition,
     defenseRating,
     leagueFilter,
@@ -1373,6 +1457,10 @@ function CardsPage() {
             return false
           }
 
+          if (!matchesStatsContext(card, statsContext)) {
+            return false
+          }
+
           if (
             !matchesPosition(
               card,
@@ -1395,7 +1483,7 @@ function CardsPage() {
               )
 
           const eligible =
-            isSeasonEligible(card)
+            isSeasonEligibleCard(card)
 
           if (!isDemo && ownershipFilter === 'owned' && !ownedByManager) {
             return false
@@ -1532,6 +1620,8 @@ function CardsPage() {
       positionFilter,
       sortDirection,
       sortField,
+      statsContext,
+      chartMode,
       throwsFilter,
       yearFrom,
       yearTo,
@@ -1555,6 +1645,7 @@ function CardsPage() {
     positionFilter,
     sortDirection,
     sortField,
+    statsContext,
     throwsFilter,
     yearFrom,
     yearTo,
@@ -1585,6 +1676,7 @@ function CardsPage() {
     setBatsFilter('')
     setThrowsFilter('')
     setChartMode('batting')
+    setStatsContext('all')
     setAttributeConditions([
       createInitialAttributeCondition(),
     ])
@@ -1596,6 +1688,48 @@ function CardsPage() {
       PAGE_SIZE,
     )
   }
+
+  const appliedFilterItems = [
+    searchTerm && { key: 'search', label: `Player: ${searchTerm}`, onRemove: () => setSearchTerm('') },
+    positionFilter && {
+      key: 'position',
+      label: `Position: ${positionFilter === 'hitters' ? 'All Hitters' : positionFilter.toUpperCase()}`,
+      onRemove: () => handlePositionFilterChange(''),
+    },
+    (isDemo || yearFrom || yearTo) && {
+      key: 'year',
+      label: `Year: ${isDemo ? '2025' : yearFrom === yearTo && yearFrom ? yearFrom : `${yearFrom || 'Any'}–${yearTo || 'Any'}`}`,
+      onRemove: isDemo ? undefined : () => { setYearFrom(''); setYearTo('') },
+    },
+    teamFilter && { key: 'team', label: `Team: ${teamFilter}`, onRemove: () => setTeamFilter('') },
+    leagueFilter && { key: 'league', label: `League: ${leagueFilter}`, onRemove: () => setLeagueFilter('') },
+    batsFilter && { key: 'bats', label: `Bats: ${batsFilter}`, onRemove: () => setBatsFilter('') },
+    throwsFilter && { key: 'throws', label: `Arm: ${throwsFilter}`, onRemove: () => setThrowsFilter('') },
+    !isDemo && ownershipFilter && {
+      key: 'ownership',
+      label: ownershipFilter === 'owned' ? 'Owned by Me' : `Ownership: ${ownershipFilter}`,
+      onRemove: () => setOwnershipFilter(''),
+    },
+    seasonEligibleOnly && { key: 'eligible', label: 'Season Eligible', onRemove: () => setSeasonEligibleOnly(false) },
+    statsContext !== 'all' && {
+      key: 'stats-context',
+      label: `Chart Type: ${statsContext === 'hitting' ? 'Hitting' : 'Pitching'}`,
+      onRemove: () => handleStatsContextChange('all'),
+    },
+    defensePosition && {
+      key: 'defense-position',
+      label: `Fielding: ${defensePosition.toUpperCase()}`,
+      onRemove: () => setDefensePosition(''),
+    },
+    defenseRating && { key: 'defense-rating', label: `DEF: ${defenseRating}`, onRemove: () => setDefenseRating('') },
+    ...attributeConditions
+      .filter((condition) => condition.attribute && condition.value.trim())
+      .map((condition) => ({
+        key: `attribute-${condition.id}`,
+        label: `${condition.chartMode === 'pitching' ? 'Pitching' : 'Hitting'} ${ATTRIBUTE_FILTER_LABELS[condition.attribute] || condition.attribute} ${ATTRIBUTE_OPERATOR_LABELS[condition.operator]} ${condition.value}`,
+        onRemove: () => setAttributeConditions((current) => current.filter((item) => item.id !== condition.id)),
+      })),
+  ].filter(Boolean) as Array<{ key: string; label: string; onRemove?: () => void }>
 
   const hasMoreCards =
     visibleCards.length <
@@ -1648,6 +1782,8 @@ function CardsPage() {
           }
           chartMode={chartMode}
           onChartModeChange={setChartMode}
+          statsContext={statsContext}
+          onStatsContextChange={handleStatsContextChange}
           onThrowsFilterChange={
             setThrowsFilter
           }
@@ -1732,41 +1868,73 @@ function CardsPage() {
           !errorMessage &&
           visibleCards.length >
             0 && (
-            <>
-              <CardGrid
-                cards={
-                  visibleCards
-                }
-              />
+            <div className="cards-results-layout">
+              <div className="cards-results-main">
+                <CardGrid
+                  cards={
+                    visibleCards
+                  }
+                />
 
-              {hasMoreCards && (
-                <section className="load-more-section">
-                  <p>
-                    Showing{' '}
-                    {visibleCards.length.toLocaleString()}{' '}
-                    of{' '}
-                    {filteredCards.length.toLocaleString()}{' '}
-                    matching cards
-                  </p>
+                {hasMoreCards && (
+                  <section className="load-more-section">
+                    <p>
+                      Showing{' '}
+                      {visibleCards.length.toLocaleString()}{' '}
+                      of{' '}
+                      {filteredCards.length.toLocaleString()}{' '}
+                      matching cards
+                    </p>
 
-                  <button
-                    type="button"
-                    className="load-more-button"
-                    onClick={() =>
-                      setVisibleCardCount(
-                        (
-                          currentCount,
-                        ) =>
-                          currentCount +
-                          PAGE_SIZE,
-                      )
-                    }
-                  >
-                    Load {PAGE_SIZE} More
-                  </button>
-                </section>
-              )}
-            </>
+                    <button
+                      type="button"
+                      className="load-more-button"
+                      onClick={() =>
+                        setVisibleCardCount(
+                          (
+                            currentCount,
+                          ) =>
+                            currentCount +
+                            PAGE_SIZE,
+                        )
+                      }
+                    >
+                      Load {PAGE_SIZE} More
+                    </button>
+                  </section>
+                )}
+              </div>
+
+              <aside className="cards-applied-filters" aria-label="Applied filters">
+                <div className="cards-applied-filters-heading">
+                  <span>Applied Filters</span>
+                  {appliedFilterItems.length > 0 && (
+                    <button type="button" onClick={clearFilters}>Clear All</button>
+                  )}
+                </div>
+
+                {appliedFilterItems.length > 0 ? (
+                  <div className="cards-applied-filter-list">
+                    {appliedFilterItems.map((item) => (
+                      <div className="cards-applied-filter-chip" key={item.key}>
+                        <span>{item.label}</span>
+                        {item.onRemove && (
+                          <button
+                            type="button"
+                            aria-label={`Remove ${item.label} filter`}
+                            onClick={item.onRemove}
+                          >
+                            ×
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="cards-applied-filters-empty">No active filters</p>
+                )}
+              </aside>
+            </div>
           )}
       </main>
     </div>

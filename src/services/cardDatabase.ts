@@ -5,10 +5,13 @@ import type {
   CardRow,
 } from '../types/card'
 import { CARD_COLUMNS } from '../types/card'
-import { normalizeImageUrl } from '../utils/cardHelpers'
+import {
+  CURRENT_ELEMENTS_SEASON_YEAR,
+  normalizeImageUrl,
+} from '../utils/cardHelpers'
 
 const DATABASE_BATCH_SIZE = 1000
-export const ACTIVE_SEASON = 2025
+export const ACTIVE_SEASON = CURRENT_ELEMENTS_SEASON_YEAR
 
 async function loadAllCardRows(): Promise<CardRow[]> {
   const rows: CardRow[] = []
@@ -22,12 +25,9 @@ async function loadAllCardRows(): Promise<CardRow[]> {
     const { data, error } = await supabase
       .from('cards')
       .select(CARD_COLUMNS)
-      .or(
-        `hitter_year.eq.${ACTIVE_SEASON},pitcher_year.eq.${ACTIVE_SEASON}`,
-      )
-      .order('all_number', {
+      .gte('hitter_points', 0)
+      .order('card_key', {
         ascending: true,
-        nullsFirst: false,
       })
       .range(startingRow, endingRow)
 
@@ -59,7 +59,6 @@ async function loadAllCardImages(): Promise<CardImageRow[]> {
     const { data, error } = await supabase
       .from('card_images')
       .select('card_key, image_url')
-      .eq('source_year', ACTIVE_SEASON)
       .order('card_key', {
         ascending: true,
       })

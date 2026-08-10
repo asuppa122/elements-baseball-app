@@ -1,8 +1,9 @@
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import CardsFilterDrawer from './CardsFilterDrawer'
 
 export type OwnershipFilter = '' | 'owned' | 'owned-eligible' | 'owned-ineligible' | 'not-collected'
 export type ChartMode = 'batting' | 'pitching'
+export type StatsContext = 'all' | 'hitting' | 'pitching'
 export type AttributeFilter = '' | 'points' | 'hitter_fatigue' | 'hitter_on_base' | 'hitter_baserunning' | 'hitter_stolen_base' | 'pitcher_fatigue' | 'pitcher_control' | 'outs' | 'pitcher_ip' | 'k' | 'gb' | 'fb' | 'bb' | '1b' | '1b_plus' | '2b' | '3b' | 'hr'
 export type AttributeOperator = 'eq' | 'neq' | 'lt' | 'lte' | 'gt' | 'gte' | 'includes' | 'starts_at' | 'ends_at'
 export type AttributeCondition = {
@@ -42,6 +43,8 @@ type Props = {
   onThrowsFilterChange: (value: string) => void
   chartMode: ChartMode
   onChartModeChange: (value: ChartMode) => void
+  statsContext: StatsContext
+  onStatsContextChange: (value: StatsContext) => void
   attributeConditions: AttributeCondition[]
   onAttributeConditionsChange: (value: AttributeCondition[]) => void
   defensePosition: DefensePosition
@@ -150,30 +153,6 @@ function sortSelection(sortField: SortField, chartMode: ChartMode): string {
 export default function FilterDrawer(props: Props) {
   const [open, setOpen] = useState(false)
 
-  const activeFilters = useMemo(
-    () =>
-      [
-        props.positionFilter &&
-          `Position: ${props.positionFilter === 'hitters' ? 'All Hitters' : props.positionFilter.toUpperCase()}`,
-        (props.lockedYear || props.yearFrom || props.yearTo) &&
-          `Year: ${props.lockedYear || `${props.yearFrom || 'Any'}–${props.yearTo || 'Any'}`}`,
-        props.teamFilter && `Team: ${props.teamFilter}`,
-        props.leagueFilter && `League: ${props.leagueFilter}`,
-        props.batsFilter && `Bats: ${props.batsFilter}`,
-        props.throwsFilter && `Arm: ${props.throwsFilter}`,
-      ].filter(Boolean) as string[],
-    [
-      props.positionFilter,
-      props.yearFrom,
-      props.yearTo,
-      props.teamFilter,
-      props.leagueFilter,
-      props.batsFilter,
-      props.throwsFilter,
-      props.lockedYear,
-    ],
-  )
-
   const quickSort = (field: SortField) => {
     if (props.sortField === field) {
       props.onSortDirectionChange(props.sortDirection === 'desc' ? 'asc' : 'desc')
@@ -206,12 +185,16 @@ export default function FilterDrawer(props: Props) {
         attribute: '',
         operator: 'eq',
         value: '',
-        chartMode: 'batting',
+        chartMode: props.statsContext === 'pitching' ? 'pitching' : 'batting',
       },
     ])
   }
 
   const selectedSort = sortSelection(props.sortField, props.chartMode)
+  const visibleHitterAttributes = props.statsContext !== 'pitching'
+  const visiblePitcherAttributes = props.statsContext !== 'hitting'
+  const labelForContext = (mode: ChartMode, label: string) =>
+    props.statsContext === 'all' ? `${mode === 'batting' ? 'Hitting' : 'Pitching'} · ${label}` : label
 
   const filterFields = [
     props.lockedYear
@@ -283,6 +266,28 @@ export default function FilterDrawer(props: Props) {
           { value: 'year' as SortField, label: 'Year' },
           { value: 'player_name' as SortField, label: 'Name' },
         ]}
+        contextControls={
+          <div className="cards-stats-context" aria-label="Chart type">
+            <span className="cards-control-heading">Chart Type</span>
+            <div className="cards-stats-context-options">
+              {([
+                ['all', 'ALL'],
+                ['hitting', 'HITTING'],
+                ['pitching', 'PITCHING'],
+              ] as Array<[StatsContext, string]>).map(([value, label]) => (
+                <button
+                  type="button"
+                  key={value}
+                  className={props.statsContext === value ? 'cards-filter-sort-chip active' : 'cards-filter-sort-chip'}
+                  aria-pressed={props.statsContext === value}
+                  onClick={() => props.onStatsContextChange(value)}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+        }
         quickFilterControls={
           <>
             {!props.hideOwnership && (
@@ -314,20 +319,24 @@ export default function FilterDrawer(props: Props) {
         attributeSortOptions={
           <>
             <option value="">Select an attribute</option>
-            <optgroup label="Hitter Attributes">
-              {hitterAttributes.map(([value, label]) => (
-                <option key={`sort-h-${value}`} value={encodeAttribute('batting', value)}>
-                  {label}
-                </option>
-              ))}
-            </optgroup>
-            <optgroup label="Pitcher Attributes">
-              {pitcherAttributes.map(([value, label]) => (
-                <option key={`sort-p-${value}`} value={encodeAttribute('pitching', value)}>
-                  {label}
-                </option>
-              ))}
-            </optgroup>
+            {visibleHitterAttributes && (
+              <optgroup label="Hitting Attributes">
+                {hitterAttributes.map(([value, label]) => (
+                  <option key={`sort-h-${value}`} value={encodeAttribute('batting', value)}>
+                    {labelForContext('batting', label)}
+                  </option>
+                ))}
+              </optgroup>
+            )}
+            {visiblePitcherAttributes && (
+              <optgroup label="Pitching Attributes">
+                {pitcherAttributes.map(([value, label]) => (
+                  <option key={`sort-p-${value}`} value={encodeAttribute('pitching', value)}>
+                    {labelForContext('pitching', label)}
+                  </option>
+                ))}
+              </optgroup>
+            )}
             <option value="defense">Fielding at selected position</option>
           </>
         }
@@ -354,25 +363,10 @@ export default function FilterDrawer(props: Props) {
         }
         filterFields={filterFields}
         onClearFilters={props.onClearFilters}
-        footer={
-          <div className="uf-chip-row">
-            {activeFilters.map((chip) => (
-              <span className="uf-chip" key={chip}>
-                {chip}
-              </span>
-            ))}
-          </div>
-        }
       >
         <section className="card-database-attribute-filters">
-          <div className="card-database-attribute-heading">
-            <span className="cards-filter-section-label">Attribute Filters</span>
-            <button type="button" className="add-filter-button" onClick={addCondition}>
-              + Add Filter
-            </button>
-          </div>
-
           <div className="card-database-attribute-layout">
+            <span className="cards-filter-section-label card-database-attribute-inline-label">Attribute Filters</span>
             <div className="card-database-condition-list">
           {props.attributeConditions.map((condition) => {
             const conditionMode = condition.chartMode ?? props.chartMode
@@ -397,20 +391,24 @@ export default function FilterDrawer(props: Props) {
                   }}
                 >
                   <option value="">Select an attribute</option>
-                  <optgroup label="Hitter Attributes">
-                    {hitterAttributes.map(([value, label]) => (
-                      <option key={`filter-h-${value}`} value={encodeAttribute('batting', value)}>
-                        {label}
-                      </option>
-                    ))}
-                  </optgroup>
-                  <optgroup label="Pitcher Attributes">
-                    {pitcherAttributes.map(([value, label]) => (
-                      <option key={`filter-p-${value}`} value={encodeAttribute('pitching', value)}>
-                        {label}
-                      </option>
-                    ))}
-                  </optgroup>
+                  {visibleHitterAttributes && (
+                    <optgroup label="Hitting Attributes">
+                      {hitterAttributes.map(([value, label]) => (
+                        <option key={`filter-h-${value}`} value={encodeAttribute('batting', value)}>
+                          {labelForContext('batting', label)}
+                        </option>
+                      ))}
+                    </optgroup>
+                  )}
+                  {visiblePitcherAttributes && (
+                    <optgroup label="Pitching Attributes">
+                      {pitcherAttributes.map(([value, label]) => (
+                        <option key={`filter-p-${value}`} value={encodeAttribute('pitching', value)}>
+                          {labelForContext('pitching', label)}
+                        </option>
+                      ))}
+                    </optgroup>
+                  )}
                 </select>
                 <select
                   value={condition.operator}
@@ -466,7 +464,7 @@ export default function FilterDrawer(props: Props) {
               </select>
             </label>
             <label>
-              <span>Minimum DEF</span>
+              <span>DEF</span>
               <input
                 value={props.defenseRating}
                 onChange={(event) => props.onDefenseRatingChange(event.target.value)}
@@ -475,6 +473,9 @@ export default function FilterDrawer(props: Props) {
               />
             </label>
           </div>
+            <button type="button" className="add-filter-button card-database-inline-add-filter" onClick={addCondition}>
+              + Add Filter
+            </button>
           </div>
         </section>
       </CardsFilterDrawer>

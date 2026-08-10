@@ -161,6 +161,43 @@ export function getCardYear(
   )
 }
 
+
+export const CURRENT_ELEMENTS_SEASON_YEAR = 1925
+
+const ELEMENTS_MANAGER_NAMES = new Set([
+  'anthony',
+  'ben',
+  'chuck',
+  'eric',
+  'james',
+  'jeremiah',
+  'john',
+  'matt',
+  'nate',
+  'ryan',
+  'will',
+  'zeek',
+])
+
+export function isSeasonEligibleCard(
+  card: CardRow,
+): boolean {
+  if (getCardYear(card) === CURRENT_ELEMENTS_SEASON_YEAR) {
+    return true
+  }
+
+  const sourceValue = String(card.source_yes_field ?? '')
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+
+  if (sourceValue === 'yes') {
+    return true
+  }
+
+  return ELEMENTS_MANAGER_NAMES.has(sourceValue)
+}
+
 export function getCardTeamCode(
   card: CardRow,
 ): string | null {

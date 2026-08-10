@@ -29,6 +29,7 @@ type Props<TSort extends string> = {
   activePosition?: string
   onPositionChange?: (value: string) => void
   quickSortOptions: Array<UniversalSortOption<TSort>>
+  contextControls?: ReactNode
   quickFilterControls?: ReactNode
   sortValue: TSort
   sortDirection: 'asc' | 'desc'
@@ -40,7 +41,6 @@ type Props<TSort extends string> = {
   filterFields: UniversalFilterField[]
   onClearFilters: () => void
   children?: ReactNode
-  footer?: ReactNode
 }
 
 export default function CardsFilterDrawer<TSort extends string>({
@@ -53,6 +53,7 @@ export default function CardsFilterDrawer<TSort extends string>({
   activePosition,
   onPositionChange,
   quickSortOptions,
+  contextControls,
   quickFilterControls,
   sortValue,
   sortDirection,
@@ -64,145 +65,134 @@ export default function CardsFilterDrawer<TSort extends string>({
   filterFields,
   onClearFilters,
   children,
-  footer,
 }: Props<TSort>) {
-  const quickSort = (
-    <div className="cards-filter-sort-chip-row">
-      {quickSortOptions.map(({ value, label }) => (
-        <button
-          type="button"
-          className={sortValue === value ? 'cards-filter-sort-chip active' : 'cards-filter-sort-chip'}
-          onClick={() => onQuickSort(value)}
-          key={value}
-        >
-          {label}
-          {sortValue === value && <span>{sortDirection === 'desc' ? '↓' : '↑'}</span>}
-        </button>
-      ))}
-      {quickFilterControls}
-    </div>
-  )
-
   return (
     <>
-      {positionChips && (
-        <div className="cards-filter-position-chip-row" aria-label="Filter by position">
-          {positionChips.map(({ value, label }) => (
-            <button
-              type="button"
-              className={activePosition === value ? 'cards-filter-sort-chip active' : 'cards-filter-sort-chip'}
-              onClick={() => onPositionChange?.(value)}
-              key={value || 'all'}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-      )}
-
-      <label className="cards-filter-player-search">
-        <span>⌕</span>
-        <input
-          type="search"
-          value={searchValue}
-          onChange={(event) => onSearchChange(event.target.value)}
-          placeholder={searchPlaceholder}
-        />
-      </label>
-
-      {!open && (
-        <div className="cards-filter-compact-toolbar">
-          {quickSort}
+      <div className="cards-control-bar">
+        <div className="cards-control-group cards-control-group-filters">
+          <span className="cards-control-heading">Filters</span>
           <button
             type="button"
-            className="cards-filter-expand-controls"
-            onClick={() => onOpenChange(true)}
+            className={open ? 'cards-filter-main-button active' : 'cards-filter-main-button'}
+            aria-expanded={open}
+            onClick={() => onOpenChange(!open)}
           >
-            Filters &amp; Sort +
+            <span aria-hidden="true">▽</span>
+            {open ? 'Hide Filters' : 'Open Filters'}
           </button>
         </div>
-      )}
+
+        <div className="cards-control-group cards-control-group-context">
+          {contextControls}
+        </div>
+
+        <div className="cards-control-group cards-control-group-quick-sort">
+          <span className="cards-control-heading">Quick Sort</span>
+          <div className="cards-filter-sort-chip-row">
+            {quickSortOptions.map(({ value, label }) => (
+              <button
+                type="button"
+                className={sortValue === value ? 'cards-filter-sort-chip active' : 'cards-filter-sort-chip'}
+                onClick={() => onQuickSort(value)}
+                key={value}
+              >
+                {label}
+                {sortValue === value && <span>{sortDirection === 'desc' ? '↓' : '↑'}</span>}
+              </button>
+            ))}
+            {quickFilterControls}
+          </div>
+        </div>
+
+        <div className="cards-control-group cards-control-group-sort-by">
+          <span className="cards-control-heading">Sort By</span>
+          <div className="cards-filter-sort-by-row">
+            <select
+              aria-label="Sort cards by attribute"
+              value={attributeSortValue}
+              onChange={(event) => onAttributeSortChange(event.target.value)}
+            >
+              {attributeSortOptions}
+            </select>
+            <button
+              type="button"
+              className="cards-filter-sort-direction-button"
+              onClick={onDirectionToggle}
+            >
+              {sortDirection === 'desc' ? 'High to Low ↓' : 'Low to High ↑'}
+            </button>
+          </div>
+        </div>
+      </div>
 
       {open && (
-        <>
-          <div className="cards-filter-expanded-controls-heading">
-            <span>Filters &amp; Sort</span>
-            <button type="button" onClick={() => onOpenChange(false)}>
-              Collapse −
+        <section className="cards-filter-detail-panel" aria-label="Detailed card filters">
+          <div className="cards-filter-detail-primary-row">
+            <label className="cards-filter-player-search">
+              <span>⌕</span>
+              <input
+                type="search"
+                value={searchValue}
+                onChange={(event) => onSearchChange(event.target.value)}
+                placeholder={searchPlaceholder}
+              />
+            </label>
+
+            {positionChips && (
+              <div className="cards-filter-position-chip-row" aria-label="Filter by position">
+                {positionChips.map(({ value, label }) => (
+                  <button
+                    type="button"
+                    className={activePosition === value ? 'cards-filter-sort-chip active' : 'cards-filter-sort-chip'}
+                    onClick={() => onPositionChange?.(value)}
+                    key={value || 'all'}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="cards-filter-grid">
+            {filterFields.map((field) => (
+              <label key={field.label}>
+                <span>{field.label}</span>
+                {field.kind === 'locked' ? (
+                  <div className="uf-locked-value">{field.value}</div>
+                ) : field.kind === 'search' ? (
+                  <input
+                    type="search"
+                    value={field.value}
+                    onChange={(event) => field.onChange?.(event.target.value)}
+                    placeholder={field.placeholder}
+                  />
+                ) : (
+                  <select
+                    value={field.value}
+                    onChange={(event) => field.onChange?.(event.target.value)}
+                  >
+                    {field.options?.map((option) => (
+                      <option value={option.value} key={`${field.label}-${option.value}`}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                )}
+              </label>
+            ))}
+
+            <button
+              type="button"
+              className="cards-filter-clear-button"
+              onClick={onClearFilters}
+            >
+              Clear Filters
             </button>
           </div>
 
-          <section className="cards-filter-sort-section">
-            <div className="cards-filter-sort-layout">
-              <div className="cards-filter-quick-sort-group">
-                <span className="cards-filter-section-label">Quick Sort</span>
-                {quickSort}
-              </div>
-
-              <div className="cards-filter-advanced-sort-row">
-                <label>
-                  <span>Attribute Sort</span>
-                  <select
-                    value={attributeSortValue}
-                    onChange={(event) => onAttributeSortChange(event.target.value)}
-                  >
-                    {attributeSortOptions}
-                  </select>
-                </label>
-
-                <button
-                  type="button"
-                  className="cards-filter-sort-direction-button"
-                  onClick={onDirectionToggle}
-                >
-                  {sortDirection === 'desc' ? 'High to Low ↓' : 'Low to High ↑'}
-                </button>
-              </div>
-            </div>
-          </section>
-
-          <section className="cards-filter-filter-section">
-            <div className="cards-filter-grid">
-              {filterFields.map((field) => (
-                <label key={field.label}>
-                  <span>{field.label}</span>
-                  {field.kind === 'locked' ? (
-                    <div className="uf-locked-value">{field.value}</div>
-                  ) : field.kind === 'search' ? (
-                    <input
-                      type="search"
-                      value={field.value}
-                      onChange={(event) => field.onChange?.(event.target.value)}
-                      placeholder={field.placeholder}
-                    />
-                  ) : (
-                    <select
-                      value={field.value}
-                      onChange={(event) => field.onChange?.(event.target.value)}
-                    >
-                      {field.options?.map((option) => (
-                        <option value={option.value} key={`${field.label}-${option.value}`}>
-                          {option.label}
-                        </option>
-                      ))}
-                    </select>
-                  )}
-                </label>
-              ))}
-
-              <button
-                type="button"
-                className="cards-filter-clear-button"
-                onClick={onClearFilters}
-              >
-                Clear Filters
-              </button>
-            </div>
-          </section>
-
           {children}
-          {footer}
-        </>
+        </section>
       )}
     </>
   )

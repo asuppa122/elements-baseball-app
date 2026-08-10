@@ -1006,3 +1006,94 @@
   .uf-compact-toolbar { grid-template-columns: 1fr 1fr; }
   .universal-filter-toggle.compact { width: 100%; }
 }
+
+/* v1.3.7 — compact, fixed-height desktop Player Profile */
+@media (min-width: 901px) {
+  .player-profile-header.player-profile-header-with-global-navigation {
+    width: min(1180px, calc(100% - 40px));
+    min-height: 82px;
+    padding: 10px 0 11px;
+  }
+
+  .player-profile-header .player-profile-heading .eyebrow {
+    margin: 0 0 4px;
+    font-size: 0.62rem;
+    letter-spacing: 0.22em;
+  }
+
+  .player-profile-header .player-profile-heading h1 {
+    margin: 0;
+    font-size: clamp(1.85rem, 3vw, 2.65rem);
+    line-height: 1;
+    letter-spacing: -0.035em;
+  }
+
+  .simplified-profile-page {
+    display: flex;
+    width: min(1380px, calc(100% - 40px));
+    height: calc(100dvh - 150px);
+    min-height: 0;
+    margin: 0 auto;
+    padding: 10px 0 12px;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .simplified-profile-page .back-to-cards-button {
+    flex: 0 0 auto;
+    min-height: 36px;
+    margin: 0 auto 10px;
+    padding: 7px 12px;
+  }
+
+  .simplified-profile-page .profile-tabs-layout {
+    flex: 1 1 auto;
+    min-height: 0;
+    grid-template-columns: minmax(300px, 0.82fr) minmax(0, 1.18fr);
+    gap: 28px;
+    align-items: stretch;
+    overflow: hidden;
+  }
+
+  .simplified-profile-page .simplified-card-frame {
+    width: auto;
+    height: 100%;
+    max-width: 100%;
+    max-height: 100%;
+    aspect-ratio: 2.5 / 3.5;
+    justify-self: center;
+    align-self: stretch;
+  }
+
+  .simplified-profile-page .profile-tab-column {
+    display: flex;
+    min-height: 0;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .simplified-profile-page .profile-tab-list {
+    flex: 0 0 auto;
+    margin-bottom: 8px;
+    gap: 6px;
+  }
+
+  .simplified-profile-page .profile-tab-button {
+    min-height: 40px;
+    padding: 7px 8px;
+  }
+
+  .simplified-profile-page .profile-tab-panel {
+    flex: 1 1 auto;
+    min-height: 0;
+    padding: 20px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+  }
+
+  .simplified-profile-page .profile-tab-panel > h1 {
+    margin-bottom: 14px;
+    font-size: clamp(1.65rem, 2.8vw, 2.35rem);
+  }
+}

@@ -17,6 +17,7 @@ import {
   getCardTeamCode,
   getCardYear,
   isCardOwnedByManager,
+  isSeasonEligibleCard,
 } from '../utils/cardHelpers'
 import { useAuth } from '../auth/AuthContext'
 import { supabase } from '../lib/supabase'
@@ -138,6 +139,7 @@ type SavedLineup = {
   assigned: Record<string, string>
   rosterFormat: RosterFormat
   useDh: boolean
+  seasonEligibleOnly: boolean
 }
 
 
@@ -337,24 +339,6 @@ function isPublished(card: CardRecord) {
     card.hitter_points >= 0
 }
 
-function isSeasonEligible(card: CardRecord) {
-  const eligibilityValue = String(
-    card.source_yes_field ?? '',
-  )
-    .trim()
-    .toLowerCase()
-
-  const cardYear =
-    getCardYear(card)
-
-  return (
-    eligibilityValue === 'yes' ||
-    eligibilityValue === 'true' ||
-    eligibilityValue === '1' ||
-    cardYear === ACTIVE_SEASON
-  )
-}
-
 function hasPitchingSide(card: CardRecord) {
   return (
     card.pitcher_control !== null ||
@@ -418,6 +402,7 @@ function RosterPage() {
   const [assigned, setAssigned] = useState<Record<string, string>>({})
   const [rosterFormat, setRosterFormat] = useState<RosterFormat>('full')
   const [useDh, setUseDh] = useState(true)
+  const [seasonEligibleOnly, setSeasonEligibleOnly] = useState(true)
   const [, setLineupLoaded] = useState(false)
   const [section, setSection] =
     useState<Section>('overview')
@@ -586,6 +571,7 @@ function RosterPage() {
         setAssigned(state.assigned ?? {})
         setRosterFormat(state.rosterFormat ?? 'full')
         setUseDh(data.use_dh ?? state.useDh ?? true)
+        setSeasonEligibleOnly(state.seasonEligibleOnly ?? true)
         setLineupLoaded(true)
       })
   }, [lineupId, user?.id, isDemo])
@@ -773,7 +759,7 @@ function RosterPage() {
           return false
         }
 
-        if (!isSeasonEligible(card)) {
+        if (seasonEligibleOnly && !isSeasonEligibleCard(card)) {
           return false
         }
 
@@ -1024,6 +1010,7 @@ function RosterPage() {
     teamFilter,
     usedCardKeys,
     yearFilter,
+    seasonEligibleOnly,
   ])
 
   useEffect(() => {
@@ -1273,6 +1260,7 @@ function RosterPage() {
           assigned,
           rosterFormat,
           useDh,
+          seasonEligibleOnly,
         },
         updated_at: new Date().toISOString(),
       })
@@ -2128,6 +2116,16 @@ function RosterPage() {
 
           <div className="roster-header-actions">
             <div className="roster-points-status"><strong>{totalPoints.toLocaleString()} / {pointCap.toLocaleString()}</strong><span>{Math.max(pointCap-totalPoints,0).toLocaleString()} remaining</span></div>
+            <button
+              type="button"
+              className={`roster-season-toggle ${seasonEligibleOnly ? 'active' : ''}`}
+              aria-pressed={seasonEligibleOnly}
+              onClick={() => setSeasonEligibleOnly((current) => !current)}
+              title={seasonEligibleOnly ? 'Only season-eligible cards are available' : 'Cards from all years are available'}
+            >
+              <span>Season Eligible</span>
+              <strong>{seasonEligibleOnly ? 'ON' : 'OFF'}</strong>
+            </button>
             <button type="button" className="roster-clear-button" onClick={clearCurrentPage}>Clear Page</button>
             <button type="button" className="roster-clear-button roster-clear-team-button" onClick={clearTeam}>Clear Team</button>
             {isDemo ? (
@@ -2594,7 +2592,7 @@ function RosterPage() {
               <div className={`roster-replacement-browser roster-replacement-browser-${selectedSlot.section}`}>
                 <div className="roster-drawer-rules">
                   <span>{isDemo ? 'All 2025 Cards' : `Owned by ${currentManager}`}</span>
-                  <span>Season Eligible</span>
+                  <span>{seasonEligibleOnly ? 'Season Eligible' : 'All Years'}</span>
                   <span>Published</span>
                   <span>
                     {selectedSlot.eligibility ===
