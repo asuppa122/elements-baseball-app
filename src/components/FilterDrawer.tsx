@@ -365,9 +365,9 @@ export default function FilterDrawer(props: Props) {
         onClearFilters={props.onClearFilters}
       >
         <section className="card-database-attribute-filters">
-          <div className="card-database-attribute-layout">
-            <span className="cards-filter-section-label card-database-attribute-inline-label">Attribute Filters</span>
-            <div className="card-database-condition-list">
+          <div className="card-database-attribute-layout shared-attribute-inline-layout">
+            <span className="cards-filter-section-label card-database-attribute-inline-label shared-attribute-inline-label">Attribute Filters</span>
+            <div className="card-database-condition-list shared-attribute-condition-list">
           {props.attributeConditions.map((condition) => {
             const conditionMode = condition.chartMode ?? props.chartMode
             return (
@@ -442,7 +442,7 @@ export default function FilterDrawer(props: Props) {
           })}
             </div>
 
-          <div className="card-database-defense-row">
+          <div className="card-database-defense-row shared-defense-filter-group">
             <label>
               <span>Fielding Position</span>
               <select
@@ -473,7 +473,7 @@ export default function FilterDrawer(props: Props) {
               />
             </label>
           </div>
-            <button type="button" className="add-filter-button card-database-inline-add-filter" onClick={addCondition}>
+            <button type="button" className="add-filter-button card-database-inline-add-filter shared-inline-add-filter" onClick={addCondition}>
               + Add Filter
             </button>
           </div>

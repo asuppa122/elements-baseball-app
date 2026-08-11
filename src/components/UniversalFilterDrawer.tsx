@@ -38,8 +38,10 @@ type Props<TSort extends string> = {
   onDirectionToggle: () => void
   filterFields: UniversalFilterField[]
   onClearFilters: () => void
+  onClearAppliedFilters?: () => void
   children?: ReactNode
   footer?: ReactNode
+  appliedFilters?: Array<{ id: string; label: string; onRemove: () => void }>
 }
 
 export default function UniversalFilterDrawer<TSort extends string>({
@@ -61,8 +63,10 @@ export default function UniversalFilterDrawer<TSort extends string>({
   onDirectionToggle,
   filterFields,
   onClearFilters,
+  onClearAppliedFilters,
   children,
   footer,
+  appliedFilters = [],
 }: Props<TSort>) {
   const quickSort = (
     <div className="tb-filter-sort-chip-row">
@@ -129,6 +133,8 @@ export default function UniversalFilterDrawer<TSort extends string>({
             </button>
           </div>
 
+          <div className={appliedFilters.length > 0 ? 'tb-filter-workspace has-applied-filters' : 'tb-filter-workspace'}>
+            <div className="tb-filter-workspace-main">
           <section className="tb-filter-sort-section">
             <div className="tb-filter-sort-layout">
               <div className="tb-filter-quick-group">
@@ -138,7 +144,7 @@ export default function UniversalFilterDrawer<TSort extends string>({
 
               <div className="tb-filter-attribute-group">
                 <label>
-                  <span>Attribute Sort</span>
+                  <span>Sort By</span>
                   <select
                     value={attributeSortValue}
                     onChange={(event) => onAttributeSortChange(event.target.value)}
@@ -199,6 +205,31 @@ export default function UniversalFilterDrawer<TSort extends string>({
 
           {children}
           {footer}
+            </div>
+
+            {appliedFilters.length > 0 && (
+              <aside className="tb-applied-filters tb-filter-applied-panel" aria-label="Applied filters">
+                <div className="tb-applied-filter-heading">
+                  <span className="tb-filter-section-label">Applied Filters</span>
+                  <button type="button" onClick={onClearAppliedFilters ?? onClearFilters}>Clear All</button>
+                </div>
+                <div className="tb-applied-filter-chip-row">
+                  {appliedFilters.map((filter) => (
+                    <button
+                      type="button"
+                      className="tb-applied-filter-chip"
+                      onClick={filter.onRemove}
+                      key={filter.id}
+                      aria-label={`Remove ${filter.label} filter`}
+                    >
+                      <span>{filter.label}</span>
+                      <strong aria-hidden="true">×</strong>
+                    </button>
+                  ))}
+                </div>
+              </aside>
+            )}
+          </div>
         </>
       )}
     </>

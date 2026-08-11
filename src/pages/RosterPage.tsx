@@ -82,6 +82,38 @@ const attributeOperators: Array<[AttributeOperator, string]> = [
   ['eq', '='], ['neq', '≠'], ['lt', '<'], ['lte', '≤'], ['gt', '>'], ['gte', '≥'],
 ]
 
+const attributeLabels: Partial<Record<DrawerSort, string>> = {
+  hitter_on_base: 'On Base',
+  hitter_outs: 'Hitter Outs',
+  hitter_baserunning: 'Baserunning',
+  hitter_stolen_base: 'Stolen Base',
+  hitter_fatigue: 'Hitter Fatigue',
+  hitter_pu: 'Hitter Pop Up',
+  hitter_k: 'Hitter Strikeout',
+  hitter_gb: 'Hitter Ground Ball',
+  hitter_fb: 'Hitter Fly Ball',
+  hitter_bb: 'Hitter Walk',
+  hitter_1b: 'Hitter Single',
+  hitter_1b_plus: 'Single Plus',
+  hitter_2b: 'Hitter Double',
+  hitter_3b: 'Hitter Triple',
+  hitter_hr: 'Hitter Home Run',
+  pitcher_control: 'Control',
+  pitcher_outs: 'Pitcher Outs',
+  pitcher_ip: 'Innings Pitched',
+  pitcher_fatigue: 'Pitcher Fatigue',
+  pitcher_pu: 'Pitcher Pop Up',
+  pitcher_k: 'Pitcher Strikeout',
+  pitcher_gb: 'Pitcher Ground Ball',
+  pitcher_fb: 'Pitcher Fly Ball',
+  pitcher_bb: 'Pitcher Walk',
+  pitcher_1b: 'Pitcher Single',
+  pitcher_2b: 'Pitcher Double',
+  pitcher_3b: 'Pitcher Triple',
+  pitcher_hr: 'Pitcher Home Run',
+  defense: 'Fielding',
+}
+
 function numericCardValue(card: CardRecord, attribute: DrawerSort): number | null {
   if (attribute === 'points') return getPoints(card)
   if (attribute === 'year') return getCardYear(card)
@@ -2394,6 +2426,46 @@ function RosterPage() {
                   onChange: setArmFilter,
                 },
               ]}
+              appliedFilters={[
+                ...(seasonEligibleOnly
+                  ? [{ id: 'season-eligible', label: 'Season Eligible', onRemove: () => setSeasonEligibleOnly(false) }]
+                  : []),
+                ...(search.trim()
+                  ? [{ id: 'search', label: `Search: ${search.trim()}`, onRemove: () => setSearch('') }]
+                  : []),
+                ...(yearFilter
+                  ? [{ id: 'year', label: `Year: ${yearFilter}`, onRemove: () => setYearFilter('') }]
+                  : []),
+                ...(teamFilter.trim()
+                  ? [{ id: 'team', label: `Team: ${teamFilter.trim()}`, onRemove: () => setTeamFilter('') }]
+                  : []),
+                ...(leagueFilter
+                  ? [{ id: 'league', label: `League: ${leagueFilter}`, onRemove: () => setLeagueFilter('') }]
+                  : []),
+                ...(batsFilter
+                  ? [{ id: 'bats', label: `Bats: ${batsFilter}`, onRemove: () => setBatsFilter('') }]
+                  : []),
+                ...(armFilter
+                  ? [{ id: 'arm', label: `Arm: ${armFilter}`, onRemove: () => setArmFilter('') }]
+                  : []),
+                ...attributeConditions
+                  .filter((condition) => condition.attribute && condition.value.trim())
+                  .map((condition) => ({
+                    id: condition.id,
+                    label: `${attributeLabels[condition.attribute as DrawerSort] ?? condition.attribute} ${attributeOperators.find(([value]) => value === condition.operator)?.[1] ?? '='} ${condition.value.trim()}`,
+                    onRemove: () => setAttributeConditions((current) =>
+                      current.length === 1
+                        ? [{ id: 'attribute-1', attribute: '', operator: 'eq', value: '' }]
+                        : current.filter((item) => item.id !== condition.id),
+                    ),
+                  })),
+                ...(defensePosition
+                  ? [{ id: 'defense-position', label: `Fielding: ${defensePosition.toUpperCase()}`, onRemove: () => setDefensePosition('') }]
+                  : []),
+                ...(defenseRating.trim()
+                  ? [{ id: 'defense-rating', label: `DEF ≥ ${defenseRating.trim()}`, onRemove: () => setDefenseRating('') }]
+                  : []),
+              ]}
               onClearFilters={() => {
                 setSearch('')
                 setYearFilter('')
@@ -2404,22 +2476,23 @@ function RosterPage() {
                 setDrawerSort('points')
                 setDrawerSortDirection('desc')
               }}
+              onClearAppliedFilters={() => {
+                setSearch('')
+                setYearFilter('')
+                setTeamFilter('')
+                setLeagueFilter('')
+                setBatsFilter('')
+                setArmFilter('')
+                setSeasonEligibleOnly(false)
+                setAttributeConditions([{ id: 'attribute-1', attribute: '', operator: 'eq', value: '' }])
+                setDefensePosition('')
+                setDefenseRating('')
+              }}
              >
                <section className="tb-attribute-filters">
-                 <div className="tb-attribute-heading">
-                   <span>Attribute Filters</span>
-                   <button type="button" onClick={() =>
-                     setAttributeConditions((current) => [
-                       ...current,
-                       { id: `attribute-${Date.now()}`, attribute: '', operator: 'eq', value: '' },
-                     ])
-                   }>
-                     + Add Filter
-                   </button>
-                 </div>
-
-                 <div className="tb-attribute-layout">
-                   <div className="tb-attribute-condition-list">
+                 <div className="tb-attribute-layout shared-attribute-inline-layout">
+                   <span className="tb-attribute-inline-label shared-attribute-inline-label">Attribute Filters</span>
+                   <div className="tb-attribute-condition-list shared-attribute-condition-list">
                      {attributeConditions.map((condition) => (
                        <div className="tb-attribute-condition" key={condition.id}>
                          <select
@@ -2509,7 +2582,7 @@ function RosterPage() {
                      ))}
                    </div>
 
-                   <div className="tb-defense-filters">
+                   <div className="tb-defense-filters shared-defense-filter-group">
                      <label>
                        <span>Fielding Position</span>
                        <select value={defensePosition} onChange={(event) =>
@@ -2527,12 +2600,24 @@ function RosterPage() {
                        </select>
                      </label>
                      <label>
-                       <span>Minimum DEF</span>
+                       <span>DEF</span>
                        <input value={defenseRating} onChange={(event) =>
                          setDefenseRating(event.target.value)
                        } placeholder="e.g. 2" inputMode="numeric" />
                      </label>
                    </div>
+                   <button
+                     type="button"
+                     className="tb-inline-add-filter shared-inline-add-filter"
+                     onClick={() =>
+                       setAttributeConditions((current) => [
+                         ...current,
+                         { id: `attribute-${Date.now()}`, attribute: '', operator: 'eq', value: '' },
+                       ])
+                     }
+                   >
+                     + Add Filter
+                   </button>
                  </div>
                </section>
              </UniversalFilterDrawer>

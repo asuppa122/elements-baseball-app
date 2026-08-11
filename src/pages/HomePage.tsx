@@ -24,11 +24,11 @@ const FEATURES: HomeFeature[] = [
   { title: 'Cards', route: '/cards', status: 'available', tone: 'cards', icon: 'cards' },
   { title: 'Team Builder', route: '/lineup-builder', status: 'available', tone: 'team-builder', icon: 'team' },
   { title: 'Trades', route: '/trades', status: 'coming-soon', tone: 'trades', icon: 'trades' },
-  { title: 'Season Milestones', route: '/milestones', status: 'coming-soon', tone: 'milestones', icon: 'milestones' },
+  { title: 'Season Milestones', route: '/milestones', status: 'available', tone: 'milestones', icon: 'milestones' },
   { title: 'Play', route: '/play', status: 'coming-soon', tone: 'play', icon: 'play' },
-  { title: 'Standings', route: '/standings', status: 'coming-soon', tone: 'standings', icon: 'standings' },
+  { title: 'Standings', route: '/standings', status: 'available', tone: 'standings', icon: 'standings' },
   { title: 'Statistics', route: '/statistics', status: 'coming-soon', tone: 'statistics', icon: 'statistics' },
-  { title: 'Rules', route: '/rules', status: 'coming-soon', tone: 'rules', icon: 'rules' },
+  { title: 'Rules', route: '/rules', status: 'available', tone: 'rules', icon: 'rules' },
 ]
 
 function HomeIcon({ name }: { name: HomeIconName }) {

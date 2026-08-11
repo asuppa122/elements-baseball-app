@@ -1267,3 +1267,172 @@ No other Home tile artwork or application functionality was intentionally change
 - Season Eligible ON preserves the existing season-eligibility filter; OFF exposes owned published cards from all loaded years.
 - Saved lineups persist the Season Eligible toggle in roster_state; existing lineups default to ON.
 - Switching eligibility does not delete players already assigned to a roster.
+
+## v1.3.8 — Team Builder UI Consistency Pass
+- Refreshed the Team Builder player-selection drawer to use the approved Cards visual language while preserving its drawer-specific workflow.
+- Renamed Attribute Sort presentation to Sort By and Minimum DEF to DEF.
+- Added compact removable Applied Filters chips inside the player drawer.
+- Standardized Quick Sort/control styling, spacing, headings, and responsive behavior with Cards.
+- Preserved Cards, Player Profile, Season Eligible placement/logic, roster pages, and card-selection functionality.
+
+## v1.3.10 — Attribute Filter Alignment Refinement
+- Reworked the shared Cards/Team Builder Attribute Filters toolbar alignment without changing filtering behavior.
+- Added one shared label band and one shared control height so Attribute, operator, Value, remove, Fielding Position, DEF, and Add Filter sit on a true common control centerline.
+- Balanced desktop column proportions so Select an Attribute no longer dominates the row.
+- Standardized Fielding Position / DEF label height and spacing above their controls.
+- Standardized control height, internal vertical centering, gaps, and Add Filter alignment.
+- Preserved the existing responsive stacked behavior below desktop width.
+
+
+## v1.3.11 — Milestones, Rules, and Filter Workspace Layout
+
+- Replaced the Season Milestones placeholder with a Season 10 / 1925 milestone dashboard using the supplied official milestone structure.
+- Added Standard milestone views for the Negro League, MLB, and Combined phases plus Consistency, Ladder, and Community milestone sections.
+- Replaced the Rules placeholder with an in-app searchable Elements Baseball League Rulebook using the supplied rulebook text.
+- Added rulebook section navigation, quick-reference shortcuts, search, and full-rulebook browsing.
+- Restructured the Cards filter workspace around the approved Picture 3 organization: filters above the card grid with a conditional Applied Filters panel beside them.
+- Applied Filters now disappears completely when no filters are active and the filter area automatically reclaims the available width.
+- Updated the Team Builder player-selection filter workspace to use the same conditional Applied Filters structure while preserving Team Builder-specific controls and behavior.
+- Preserved all existing filtering, sorting, roster selection, card interactions, Season Eligible behavior, and responsive fallbacks.
+- Consolidated version notes into this continuous CHANGELOG; separate per-version update-note files are no longer created.
+
+## v1.3.12 — Milestones Progression + Rules Reference Polish
+
+- Refined the Season 10 / 1925 Milestones page into a more intentional achievement/progression interface without changing any official milestone rewards or milestone data.
+- Preserved the three Season 10 phases and Standard / Consistency / Ladder / Community navigation while strengthening phase and track hierarchy.
+- Reworked milestone rows into a connected progression track with clearer threshold, reward, and published-status zones.
+- Kept milestone status truthful: no completed/current/locked state is inferred until reliable manager/game progress data is connected.
+- Added tracker-ready presentation hooks so future live milestone states can be added without another structural redesign.
+- Improved Milestones desktop/tablet/mobile density, spacing, hierarchy, and scanning while retaining all supplied milestone content.
+- Refined the Rules page as an in-game reference tool rather than rebuilding its existing architecture.
+- Promoted Search Rules into the Rules hero, strengthened sticky section navigation, improved section hierarchy, and made nested rule text easier to scan.
+- Updated Quick Rules into clearer direct-jump reference controls while preserving the existing search/navigation behavior.
+- Added non-functional demo metadata/hooks to common Quick Rules so future visual rule examples can be attached without restructuring the Rules page.
+- Added a subtle future Visual Rule Demos note without enabling or simulating any demo functionality yet.
+- Preserved the supplied rulebook wording and all existing Rules navigation/search functionality.
+- Continued all update history in this single CHANGELOG only.
+
+## v1.3.13 — Milestone Progress Tracker + Rulebook / Demo Separation
+
+- Removed the Milestones right-side informational column and expanded the primary milestone progression area to use the full available width.
+- Replaced the hard-coded `Announced / Tracker-ready` milestone status with a visible Progress area that shows the milestone target and explicitly states when live progress data is not connected.
+- Preserved all official Season 10 milestone thresholds and rewards; no completion/current values are fabricated.
+- Added tracker-ready progress-bar structure so real manager, week, phase-game, total-game, and league-wide progress can populate the same UI when a reliable data source is connected.
+- Split Rules into two distinct top-level experiences: `Rulebook` and `Simulated Demos`.
+- Preserved the traditional searchable Rulebook as the authoritative rules reference with its existing sections, Quick Rules, search, and Full Rulebook navigation.
+- Added a separate Simulated Demos workspace with planned situation cards for Pitch vs. Swing, Fielding Checks, Extra Bases, Stolen Bases, Bunting, and Fatigue.
+- Did not create or fake a simulation engine; demo controls are intentionally marked as coming later.
+- Removed the prior mixed-in future-demo note from the traditional Rulebook navigation so official rules and visual-learning experiences remain clearly separated.
+- Preserved rulebook text, milestone data, routes, and existing navigation behavior.
+
+## v1.3.14 — Standings + Live Season 10 Milestone Tracker Snapshot
+
+- Replaced the Standings placeholder with a full Elements standings page using two tabs: Current Standings and All-Time Standings.
+- Current Standings are reconstructed from the supplied Season 10 Discord results from June 16 through August 9, 2026 and rank managers by games played, then wins, then run differential.
+- All-Time Standings reproduce the main workbook STANDINGS tab snapshot, with the workbook `Suppa` identity displayed as Anthony in-app.
+- Added current-manager highlighting to standings rows when a logged-in manager profile matches the row.
+- Connected Milestones to a Season 10 manager tracking snapshot for all current managers, including phase games, total games, and Monday–Sunday consistency-week participation.
+- Added a manager selector so every manager's Standard, Consistency, and Ladder progress can be reviewed from the same Milestones page.
+- Replaced unconnected milestone progress with real completed/progress/remaining states based on reported Season 10 results.
+- Added a Monday–Sunday weekly consistency strip showing each qualifying week through August 9 and the current August 10–16 week.
+- Added league-wide Community milestone progress from the reconstructed results: manager GP thresholds and total unique games.
+- Preserved official milestone reward text and existing milestone navigation/data.
+- Continued version history only in this single CHANGELOG.
+
+### v1.3.14 data reconciliation correction
+- Reconciled Season 10.1 standings using the workbook snapshot through June 26 as the baseline, then appended every supplied result from June 27 through August 9 rather than rebuilding standings only from the Discord export.
+- Current Standings now include exactly the 10 managers who have played in Season 10.1: Will, Anthony, Eric, Ryan, Zeek, James, Ben, Nate, Chuck, and Jeremiah.
+- Replaced the stale/incomplete workbook STANDINGS roster with the supplied 21-manager Overall Standings source-of-truth list, including Will, Anthony, Eric, John, Ryan, Zeek, Mark, James, Ben, Nate, Chuck, Matt, Jeremiah, Ramel, Daniel, Zach, Brad, Jaycen, Miles, Sisu, and PFly.
+- Updated all Season 10 milestone trackers to the reconciled GP totals and phase split; Monday–Sunday Consistency participation continues to come from the complete supplied Discord date history from June 16 through August 9.
+- Updated Community milestone progress to 199 total Season 10.1 games, 4 managers at 25 GP, 4 at 50 GP, 2 at 75 GP, and 1 at 100 GP.
+
+## v1.3.15 — Document1 Source-of-Truth Correction
+
+- Replaced all Discord-derived Season 10.1 standings and milestone GP calculations with the verified `Document1` → `STANDINGS` workbook snapshot.
+- Current Standings now reproduce the workbook Season 10.1 values exactly; Anthony is 26–20 with 46 GP in this snapshot.
+- All-Time Standings remain workbook-backed display/reference data only and never feed milestone progress.
+- Standard and Ladder milestone progress now use only each manager’s Season 10.1 `Total` from the workbook.
+- Community manager-threshold progress is calculated from those same Season 10.1 totals; league-game progress is derived from the workbook totals (111 completed games / 222 combined manager GP).
+- Removed Discord-derived phase splits, weekly participation, and reconstructed game totals from the milestone data layer.
+- Consistency remains intentionally unconnected until Monday–Sunday weekly participation is represented in `Document1`; the app no longer infers it from Discord results.
+- Continued version history only in this single `CHANGELOG.md`.
+
+## v1.3.16 — Sortable Standings + RD%
+
+- Added the workbook-style `RD%` column to both Current Standings and All-Time Standings.
+- `RD%` follows the Document1 workbook calculation (`RS / RA`), matching values such as Anthony Season 10.1 = 1.29.
+- Made every standings column header interactive and sortable, including Manager, W, L, GP, Win %, RS, RA, RS/G, RA/G, RD, and RD%.
+- Rank can also be selected to return to the source-order ranking direction.
+- Set the default standings sort to Games Played (`GP`) high to low on initial load.
+- New numeric sorts default high to low; Manager and Rank default low to high, with repeated clicks toggling direction.
+- Preserved Document1 as the sole standings source of truth and made no changes to milestone-tracking logic.
+- Continued version history only in this single `CHANGELOG.md`.
+
+## v1.3.17 — Standings Headers + Rules Layout Correction
+
+- Reworked both Standings hero headers to use one shared hierarchy: `Elements Baseball League Standings` → current view title → view identifier.
+- Current Standings now displays `Current Standings` and `Season 10.1 - 1925` with no descriptive subtitle text.
+- All-Time Standings now displays `All-Time Standings` and `All-Time` with the same sizing, spacing, and alignment as Current Standings.
+- Preserved all v1.3.16 standings data, RD%, sorting behavior, summary totals, tabs, and workbook source-of-truth logic.
+- Fixed the Rules compression at the underlying CSS selector level: legacy `.rules-lines p` grid styling was unintentionally applying to the newer nested rule-item paragraphs and forcing the text into the old 12px grid column.
+- Scoped the legacy rule selectors to direct-child paragraphs only and explicitly restored full-width block flow for v2 rule-item text.
+- Reinforced the Rulebook layout with `min-width: 0` and balanced grid constraints so the navigation and reading panel use available desktop width correctly and collapse cleanly at responsive breakpoints.
+- Preserved Rulebook search/navigation, Quick Rules, Simulated Demos separation, rule content, and all existing functionality.
+- Continued version history only in this single `CHANGELOG.md`.
+
+## v1.3.18 — Standings + Milestones Redundancy Cleanup
+
+- Simplified the Standings view tabs to `Current Standings` and `All-Time Standings`, removing the repeated `Season 10.1` and `Workbook History` labels already communicated by the page header.
+- Preserved the Standings hero titles, summary statistics, sortable columns, RD%, workbook-backed data, and all existing functionality.
+- Removed the technical Document1 snapshot/source sentence from the Milestones hero while preserving the manager GP / wins / losses summary and manager selector.
+- Removed repeated Season 10.1 GP totals from all three phase cards; phase cards now focus only on Phase, weeks, and Negro Leagues / MLB / Combined season context.
+- Removed repeated `Tracking • Manager` / `Tracking • League` badges from milestone category panels because the manager selector and Community context already establish tracking scope.
+- Removed redundant source-of-truth helper text from Standard and Consistency milestone panel headers.
+- Retained concise explanatory text for Ladder and Community because those descriptions distinguish their actual progression mechanics.
+- Consolidated the Consistency unconnected state into one clear notice instead of repeating the same workbook-tracker limitation in multiple places.
+- Tightened affected spacing so removed content does not leave awkward gaps; no milestone data, progress logic, navigation, or controls were changed.
+- Continued version history only in this single `CHANGELOG.md`.
+
+## v1.3.19 — Milestones Achievement Flair + Rules Polish
+
+- Upgraded Milestones presentation without changing workbook-backed progress logic, milestone thresholds, rewards, manager tracking, or navigation.
+- Added clear season-phase states: Phase 1 is visually completed, Phase 2 is identified as the current phase, and Phase 3 is presented as upcoming while all three remain selectable.
+- Added restrained category iconography to Standard, Consistency, Ladder, and Community while preserving the existing four-tab structure.
+- Added distinct achievement states to milestone rows: completed milestones now read as earned/unlocked, the first incomplete milestone is emphasized as `Next Up`, and later milestones are quieter until approached.
+- Strengthened completed milestone check/seal treatment, reward hierarchy, progress emphasis, and subtle gold progression styling.
+- Added restrained baseball-inspired circular linework to the Milestones hero for visual depth without reducing readability.
+- Polished Rulebook reading panels with subtle depth, hover feedback, gold reference accents, and improved Quick Rules card treatment while preserving all rule text and behavior.
+- Added subtle interactive depth to Simulated Demo cards while keeping all demo controls disabled and honestly marked as future functionality.
+- Preserved responsive behavior and added mobile-specific safeguards for the new visual treatments.
+- Continued version history only in this single `CHANGELOG.md`.
+
+## v1.3.20 — Milestones Showcase + Editorial Rulebook
+- Rebuilt the Milestones presentation layer into a stronger achievement/progression showcase without changing workbook-driven tracking logic.
+- Added a connected Season 10 phase timeline with Completed / Now Playing / On Deck visual states.
+- Added a featured Next Achievement card with reward emphasis and a larger progress meter.
+- Added stronger Earned / Next / Upcoming states, major-checkpoint treatments, reward iconography, and restrained historical-baseball visual motifs.
+- Added a visual Ladder map / You Are Here treatment, a 26-week Consistency calendar shell, and a Community league-progress scoreboard.
+- Reworked Rulebook content into an editorial reading system with left-aligned body copy, stronger chapter hierarchy, semantic callouts, formula/check treatments, and compact Quick Rules.
+- Enhanced the Simulated Demos placeholder cards so they visually read as a future step-by-step learning environment while keeping the simulation engine disabled.
+- Preserved all existing Milestones data/tracking, Rulebook text, search, navigation, and demo architecture.
+
+## v1.3.21 — Original Rulebook Digital Edition
+- Rebuilt the Rulebook presentation around the original Elements Baseball League Rulebook section order, section names, hierarchy, and authoritative wording.
+- Replaced shortened website aliases in the table of contents with the original Rulebook section names.
+- Added Roman-numeral section navigation, hierarchical rule numbering, original nested indentation, and in-section navigation for named Advanced/Fatigue subsections.
+- Reworked the reading experience into a cohesive digital manual rather than a collection of generic rule cards.
+- Added restrained editorial treatments for source-authored examples, notes, formulas/checks, and conditional rules without rewriting the underlying rule text.
+- Compacted Quick Rules into a separate in-game reference strip while preserving the authoritative Rulebook structure beneath it.
+- Preserved Rulebook vs. Simulated Demos as separate experiences and did not reorganize the Rulebook around demos.
+- Added responsive desktop/tablet/mobile behavior for the table of contents, nested rules, and reading panel.
+
+## v1.3.22 — Milestones Trophy Room Achievement Showcase
+- Reworked the Milestones presentation into a more ambitious Elements Baseball achievement showcase while preserving every workbook-driven threshold, reward, progress calculation, manager selector, category, and phase behavior.
+- Replaced generic category symbols with a cohesive custom baseball achievement crest system: pennant/baseball for Standard, scorecard/calendar for Consistency, trophy/steps for Ladder, and stadium/league crest for Community.
+- Rebuilt milestone threshold presentation as collectible plaque/medallion treatments with distinct Earned, Chasing, Upcoming, and Major Checkpoint states.
+- Strengthened completed milestones with trophy-room gold treatments, earned seals, completion accents, and more prestigious progress presentation.
+- Added category-specific visual identity, baseball-card/foil/team/player reward glyph treatments, vintage scorebook/clubhouse textures, and restrained historical baseball ornament throughout the Milestones page.
+- Elevated major thresholds such as 50, 100, 200, 300, 500, and 1000 into featured checkpoint moments without changing their underlying data or rewards.
+- Preserved the existing Next Achievement, phase timeline, Ladder map, Consistency tracker shell, and Community scoreboard while visually integrating them into the new achievement system.
+- Added responsive desktop/tablet/mobile treatments so badge geometry, milestone rows, progression rails, and reward content remain readable and functional at narrow widths.
+- Continued version history only in this single `CHANGELOG.md`.

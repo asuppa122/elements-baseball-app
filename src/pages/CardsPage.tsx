@@ -1739,86 +1739,108 @@ function CardsPage() {
     <div className="app">
       <main className="cards-page">
 
+        <div className={appliedFilterItems.length > 0 ? 'cards-filter-workspace has-applied-filters' : 'cards-filter-workspace'}>
+          <div className="cards-filter-workspace-main">
         <FilterDrawer
-          searchTerm={searchTerm}
-          onSearchChange={
-            setSearchTerm
-          }
-          yearFrom={yearFrom}
-          onYearFromChange={isDemo ? () => {} : setYearFrom}
-          yearTo={yearTo}
-          onYearToChange={isDemo ? () => {} : setYearTo}
-          lockedYear={isDemo ? '2025' : undefined}
-          yearOptions={yearOptions}
-          teamFilter={teamFilter}
-          onTeamFilterChange={
-            setTeamFilter
-          }
-          teamOptions={teamOptions}
-          leagueFilter={leagueFilter}
-          onLeagueFilterChange={
-            setLeagueFilter
-          }
-          leagueOptions={leagueOptions}
-          positionFilter={
-            positionFilter
-          }
-          onPositionFilterChange={
-            handlePositionFilterChange
-          }
-          ownershipFilter={ownershipFilter}
-          seasonEligibleOnly={seasonEligibleOnly}
-          onSeasonEligibleOnlyChange={setSeasonEligibleOnly}
-          onOwnershipFilterChange={
-            isDemo ? () => {} : setOwnershipFilter
-          }
-          hideOwnership={isDemo}
-          batsFilter={batsFilter}
-          onBatsFilterChange={
-            setBatsFilter
-          }
-          throwsFilter={
-            throwsFilter
-          }
-          chartMode={chartMode}
-          onChartModeChange={setChartMode}
-          statsContext={statsContext}
-          onStatsContextChange={handleStatsContextChange}
-          onThrowsFilterChange={
-            setThrowsFilter
-          }
-          attributeConditions={
-            attributeConditions
-          }
-          onAttributeConditionsChange={
-            setAttributeConditions
-          }
-          defensePosition={
-            defensePosition
-          }
-          onDefensePositionChange={
-            setDefensePosition
-          }
-          defenseRating={
-            defenseRating
-          }
-          onDefenseRatingChange={
-            setDefenseRating
-          }
-          sortField={sortField}
-          onSortFieldChange={
-            setSortField
-          }
-          sortDirection={
-            sortDirection
-          }
-          onSortDirectionChange={
-            setSortDirection
-          }
-          onClearFilters={
-            clearFilters
-          }
-        />
+            searchTerm={searchTerm}
+            onSearchChange={
+              setSearchTerm
+            }
+            yearFrom={yearFrom}
+            onYearFromChange={isDemo ? () => {} : setYearFrom}
+            yearTo={yearTo}
+            onYearToChange={isDemo ? () => {} : setYearTo}
+            lockedYear={isDemo ? '2025' : undefined}
+            yearOptions={yearOptions}
+            teamFilter={teamFilter}
+            onTeamFilterChange={
+              setTeamFilter
+            }
+            teamOptions={teamOptions}
+            leagueFilter={leagueFilter}
+            onLeagueFilterChange={
+              setLeagueFilter
+            }
+            leagueOptions={leagueOptions}
+            positionFilter={
+              positionFilter
+            }
+            onPositionFilterChange={
+              handlePositionFilterChange
+            }
+            ownershipFilter={ownershipFilter}
+            seasonEligibleOnly={seasonEligibleOnly}
+            onSeasonEligibleOnlyChange={setSeasonEligibleOnly}
+            onOwnershipFilterChange={
+              isDemo ? () => {} : setOwnershipFilter
+            }
+            hideOwnership={isDemo}
+            batsFilter={batsFilter}
+            onBatsFilterChange={
+              setBatsFilter
+            }
+            throwsFilter={
+              throwsFilter
+            }
+            chartMode={chartMode}
+            onChartModeChange={setChartMode}
+            statsContext={statsContext}
+            onStatsContextChange={handleStatsContextChange}
+            onThrowsFilterChange={
+              setThrowsFilter
+            }
+            attributeConditions={
+              attributeConditions
+            }
+            onAttributeConditionsChange={
+              setAttributeConditions
+            }
+            defensePosition={
+              defensePosition
+            }
+            onDefensePositionChange={
+              setDefensePosition
+            }
+            defenseRating={
+              defenseRating
+            }
+            onDefenseRatingChange={
+              setDefenseRating
+            }
+            sortField={sortField}
+            onSortFieldChange={
+              setSortField
+            }
+            sortDirection={
+              sortDirection
+            }
+            onSortDirectionChange={
+              setSortDirection
+            }
+            onClearFilters={
+              clearFilters
+            }
+          />
+          </div>
+          {appliedFilterItems.length > 0 && (
+            <aside className="cards-applied-filters cards-filter-applied-panel" aria-label="Applied filters">
+              <div className="cards-applied-filters-heading">
+                <span>Applied Filters</span>
+                <button type="button" onClick={clearFilters}>Clear All</button>
+              </div>
+              <div className="cards-applied-filter-list">
+                {appliedFilterItems.map((item) => (
+                  <div className="cards-applied-filter-chip" key={item.key}>
+                    <span>{item.label}</span>
+                    {item.onRemove && (
+                      <button type="button" aria-label={`Remove ${item.label} filter`} onClick={item.onRemove}>×</button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </aside>
+          )}
+        </div>
 
         {isLoading && (
           <section className="status-panel">
@@ -1905,35 +1927,7 @@ function CardsPage() {
                 )}
               </div>
 
-              <aside className="cards-applied-filters" aria-label="Applied filters">
-                <div className="cards-applied-filters-heading">
-                  <span>Applied Filters</span>
-                  {appliedFilterItems.length > 0 && (
-                    <button type="button" onClick={clearFilters}>Clear All</button>
-                  )}
-                </div>
 
-                {appliedFilterItems.length > 0 ? (
-                  <div className="cards-applied-filter-list">
-                    {appliedFilterItems.map((item) => (
-                      <div className="cards-applied-filter-chip" key={item.key}>
-                        <span>{item.label}</span>
-                        {item.onRemove && (
-                          <button
-                            type="button"
-                            aria-label={`Remove ${item.label} filter`}
-                            onClick={item.onRemove}
-                          >
-                            ×
-                          </button>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="cards-applied-filters-empty">No active filters</p>
-                )}
-              </aside>
             </div>
           )}
       </main>
