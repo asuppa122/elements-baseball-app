@@ -1278,3 +1278,940 @@
   .milestone-achievement-progress { grid-column:2 / -1; }
   .milestones-panel-heading::after { display:none; }
 }
+
+/* =========================================================
+   v1.3.25 — Rules chapter typography proportion correction
+   Targeted only at the Rulebook chapter header shown in the
+   desktop comparison. Preserve the v4 visual language while
+   keeping titles from overpowering the document body.
+   ========================================================= */
+.rules-section-v4 .rules-chapter-header {
+  min-height: 82px;
+  padding: 11px 16px;
+}
+
+.rules-section-v4 .rules-chapter-number {
+  width: 48px;
+  height: 57px;
+}
+
+.rules-section-v4 .rules-chapter-number strong {
+  font-size: 1.02rem;
+  line-height: 1;
+}
+
+.rules-section-v4 .rules-section-kicker {
+  font-size: .39rem;
+  line-height: 1.2;
+}
+
+.rules-section-v4 .rules-chapter-header h2 {
+  margin-top: 4px;
+  max-width: 100%;
+  font-size: 1.02rem;
+  line-height: 1.18;
+  letter-spacing: -.01em;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 1050px) {
+  .rules-section-v4 .rules-chapter-header {
+    min-height: 78px;
+    padding: 10px 13px;
+  }
+
+  .rules-section-v4 .rules-chapter-header h2 {
+    font-size: .96rem;
+    line-height: 1.2;
+  }
+}
+
+@media (max-width: 560px) {
+  .rules-section-v4 .rules-chapter-header {
+    grid-template-columns: 50px minmax(0, 1fr);
+    min-height: 72px;
+    padding: 9px 10px;
+  }
+
+  .rules-section-v4 .rules-chapter-number {
+    width: 40px;
+    height: 48px;
+  }
+
+  .rules-section-v4 .rules-chapter-number strong {
+    font-size: .9rem;
+  }
+
+  .rules-section-v4 .rules-section-kicker {
+    font-size: .35rem;
+    letter-spacing: .11em;
+  }
+
+  .rules-section-v4 .rules-chapter-header h2 {
+    margin-top: 3px;
+    font-size: .86rem;
+    line-height: 1.22;
+  }
+}
+
+
+/* v1.3.26 — Rulebook source-of-truth hierarchy */
+.rules-clause-number,.rules-subsection-heading > span { white-space:nowrap; font-weight:800; }
+.rules-subsection-heading h3 { font-size:.84rem; line-height:1.25; }
+.rules-chapter-header h2 { font-size:1.02rem; line-height:1.18; }
+@media (max-width:640px) {
+  .rules-chapter-header h2 { font-size:.88rem; }
+  .rules-subsection-heading h3 { font-size:.78rem; }
+}
+
+/* v1.3.27 — Rulebook source images + reviewable digital gameplay proposal layer */
+.rules-card-media {
+  max-width:1120px;
+  margin:10px auto 18px;
+  padding:14px 16px 16px;
+  border-top:1px solid rgba(216,173,45,.16);
+  border-bottom:1px solid rgba(216,173,45,.16);
+  background:linear-gradient(90deg,rgba(216,173,45,.035),rgba(216,173,45,.012) 45%,transparent);
+}
+.rules-card-media-grid { display:grid; justify-content:center; gap:18px; }
+.rules-card-media-single .rules-card-media-grid { grid-template-columns:minmax(240px,420px); }
+.rules-card-media-pair .rules-card-media-grid { grid-template-columns:repeat(2,minmax(220px,390px)); }
+.rules-card-media-frame {
+  position:relative;
+  overflow:hidden;
+  border:1px solid rgba(216,173,45,.48);
+  border-radius:15px;
+  padding:7px;
+  background:linear-gradient(145deg,rgba(216,173,45,.12),rgba(5,6,5,.96) 46%);
+  box-shadow:0 15px 34px rgba(0,0,0,.34),0 0 0 1px rgba(255,242,184,.025) inset;
+}
+.rules-card-media-frame::after {
+  content:'';
+  position:absolute;
+  inset:7px;
+  pointer-events:none;
+  border:1px solid rgba(255,232,139,.12);
+  border-radius:10px;
+}
+.rules-card-media-frame img {
+  display:block;
+  width:100%;
+  height:auto;
+  aspect-ratio:auto;
+  object-fit:contain;
+  border-radius:9px;
+}
+.rules-digital-review-legend {
+  display:grid;
+  grid-template-columns:minmax(250px,.8fr) minmax(420px,1.2fr);
+  gap:14px;
+  align-items:center;
+  margin:10px 0;
+  padding:10px 12px;
+  border:1px solid rgba(88,191,255,.24);
+  border-radius:8px;
+  background:linear-gradient(100deg,rgba(88,191,255,.055),rgba(180,112,255,.025),#090a09 72%);
+}
+.rules-digital-legend-title { display:block; color:#d9eefe; font-size:.54rem; font-weight:950; letter-spacing:.12em; text-transform:uppercase; }
+.rules-digital-review-legend small { display:block; margin-top:3px; color:#8f9ba3; font-size:.47rem; line-height:1.35; }
+.rules-digital-legend-items { display:flex; justify-content:flex-end; flex-wrap:wrap; gap:7px; }
+.rules-digital-legend-items > span { display:inline-flex; align-items:center; gap:6px; min-height:28px; padding:5px 8px; border-radius:999px; font-size:.44rem; font-weight:850; letter-spacing:.045em; }
+.rules-digital-legend-items i { display:grid; place-items:center; width:17px; height:17px; border-radius:50%; font-style:normal; font-size:.52rem; }
+.rules-digital-legend-proposed { color:#bde9ff; border:1px solid rgba(72,190,255,.32); background:rgba(49,166,226,.09); }
+.rules-digital-legend-proposed i { color:#071018; background:#55c7ff; }
+.rules-digital-legend-clarification { color:#e6c9ff; border:1px solid rgba(195,126,255,.3); background:rgba(158,83,226,.085); }
+.rules-digital-legend-clarification i { color:#140b1b; background:#c78cff; font-weight:950; }
+.rules-digital-marker {
+  position:relative;
+  display:grid;
+  grid-template-columns:34px minmax(0,1fr) auto;
+  gap:11px;
+  align-items:start;
+  max-width:1085px;
+  margin:8px auto 12px;
+  padding:11px 12px;
+  border-radius:8px;
+  overflow:hidden;
+}
+.rules-digital-marker::before { content:''; position:absolute; left:0; top:0; bottom:0; width:3px; }
+.rules-digital-marker-proposed {
+  border:1px solid rgba(74,190,255,.33);
+  background:linear-gradient(90deg,rgba(47,171,232,.12),rgba(47,171,232,.045) 58%,rgba(5,8,10,.82));
+  box-shadow:0 8px 24px rgba(27,127,179,.05);
+}
+.rules-digital-marker-proposed::before { background:#55c7ff; box-shadow:0 0 14px rgba(85,199,255,.45); }
+.rules-digital-marker-clarification {
+  border:1px solid rgba(197,140,255,.30);
+  background:linear-gradient(90deg,rgba(163,90,226,.11),rgba(163,90,226,.04) 58%,rgba(8,5,10,.82));
+  box-shadow:0 8px 24px rgba(118,55,166,.05);
+}
+.rules-digital-marker-clarification::before { background:#c78cff; box-shadow:0 0 14px rgba(199,140,255,.35); }
+.rules-digital-marker-icon { display:grid; place-items:center; width:28px; height:28px; border-radius:50%; font-size:.64rem; font-weight:950; }
+.rules-digital-marker-proposed .rules-digital-marker-icon { color:#071018; background:#55c7ff; box-shadow:0 0 0 5px rgba(85,199,255,.06); }
+.rules-digital-marker-clarification .rules-digital-marker-icon { color:#150a1e; background:#c78cff; box-shadow:0 0 0 5px rgba(199,140,255,.055); }
+.rules-digital-marker-copy > span { display:block; margin:1px 0 4px; font-size:.48rem; font-weight:950; letter-spacing:.12em; text-transform:uppercase; }
+.rules-digital-marker-proposed .rules-digital-marker-copy > span { color:#77d4ff; }
+.rules-digital-marker-clarification .rules-digital-marker-copy > span { color:#d1a3ff; }
+.rules-digital-marker-copy p { margin:0; color:#c8c9c8; font-size:.62rem; line-height:1.55; text-align:left; }
+.rules-digital-marker-status { align-self:center; padding:5px 7px; border-radius:999px; font-size:.39rem; font-weight:900; letter-spacing:.08em; text-transform:uppercase; white-space:nowrap; }
+.rules-digital-marker-proposed .rules-digital-marker-status { color:#aee5ff; border:1px solid rgba(85,199,255,.25); }
+.rules-digital-marker-clarification .rules-digital-marker-status { color:#dfbdff; border:1px solid rgba(199,140,255,.24); }
+
+@media (max-width:900px) {
+  .rules-digital-review-legend { grid-template-columns:1fr; }
+  .rules-digital-legend-items { justify-content:flex-start; }
+  .rules-card-media-pair .rules-card-media-grid { grid-template-columns:repeat(2,minmax(180px,1fr)); }
+}
+@media (max-width:640px) {
+  .rules-card-media { margin:8px 0 14px; padding:10px 8px 12px; }
+  .rules-card-media-single .rules-card-media-grid,
+  .rules-card-media-pair .rules-card-media-grid { grid-template-columns:minmax(0,1fr); }
+  .rules-card-media-frame { max-width:420px; margin:0 auto; padding:5px; }
+  .rules-digital-review-legend { padding:9px; }
+  .rules-digital-legend-items { display:grid; grid-template-columns:1fr; }
+  .rules-digital-marker { grid-template-columns:28px minmax(0,1fr); gap:8px; margin:7px 0 10px; padding:10px 9px; }
+  .rules-digital-marker-icon { width:24px; height:24px; }
+  .rules-digital-marker-status { grid-column:2; justify-self:start; margin-top:-1px; }
+  .rules-digital-marker-copy p { font-size:.59rem; line-height:1.5; }
+}
+
+/* v1.3.29 — approved Milestones tracker system rollout */
+.milestones-page-v3 .milestones-panel-heading::before {
+  content:'MILESTONE        REWARD                         PROGRESS';
+  position:absolute;
+  left:96px;
+  right:185px;
+  bottom:-22px;
+  color:#bca04b;
+  font-size:.43rem;
+  font-weight:950;
+  letter-spacing:.16em;
+  word-spacing:7.2rem;
+  white-space:pre;
+  pointer-events:none;
+}
+.milestones-page-v3 .milestone-track { margin-top:24px; }
+.milestones-page-v3 .milestone-achievement {
+  grid-template-columns:38px 148px minmax(250px,1fr) minmax(245px,310px) 150px;
+  min-height:132px;
+  align-items:center;
+}
+.milestones-page-v3 .milestone-achievement.is-upcoming {
+  opacity:.46;
+  filter:grayscale(.92) saturate(.22);
+}
+.milestones-page-v3 .milestone-achievement.is-upcoming:hover {
+  opacity:.58;
+  filter:grayscale(.78) saturate(.32);
+}
+.milestones-page-v3 .milestone-plaque-top,
+.milestones-page-v3 .milestone-reward-label,
+.milestones-page-v3 .milestone-major-badge { display:none; }
+.milestones-page-v3 .milestone-achievement-copy { padding:10px 22px 10px 8px; }
+.milestones-page-v3 .milestone-achievement-copy p { margin:0; font-size:.75rem; line-height:1.55; }
+.milestone-diamond-progress {
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:24px;
+  margin:8px 0;
+  padding:8px 18px;
+  border-left:1px solid rgba(216,173,45,.16);
+  border-right:1px solid rgba(216,173,45,.16);
+}
+.progress-diamond {
+  position:relative;
+  display:grid;
+  place-content:center;
+  justify-items:center;
+  flex:0 0 92px;
+  width:92px;
+  height:92px;
+  transform:rotate(45deg);
+  border:2px solid rgba(216,173,45,.45);
+  border-radius:9px;
+  background:linear-gradient(145deg,rgba(216,173,45,.13),#090a09 60%);
+  box-shadow:inset 0 0 0 5px rgba(216,173,45,.025),0 10px 25px rgba(0,0,0,.28);
+}
+.progress-diamond::before,.progress-diamond::after {
+  content:'';
+  position:absolute;
+  width:12px;
+  height:12px;
+  border-radius:50%;
+  background:#c89c29;
+  box-shadow:0 0 9px rgba(244,200,63,.28);
+}
+.progress-diamond::before { left:-7px; top:-7px; }
+.progress-diamond::after { right:-7px; bottom:-7px; }
+.progress-diamond > * { transform:rotate(-45deg); }
+.progress-diamond strong { color:#f2d46a; font-family:Georgia,'Times New Roman',serif; font-size:1.55rem; line-height:1; }
+.progress-diamond .diamond-top { color:#d5ad35; font-size:.7rem; margin-bottom:2px; }
+.progress-diamond .diamond-target { color:#aaa28b; font-size:.52rem; font-weight:900; margin-top:3px; }
+.progress-diamond.complete { border-color:#f4c83f; background:linear-gradient(145deg,rgba(216,173,45,.34),rgba(65,45,8,.65) 45%,#080908); box-shadow:0 0 0 5px rgba(216,173,45,.04),0 0 25px rgba(244,200,63,.14),inset 0 0 18px rgba(244,200,63,.08); }
+.progress-diamond.active { border-color:#e5b72f; box-shadow:0 0 0 5px rgba(216,173,45,.035),0 0 22px rgba(244,200,63,.10); }
+.progress-diamond.locked { border-color:#55534c; background:linear-gradient(145deg,#222,#090a09 62%); }
+.diamond-progress-copy { display:grid; gap:5px; min-width:88px; }
+.diamond-progress-copy > span { color:#c6a947; font-size:.48rem; font-weight:950; letter-spacing:.12em; }
+.diamond-progress-copy > strong { color:#e5e0d3; font-size:.78rem; }
+.diamond-progress-copy > small { color:#b99a3d; font-size:.5rem; font-weight:900; letter-spacing:.08em; }
+.milestone-claim-state {
+  display:grid;
+  place-items:center;
+  min-height:66px;
+  margin:10px 0 10px 18px;
+  border:1px solid rgba(120,120,115,.18);
+  border-radius:12px;
+  background:rgba(5,6,6,.56);
+  color:#6f706c;
+  text-align:center;
+}
+.milestone-claim-state strong { font-size:.58rem; letter-spacing:.14em; }
+.milestone-claim-state.unclaimed {
+  border-color:rgba(244,200,63,.75);
+  color:#ffe071;
+  background:radial-gradient(circle at 50% 50%,rgba(216,173,45,.22),rgba(22,17,6,.82) 58%,#090a09);
+  box-shadow:0 0 0 4px rgba(216,173,45,.045),0 0 26px rgba(244,200,63,.20),inset 0 0 18px rgba(244,200,63,.08);
+}
+.milestone-claim-state.unclaimed strong { text-shadow:0 0 12px rgba(255,221,91,.38); }
+.milestones-page-v3 .milestone-achievement.is-complete { filter:none; opacity:1; }
+
+@media (max-width:1100px) {
+  .milestones-page-v3 .milestone-achievement { grid-template-columns:32px 120px minmax(210px,1fr) minmax(220px,270px) 126px; }
+  .progress-diamond { width:78px; height:78px; flex-basis:78px; }
+  .milestone-diamond-progress { gap:16px; padding-inline:12px; }
+  .milestones-page-v3 .milestones-panel-heading::before { display:none; }
+}
+@media (max-width:760px) {
+  .milestones-page-v3 .milestone-track { margin-top:0; }
+  .milestones-page-v3 .milestone-achievement {
+    grid-template-columns:28px 96px minmax(0,1fr);
+    padding:12px 8px 14px 0;
+  }
+  .milestones-page-v3 .milestone-achievement-copy { padding:8px 4px; }
+  .milestone-diamond-progress { grid-column:2 / -1; justify-content:flex-start; border-left:0; border-right:0; border-top:1px solid rgba(216,173,45,.12); padding:12px 4px 8px; }
+  .milestone-claim-state { grid-column:2 / -1; margin:3px 4px 2px; min-height:48px; }
+}
+@media (max-width:520px) {
+  .milestones-page-v3 .milestone-achievement { grid-template-columns:24px 82px minmax(0,1fr); }
+  .progress-diamond { width:70px; height:70px; flex-basis:70px; }
+  .progress-diamond strong { font-size:1.3rem; }
+  .milestone-diamond-progress { gap:14px; }
+  .milestones-page-v3 .milestone-achievement-copy p { font-size:.62rem; }
+}
+
+/* =========================================================
+   v1.3.30 — Milestones mockup-faithful presentation rebuild
+   Approved mockup is the desktop visual specification.
+   Preserve milestone data / tracking; replace presentation only.
+   ========================================================= */
+.milestones-page-v3 .milestones-panel-heading::before { display:none !important; }
+.milestones-page-v3 .milestone-grid-header {
+  display:grid;
+  grid-template-columns: 36px minmax(150px,18%) minmax(250px,25%) minmax(390px,39%) minmax(128px,18%);
+  align-items:end;
+  min-height:34px;
+  padding:0 14px 8px 0;
+  border-bottom:1px solid rgba(216,173,45,.22);
+  color:#c7a844;
+  font-size:.48rem;
+  font-weight:950;
+  letter-spacing:.16em;
+  text-transform:uppercase;
+}
+.milestones-page-v3 .milestone-grid-header > span:nth-child(1) { grid-column:2; padding-left:10px; }
+.milestones-page-v3 .milestone-grid-header > span:nth-child(2) { grid-column:3; padding-left:24px; }
+.milestones-page-v3 .milestone-grid-header > span:nth-child(3) { grid-column:4; text-align:center; }
+.milestones-page-v3 .milestone-grid-header > span:nth-child(4) { grid-column:5; }
+.milestones-page-v3 .milestone-track { margin-top:0; }
+
+.milestones-page-v3 .milestone-achievement {
+  display:grid;
+  grid-template-columns: 36px minmax(150px,18%) minmax(250px,25%) minmax(390px,39%) minmax(128px,18%);
+  gap:0;
+  min-height:156px;
+  padding:12px 14px 12px 0;
+  align-items:stretch;
+  border-bottom:1px solid rgba(216,173,45,.22);
+  background:linear-gradient(90deg,rgba(216,173,45,.025),rgba(5,6,6,.93) 45%,rgba(5,6,6,.98));
+}
+.milestones-page-v3 .milestone-achievement.is-complete {
+  background:linear-gradient(90deg,rgba(216,173,45,.11),rgba(216,173,45,.035) 36%,rgba(5,6,6,.98) 72%);
+}
+.milestones-page-v3 .milestone-achievement.is-next {
+  background:linear-gradient(90deg,rgba(56,132,205,.095),rgba(15,54,89,.055) 34%,rgba(5,6,6,.98) 74%);
+  border-top:0;
+  box-shadow:inset 0 0 38px rgba(46,131,220,.025);
+}
+.milestones-page-v3 .milestone-achievement.is-next::after { display:none; }
+.milestones-page-v3 .milestone-achievement.is-upcoming {
+  opacity:.48;
+  filter:grayscale(.92) saturate(.18);
+}
+.milestones-page-v3 .milestone-achievement.is-upcoming:hover {
+  opacity:.58;
+  filter:grayscale(.82) saturate(.28);
+}
+.milestones-page-v3 .milestone-track-rail { align-self:stretch; }
+.milestones-page-v3 .milestone-achievement-threshold,
+.milestones-page-v3 .milestone-achievement-copy,
+.milestones-page-v3 .milestone-diamond-progress,
+.milestones-page-v3 .milestone-claim-state { min-width:0; }
+
+.milestones-page-v3 .milestone-achievement-threshold {
+  display:grid;
+  place-items:center;
+  padding:4px 16px 4px 10px;
+  border-right:1px solid rgba(216,173,45,.15);
+}
+.milestones-page-v3 .milestone-plaque {
+  width:min(100%,145px);
+  min-height:116px;
+  padding:12px 10px;
+  border-radius:24px 24px 14px 14px;
+}
+.milestones-page-v3 .milestone-plaque strong { font-size:2.1rem; }
+.milestones-page-v3 .milestone-plaque > span:last-of-type { font-size:.46rem; }
+
+.milestones-page-v3 .milestone-achievement-copy {
+  display:grid;
+  align-items:center;
+  padding:18px 28px;
+  border-right:1px solid rgba(216,173,45,.15);
+  text-align:left;
+}
+.milestones-page-v3 .milestone-achievement-copy p {
+  margin:0;
+  max-width:420px;
+  color:#e3e0d7;
+  font-size:.78rem;
+  line-height:1.55;
+  text-wrap:balance;
+}
+
+.milestones-page-v3 .milestone-diamond-progress {
+  display:grid;
+  grid-template-columns:118px minmax(0,1fr);
+  gap:26px;
+  align-items:center;
+  justify-content:stretch;
+  margin:0;
+  padding:14px 26px;
+  border:1px solid rgba(216,173,45,.34);
+  border-radius:14px;
+  background:linear-gradient(145deg,rgba(216,173,45,.075),rgba(7,9,9,.96) 58%);
+  box-shadow:inset 0 0 0 1px rgba(255,236,171,.025),0 10px 24px rgba(0,0,0,.18);
+}
+.milestones-page-v3 .is-complete .milestone-diamond-progress {
+  border-color:rgba(244,200,63,.58);
+  background:linear-gradient(145deg,rgba(115,84,13,.25),rgba(9,12,9,.96) 58%);
+  box-shadow:inset 0 0 26px rgba(244,200,63,.035),0 0 22px rgba(244,200,63,.045);
+}
+.milestones-page-v3 .is-next .milestone-diamond-progress {
+  border-color:rgba(70,156,240,.52);
+  background:linear-gradient(145deg,rgba(25,86,139,.21),rgba(7,11,15,.97) 58%);
+  box-shadow:inset 0 0 28px rgba(62,148,238,.035),0 0 22px rgba(62,148,238,.045);
+}
+.milestones-page-v3 .progress-diamond {
+  width:104px;
+  height:104px;
+  flex-basis:104px;
+  margin:auto;
+  border-radius:9px;
+}
+.milestones-page-v3 .progress-diamond strong { font-size:1.75rem; }
+.milestones-page-v3 .is-next .progress-diamond.active {
+  border-color:#58a7ef;
+  background:linear-gradient(145deg,rgba(44,133,215,.27),rgba(7,15,22,.96) 62%);
+  box-shadow:0 0 0 5px rgba(65,151,235,.035),0 0 24px rgba(65,151,235,.14),inset 0 0 18px rgba(65,151,235,.07);
+}
+.milestones-page-v3 .is-next .progress-diamond.active::before,
+.milestones-page-v3 .is-next .progress-diamond.active::after { background:#58a7ef; box-shadow:0 0 10px rgba(88,167,239,.42); }
+.milestones-page-v3 .diamond-progress-copy {
+  display:grid;
+  align-content:center;
+  gap:8px;
+  min-width:0;
+}
+.milestones-page-v3 .diamond-progress-copy > span {
+  color:#d4b54d;
+  font-size:.55rem;
+  letter-spacing:.16em;
+}
+.milestones-page-v3 .is-next .diamond-progress-copy > span,
+.milestones-page-v3 .is-next .diamond-progress-copy > small { color:#58a7ef; }
+.milestones-page-v3 .diamond-progress-copy > strong {
+  color:#eee9dc;
+  font-size:.95rem;
+  line-height:1.25;
+  letter-spacing:.015em;
+}
+.milestones-page-v3 .diamond-progress-copy > small {
+  color:#c7a53a;
+  font-size:.54rem;
+  font-weight:950;
+  letter-spacing:.1em;
+}
+.milestones-page-v3 .milestone-inline-progress {
+  width:100%;
+  height:9px;
+  overflow:hidden;
+  border:1px solid rgba(216,173,45,.24);
+  border-radius:999px;
+  background:#171817;
+  box-shadow:inset 0 1px 3px rgba(0,0,0,.55);
+}
+.milestones-page-v3 .milestone-inline-progress i {
+  display:block;
+  height:100%;
+  min-width:0;
+  border-radius:inherit;
+  background:linear-gradient(90deg,#9a7618,#f4c83f 72%,#ffe77e);
+  box-shadow:0 0 10px rgba(244,200,63,.14);
+}
+.milestones-page-v3 .is-next .milestone-inline-progress { border-color:rgba(78,155,230,.28); }
+.milestones-page-v3 .is-next .milestone-inline-progress i {
+  background:linear-gradient(90deg,#245f96,#4f9ee7 70%,#81c6ff);
+  box-shadow:0 0 10px rgba(75,157,231,.14);
+}
+
+.milestones-page-v3 .milestone-claim-state {
+  align-self:stretch;
+  display:grid;
+  place-items:center;
+  min-height:0;
+  margin:0 0 0 16px;
+  padding:12px;
+  border-radius:14px;
+  border:1px solid rgba(120,120,115,.22);
+  background:linear-gradient(145deg,rgba(28,29,28,.55),rgba(6,7,7,.92));
+}
+.milestones-page-v3 .milestone-claim-state strong {
+  font-size:.68rem;
+  letter-spacing:.16em;
+}
+.milestones-page-v3 .milestone-claim-state.unclaimed {
+  border-color:rgba(244,200,63,.85);
+  background:radial-gradient(circle at 50% 48%,rgba(216,173,45,.23),rgba(31,23,6,.86) 54%,#080909 84%);
+  box-shadow:0 0 0 3px rgba(216,173,45,.05),0 0 28px rgba(244,200,63,.22),inset 0 0 22px rgba(244,200,63,.09);
+}
+.milestones-page-v3 .milestone-claim-state.unclaimed strong {
+  color:#ffe274;
+  text-shadow:0 0 13px rgba(255,221,91,.45);
+}
+
+@media (max-width:1250px) {
+  .milestones-page-v3 .milestone-grid-header,
+  .milestones-page-v3 .milestone-achievement {
+    grid-template-columns:32px minmax(132px,18%) minmax(220px,25%) minmax(320px,39%) minmax(110px,18%);
+  }
+  .milestones-page-v3 .milestone-diamond-progress { grid-template-columns:96px minmax(0,1fr); gap:18px; padding:12px 18px; }
+  .milestones-page-v3 .progress-diamond { width:88px; height:88px; flex-basis:88px; }
+  .milestones-page-v3 .milestone-achievement-copy { padding-inline:20px; }
+}
+
+@media (max-width:980px) {
+  .milestones-page-v3 .milestone-grid-header { display:none; }
+  .milestones-page-v3 .milestone-achievement {
+    grid-template-columns:30px 132px minmax(0,1fr) 132px;
+    grid-template-areas:
+      'rail plaque reward claim'
+      'rail progress progress progress';
+    min-height:0;
+    row-gap:12px;
+    padding:14px 12px 16px 0;
+  }
+  .milestones-page-v3 .milestone-track-rail { grid-area:rail; }
+  .milestones-page-v3 .milestone-achievement-threshold { grid-area:plaque; border-right:1px solid rgba(216,173,45,.15); }
+  .milestones-page-v3 .milestone-achievement-copy { grid-area:reward; border-right:0; }
+  .milestones-page-v3 .milestone-diamond-progress { grid-area:progress; margin-left:8px; }
+  .milestones-page-v3 .milestone-claim-state { grid-area:claim; margin-left:8px; min-height:82px; align-self:center; }
+}
+
+@media (max-width:680px) {
+  .milestones-page-v3 .milestone-achievement {
+    grid-template-columns:24px 96px minmax(0,1fr);
+    grid-template-areas:
+      'rail plaque reward'
+      'rail progress progress'
+      'rail claim claim';
+    gap:10px 6px;
+    padding:12px 8px 14px 0;
+  }
+  .milestones-page-v3 .milestone-achievement-threshold { padding:3px 8px 3px 4px; }
+  .milestones-page-v3 .milestone-plaque { width:88px; min-height:82px; border-radius:18px 18px 11px 11px; }
+  .milestones-page-v3 .milestone-plaque strong { font-size:1.55rem; }
+  .milestones-page-v3 .milestone-achievement-copy { padding:8px 8px 8px 12px; align-items:center; }
+  .milestones-page-v3 .milestone-achievement-copy p { font-size:.66rem; line-height:1.48; }
+  .milestones-page-v3 .milestone-diamond-progress {
+    grid-template-columns:82px minmax(0,1fr);
+    gap:14px;
+    margin-left:2px;
+    padding:11px 13px;
+  }
+  .milestones-page-v3 .progress-diamond { width:72px; height:72px; flex-basis:72px; }
+  .milestones-page-v3 .progress-diamond strong { font-size:1.35rem; }
+  .milestones-page-v3 .diamond-progress-copy > strong { font-size:.78rem; }
+  .milestones-page-v3 .milestone-claim-state { margin:0 2px; min-height:52px; }
+}
+
+@media (max-width:430px) {
+  .milestones-page-v3 .milestone-achievement {
+    grid-template-columns:22px 82px minmax(0,1fr);
+  }
+  .milestones-page-v3 .milestone-plaque { width:76px; min-height:72px; padding:7px 5px; }
+  .milestones-page-v3 .milestone-plaque strong { font-size:1.4rem; }
+  .milestones-page-v3 .milestone-diamond-progress { grid-template-columns:68px minmax(0,1fr); gap:10px; padding:10px; }
+  .milestones-page-v3 .progress-diamond { width:62px; height:62px; flex-basis:62px; }
+  .milestones-page-v3 .progress-diamond strong { font-size:1.16rem; }
+  .milestones-page-v3 .diamond-progress-copy { gap:6px; }
+  .milestones-page-v3 .diamond-progress-copy > span { font-size:.45rem; }
+  .milestones-page-v3 .diamond-progress-copy > strong { font-size:.68rem; }
+  .milestones-page-v3 .diamond-progress-copy > small { font-size:.45rem; }
+}
+
+/* v1.3.31 — targeted Milestones density + approved plaque refinement */
+@media (min-width:981px) {
+  .milestones-page-v3 .milestone-achievement {
+    min-height:118px;
+    padding:7px 12px 7px 0;
+  }
+  .milestones-page-v3 .milestone-achievement-threshold { padding:2px 12px 2px 8px; }
+  .milestones-page-v3 .milestone-plaque {
+    width:min(100%,128px);
+    min-height:92px;
+    padding:8px 9px;
+    border-radius:10px;
+    clip-path:polygon(8% 0,92% 0,100% 8%,100% 92%,92% 100%,8% 100%,0 92%,0 8%);
+    box-shadow:inset 0 0 0 1px rgba(255,228,118,.16), inset 0 0 22px rgba(216,173,45,.055), 0 4px 14px rgba(0,0,0,.22);
+  }
+  .milestones-page-v3 .milestone-plaque::before {
+    inset:5px;
+    border-radius:6px;
+    clip-path:polygon(7% 0,93% 0,100% 7%,100% 93%,93% 100%,7% 100%,0 93%,0 7%);
+  }
+  .milestones-page-v3 .milestone-plaque strong { font-size:1.72rem; line-height:.95; }
+  .milestones-page-v3 .milestone-plaque > span:last-of-type { font-size:.41rem; margin-top:5px; }
+  .milestones-page-v3 .milestone-plaque.earned::after {
+    content:'★  EARNED  ★';
+    order:-1;
+    color:#f4c83f;
+    font-size:.39rem;
+    font-weight:950;
+    letter-spacing:.14em;
+    margin-bottom:5px;
+  }
+  .milestones-page-v3 .milestone-plaque.active::after {
+    content:'◆  IN PROGRESS  ◆';
+    order:-1;
+    color:#58a7ef;
+    font-size:.36rem;
+    font-weight:950;
+    letter-spacing:.11em;
+    margin-bottom:5px;
+  }
+  .milestones-page-v3 .milestone-plaque.locked::after {
+    content:'◆  LOCKED  ◆';
+    order:-1;
+    color:#8d8d87;
+    font-size:.36rem;
+    font-weight:950;
+    letter-spacing:.12em;
+    margin-bottom:5px;
+  }
+  .milestones-page-v3 .milestone-achievement-copy { padding:10px 20px; }
+  .milestones-page-v3 .milestone-achievement-copy p { font-size:.7rem; line-height:1.4; }
+  .milestones-page-v3 .milestone-diamond-progress {
+    grid-template-columns:82px minmax(0,1fr);
+    gap:17px;
+    padding:8px 17px;
+    border-radius:11px;
+  }
+  .milestones-page-v3 .progress-diamond { width:76px; height:76px; flex-basis:76px; }
+  .milestones-page-v3 .progress-diamond strong { font-size:1.38rem; }
+  .milestones-page-v3 .diamond-progress-copy { gap:5px; }
+  .milestones-page-v3 .diamond-progress-copy > span { font-size:.48rem; }
+  .milestones-page-v3 .diamond-progress-copy > strong { font-size:.78rem; }
+  .milestones-page-v3 .diamond-progress-copy > small { font-size:.47rem; }
+  .milestones-page-v3 .milestone-inline-progress { height:7px; }
+  .milestones-page-v3 .milestone-claim-state { margin-left:12px; padding:8px; border-radius:11px; }
+  .milestones-page-v3 .milestone-claim-state strong { font-size:.58rem; }
+  .milestones-page-v3 .milestone-track-rail .milestone-node { transform:scale(.86); }
+  .milestones-page-v3 .milestones-panel-heading { padding-top:11px; padding-bottom:10px; }
+  .milestones-page-v3 .milestone-grid-header { min-height:31px; }
+}
+
+/* v1.3.32 — Milestones simplification / consolidation */
+.milestones-page-v3 .milestones-manager-row {
+  justify-content:flex-start;
+}
+.milestones-page-v3 .milestones-live-summary { display:none!important; }
+.milestones-page-v3 .milestones-season-timeline .phase-state-seal,
+.milestones-page-v3 .milestones-season-timeline .milestones-phase-card small { display:none!important; }
+.milestones-page-v3 .milestones-phase-card {
+  padding-left:18px!important;
+  min-height:82px;
+}
+.milestones-page-v3 .milestones-phase-card strong { margin-top:9px; }
+.milestones-page-v3 .milestones-phase-card em { margin-top:6px; }
+
+/* Header and rows now share Milestone | Progress | Claim geometry. */
+.milestones-page-v3 .milestone-grid-header {
+  grid-template-columns:170px minmax(0,1fr) 150px!important;
+}
+.milestones-page-v3 .milestone-grid-header > span:nth-child(2) { text-align:center; }
+.milestones-page-v3 .milestone-achievement {
+  grid-template-columns:34px 138px minmax(0,1fr) 150px!important;
+}
+.milestones-page-v3 .milestone-achievement-copy { display:none!important; }
+.milestones-page-v3 .milestone-achievement-progress {
+  grid-column:auto!important;
+  margin:7px 10px!important;
+}
+
+/* Let the diamond number carry the visual state without redundant glyphs. */
+.milestones-page-v3 .progress-diamond {
+  display:grid;
+  place-items:center;
+}
+.milestones-page-v3 .progress-diamond .diamond-top { display:none!important; }
+.milestones-page-v3 .progress-diamond > strong {
+  grid-area:1 / 1;
+  align-self:center;
+  justify-self:center;
+  margin:0!important;
+  line-height:1!important;
+  text-align:center;
+}
+.milestones-page-v3 .milestone-progress-reward {
+  display:block;
+  color:#e4dfd1!important;
+  font-size:.72rem!important;
+  font-weight:700!important;
+  line-height:1.35!important;
+  letter-spacing:0!important;
+  text-transform:none!important;
+}
+
+/* Current achievement: one cohesive blue row, not a gold row with a blue panel. */
+.milestones-page-v3 .milestone-achievement.is-next {
+  background:linear-gradient(90deg,rgba(23,96,151,.28),rgba(10,32,50,.42) 42%,rgba(10,24,37,.36))!important;
+  border-color:rgba(74,166,234,.62)!important;
+  box-shadow:inset 3px 0 0 #49a7ec,0 0 22px rgba(52,150,220,.13)!important;
+}
+.milestones-page-v3 .milestone-achievement.is-next .milestone-node {
+  color:#bfe4ff!important;
+  border-color:#4aa6e8!important;
+  background:#0d2334!important;
+  box-shadow:0 0 14px rgba(63,157,224,.25)!important;
+}
+.milestones-page-v3 .milestone-achievement.is-next .milestone-node-line { background:rgba(74,166,232,.48)!important; }
+.milestones-page-v3 .milestone-achievement.is-next .milestone-plaque.active {
+  border-color:#4aa6e8!important;
+  background:linear-gradient(155deg,rgba(38,124,184,.18),rgba(8,20,30,.96))!important;
+  box-shadow:0 0 18px rgba(46,142,210,.18),inset 0 0 22px rgba(47,139,202,.07)!important;
+}
+.milestones-page-v3 .milestone-achievement.is-next .milestone-plaque.active strong,
+.milestones-page-v3 .milestone-achievement.is-next .milestone-plaque.active span,
+.milestones-page-v3 .milestone-achievement.is-next .milestone-plaque.active b { color:#70bdf2!important; }
+.milestones-page-v3 .milestone-achievement.is-next .milestone-claim-state.locked {
+  border-color:rgba(74,166,232,.22)!important;
+  background:linear-gradient(145deg,rgba(16,48,71,.55),rgba(8,15,21,.96))!important;
+  color:#749db9!important;
+}
+
+@media (max-width:1100px) {
+  .milestones-page-v3 .milestone-grid-header { grid-template-columns:140px minmax(0,1fr) 126px!important; }
+  .milestones-page-v3 .milestone-achievement { grid-template-columns:28px 112px minmax(0,1fr) 126px!important; }
+}
+@media (max-width:760px) {
+  .milestones-page-v3 .milestone-grid-header { display:none!important; }
+  .milestones-page-v3 .milestone-achievement {
+    grid-template-columns:26px 92px minmax(0,1fr)!important;
+    grid-template-areas:
+      "rail plaque progress"
+      "rail claim claim"!important;
+  }
+  .milestones-page-v3 .milestone-track-rail { grid-area:rail; }
+  .milestones-page-v3 .milestone-achievement-threshold { grid-area:plaque; }
+  .milestones-page-v3 .milestone-achievement-progress { grid-area:progress; }
+  .milestones-page-v3 .milestone-claim-state { grid-area:claim; min-height:42px; margin:0 8px 8px!important; }
+}
+@media (max-width:520px) {
+  .milestones-page-v3 .milestone-achievement {
+    grid-template-columns:22px 78px minmax(0,1fr)!important;
+  }
+  .milestones-page-v3 .milestone-achievement-progress { margin:5px 4px!important; }
+  .milestones-page-v3 .milestone-progress-reward { font-size:.64rem!important; }
+  .milestones-page-v3 .milestones-phase-card { padding-left:12px!important; min-height:74px; }
+}
+
+
+/* v1.3.33 — Milestones left-side hierarchy refinement
+   Plaque = target; diamond = state/current position; rail = quiet journey marker. */
+.milestones-page-v3 .milestone-node {
+  width:10px!important;
+  height:10px!important;
+  min-width:10px!important;
+  padding:0!important;
+  border:1px solid rgba(216,173,45,.48)!important;
+  background:#15140f!important;
+  color:transparent!important;
+  font-size:0!important;
+  box-shadow:0 0 0 3px rgba(216,173,45,.025)!important;
+}
+.milestones-page-v3 .is-complete .milestone-node {
+  background:#d8ad2d!important;
+  border-color:#f1cb55!important;
+  box-shadow:0 0 10px rgba(216,173,45,.22)!important;
+}
+.milestones-page-v3 .is-next .milestone-node {
+  background:#58a7ef!important;
+  border-color:#8ac8f5!important;
+  box-shadow:0 0 11px rgba(88,167,239,.34)!important;
+}
+.milestones-page-v3 .is-upcoming .milestone-node {
+  background:#262626!important;
+  border-color:#686864!important;
+  box-shadow:none!important;
+}
+.milestones-page-v3 .milestone-node-line { width:1px!important; opacity:.65; }
+
+.milestones-page-v3 .diamond-state-icon {
+  grid-area:1 / 1;
+  align-self:center;
+  justify-self:center;
+  transform:rotate(-45deg);
+  display:grid;
+  place-items:center;
+  line-height:1;
+}
+.milestones-page-v3 .diamond-trophy {
+  color:#f5d45a;
+  font-size:2rem;
+  text-shadow:0 0 14px rgba(244,200,63,.38);
+}
+.milestones-page-v3 .diamond-lock {
+  color:#96948b;
+  font-size:1.35rem;
+  opacity:.82;
+}
+/* Completed diamonds communicate accomplishment rather than repeating the plaque target. */
+.milestones-page-v3 .is-complete .progress-diamond strong { display:none; }
+
+@media (max-width:760px) {
+  .milestones-page-v3 .milestone-node { width:8px!important; height:8px!important; min-width:8px!important; }
+  .milestones-page-v3 .diamond-trophy { font-size:1.55rem; }
+  .milestones-page-v3 .diamond-lock { font-size:1.05rem; }
+}
+
+/* v1.3.34 — compact Milestones controls + right-edge progress diamond */
+.milestones-page-v3 .milestones-hero-v2 {
+  grid-template-columns:minmax(260px,.58fr) minmax(620px,1.65fr)!important;
+  padding:10px 16px!important;
+  min-height:0!important;
+  align-items:center!important;
+}
+.milestones-page-v3 .milestones-season-copy { display:grid; grid-template-columns:auto minmax(150px,190px); grid-template-areas:"eyebrow manager" "title manager"; column-gap:18px; align-items:center; }
+.milestones-page-v3 .milestones-season-copy > .league-eyebrow { grid-area:eyebrow; }
+.milestones-page-v3 .milestones-season-copy h1 { grid-area:title; margin:2px 0 0!important; font-size:1.55rem!important; }
+.milestones-page-v3 .milestones-season-copy > .milestones-manager-row { grid-area:manager; margin:0!important; }
+.milestones-page-v3 .milestones-manager-row label { gap:3px!important; }
+.milestones-page-v3 .milestones-manager-row select { min-width:150px!important; height:32px!important; }
+.milestones-page-v3 .milestones-phase-progress { gap:9px!important; }
+.milestones-page-v3 .milestones-phase-card { min-height:64px!important; padding:9px 12px!important; }
+.milestones-page-v3 .milestones-phase-card strong { margin-top:4px!important; font-size:.72rem!important; }
+.milestones-page-v3 .milestones-phase-card em { margin-top:3px!important; font-size:.5rem!important; }
+.milestones-page-v3 .milestones-season-timeline::before { top:18px!important; }
+.milestones-page-v3 .milestones-phase-connector { top:18px!important; }
+.milestones-page-v3 .milestones-track-tabs-v3 button { min-height:48px!important; padding:5px 8px!important; }
+.milestones-page-v3 .milestone-tab-icon { width:17px!important; height:17px!important; margin-bottom:1px!important; }
+.milestones-page-v3 .milestones-track-tabs button > span { font-size:.42rem!important; }
+.milestones-page-v3 .milestones-track-tabs button > strong { font-size:.58rem!important; }
+.milestones-page-v3 .milestones-next-feature { grid-template-columns:52px minmax(0,1.2fr) minmax(230px,.75fr)!important; gap:12px!important; margin:6px 0!important; padding:7px 13px!important; }
+.milestones-page-v3 .milestones-next-medallion { width:43px!important; height:43px!important; }
+.milestones-page-v3 .milestones-next-medallion .milestone-glyph { width:22px!important; height:22px!important; }
+.milestones-page-v3 .milestones-next-copy h2 { font-size:.86rem!important; margin-top:1px!important; }
+.milestones-page-v3 .milestones-next-copy p { margin-top:2px!important; font-size:.52rem!important; }
+.milestones-page-v3 .milestones-next-meter { gap:4px!important; }
+.milestones-page-v3 .milestones-feature-track { height:7px!important; }
+.milestones-page-v3 .milestones-next-feature::after { font-size:2rem!important; }
+
+/* Rows: milestone target at left; integrated progress/reward center; diamond anchors far right. */
+.milestones-page-v3 .milestone-grid-header { grid-template-columns:170px minmax(0,1fr)!important; }
+.milestones-page-v3 .milestone-grid-header > span:nth-child(2) { text-align:right!important; padding-right:36px; }
+.milestones-page-v3 .milestone-achievement { grid-template-columns:34px 138px minmax(0,1fr)!important; }
+.milestones-page-v3 .milestone-achievement-progress { margin:7px 4px 7px 10px!important; }
+.milestones-page-v3 .milestone-diamond-progress { grid-template-columns:minmax(0,1fr) 82px!important; gap:17px!important; }
+.milestones-page-v3 .progress-diamond { grid-column:2; grid-row:1; justify-self:end; }
+.milestones-page-v3 .diamond-progress-copy { grid-column:1; grid-row:1; min-width:0; }
+.milestones-page-v3 .milestone-progress-footer { display:flex; min-height:18px; align-items:center; justify-content:space-between; gap:10px; }
+.milestones-page-v3 .milestone-progress-footer > small { color:#58a7ef; font-size:.47rem; font-weight:900; letter-spacing:.12em; }
+.milestones-page-v3 .milestone-claim-inline { display:inline-flex; align-items:center; justify-content:center; min-width:74px; min-height:22px; padding:3px 9px; border:1px solid rgba(130,130,125,.22); border-radius:999px; color:#72736f; background:rgba(0,0,0,.2); font-size:.43rem; font-weight:950; letter-spacing:.13em; }
+.milestones-page-v3 .milestone-claim-inline.unclaimed { color:#f4c83f; border-color:rgba(244,200,63,.72); background:rgba(125,88,8,.18); box-shadow:0 0 13px rgba(244,200,63,.22), inset 0 0 10px rgba(244,200,63,.06); }
+.milestones-page-v3 .milestone-claim-state { display:none!important; }
+
+@media (max-width:1100px) {
+  .milestones-page-v3 .milestones-hero-v2 { grid-template-columns:1fr!important; gap:8px!important; }
+  .milestones-page-v3 .milestones-season-copy { grid-template-columns:minmax(0,1fr) 170px; }
+  .milestones-page-v3 .milestone-grid-header { grid-template-columns:140px minmax(0,1fr)!important; }
+  .milestones-page-v3 .milestone-achievement { grid-template-columns:28px 112px minmax(0,1fr)!important; }
+}
+@media (max-width:760px) {
+  .milestones-page-v3 .milestones-season-copy { grid-template-columns:1fr 145px; column-gap:10px; }
+  .milestones-page-v3 .milestones-season-copy h1 { font-size:1.25rem!important; }
+  .milestones-page-v3 .milestones-phase-progress { grid-template-columns:repeat(3,minmax(0,1fr))!important; }
+  .milestones-page-v3 .milestones-phase-card { min-height:58px!important; padding:7px 8px!important; }
+  .milestones-page-v3 .milestones-phase-card em { display:none!important; }
+  .milestones-page-v3 .milestone-achievement { grid-template-columns:26px 92px minmax(0,1fr)!important; grid-template-areas:"rail plaque progress"!important; }
+  .milestones-page-v3 .milestone-diamond-progress { grid-template-columns:minmax(0,1fr) 68px!important; gap:10px!important; }
+  .milestones-page-v3 .milestone-progress-footer { flex-wrap:wrap; gap:4px; }
+}
+@media (max-width:520px) {
+  .milestones-page-v3 .milestones-hero-v2 { padding:8px 10px!important; }
+  .milestones-page-v3 .milestones-season-copy { grid-template-columns:1fr; grid-template-areas:"eyebrow" "title" "manager"; gap:3px; }
+  .milestones-page-v3 .milestones-manager-row select { width:100%; }
+  .milestones-page-v3 .milestones-phase-progress { gap:4px!important; }
+  .milestones-page-v3 .phase-label { font-size:.38rem!important; }
+  .milestones-page-v3 .milestones-phase-card strong { font-size:.57rem!important; }
+  .milestones-page-v3 .milestones-next-feature { grid-template-columns:40px minmax(0,1fr)!important; }
+  .milestones-page-v3 .milestones-next-meter { grid-column:1/-1; }
+  .milestones-page-v3 .milestone-achievement { grid-template-columns:22px 78px minmax(0,1fr)!important; }
+  .milestones-page-v3 .milestone-diamond-progress { grid-template-columns:minmax(0,1fr) 58px!important; gap:7px!important; padding:8px!important; }
+  .milestones-page-v3 .progress-diamond { width:54px!important; height:54px!important; flex-basis:54px!important; }
+  .milestones-page-v3 .milestone-claim-inline { min-width:62px; font-size:.38rem; padding:2px 6px; }
+}
+
+
+/* v1.3.35 — diamond is the single milestone state/action surface. */
+.milestones-page-v3 .milestone-claim-inline { display:none!important; }
+.milestones-page-v3 .milestone-progress-footer { justify-content:center!important; }
+.milestones-page-v3 .progress-diamond .diamond-state-label {
+  grid-area:1 / 1;
+  align-self:center;
+  justify-self:center;
+  margin:0!important;
+  max-width:86%;
+  color:#aaa69a;
+  font-family:inherit!important;
+  font-size:.58rem!important;
+  font-weight:950!important;
+  line-height:1.12!important;
+  letter-spacing:.08em;
+  text-align:center;
+  text-transform:uppercase;
+}
+.milestones-page-v3 .progress-diamond.complete .diamond-state-label.claim {
+  color:#ffe47c!important;
+  text-shadow:0 0 11px rgba(244,200,63,.42);
+}
+.milestones-page-v3 .progress-diamond.locked .diamond-state-label.locked {
+  color:#777771!important;
+  text-shadow:none;
+}
+@media (max-width:760px) {
+  .milestones-page-v3 .progress-diamond .diamond-state-label { font-size:.48rem!important; letter-spacing:.06em; }
+}
+@media (max-width:520px) {
+  .milestones-page-v3 .progress-diamond .diamond-state-label { font-size:.41rem!important; }
+}

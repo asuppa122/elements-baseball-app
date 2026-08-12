@@ -13605,3 +13605,304 @@ span {
     width: auto;
   }
 }
+
+
+/* =========================================================
+   v1.3.23 — Public beta Cards / Team Builder usability fixes
+   - DEF comparison operator in Cards + Team Builder
+   - Drawer height is derived from remaining viewport space, not stacked vh calcs
+   - All swap/add controls remain reachable at short desktop heights and mobile widths
+   ========================================================= */
+@media (min-width: 1051px) {
+  .cards-filter-detail-panel .card-database-defense-row,
+  .roster-player-drawer .tb-defense-filters {
+    grid-template-columns: minmax(170px, 1fr) 82px 96px !important;
+  }
+}
+
+.cards-filter-detail-panel .defense-operator-field select,
+.roster-player-drawer .defense-operator-field select {
+  text-align: center;
+  text-align-last: center;
+}
+
+/* The overlay itself owns the viewport. Its controls take only the space they
+   actually need and the replacement workspace flexes into everything left. */
+.roster-player-drawer {
+  display: flex !important;
+  flex-direction: column !important;
+  min-height: 0 !important;
+}
+
+.roster-player-drawer .roster-drawer-sticky-controls {
+  flex: 0 1 auto !important;
+  min-height: 0 !important;
+  max-height: min(48dvh, 520px) !important;
+  overflow-y: auto !important;
+  overscroll-behavior: contain !important;
+  scrollbar-gutter: stable;
+}
+
+.roster-player-drawer .roster-picker-content.roster-picker-content-stacked {
+  flex: 1 1 auto !important;
+  width: 100% !important;
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+}
+
+/* Short laptop / landscape displays: keep the action rail and results usable
+   instead of clipping the bottom of the drawer. */
+@media (min-width: 721px) and (max-height: 820px) {
+  .roster-player-drawer .roster-drawer-sticky-controls {
+    max-height: 44dvh !important;
+    padding-top: 5px !important;
+    padding-bottom: 4px !important;
+  }
+
+  .roster-picker-content.roster-picker-content-stacked {
+    padding-top: 5px !important;
+    padding-bottom: 7px !important;
+  }
+
+  .roster-picker-content-stacked .roster-compare-strip {
+    padding: 7px 8px !important;
+    gap: 5px !important;
+  }
+
+  .roster-picker-content-stacked .roster-compare-card {
+    width: min(102px, 21vh) !important;
+    max-width: 102px !important;
+    max-height: 24vh !important;
+  }
+
+  .roster-picker-content-stacked .roster-compare-arrow {
+    min-height: 34px !important;
+  }
+}
+
+@media (max-width: 1050px) {
+  .cards-filter-detail-panel .card-database-defense-row,
+  .roster-player-drawer .tb-defense-filters {
+    grid-template-columns: minmax(150px, 1fr) 78px minmax(82px, .45fr) !important;
+  }
+}
+
+@media (max-width: 700px) {
+  .cards-filter-detail-panel .card-database-defense-row,
+  .roster-player-drawer .tb-defense-filters {
+    grid-template-columns: minmax(0, 1fr) 76px minmax(80px, .75fr) !important;
+    align-items: end !important;
+  }
+
+  .cards-filter-detail-panel .card-database-defense-row label,
+  .roster-player-drawer .tb-defense-filters label {
+    min-width: 0 !important;
+  }
+
+  .roster-player-drawer .roster-drawer-sticky-controls {
+    max-height: 52dvh !important;
+  }
+}
+
+@media (max-width: 460px) {
+  .cards-filter-detail-panel .card-database-defense-row,
+  .roster-player-drawer .tb-defense-filters {
+    grid-template-columns: minmax(0, 1fr) 68px 76px !important;
+    gap: 5px !important;
+  }
+
+  .cards-filter-detail-panel .card-database-defense-row label > span,
+  .roster-player-drawer .tb-defense-filters label > span {
+    font-size: .48rem !important;
+  }
+}
+
+/* =========================================================
+   v1.3.24 — Team Builder player drawer regression correction
+   Keep the v1.3.23 DEF operators, but restore the proven v1.3.22
+   drawer composition. Short displays scroll the drawer/workspace
+   instead of flex-stretching CURRENT/SUBSTITUTE or clipping actions.
+   ========================================================= */
+
+/* Undo the v1.3.23 flex-height takeover that could collapse the filter
+   toolbar and stretch the comparison rail to fill the entire viewport. */
+.roster-player-drawer {
+  display: block !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+}
+
+.roster-player-drawer .roster-drawer-sticky-controls {
+  flex: none !important;
+  max-height: none !important;
+  overflow: visible !important;
+  scrollbar-gutter: auto !important;
+}
+
+.roster-player-drawer .roster-picker-content.roster-picker-content-stacked {
+  flex: none !important;
+}
+
+/* Short desktop/laptop displays: keep the original compact comparison
+   geometry, but allow the whole drawer to scroll when its natural content
+   is taller than the available viewport. Nothing is clipped or hidden. */
+@media (min-width: 721px) and (max-height: 820px) {
+  .roster-player-drawer {
+    height: calc(100dvh - 60px) !important;
+    overflow-y: auto !important;
+  }
+
+  .roster-player-drawer .roster-drawer-sticky-controls {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 8 !important;
+    max-height: none !important;
+    overflow: visible !important;
+    padding-top: 5px !important;
+    padding-bottom: 5px !important;
+  }
+
+  .roster-player-drawer .roster-picker-content.roster-picker-content-stacked {
+    height: auto !important;
+    min-height: 600px !important;
+    overflow: visible !important;
+    padding-top: 6px !important;
+    padding-bottom: 12px !important;
+  }
+
+  .roster-picker-content-stacked .roster-compare-strip {
+    height: 100% !important;
+    min-height: 560px !important;
+    max-height: 600px !important;
+    padding: 9px 8px !important;
+    gap: 7px !important;
+  }
+
+  .roster-picker-content-stacked .roster-compare-card {
+    width: min(108px, 100%) !important;
+    max-width: 108px !important;
+    max-height: 26vh !important;
+  }
+
+  .roster-picker-content-stacked .roster-replacement-browser {
+    height: 600px !important;
+    max-height: 600px !important;
+    overflow-y: auto !important;
+    overscroll-behavior: contain !important;
+  }
+}
+
+/* Mobile/tablet remains a stacked, independently scrollable experience;
+   do not let desktop short-height overrides leak into narrow screens. */
+@media (max-width: 720px) {
+  .roster-player-drawer {
+    display: block !important;
+    overflow-y: auto !important;
+  }
+
+  .roster-player-drawer .roster-drawer-sticky-controls {
+    max-height: none !important;
+    overflow: visible !important;
+  }
+}
+
+/* =========================================================
+   v1.3.25 — Team Builder Current/Substitute full-card restore
+   Keep the v1.3.23 filter layout intact. Fix the underlying
+   comparison-stage sizing so full card art is never clipped.
+   ========================================================= */
+.roster-player-drawer .roster-picker-content-stacked .roster-compare-strip {
+  grid-template-rows: auto auto !important;
+  align-content: center !important;
+  overflow: visible !important;
+}
+
+.roster-player-drawer .roster-picker-content-stacked .roster-compare-side {
+  height: auto !important;
+  min-height: 0 !important;
+  align-self: center !important;
+  overflow: visible !important;
+}
+
+.roster-player-drawer .roster-picker-content-stacked .roster-compare-card {
+  box-sizing: border-box !important;
+  height: auto !important;
+  max-height: none !important;
+  aspect-ratio: 5 / 7 !important;
+  flex: 0 0 auto !important;
+}
+
+.roster-player-drawer .roster-picker-content-stacked .roster-compare-card img {
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain !important;
+  object-position: center !important;
+}
+
+/* Condensed desktop: size both comparison cards from available width,
+   not a viewport-height cap. The drawer already scrolls vertically in
+   v1.3.24, so the full cards can retain their native 5:7 proportion. */
+@media (min-width: 721px) and (max-height: 820px) {
+  .roster-player-drawer .roster-picker-content.roster-picker-content-stacked {
+    min-height: 620px !important;
+  }
+
+  .roster-player-drawer .roster-picker-content-stacked .roster-compare-strip {
+    height: auto !important;
+    min-height: 520px !important;
+    max-height: none !important;
+    padding: 12px 10px !important;
+  }
+
+  .roster-player-drawer .roster-picker-content-stacked .roster-compare-card {
+    width: min(172px, 84%) !important;
+    min-width: 124px !important;
+    max-width: 172px !important;
+    max-height: none !important;
+  }
+
+  .roster-player-drawer .roster-picker-content-stacked .roster-replacement-browser {
+    height: 600px !important;
+    max-height: 600px !important;
+  }
+}
+
+/* Normal desktop: allow a comfortably readable full card while keeping
+   the collection/filter side unchanged. */
+@media (min-width: 721px) and (min-height: 821px) {
+  .roster-player-drawer .roster-picker-content-stacked .roster-compare-card {
+    width: min(190px, 84%) !important;
+    min-width: 138px !important;
+    max-width: 190px !important;
+  }
+}
+
+/* Mobile/tablet: preserve the stacked/tap workflow but never crop the
+   Current or Substitute artwork. Width drives height via 5:7 ratio. */
+@media (max-width: 720px) {
+  .roster-player-drawer .roster-picker-content-stacked .roster-compare-strip {
+    grid-template-rows: auto auto !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  .roster-player-drawer .roster-picker-content-stacked .roster-compare-card {
+    width: min(126px, 30vw) !important;
+    min-width: 82px !important;
+    max-width: 126px !important;
+    max-height: none !important;
+  }
+}
+
+@media (max-width: 430px) {
+  .roster-player-drawer .roster-picker-content-stacked .roster-compare-card {
+    width: min(108px, 29vw) !important;
+    min-width: 72px !important;
+    max-width: 108px !important;
+  }
+}

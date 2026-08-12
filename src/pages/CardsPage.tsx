@@ -86,6 +86,7 @@ type SavedFilterState = {
   attributeConditions: AttributeCondition[]
   defensePosition: DefensePosition
   defenseRating: string
+  defenseOperator: AttributeOperator
   sortField: SortField
   sortDirection: SortDirection
   visibleCardCount: number
@@ -168,6 +169,22 @@ type ChartRange = {
   start: number
   end: number
   rating: number
+}
+
+function matchesNumericOperator(
+  actual: number,
+  expected: number,
+  operator: AttributeOperator,
+) {
+  switch (operator) {
+    case 'eq': return actual === expected
+    case 'neq': return actual !== expected
+    case 'lt': return actual < expected
+    case 'lte': return actual <= expected
+    case 'gt': return actual > expected
+    case 'gte': return actual >= expected
+    default: return actual >= expected
+  }
 }
 
 function createInitialAttributeCondition(): AttributeCondition {
@@ -936,6 +953,13 @@ function CardsPage() {
   )
 
   const [
+    defenseOperator,
+    setDefenseOperator,
+  ] = useState<AttributeOperator>(
+    savedFilters.defenseOperator ?? 'gte',
+  )
+
+  const [
     sortField,
     setSortField,
   ] =
@@ -1027,6 +1051,7 @@ function CardsPage() {
         attributeConditions,
         defensePosition,
         defenseRating,
+        defenseOperator,
         sortField,
         sortDirection,
         visibleCardCount,
@@ -1045,6 +1070,7 @@ function CardsPage() {
     statsContext,
     defensePosition,
     defenseRating,
+    defenseOperator,
     leagueFilter,
     ownershipFilter,
     seasonEligibleOnly,
@@ -1561,12 +1587,18 @@ function CardsPage() {
               const highestDefense = Math.max(
                 ...DEFENSE_COLUMN_LIST.map((column) => Number(card[column] ?? Number.NEGATIVE_INFINITY)),
               )
-              if (!Number.isFinite(highestDefense) || highestDefense < numericDefenseRating) return false
+              if (
+                !Number.isFinite(highestDefense) ||
+                !matchesNumericOperator(highestDefense, numericDefenseRating, defenseOperator)
+              ) return false
             } else {
               const defenseColumn = DEFENSE_COLUMNS[effectiveDefensePosition]
               const defenseValue = card[defenseColumn]
 
-              if (defenseValue === null || Number(defenseValue) < numericDefenseRating) {
+              if (
+                defenseValue === null ||
+                !matchesNumericOperator(Number(defenseValue), numericDefenseRating, defenseOperator)
+              ) {
                 return false
               }
             }
@@ -1614,6 +1646,7 @@ function CardsPage() {
       debouncedTeamFilter,
       effectiveDefensePosition,
       defenseRating,
+      defenseOperator,
       leagueFilter,
       ownershipFilter,
       seasonEligibleOnly,
@@ -1639,6 +1672,7 @@ function CardsPage() {
     debouncedTeamFilter,
     defensePosition,
     defenseRating,
+    defenseOperator,
     leagueFilter,
     ownershipFilter,
     seasonEligibleOnly,
@@ -1682,6 +1716,7 @@ function CardsPage() {
     ])
     setDefensePosition('')
     setDefenseRating('')
+    setDefenseOperator('gte')
     setSortField('points')
     setSortDirection('desc')
     setVisibleCardCount(
@@ -1721,7 +1756,7 @@ function CardsPage() {
       label: `Fielding: ${defensePosition.toUpperCase()}`,
       onRemove: () => setDefensePosition(''),
     },
-    defenseRating && { key: 'defense-rating', label: `DEF: ${defenseRating}`, onRemove: () => setDefenseRating('') },
+    defenseRating && { key: 'defense-rating', label: `${effectiveDefensePosition ? effectiveDefensePosition.toUpperCase() : 'Highest'} DEF ${ATTRIBUTE_OPERATOR_LABELS[defenseOperator]} ${defenseRating}`, onRemove: () => setDefenseRating('') },
     ...attributeConditions
       .filter((condition) => condition.attribute && condition.value.trim())
       .map((condition) => ({
@@ -1807,6 +1842,8 @@ function CardsPage() {
             onDefenseRatingChange={
               setDefenseRating
             }
+            defenseOperator={defenseOperator}
+            onDefenseOperatorChange={setDefenseOperator}
             sortField={sortField}
             onSortFieldChange={
               setSortField

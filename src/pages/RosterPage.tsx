@@ -425,6 +425,22 @@ function isEligible(
   )
 }
 
+function matchesDefenseOperator(
+  actual: number,
+  expected: number,
+  operator: AttributeOperator,
+) {
+  switch (operator) {
+    case 'eq': return actual === expected
+    case 'neq': return actual !== expected
+    case 'lt': return actual < expected
+    case 'lte': return actual <= expected
+    case 'gt': return actual > expected
+    case 'gte': return actual >= expected
+    default: return actual >= expected
+  }
+}
+
 function RosterPage() {
   const navigate = useNavigate()
   const { lineupId } = useParams()
@@ -465,6 +481,7 @@ function RosterPage() {
   ])
   const [defensePosition, setDefensePosition] = useState<DefensePosition>('')
   const [defenseRating, setDefenseRating] = useState('')
+  const [defenseOperator, setDefenseOperator] = useState<AttributeOperator>('gte')
   const [drawerControlsOpen, setDrawerControlsOpen] =
     useState(false)
   const [hoverCardKey, setHoverCardKey] =
@@ -900,7 +917,7 @@ function RosterPage() {
                 return typeof value === 'number' ? value : -999
               }),
             )
-            if (best < minimum) return false
+            if (!matchesDefenseOperator(best, minimum, defenseOperator)) return false
           }
         }
 
@@ -1031,6 +1048,7 @@ function RosterPage() {
     attributeConditions,
     defensePosition,
     defenseRating,
+    defenseOperator,
     assigned,
     batsFilter,
     cards,
@@ -2463,7 +2481,7 @@ function RosterPage() {
                   ? [{ id: 'defense-position', label: `Fielding: ${defensePosition.toUpperCase()}`, onRemove: () => setDefensePosition('') }]
                   : []),
                 ...(defenseRating.trim()
-                  ? [{ id: 'defense-rating', label: `DEF ≥ ${defenseRating.trim()}`, onRemove: () => setDefenseRating('') }]
+                  ? [{ id: 'defense-rating', label: `${defensePosition ? defensePosition.toUpperCase() : 'Highest'} DEF ${attributeOperators.find(([value]) => value === defenseOperator)?.[1] ?? '≥'} ${defenseRating.trim()}`, onRemove: () => setDefenseRating('') }]
                   : []),
               ]}
               onClearFilters={() => {
@@ -2487,6 +2505,7 @@ function RosterPage() {
                 setAttributeConditions([{ id: 'attribute-1', attribute: '', operator: 'eq', value: '' }])
                 setDefensePosition('')
                 setDefenseRating('')
+                setDefenseOperator('gte')
               }}
              >
                <section className="tb-attribute-filters">
@@ -2599,11 +2618,23 @@ function RosterPage() {
                          <option value="rf">RF</option>
                        </select>
                      </label>
+                     <label className="defense-operator-field">
+                       <span>Operator</span>
+                       <select
+                         value={defenseOperator}
+                         onChange={(event) => setDefenseOperator(event.target.value as AttributeOperator)}
+                         aria-label="Defense comparison operator"
+                       >
+                         {attributeOperators.map(([value, label]) => (
+                           <option value={value} key={value}>{label}</option>
+                         ))}
+                       </select>
+                     </label>
                      <label>
                        <span>DEF</span>
                        <input value={defenseRating} onChange={(event) =>
                          setDefenseRating(event.target.value)
-                       } placeholder="e.g. 2" inputMode="numeric" />
+                       } placeholder="e.g. 6" inputMode="numeric" />
                      </label>
                    </div>
                    <button

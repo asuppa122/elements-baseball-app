@@ -1,3 +1,22 @@
+
+## v1.3.35 — Diamond state surface + reward groundwork
+
+- Milestone diamond is now the single state/action visual: `CLAIM REWARD` for completed/unclaimed milestones, current progress number for the active milestone, and `LOCKED` for future milestones.
+- Removed the redundant inline claim-state pill from the Progress copy.
+- Added an intentionally disabled milestone reward / Prize Pack TypeScript scaffold (`MILESTONE_REWARDS_ENABLED = false`).
+- Added a Supabase groundwork migration for immutable/idempotent milestone reward claims and persisted reward reveal items.
+- Reward tables have owner read policies only; there are deliberately no authenticated write policies or claim RPCs yet.
+- Added `MILESTONE_REWARD_GROUNDWORK.md` documenting the eventual secure claim → reveal → grant lifecycle and the decisions still required before activation.
+- No reward claiming, Prize Pack route, collection mutation, or new user-accessible functionality is enabled in this build.
+
+# v1.3.26 — Rulebook Source-of-Truth Hierarchy
+
+- Restored the website Rulebook outline to mirror the Google Doc's legal hierarchy: Roman numeral sections with A. / 1. / a) / (1) / (a) / (i) nesting.
+- Section VII and VIII remain fully represented in the Table of Contents and reading view.
+- Card-description blocks in Section III now behave as source-document subsections instead of being flattened into generic rule rows.
+- Preserved the Rulebook wording and existing interactive search, Quick Rules, section navigation, and Simulated Demos separation.
+- Refined chapter/subsection typography without changing unrelated app pages.
+
 # v1.3.7 — Compact Attribute Row + Player Profile + Season Eligibility
 
 - Condensed the Cards Attribute Filters builder into one horizontal desktop row.
@@ -18,6 +37,12 @@
 - Packaging note: node_modules is intentionally excluded from the update ZIP; run npm install after replacing the project if dependencies are not already installed.
 
 # Elements Baseball Change Log
+
+
+## v1.3.28 — Rulebook Section III.D Card Example
+- Added the provided Luke Williams atypical player card to Section III.D in the same source-relative location and presentation pattern used for the existing III.A, III.B, and III.C card examples.
+- Preserved the original Rulebook wording, hierarchy, digital gameplay review markers, search, Quick Rules, and Simulated Demos separation.
+- Reused the established responsive Rulebook card-media treatment so the III.D example remains uncropped, keeps its original aspect ratio, and scales cleanly on desktop and mobile.
 
 ## v1.3.3 — Unified Card Quick Controls
 - Moved **Owned by Me** and **Season Eligible** into the same quick-control row as **Points**, **Year**, and **Name**.
@@ -1436,3 +1461,101 @@ No other Home tile artwork or application functionality was intentionally change
 - Preserved the existing Next Achievement, phase timeline, Ladder map, Consistency tracker shell, and Community scoreboard while visually integrating them into the new achievement system.
 - Added responsive desktop/tablet/mobile treatments so badge geometry, milestone rows, progression rails, and reward content remain readable and functional at narrow widths.
 - Continued version history only in this single `CHANGELOG.md`.
+
+## v1.3.23 — Public Beta Cards + Team Builder Usability Fixes
+
+- Added a comparison operator to Fielding Position / DEF filters in both Cards and Team Builder (`=`, `≠`, `<`, `≤`, `>`, `≥`).
+- Preserved the prior minimum-defense behavior as the default (`≥`), while allowing searches such as `C DEF ≥ 6`.
+- Updated Applied Filters labels so the selected fielding position, comparison operator, and DEF value are visible together.
+- Rebuilt the Team Builder player-selection overlay height model so filter controls and the substitution workspace share the actual available viewport instead of stacking independent viewport-height calculations.
+- Kept Current / Substitute / Confirm Swap and the eligible-card browser reachable on shorter desktop displays.
+- Added bounded scrolling to expanded filter controls where required rather than clipping player-management content.
+- Added responsive DEF operator layouts for desktop, tablet, and mobile widths.
+- No changes to Rules, Milestones, standings, workbook logic, ownership, season eligibility, roster assignment logic, or unrelated UI.
+
+## v1.3.24 — Team Builder Player Drawer Regression Fix
+
+- Corrected the Team Builder Select Player / substitution drawer regression introduced by the v1.3.23 responsive-height changes.
+- Preserved the new Fielding Position + DEF comparison operators (`=`, `≠`, `<`, `≤`, `>`, `≥`) in both Cards and Team Builder.
+- Restored the proven pre-v1.3.23 Team Builder drawer composition so the filter toolbar remains visible and the CURRENT / SUBSTITUTE comparison area no longer stretches disproportionately.
+- Changed short-display handling to scroll the overall Team Builder drawer/workspace rather than clipping controls or forcing the comparison rail to consume the remaining viewport.
+- Kept Current, Substitute, Confirm Swap / Add, and eligible-card results reachable on shorter laptop displays.
+- Preserved tablet/mobile stacked behavior and independent eligible-card scrolling.
+- No changes to Card Database layout, roster assignment logic, ownership, Season Eligible, Rules, Milestones, standings, or workbook-backed data.
+
+## v1.3.25 — Targeted Rules Typography + Team Builder Card Visibility Fix
+- Reduced the oversized Rulebook chapter-title typography and tightened its chapter-header spacing without changing Rulebook content or functionality.
+- Added responsive chapter-title sizing for normal desktop, condensed desktop, and mobile widths.
+- Preserved the successful Team Builder filter/DEF operator layout from v1.3.23/v1.3.24.
+- Fixed the Current Player / Substitute comparison stage so both full card images retain their 5:7 aspect ratio and use `object-fit: contain` rather than being clipped by height/overflow constraints.
+- Removed the comparison card viewport-height cap as the sizing driver; condensed desktop now relies on the drawer's existing vertical scrolling while keeping full cards visible.
+- Added mobile/tablet comparison sizing that preserves full-card visibility without changing swap/add functionality.
+
+## v1.3.26 — Rulebook Source-of-Truth Hierarchy
+- Rebuilt the website Rulebook around the original Elements League Rulebook's Roman numeral section order and nested legal-outline hierarchy.
+- Restored Sections I–VIII, including the complete Section VII Advanced In-Game Components and Section VIII Player Fatigue & Effects content structure.
+- Preserved the original Rulebook wording while retaining the upgraded interactive black/gold digital-manual presentation.
+
+## v1.3.27 — Rulebook Card Examples + Digital Gameplay Review Layer
+- Added the provided original card examples to Section III in their source-relative locations: Michael Harris II in III.A, Framber Valdez in III.B, and Evan Phillips + Yadier Molina together in III.C.
+- Kept card images uncropped at their original aspect ratios, with readable desktop sizing and responsive single-column stacking on mobile.
+- Added a distinct review-only digital gameplay layer without modifying or replacing any official Rulebook text.
+- Added blue `Proposed Digital Gameplay Update` callouts for previously discussed decisions: Active Season roster blueprints, automatic lineup visibility, Active Season/year-driven MLB rules, app-based pregame lineup submission/reveal, and locked confirmed offensive/defensive substitutions.
+- Added purple `Digital Gameplay Clarification Needed` callouts for unresolved digital execution questions: Pitch/Swing roll handling, official roster source of truth during migration, active-hitter announcements, postgame Discord reporting, RTS/DP/TP/fielding-check automation, and fatigue calculation automation.
+- Added a persistent legend explaining that official Rulebook text remains authoritative while colored callouts are review markers for Anthony/James approval, rejection, or revision.
+- Preserved the Rulebook's Roman numeral/lettered structure, search, Quick Rules, sticky navigation, Simulated Demos separation, and responsive desktop/mobile behavior.
+
+
+## v1.3.29 — Milestones Approved Tracker System Rollout
+- Preserved the approved Milestone + Reward + Progress + unlabeled claim/status structure.
+- Removed redundant milestone status copy, Reward labels, Progress notes, and all claim-area iconography.
+- Added the baseball-diamond Progress treatment across Standard, Consistency, Ladder, and Community milestone categories while preserving each category's existing metric and reward data.
+- Applied full-color unlocked/active states and cohesive desaturated locked states across each milestone row.
+- Added a restrained glowing UNCLAIMED treatment for achieved rewards and a muted LOCKED treatment for unavailable rewards; Prize Pack claiming remains intentionally unimplemented pending approval of that workflow.
+- Preserved existing manager progress logic, season phase logic, milestone data, Rules, Team Builder, Cards, and unrelated functionality.
+- Added responsive desktop, condensed desktop, tablet, and mobile layouts for the new tracker system.
+
+
+## v1.3.30 — Milestones Mockup-Faithful Layout Rebuild
+
+- Rebuilt only the Milestones presentation layer using the approved tracker mockup as the desktop visual source of truth.
+- Preserved all existing milestone data, manager tracking, category logic, phase logic, rewards, and progress calculations.
+- Replaced the inherited legacy row proportions with one shared four-zone grid for **Milestone | Reward | Progress | unlabeled Claim/Status**.
+- Added a real aligned header grid so column headings and row content use the same layout definition.
+- Rebuilt Progress as one integrated component containing the approved baseball diamond, exact progress values, progress meter, and remaining amount.
+- Completed milestones now visually report the milestone threshold as complete (for example 10 / 10) instead of showing overall season GP as 46 / 10.
+- Preserved the glowing **UNCLAIMED** treatment and simplified unlabeled Claim/Status area; no Prize Pack or claim backend was added.
+- Locked/future milestones remain cohesively desaturated while unlocked milestones remain full color.
+- Added deliberate condensed-desktop, tablet, and mobile layouts rather than squeezing the desktop grid.
+- No Rules, Cards, Team Builder, Standings, ownership, Season Eligible, or gameplay logic changes.
+
+## v1.3.31 — Milestones Compact Targeted Refinements
+- Reduced the Milestones tracker vertical footprint through tighter row heights, padding, plaque sizing, and internal spacing while preserving readability and the approved visual system.
+- Removed the redundant `/ target` value from inside the Progress diamond while retaining exact progress elsewhere in the Progress treatment.
+- Refined the milestone plaque treatment toward the approved compact framed milestone artwork without changing milestone data or tracking behavior.
+
+## v1.3.32 — Milestones Simplification + Active Row Consolidation
+- Removed the Milestones W/L/GP summary from the hero because wins/losses do not affect milestone rewards and games played is already represented by milestone progress.
+- Simplified phase cards by removing phase-state/moon-style seals and the Completed / Now Playing / On Deck labels; active phase glow remains the visual state indicator.
+- Removed the check/status glyph from inside each Progress diamond and centered the progress number vertically and horizontally.
+- Changed the current active achievement into one cohesive blue row treatment, including milestone rail/plaque, Progress, and Claim/Status surfaces, while preserving the existing active glow.
+- Consolidated Reward information into the Progress component and removed the standalone Reward content column from milestone rows.
+- Removed the redundant exact-progress sentence from the Progress copy; the Progress visual carries the numeric state while the supporting copy now communicates the actual reward.
+- Preserved all milestone thresholds, rewards, manager-specific tracking logic, category logic, claim states, and responsive behavior.
+
+
+## v1.3.33 — Milestones Left-Side Visual Hierarchy
+- Preserved the approved milestone plaque, earned-star treatment, baseball diamond, row-state colors, reward text, progress bar, and claim states.
+- Clarified the visual jobs: the plaque communicates the milestone target; the diamond communicates achievement/current position/locked state.
+- Completed milestone diamonds now use a gold achievement/trophy-style symbol instead of repeating the target number.
+- The active milestone diamond continues to show the manager's current progress number.
+- Future/locked milestone diamonds now use a muted lock-state symbol instead of repeating progress information.
+- Simplified the far-left progression rail into small state-colored journey nodes, removing redundant checkmarks and sequence numbers while preserving the season-progression line.
+- Added responsive sizing for the refined rail and diamond state symbols.
+## v1.3.34 — Milestones Compact Header + Right-Side Diamond
+- Aggressively reduced the Milestones hero/context, phase selector, category navigation, and Next Achievement vertical footprint without changing milestone data or tracking logic.
+- Moved the baseball diamond to the far-right edge of each milestone progress treatment.
+- Removed the dedicated large Claim/Locked column and integrated claim availability into a compact inline state within the progress/reward area.
+- Preserved the glowing UNCLAIMED cue, locked state, milestone plaques, progress bars, active blue row treatment, rewards, and responsive behavior.
+- Mobile layout keeps the same information hierarchy without restoring the removed claim column.
+

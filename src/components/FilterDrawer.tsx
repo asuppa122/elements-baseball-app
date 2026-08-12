@@ -51,6 +51,8 @@ type Props = {
   onDefensePositionChange: (value: DefensePosition) => void
   defenseRating: string
   onDefenseRatingChange: (value: string) => void
+  defenseOperator: AttributeOperator
+  onDefenseOperatorChange: (value: AttributeOperator) => void
   sortField: SortField
   onSortFieldChange: (value: SortField) => void
   sortDirection: SortDirection
@@ -463,12 +465,26 @@ export default function FilterDrawer(props: Props) {
                   ))}
               </select>
             </label>
+            <label className="defense-operator-field">
+              <span>Operator</span>
+              <select
+                value={props.defenseOperator}
+                onChange={(event) =>
+                  props.onDefenseOperatorChange(event.target.value as AttributeOperator)
+                }
+                aria-label="Defense comparison operator"
+              >
+                {operators.map(([value, label]) => (
+                  <option key={value} value={value}>{label}</option>
+                ))}
+              </select>
+            </label>
             <label>
               <span>DEF</span>
               <input
                 value={props.defenseRating}
                 onChange={(event) => props.onDefenseRatingChange(event.target.value)}
-                placeholder="e.g. 2"
+                placeholder="e.g. 6"
                 inputMode="numeric"
               />
             </label>
