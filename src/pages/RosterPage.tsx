@@ -244,13 +244,6 @@ function SidebarIcon({ section }: { section: Section }) {
   )
 }
 
-const TWO_WAY_NAMES = new Set([
-  'earl gurley',
-  'martin dihigo',
-  'martín dihigo',
-  'shohei ohtani',
-])
-
 const DEFENSE: Slot[] = [
   {
     id: 'defense-c',
@@ -371,23 +364,51 @@ function isPublished(card: CardRecord) {
     card.hitter_points >= 0
 }
 
+function hasChartValue(value: string | null) {
+  if (value === null) return false
+  const normalized = value.trim()
+  return normalized.length > 0 && normalized !== '--' && normalized !== '-'
+}
+
+function hasHittingSide(card: CardRecord) {
+  const hasHitterChart = [
+    card.hitter_pu,
+    card.hitter_k,
+    card.hitter_gb,
+    card.hitter_fb,
+    card.hitter_bb,
+    card.hitter_1b,
+    card.hitter_1b_plus,
+    card.hitter_2b,
+    card.hitter_3b,
+    card.hitter_hr,
+  ].some(hasChartValue)
+
+  return card.hitter_on_base !== null && hasHitterChart
+}
+
 function hasPitchingSide(card: CardRecord) {
+  const hasPitcherChart = [
+    card.pitcher_pu,
+    card.pitcher_k,
+    card.pitcher_gb,
+    card.pitcher_fb,
+    card.pitcher_bb,
+    card.pitcher_1b,
+    card.pitcher_2b,
+    card.pitcher_3b,
+    card.pitcher_hr,
+  ].some(hasChartValue)
+
   return (
-    card.pitcher_control !== null ||
-    card.pitcher_ip !== null
+    card.pitcher_control !== null &&
+    card.pitcher_ip !== null &&
+    hasPitcherChart
   )
 }
 
 function isTrueTwoWay(card: CardRecord) {
-  return (
-    hasPitchingSide(card) &&
-    card.hitter_on_base !== null &&
-    TWO_WAY_NAMES.has(
-      card.player_name
-        .trim()
-        .toLowerCase(),
-    )
-  )
+  return hasHittingSide(card) && hasPitchingSide(card)
 }
 
 function isPrimaryPitcher(card: CardRecord) {
@@ -844,12 +865,36 @@ function RosterPage() {
             return false
           }
         } else if (
-          selectedSlot.id !==
-            'defense-p' &&
+          selectedSlot.id !== 'defense-p' &&
           usedCardKeys.has(card.card_key) &&
           existing !== card.card_key
         ) {
-          return false
+          // True two-way cards are one roster member with multiple legal roles.
+          // Allow the same card to appear once in a hitting/fielding role and once
+          // in a pitching role without creating a second player or charging points twice.
+          if (!isTrueTwoWay(card)) {
+            return false
+          }
+
+          const targetIsPitching =
+            selectedSlot.section === 'rotation' ||
+            selectedSlot.section === 'bullpen'
+
+          const sameRoleAlreadyAssigned = ALL_SLOTS.some((slot) => {
+            if (slot.id === selectedSlot.id || assigned[slot.id] !== card.card_key) {
+              return false
+            }
+
+            const slotIsPitching =
+              slot.section === 'rotation' ||
+              slot.section === 'bullpen'
+
+            return targetIsPitching === slotIsPitching
+          })
+
+          if (sameRoleAlreadyAssigned) {
+            return false
+          }
         }
 
         if (
@@ -1128,16 +1173,6 @@ function RosterPage() {
     bullpen: countFilled(BULLPEN),
   }
 
-  const sharedReserveCount =
-    counts.bench + counts.bullpen
-
-  const sharedReserveMaximum =
-    Math.max(
-      0,
-      playerLimit -
-        requiredDefenseSlots.length -
-        ROTATION.length,
-    )
 
   function getDefenseRating(
     slotId: string,
@@ -1430,29 +1465,9 @@ function RosterPage() {
         ? 1
         : 0)
 
-    const reserveSlot =
-      selectedSlot.section === 'bench' ||
-      selectedSlot.section === 'bullpen'
-
-    const replacingReserveCard =
-      Boolean(existingCard)
-
-    const projectedReserveCount =
-      sharedReserveCount +
-      (reserveSlot &&
-      !replacingReserveCard
-        ? 1
-        : 0)
-
-    if (
-      projectedReserveCount >
-      sharedReserveMaximum
-    ) {
-      setMessage(
-        `Bench and bullpen share ${sharedReserveMaximum} roster spots`,
-      )
-      return
-    }
+    // Do not cap bench/bullpen by occupied UI slots. The real roster limit is
+    // based on unique roster members, so a true two-way player may legally
+    // occupy both a hitting/fielding assignment and a pitching assignment.
 
     if (
       projectedPitchers >
@@ -1709,6 +1724,16 @@ function RosterPage() {
     const hasPitchingChart =
       card?.pitcher_control !== null &&
       card?.pitcher_control !== undefined
+    const isPitchingAssignment =
+      slot.section === 'rotation' || slot.section === 'bullpen'
+    const isTwoWaySecondaryAssignment = Boolean(
+      card &&
+      isPitchingAssignment &&
+      ALL_SLOTS.some((candidate) => {
+        if (candidate.id === slot.id || assigned[candidate.id] !== card.card_key) return false
+        return candidate.section !== 'rotation' && candidate.section !== 'bullpen'
+      }),
+    )
 
     return (
       <div
@@ -1877,10 +1902,13 @@ function RosterPage() {
                 </span>
               </span>
 
-              <span className="roster-player-points">
-                {getPoints(
-                  card,
-                ).toLocaleString()}
+              <span
+                className={`roster-player-points${isTwoWaySecondaryAssignment ? ' roster-player-points--counted' : ''}`}
+                title={isTwoWaySecondaryAssignment ? `${getPoints(card).toLocaleString()} points counted with the hitter/fielding assignment` : undefined}
+              >
+                {isTwoWaySecondaryAssignment
+                  ? '2-WAY'
+                  : getPoints(card).toLocaleString()}
               </span>
             </>
           ) : (

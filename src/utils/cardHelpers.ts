@@ -1,6 +1,7 @@
 import type {
   CardRow,
 } from '../types/card'
+import { ACTIVE_SEASON_CONFIG } from '../gameplay/seasonConfig'
 
 function getGoogleDriveFileId(
   url: string,
@@ -162,7 +163,7 @@ export function getCardYear(
 }
 
 
-export const CURRENT_ELEMENTS_SEASON_YEAR = 1925
+export const CURRENT_ELEMENTS_SEASON_YEAR = ACTIVE_SEASON_CONFIG.mlbYear
 
 const ELEMENTS_MANAGER_NAMES = new Set([
   'anthony',

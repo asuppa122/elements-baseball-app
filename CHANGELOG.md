@@ -1,3 +1,89 @@
+## v1.3.70 — Certification invariant trace instrumentation
+- Adds a rolling state-transition trace only to failed Complete-Game Certification simulations.
+- Captures inning/half, outs, batting-order cursor, batter card key, all three base identities/card keys, status/waiting state, and pending decision around the final transitions before an invariant failure.
+- Does not change gameplay resolution, Rulebook logic, substitution behavior, batting-order advancement, or validation rules.
+- Intended to isolate the remaining rare current-batter/active-baserunner corruption from deterministic seeds before making a gameplay fix.
+
+## v1.3.68 — Certification runner identity correction
+- Replaced broad batting-order substitution mapping with one-slot substitution and duplicate-active-player guards.
+- Added certification invariants for duplicate batting-order identities and a current batter already occupying a base.
+- Corrected inning-ending pre-pitch stolen-base outs so they end the half without advancing the batting-order cursor for a PA that never occurred.
+- Keeps zero-bypass certification and all deterministic scenario matrices intact.
+
+## v1.3.61 — Update 1 compile correction
+
+## v1.3.63 — Update 2 DBP equality scenario correction
+- Corrected the deterministic Standard DBP equality scenario so both fielding checks are true equality cases.
+- Gameplay resolver unchanged: ordinary fielding checks are outs only when the fielding total is greater than BsR; equality remains safe.
+
+- Removed an unused `tagUpRtsThreshold` import from `decisionEngine.ts` so the production TypeScript build passes with `noUnusedLocals`.
+- No gameplay or Rulebook behavior changed from v1.3.60.
+
+
+## v1.3.58 — Non-GB stress-test correction
+- Applies Rulebook chartless defaults at the engine level: missing hitter On Base uses OB 5/default hitter chart; missing pitcher Control uses Control -5/default pitcher chart.
+- Chartless handedness inherits the populated side of the card (Bats -> pitching arm; Arm -> batting side).
+- Rules Bot now resumes and resolves valid `SWING_ROLL` handoffs returned by manager-decision branches.
+- Manual pitch UI/logging now displays effective default OB/Control values instead of blanks.
+
+## v1.3.57 — Build 2 Non-GB Decision Engine
+
+- Completed the non-ground-ball decision framework for the private Gameplay Lab.
+- Added pre-pitch manager actions for natural steals, intentional walks, sacrifice bunts, squeeze bunts, infield-in, pinch hitters, pinch runners, defensive substitutions, pitching changes, and no-DH double switches.
+- Added mandatory 1B+ catcher-check resolution and natural-steal catcher/full-infield checks, including the one-attempt rule, negative-catcher exception, simultaneous steals, steal-home +15, and second-steal-of-home branch.
+- Added sacrifice-bunt wheel-play and standard tables plus squeeze-bunt resolution.
+- Corrected the two-out extra-base throw-home path so RTS is skipped entirely rather than rolled and ignored.
+- Added locked Card Attributes / Default Attributes selection for replacement entries and default-pitcher chart/control support.
+- Added infield-in pre-pitch declaration; non-GB PU/FB conversion is active while GB-specific infield-in outcomes remain intentionally reserved for the GB engine.
+- Extended the Rules Bot so it can initiate and stress non-GB pre-pitch manager actions while Ground Ball Resolution remains the only major recurring development bypass.
+
+# v1.3.56 — Build 2 Rules Bot / Decision Stress Test
+
+- Adds a private, local-only 100-game Rules Bot stress test.
+- Uses real Build 2 legal choices, Confirm transitions, RTS rolls, OF selection rotation and fielding resolver paths for implemented manager decisions.
+- Counts unfinished Rulebook branches separately as development bypasses so later decision paths remain reachable during stress testing.
+- Adds seeded failure reproduction and auditable RTS / outfield fielding math logs.
+- Does not add a public game simulation feature and never writes bot simulations to Supabase.
+
+## v1.3.54 — Build 2 Rulebook Resolver Compile Fix
+
+- Fixed the v1.3.53 production TypeScript build errors without changing the approved Rulebook behavior.
+- Removed an unused decision-selection import.
+- Persist Rulebook d20 resolver actions through the existing `DECISION_RESOLVED` event contract with `resolutionKind: ROLL`, avoiding an unnecessary database migration/event-type fork.
+- Corrected decision rendering so roll-only gateways render their Roll action directly instead of entering the selectable-option branch.
+
+## v1.3.53 — Build 2 Rulebook Resolver
+- Removed the redundant Review step: gameplay choices now use Select → Confirm → Next Action.
+- Added authoritative d20 RTS resolution for optional extra bases and tag-ups.
+- Added defensive throw-target and eligible outfielder selection, persisted LF/CF/RF usage rotation, and outfield fielding checks.
+- Added the approved 1B → 2B tag-up rule: RTS 1-15 fails, 16+ continues, with +10 to the selected OF fielding check.
+- Preserved base-path legality and authoritative persisted decision transitions.
+
+# v1.3.52 — Build 2 Decision Engine Foundation
+
+- Added shared manager-decision engine instead of page-specific decision buttons.
+- Added Select → Review → Confirm → Locked interaction contract.
+- Confirmed decisions persist as authoritative DECISION_RESOLVED events.
+- Added multi-runner selection for optional extra-base and tag-up attempts.
+- Enforced base-path legality in offered extra-base choices.
+- Added defensive throw-target state for extra-base attempts.
+- Added tag-up RTS handoff state matching the approved offense-selection → RTS sequence.
+- Preserved Build 1 test harness behavior and existing game-state persistence.
+- Left unresolved Rulebook roll/fielding resolvers explicit rather than inventing outcomes.
+
+# v1.3.39 — Team Builder Automatic Two-Way Card Detection
+
+- Replaced the manual two-way player-name allowlist with card-data detection.
+- A card is now considered two-way only when it has both a usable hitter side (On Base + hitter chart result data) and a usable pitcher side (Control + IP + pitcher chart result data).
+- Two-way cards may occupy one hitting/fielding assignment and one pitching assignment while counting once toward roster size and points.
+- Fixes 1925 Harry Kenyon being incorrectly locked out of pitching assignments and automatically supports future two-way cards without name-specific code.
+
+## v1.3.38 — Team Builder Two-Way Roster Fix
+- True two-way cards can occupy one hitting/fielding role and one pitching role while counting once toward roster size and points.
+- Added Luther Farrell to the recognized two-way player set.
+- Removed the slot-based Bench + Bullpen cap that incorrectly blocked P5/P6; the unique-player roster limit remains authoritative.
+- Preserves existing Team Builder assignments and gameplay Phase 1A groundwork.
+
 
 ## v1.3.35 — Diamond state surface + reward groundwork
 
@@ -1559,3 +1645,118 @@ No other Home tile artwork or application functionality was intentionally change
 - Preserved the glowing UNCLAIMED cue, locked state, milestone plaques, progress bars, active blue row treatment, rewards, and responsive behavior.
 - Mobile layout keeps the same information hierarchy without restoring the removed claim column.
 
+
+## v1.3.36 — Gameplay Phase 1 Engine Foundation
+- Added the first centralized Active Season gameplay configuration. Season 10.1 now has one reusable engine blueprint: 1925 rule year, 18-player roster, 4,000-point cap, DH off, Season Eligible required, and MLB timeline rules derived from the configured year.
+- Centralized the existing 1925 card/season constant on the new Active Season configuration without changing current Cards or Team Builder behavior.
+- Added core gameplay TypeScript state/types for shared PvP games, pregame manager state, frozen roster/card snapshots, inning/score/bases, plate-appearance state, pending decisions, pause/resume state, event types, and the RC1–RC5 rule-condition taxonomy.
+- Formalized RC5 as **Conditional Game State**: rules activated by the current state plus the event that just occurred (for example GB/DBP opportunities, RTS, fatigue thresholds, inning transitions, and game-ending conditions).
+- Added saved-roster eligibility validation and immutable game-roster snapshot creation so future Games can reuse Team Builder without allowing later Team Builder edits to alter an ongoing game.
+- Added game-only pregame selection state for starting pitchers and default-batter declarations; pregame selections become locked once submitted.
+- Added pure engine lifecycle helpers for create → pregame → ready → start, state-version checks, and foundational pause/resume that preserves the exact status to resume later.
+- Added in-app d20 providers: production random rolls plus an intentionally hidden queued deterministic provider for scenario/regression testing.
+- Added a Supabase Phase 1 migration defining participant-only `games` and append-only `game_events` foundations. Direct gameplay updates are intentionally withheld until Phase 2 version-checked RPCs are added.
+- Added `src/gameplay/README.md` documenting the engine/source-of-truth rules and Phase 1 acceptance target.
+- No public Games UI or gameplay route was activated in this update; `/play` and `/games` remain Coming Soon while the engine foundation is tested.
+
+## v1.3.37 — Gameplay Phase 1A Private Create Game
+- Adds a database-enforced private gameplay tester allowlist; the unreleased lab is not available to ordinary managers.
+- Adds `/games/lab` as an unlinked private development route.
+- Lists claimed managers as test opponents without granting them access to the prototype.
+- Reuses existing saved Team Builder rosters and validates them against the centralized Season 10.1 configuration.
+- Shows exact roster eligibility/ineligibility reasons before game creation.
+- Freezes the selected eligible roster into the game record instead of depending on a mutable Team Builder roster.
+- Creates the first persistent private Supabase game record and reloads saved lab games after refresh.
+- Does not yet expose opponent roster selection, starting-pitcher/default-batter setup, pregame locking, gameplay rolls, or the visual game board.
+
+## v1.3.38 — Team Builder Two-Way Roster Fix
+- Changed roster-size and point-cap enforcement to count unique cards rather than occupied role slots.
+- Allows a true two-way card to occupy one hitting/fielding assignment and one pitching assignment without charging its points or roster count twice.
+- Removed the incorrect Bench/Bullpen occupied-slot cap that could block legal P5/P6 assignments.
+- Added Luther Farrell to the temporary two-way recognition path while the generalized detector was being validated.
+
+## v1.3.39 — Automatic Two-Way Card Detection
+- Replaced player-name-based two-way recognition with card-data detection.
+- A card qualifies for two-way use only when it contains both a usable hitter side and a usable pitcher side.
+- Preserves one unique roster member / one point charge while allowing one hitting/fielding role plus one pitching role across 18/4000, 25/5500, and 26/6000 roster constructions.
+- Prevents ordinary one-way cards from using the cross-role exception.
+
+## v1.3.40 — Gameplay Phase 1B Pregame + Two-Way Point Clarity
+- Keeps the actual point total on the hitting/fielding assignment for a two-way player and changes the duplicate pitching-side display to `2-WAY`, clarifying that the card is not being charged twice.
+- Makes persisted private Gameplay Lab records openable into a game-specific Pregame screen.
+- Displays the frozen Team Builder roster snapshot used by the saved game rather than reading a mutable live roster.
+- Adds starting-pitcher selection from the frozen starting rotation.
+- Adds game-only Default Batter declarations for hitter-capable starters, preserving the underlying Team Builder roster.
+- Adds separate Save Selections and Lock My Pregame actions; locked pregame choices become read-only.
+- Adds expected-state-version protected private lab persistence plus append-only pregame events in Supabase.
+- Keeps the opponent side pending/unavailable in this private one-tester slice; no gameplay board, dice, or public Games access is enabled yet.
+
+## v1.3.41 - Gameplay Phase 1C Pregame Game Lineup
+- Adds game-specific batting order and defensive alignment to persisted pregame state.
+- Saved Team Builder roster remains frozen/source data; game order/alignment can change without editing it.
+- No-DH games require the selected starting pitcher in the nine-player batting order.
+- Starting pitcher becomes the game P assignment; two-way identity remains one frozen card.
+- Pregame lock now requires a valid game batting order and defensive alignment.
+
+## v1.3.43 — Universal Defensive Assignment Rule
+- Makes every frozen-roster card selectable at C, 1B, 2B, 3B, SS, LF, CF, and RF during game-specific pregame alignment.
+- Uses the card's printed fielding rating when that position is listed; unlisted non-pitching positions are legal at -10.
+- Keeps P restricted to cards with a valid pitcher chart and DH restricted to cards with a valid hitter side.
+- Shows the effective fielding rating beside each defender option in the pregame dropdown.
+- Prevents one player from occupying two defensive positions simultaneously.
+- Validates that the batting order and defensive starters represent the same nine players (with the DH/P distinction handled by active-season DH rules).
+- Centralizes the rule in `src/gameplay/defense.ts` so pregame and future in-game substitutions can share the same defensive-assignment logic.
+
+## v1.3.48 — Card source integrity fix
+- Replaces the Google Visualization JSON card source with the live CARDS worksheet CSV export.
+- Preserves chart cells as strings so single values such as `1` are not dropped in mixed-type columns.
+- Adds `npm run audit:cards`, which validates every populated hitter/pitcher chart for exactly one result on each roll 1-20 and never writes to Supabase.
+- `npm run import:cards` now runs the same chart validation first and refuses to modify Supabase if any populated chart is malformed.
+
+
+## v1.3.51 — Build 1 Closing Cleanup
+- Prevents Supabase token refreshes/background-tab reactivation from replacing the authenticated app with the full-screen loading gate.
+- Keeps route/UI mounted while auth refreshes in the background; authoritative game state remains Supabase-backed.
+- Persists/restores per-route scroll position through page lifecycle events without triggering visibility/focus refetches.
+- Adds final developer-harness invariant checks for completion, legal final score/inning, outs, duplicate runners, lineup cursors, resolved final state, and post-completion PA safety.
+- Keeps all Build 2 manager-decision test policies explicitly development-only.
+
+## v1.3.55 — Build 2 Manual Testing Continuity
+- Adds a development-only `Resolve Pending Rule for Test` action for unresolved Rulebook branches so manual Build 2 testing can continue in the same persisted game instead of requiring a restart.
+- The bypass uses the existing explicit Build 1 development policy, persists the resulting state through the normal version-checked Supabase save path, and records `developmentOnly: true` / `DEVELOPMENT_TEST_BYPASS` in the game-event payload.
+- Implemented Build 2 decision branches are not bypassed; the escape hatch is shown only when the current resolver reports an unfinished informational branch.
+- Replaces the text-only BASES status with a responsive live baseball diamond driven directly from authoritative `state.bases`.
+- Occupied bases are highlighted and show the runner name; hover/accessibility text exposes runner BSR/SB without changing game state or persistence.
+
+## v1.3.60 — Update 1: Scenario Runner + Non-GB Rulebook Validation
+- Added a private deterministic Non-GB Scenario Runner that forces gameplay states/rolls and uses production decision resolvers.
+- Added shared Rulebook assertion helpers so production gameplay and deterministic tests use the same natural-roll, BsR-modifier, tag-up, RTS, and catcher-check math.
+- Explicitly separated hit extra-base BsR modifiers from tag-up math.
+- Encoded the 1B→3B hit-advancement exception, two-out +3, qualifying hit +3, and 1B→2B tag +10 OF modifier.
+- Added deterministic coverage for core chart outcomes, extra bases, tag ups, steals, 1B+, bunts, squeeze, intentional walks, INF IN declaration, substitutions, entry attributes, OF rotation, and negative-action checks.
+- Ground Ball / Force / DBP remains intentionally deferred to Update 2.
+
+## 1.3.65 — Update 4 Game/Season/Regression Matrix
+- Added deterministic game-state boundary validation for inning transitions, regulation endings, ties/extras and walk-offs.
+- Added third-out run-counting assertions separating force/batter-runner outs from completed non-force advancement.
+- Added MLB timeline boundary checks for 1925, 2020 roster-era baseline, and 2023 automatic extra-inning runner.
+- Added multi-mechanic regression checks spanning BsR modifiers, fielding equality/natural overrides, GB checks, fatigue stacking and season configuration.
+- Preserved all prior Non-GB, GB/Force/DBP and Fatigue/Pitching matrices as cumulative regression gates.
+
+## v1.3.72 — Basic Playable Game Shell
+- Replaced the authenticated `/games` Coming Soon route with a private Games hub for allowlisted gameplay testers.
+- Added active-season roster readiness reporting; an active lineup is separately validated against Season 10.1 before being considered gameplay-ready.
+- Added `list_gameplay_active_rosters()` as a private gameplay-lab RPC without changing normal lineup RLS.
+- Added a basic retro/console playable shell at `/games/lab/:gameId/play` using the certified engine's real pitch, swing, pre-pitch action, manager-decision, confirm, and d20 roll resolvers.
+- Kept the developer Gameplay Lab and certification tools intact and separate.
+- New-game creation remains disabled until a real opponent active roster validates; existing lab fixtures can be used to test the shell meanwhile.
+
+## v1.3.72 — Basic Playable Game Shell
+
+- Replaced the authenticated `/games` Coming Soon route with a private Games hub for allowlisted gameplay testers.
+- Added active-season roster readiness reporting. An active lineup is now separately validated against Season 10.1 (18 players, 4,000-point cap, DH off, Season Eligible cards) before it can be considered gameplay-ready.
+- Added `list_gameplay_active_rosters()` as a private gameplay-lab RPC. Existing lineup RLS remains unchanged; only allowlisted gameplay testers can call the helper.
+- Added an intentionally basic retro/console playable shell at `/games/lab/:gameId/play` using the certified engine's real pitch, swing, pre-pitch action, manager-decision, confirm, and d20 roll resolvers.
+- Kept the developer Gameplay Lab and all certification tools intact and separate from the playable shell.
+- Added a direct "Open Playable Shell" path from the existing developer game-state screen.
+- New-game creation remains intentionally disabled until a real opponent active roster validates for Season 10.1; existing lab fixtures can be used to test the shell in the meantime.

@@ -3,6 +3,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from 'react'
@@ -67,14 +68,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<ManagerProfile | null>(null)
   const [loading, setLoading] = useState(true)
   const [profileLoading, setProfileLoading] = useState(false)
+  const profileRef = useRef<ManagerProfile | null>(null)
 
-  async function loadProfile(nextSession: Session | null) {
+  async function loadProfile(nextSession: Session | null, options: { blocking?: boolean } = {}) {
+    const blocking = options.blocking ?? false
     if (!nextSession?.user) {
+      profileRef.current = null
       setProfile(null)
+      setProfileLoading(false)
       return
     }
 
-    setProfileLoading(true)
+    if (blocking) setProfileLoading(true)
     const { data, error } = await supabase
       .from('profiles')
       .select(
@@ -85,11 +90,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     if (error) {
       console.error('Could not load manager profile:', error)
+      profileRef.current = null
       setProfile(null)
     } else {
-      setProfile((data as ManagerProfile | null) ?? null)
+      const nextProfile = (data as ManagerProfile | null) ?? null
+      profileRef.current = nextProfile
+      setProfile(nextProfile)
     }
-    setProfileLoading(false)
+    if (blocking) setProfileLoading(false)
   }
 
   useEffect(() => {
@@ -98,15 +106,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     void supabase.auth.getSession().then(({ data }) => {
       if (!mounted) return
       setSession(data.session)
-      void loadProfile(data.session).finally(() => {
+      void loadProfile(data.session, { blocking: true }).finally(() => {
         if (mounted) setLoading(false)
       })
     })
 
     const { data: subscription } = supabase.auth.onAuthStateChange(
-      (_event, nextSession) => {
+      (event, nextSession) => {
         setSession(nextSession)
-        void loadProfile(nextSession)
+
+        if (!nextSession?.user) {
+          profileRef.current = null
+          setProfile(null)
+          setProfileLoading(false)
+          setLoading(false)
+          return
+        }
+
+        // Supabase can refresh auth tokens when a background tab becomes active.
+        // That is not a reason to tear down the authenticated app or show the
+        // full-screen loading gate again. Keep the existing manager profile and
+        // authoritative page/game state mounted during TOKEN_REFRESHED events.
+        if (event === 'TOKEN_REFRESHED' && profileRef.current?.user_id === nextSession.user.id) {
+          setLoading(false)
+          return
+        }
+
+        const needsBlockingProfile = profileRef.current?.user_id !== nextSession.user.id
+        void loadProfile(nextSession, { blocking: needsBlockingProfile })
         setLoading(false)
       },
     )
@@ -118,7 +145,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   async function refreshProfile() {
-    await loadProfile(session)
+    await loadProfile(session, { blocking: false })
   }
 
   async function signInWithDiscord() {

@@ -6,12 +6,12 @@ import type {
 } from '../types/card'
 import { CARD_COLUMNS } from '../types/card'
 import {
-  CURRENT_ELEMENTS_SEASON_YEAR,
   normalizeImageUrl,
 } from '../utils/cardHelpers'
+import { ACTIVE_SEASON_CONFIG } from '../gameplay/seasonConfig'
 
 const DATABASE_BATCH_SIZE = 1000
-export const ACTIVE_SEASON = CURRENT_ELEMENTS_SEASON_YEAR
+export const ACTIVE_SEASON = ACTIVE_SEASON_CONFIG.mlbYear
 
 async function loadAllCardRows(): Promise<CardRow[]> {
   const rows: CardRow[] = []

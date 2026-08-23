@@ -11,6 +11,33 @@ export default function AppShell({ children }: { children: ReactNode }) {
   const [profileOpen, setProfileOpen] = useState(false)
   const profileMenuRef = useRef<HTMLDivElement | null>(null)
 
+
+  useEffect(() => {
+    const storageKey = `elements:scroll:${location.pathname}${location.search}`
+    const saved = sessionStorage.getItem(storageKey)
+    if (saved !== null) {
+      const y = Number(saved)
+      if (Number.isFinite(y)) requestAnimationFrame(() => window.scrollTo({ top: y, left: 0 }))
+    }
+
+    const remember = () => {
+      sessionStorage.setItem(storageKey, String(window.scrollY))
+    }
+
+    // pagehide covers real reload/navigation/tab discard. visibilitychange is
+    // intentionally save-only: becoming visible never triggers a reload/refetch.
+    const onVisibility = () => {
+      if (document.visibilityState === 'hidden') remember()
+    }
+    window.addEventListener('pagehide', remember)
+    document.addEventListener('visibilitychange', onVisibility)
+    return () => {
+      remember()
+      window.removeEventListener('pagehide', remember)
+      document.removeEventListener('visibilitychange', onVisibility)
+    }
+  }, [location.pathname, location.search])
+
   useEffect(() => {
     if (!profileOpen) return
     const close = (event: MouseEvent) => {

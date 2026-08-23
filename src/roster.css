@@ -395,6 +395,13 @@
   text-align: right;
 }
 
+.roster-player-points--counted {
+  color: rgba(242, 234, 216, 0.48);
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
 .remove-roster-card {
   position: absolute;
   top: 50%;
