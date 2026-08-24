@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useAuth } from '../auth/AuthContext'
 import { ALL_TIME_STANDINGS, CURRENT_STANDINGS, type StandingRow } from '../data/standings'
 
@@ -42,6 +42,24 @@ export default function StandingsPage() {
   const { profile } = useAuth()
   const sourceRows = view === 'current' ? CURRENT_STANDINGS : ALL_TIME_STANDINGS
 
+  // All 11 columns are real <td> data — nothing is dropped at narrow widths.
+  // The table scrolls horizontally (.standings-table-scroll already has
+  // overflow:auto and the table has min-width:980px), but with no visual
+  // signal that there's more to the right, mobile managers had no way to
+  // discover Win%/RS/RA/RS-G/RA-G/RD/RD% existed at all. This tracks scroll
+  // position so a fade + hint can show/hide instead of leaving that silent.
+  const tableScrollRef = useRef<HTMLDivElement>(null)
+  const [scrollEdges, setScrollEdges] = useState({ left: false, right: false })
+
+  function updateScrollEdges(el: HTMLDivElement | null) {
+    if (!el) return
+    const maxScrollLeft = el.scrollWidth - el.clientWidth
+    setScrollEdges({
+      left: el.scrollLeft > 4,
+      right: el.scrollLeft < maxScrollLeft - 4,
+    })
+  }
+
   const rows = useMemo(() => {
     return sourceRows
       .map((row, sourceIndex) => ({ row, sourceIndex }))
@@ -59,6 +77,25 @@ export default function StandingsPage() {
       })
       .map(({row}) => row)
   }, [sourceRows, sort])
+
+  useEffect(() => {
+    const el = tableScrollRef.current
+    if (!el) return
+    el.scrollLeft = 0
+    updateScrollEdges(el)
+  }, [view])
+
+  // Re-check on resize (window resize, orientation change, sidebar toggle,
+  // etc.) — without this, resizing from mobile to a width where the table
+  // already fits leaves the "Scroll for..." hint stuck on from the last
+  // scroll/view-change check instead of correctly disappearing.
+  useEffect(() => {
+    const el = tableScrollRef.current
+    if (!el || typeof ResizeObserver === 'undefined') return
+    const observer = new ResizeObserver(() => updateScrollEdges(el))
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
 
   function toggleSort(key: SortKey) {
     setSort(current => {
@@ -102,8 +139,19 @@ export default function StandingsPage() {
       <button className={view==='allTime'?'active':''} onClick={()=>setView('allTime')}><strong>All-Time Standings</strong></button>
     </nav>
 
-    <section className="standings-table-panel">
-      <div className="standings-table-scroll">
+    <section
+      className={`standings-table-panel${scrollEdges.left ? ' can-scroll-left' : ''}${scrollEdges.right ? ' can-scroll-right' : ''}`}
+    >
+      {scrollEdges.right && (
+        <p className="standings-scroll-hint" aria-hidden="true">
+          Scroll for Win %, RS, RA, RS/G, RA/G, RD, RD% <span>→</span>
+        </p>
+      )}
+      <div
+        className="standings-table-scroll"
+        ref={tableScrollRef}
+        onScroll={(event) => updateScrollEdges(event.currentTarget)}
+      >
         <table className="standings-table">
           <thead><tr>
             <th>{sortHeader('Rank','rank')}</th>

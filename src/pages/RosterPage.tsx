@@ -2852,7 +2852,7 @@ function RosterPage() {
                           ? afterPlayers > playerLimit
                             ? 'Roster Limit Reached'
                             : 'Over Point Cap'
-                          : `Add to ${selectedSlot.label}`}
+                          : `Select for ${selectedSlot.label}`}
                       </span>
                     </div>
                   </button>

@@ -13913,3 +13913,336 @@ span {
     max-width: 108px !important;
   }
 }
+
+/* v1.3.73 — Active Roster Overview condensed-width point-value fit.
+   Keep the complete numeric / 2-WAY value visible and reserve its own column. */
+.roster-overview-grid .roster-player-points {
+  width: 48px !important;
+  min-width: 48px !important;
+  max-width: 48px !important;
+  white-space: nowrap !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+}
+.roster-overview-grid .overview-group-defense .roster-slot-main {
+  grid-template-columns: 30px 34px minmax(72px, 1fr) 48px !important;
+  padding-right: 38px !important;
+}
+.roster-overview-grid .overview-group-bench .roster-slot-main,
+.roster-overview-grid .overview-group-rotation .roster-slot-main,
+.roster-overview-grid .overview-group-bullpen .roster-slot-main {
+  grid-template-columns: 34px 12px 34px minmax(72px, 1fr) 48px !important;
+  padding-right: 38px !important;
+}
+@media (max-width: 1350px) {
+  .roster-overview-grid .roster-player-points { width: 44px !important; min-width: 44px !important; max-width: 44px !important; }
+}
+
+/* v1.3.73 — Active Roster Overview condensed-width point-value fit. */
+.roster-overview-grid .roster-player-points { width: 48px !important; min-width: 48px !important; max-width: 48px !important; white-space: nowrap !important; overflow: visible !important; text-overflow: clip !important; }
+.roster-overview-grid .overview-group-defense .roster-slot-main { grid-template-columns: 30px 34px minmax(72px, 1fr) 48px !important; padding-right: 38px !important; }
+.roster-overview-grid .overview-group-bench .roster-slot-main, .roster-overview-grid .overview-group-rotation .roster-slot-main, .roster-overview-grid .overview-group-bullpen .roster-slot-main { grid-template-columns: 34px 12px 34px minmax(72px, 1fr) 48px !important; padding-right: 38px !important; }
+
+/* =========================================================
+   v1.3.81 — TEAM BUILDER AUTOSAVE + MOBILE FIRST-CLASS PASS
+   Same capability/design intent on desktop and mobile; reflow, never shrink.
+   ========================================================= */
+
+.roster-autosave-status {
+  display: inline-flex;
+  min-width: 92px;
+  min-height: 34px;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 11px;
+  border: 1px solid rgba(107, 181, 119, .42);
+  border-radius: 8px;
+  background: rgba(28, 52, 34, .45);
+  color: #8fd49a;
+  font: inherit;
+  font-size: .73rem;
+  font-weight: 800;
+  letter-spacing: .06em;
+}
+.roster-autosave-status.saving { color: #e6c65c; border-color: rgba(216,173,45,.55); background: rgba(75,57,11,.32); }
+.roster-autosave-status.error { cursor: pointer; color: #ff9c91; border-color: rgba(210,77,65,.68); background: rgba(83,23,20,.42); }
+.roster-autosave-status.demo { color: #aaa59a; border-color: rgba(170,165,154,.28); background: rgba(30,30,30,.48); }
+
+.roster-mobile-confirm-bar { display: none; }
+
+/* Explicit mobile drawer ownership: the overlay scrolls, not the document behind it. */
+.roster-player-drawer {
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 760px) {
+  /* A phone gets a real one-column Team Builder, not a scaled desktop workspace. */
+  .roster-player-drawer {
+    position: fixed !important;
+    inset: 0 !important;
+    width: 100vw !important;
+    max-width: 100vw !important;
+    height: 100dvh !important;
+    max-height: 100dvh !important;
+    padding: 0 !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    overscroll-behavior: contain !important;
+    touch-action: pan-y !important;
+  }
+
+  .roster-drawer-sticky-controls {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 80 !important;
+    width: 100% !important;
+    padding: 10px 12px 8px !important;
+    background: rgba(12, 12, 11, .985) !important;
+    border-bottom: 1px solid rgba(216,173,45,.28) !important;
+  }
+
+  .roster-drawer-sticky-controls .roster-drawer-heading h2 {
+    font-size: 1.12rem !important;
+  }
+  .roster-drawer-sticky-controls .roster-drawer-heading button {
+    width: 44px !important;
+    height: 44px !important;
+  }
+  .roster-drawer-sticky-controls .roster-player-search input {
+    min-height: 44px !important;
+    height: 44px !important;
+    font-size: 1rem !important;
+  }
+  .roster-compact-toolbar,
+  .roster-drawer-sticky-controls .roster-sort-chip-row,
+  .tb-filter-sort-chip-row {
+    flex-wrap: wrap !important;
+  }
+  .roster-compact-toolbar .roster-sort-chip,
+  .roster-compact-toolbar .roster-expand-controls,
+  .tb-filter-sort-chip,
+  .tb-filter-expand-button {
+    min-height: 42px !important;
+    height: auto !important;
+    padding: 8px 11px !important;
+    font-size: .78rem !important;
+  }
+
+  /* Expanded filters own their own vertical space and stay touch-scrollable. */
+  .tb-filter-workspace,
+  .tb-filter-workspace-main {
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+  .tb-filter-fields-grid,
+  .roster-drawer-sticky-controls .roster-drawer-filter-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+  .tb-filter-fields-grid input,
+  .tb-filter-fields-grid select,
+  .tb-filter-clear-button,
+  .roster-drawer-sticky-controls .roster-drawer-filter-grid input,
+  .roster-drawer-sticky-controls .roster-drawer-filter-grid select {
+    min-height: 44px !important;
+    font-size: 1rem !important;
+  }
+
+  /* Comparison becomes a readable stacked stage. The selected card is never a thumbnail. */
+  .roster-picker-content.roster-picker-content-stacked,
+  .roster-picker-content-stacked {
+    display: block !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+    padding-bottom: 88px !important;
+  }
+  .roster-picker-content-stacked .roster-compare-strip,
+  .roster-compare-strip {
+    position: relative !important;
+    display: grid !important;
+    width: calc(100% - 20px) !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    margin: 10px !important;
+    padding: 12px !important;
+    grid-template-columns: minmax(0,1fr) minmax(0,1fr) !important;
+    gap: 12px !important;
+    box-shadow: none !important;
+  }
+  .roster-compare-side { gap: 7px !important; }
+  .roster-picker-content-stacked .roster-compare-card,
+  .roster-compare-card {
+    width: min(148px, 38vw) !important;
+    min-width: 108px !important;
+    max-width: 148px !important;
+  }
+  /* Compound selector matches the specificity of the unconditional
+     .roster-picker-content-stacked .roster-compare-shared-action rule
+     (roster.css ~10711) that was otherwise winning over this single-class
+     selector regardless of source order, keeping the old inline "Confirm
+     Swap" button visible alongside .roster-mobile-confirm-bar. */
+  .roster-picker-content-stacked .roster-compare-shared-action { display: none !important; }
+
+  .roster-replacement-browser,
+  .roster-picker-content-stacked .roster-replacement-browser {
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    padding: 0 10px 22px !important;
+    overflow: visible !important;
+  }
+  .roster-drawer-rules {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+  }
+  .roster-drawer-rules span {
+    min-height: 34px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    padding: 7px 10px !important;
+    font-size: .68rem !important;
+  }
+
+  /* One useful card per row: artwork + projection/action share the screen width. */
+  .roster-replacement-browser .roster-player-grid,
+  .roster-picker-content .roster-player-grid,
+  .roster-player-grid {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 12px !important;
+    width: 100% !important;
+  }
+  .roster-player-card {
+    display: grid !important;
+    grid-template-columns: minmax(132px, 44%) minmax(0, 1fr) !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 190px !important;
+    align-items: stretch !important;
+    overflow: hidden !important;
+  }
+  .roster-card-image {
+    width: 100% !important;
+    min-width: 0 !important;
+    height: auto !important;
+    aspect-ratio: 5 / 7 !important;
+  }
+  .roster-card-image img {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: contain !important;
+  }
+  .roster-card-copy.roster-card-actions-only {
+    display: flex !important;
+    min-width: 0 !important;
+    padding: 14px 12px !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    gap: 12px !important;
+  }
+  .roster-card-actions-only .roster-card-projection {
+    display: grid !important;
+    gap: 5px !important;
+    padding: 0 0 10px !important;
+  }
+  .roster-card-actions-only .roster-card-projection span { font-size: .72rem !important; }
+  .roster-card-actions-only .roster-card-projection strong { font-size: .9rem !important; white-space: normal !important; }
+  .roster-card-actions-only .roster-add-card-button {
+    display: flex !important;
+    min-height: 44px !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 10px !important;
+    font-size: .8rem !important;
+    white-space: normal !important;
+  }
+
+  /* Crucial confirmation stays visible after a player is queued.
+     position: fixed rather than sticky: sticky's "stick" never actually
+     engaged here (verified live — it just tracked scroll 1:1 at every
+     offset tested, in a fully reset/minimal ancestor chain with no
+     overflow/transform/contain culprit found), so this anchors directly
+     to the viewport instead, matching the drawer's own reliable
+     position: fixed behavior. left/right (not width+margin) avoid an
+     over-constrained box now that the element is out of flow. */
+  .roster-mobile-confirm-bar {
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 8px !important;
+    right: 8px !important;
+    z-index: 90 !important;
+    display: grid !important;
+    width: auto !important;
+    margin: 0 !important;
+    padding: 10px !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    align-items: center !important;
+    gap: 10px !important;
+    border: 1px solid rgba(216,173,45,.42) !important;
+    border-radius: 10px !important;
+    background: rgba(9,10,10,.98) !important;
+    box-shadow: 0 -8px 26px rgba(0,0,0,.55) !important;
+  }
+  .roster-mobile-confirm-bar div { min-width: 0; }
+  .roster-mobile-confirm-bar span { display: block; color: #8b8d88; font-size: .66rem; text-transform: uppercase; letter-spacing: .1em; }
+  .roster-mobile-confirm-bar strong { display: block; overflow: hidden; color: #f1ede3; font-size: .88rem; text-overflow: ellipsis; white-space: nowrap; }
+  .roster-mobile-confirm-bar button {
+    min-width: 118px !important;
+    min-height: 46px !important;
+    padding: 10px 12px !important;
+    border: 1px solid #d8ad2d !important;
+    border-radius: 8px !important;
+    background: #d8ad2d !important;
+    color: #080808 !important;
+    font-weight: 900 !important;
+  }
+  .roster-mobile-confirm-bar button:disabled { opacity: .38 !important; }
+
+  /* Header actions wrap cleanly instead of being compressed into tiny controls. */
+  .roster-header.roster-header-compact {
+    display: grid !important;
+    grid-template-columns: minmax(0,1fr) !important;
+    gap: 8px !important;
+    padding: 10px !important;
+  }
+  .roster-header-actions {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0,1fr)) !important;
+    width: 100% !important;
+    gap: 8px !important;
+  }
+  .roster-points-status { grid-column: 1 / -1 !important; }
+  .roster-season-toggle,
+  .roster-clear-button,
+  .roster-autosave-status {
+    width: 100% !important;
+    min-height: 44px !important;
+    font-size: .78rem !important;
+  }
+  .roster-autosave-status { grid-column: 1 / -1 !important; }
+
+  /* Protect value/action columns on roster overview rows. Names truncate first. */
+  .roster-player-copy { min-width: 0 !important; }
+  .roster-player-copy strong,
+  .roster-player-copy small { overflow: hidden !important; text-overflow: ellipsis !important; white-space: nowrap !important; }
+  .roster-player-points {
+    flex: 0 0 auto !important;
+    min-width: 48px !important;
+    white-space: nowrap !important;
+    text-align: right !important;
+  }
+  .remove-roster-card { flex: 0 0 42px !important; width: 42px !important; height: 42px !important; }
+}
+
+@media (max-width: 420px) {
+  .roster-player-card { grid-template-columns: minmax(120px, 46%) minmax(0,1fr) !important; }
+  .roster-picker-content-stacked .roster-compare-card,
+  .roster-compare-card { width: min(132px, 39vw) !important; min-width: 96px !important; }
+  .roster-header-actions { grid-template-columns: minmax(0,1fr) !important; }
+  .roster-points-status,
+  .roster-autosave-status { grid-column: 1 !important; }
+}

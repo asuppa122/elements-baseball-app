@@ -580,7 +580,56 @@
 /* v1.3.14 — standings + connected milestone tracker */
 .milestones-manager-row{display:flex;align-items:end;justify-content:space-between;gap:16px;margin-top:12px}.milestones-manager-row label{display:grid;gap:5px}.milestones-manager-row label>span{color:#9e8d56;font-size:.47rem;font-weight:900;letter-spacing:.12em;text-transform:uppercase}.milestones-manager-row select{min-width:180px;height:38px;border:1px solid rgba(216,173,45,.38);border-radius:7px;background:#080909;color:#e7dfc7;padding:0 34px 0 10px;font-weight:800}.milestones-live-summary{display:flex;gap:8px;flex-wrap:wrap}.milestones-live-summary span{min-width:92px;padding:7px 10px;border:1px solid rgba(216,173,45,.16);border-radius:7px;background:#0a0b0c;color:#777;font-size:.48rem;text-transform:uppercase;letter-spacing:.06em}.milestones-live-summary strong{display:block;color:var(--gold-bright);font-size:.8rem;letter-spacing:0}.milestones-phase-card b{display:block;margin-top:6px;color:#cbb86f;font-size:.5rem;font-style:normal}.consistency-week-strip{margin:10px 0;padding:12px;border:1px solid rgba(216,173,45,.24);border-radius:9px;background:#090a0b}.consistency-week-strip>div:first-child{display:flex;justify-content:space-between;gap:10px;margin-bottom:9px}.consistency-week-strip>div:first-child span{color:#a58f4c;font-size:.48rem;font-weight:900;letter-spacing:.12em;text-transform:uppercase}.consistency-week-strip>div:first-child strong{color:#ddd7c5;font-size:.58rem}.consistency-week-grid{display:grid;grid-template-columns:repeat(9,minmax(0,1fr));gap:6px}.consistency-week-grid>span{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:5px;min-height:38px;padding:6px 7px;border:1px solid #242526;border-radius:6px;background:#0d0e0f;color:#676864}.consistency-week-grid b{font-size:.5rem}.consistency-week-grid small{font-size:.43rem}.consistency-week-grid em{font-style:normal;font-weight:950}.consistency-week-grid .complete{border-color:rgba(216,173,45,.46);background:rgba(216,173,45,.08);color:#d8c676}.consistency-week-grid .current{border-style:dashed;color:#9c9b92}.milestone-progress-track{height:7px;overflow:hidden;border-radius:99px;background:#1c1d1e}.milestone-progress-track span{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,#8b6c16,var(--gold-bright))}.milestone-achievement.is-complete{border-color:rgba(216,173,45,.35);background:linear-gradient(90deg,rgba(216,173,45,.055),rgba(10,11,12,.98) 32%)}.milestone-achievement.is-complete .milestone-node{background:var(--gold-bright);color:#090909}.milestone-achievement.is-complete .milestone-progress-heading span,.milestone-achievement.is-complete .milestone-progress-meta>span{color:#d7c36b}
 
-.standings-hero{display:flex;justify-content:space-between;gap:24px;align-items:end;margin-bottom:10px;padding:15px 17px;border:1px solid rgba(216,173,45,.25);border-radius:10px;background:linear-gradient(135deg,rgba(216,173,45,.055),#080909 58%)}.standings-hero h1{margin:4px 0 0;color:#eee9dc;font-size:1.2rem}.standings-hero p{max-width:760px;margin:6px 0 0;color:#858680;font-size:.58rem;line-height:1.45}.standings-summary{display:flex;gap:8px}.standings-summary span{min-width:105px;padding:8px 11px;border:1px solid rgba(216,173,45,.17);border-radius:7px;background:#0b0c0d;color:#757670;font-size:.48rem;text-transform:uppercase}.standings-summary strong{display:block;color:var(--gold-bright);font-size:.86rem}.standings-tabs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}.standings-tabs button{min-height:51px;padding:8px 13px;border:1px solid rgba(216,173,45,.18);border-radius:8px;background:#090a0b;color:#888;text-align:left;cursor:pointer}.standings-tabs span{display:block;font-size:.43rem;font-weight:900;letter-spacing:.11em;text-transform:uppercase}.standings-tabs strong{display:block;margin-top:3px;font-size:.66rem}.standings-tabs button.active{border-color:rgba(216,173,45,.55);background:linear-gradient(135deg,rgba(216,173,45,.12),#090a0b 65%);color:var(--gold-bright)}.standings-table-panel{overflow:hidden;border:1px solid rgba(216,173,45,.23);border-radius:10px;background:#090a0b}.standings-table-scroll{overflow:auto}.standings-table{width:100%;min-width:980px;border-collapse:collapse;font-size:.57rem}.standings-table th{position:sticky;top:0;z-index:1;padding:9px 10px;border-bottom:1px solid rgba(216,173,45,.25);background:#111213;color:#9e8d56;font-size:.44rem;letter-spacing:.08em;text-align:center;text-transform:uppercase}.standings-sort-button{display:inline-flex;align-items:center;justify-content:center;gap:4px;width:100%;padding:0;border:0;background:transparent;color:inherit;font:inherit;font-weight:900;letter-spacing:inherit;text-transform:inherit;cursor:pointer;white-space:nowrap}.standings-sort-button:hover,.standings-sort-button.active{color:var(--gold-bright)}.standings-sort-indicator{min-width:10px;color:#726944;font-size:.52rem;line-height:1}.standings-sort-button.active .standings-sort-indicator{color:var(--gold-bright)}.standings-table th:nth-child(2),.standings-table td:nth-child(2){text-align:left}.standings-table td{padding:9px 10px;border-bottom:1px solid rgba(255,255,255,.045);color:#b9b7af;text-align:center}.standings-table tbody tr:hover{background:rgba(216,173,45,.035)}.standings-table tr.is-current-manager{background:rgba(216,173,45,.085)}.standings-table tr.is-current-manager td{color:#e2dac2}.standings-rank{display:inline-grid;width:23px;height:23px;place-items:center;border:1px solid rgba(216,173,45,.22);border-radius:50%;color:#bca75d;font-weight:900}.standings-manager{display:flex;align-items:center;gap:7px}.standings-manager strong{color:#ded9ca;font-size:.62rem}.standings-manager small{color:#666;font-size:.43rem}.standings-manager em{padding:2px 5px;border-radius:99px;background:var(--gold-bright);color:#090909;font-size:.4rem;font-style:normal;font-weight:950;text-transform:uppercase}.positive-rd{color:#cdbb70!important;font-weight:900}.negative-rd{color:#9f7b73!important}
+.standings-hero{display:flex;justify-content:space-between;gap:24px;align-items:end;margin-bottom:10px;padding:15px 17px;border:1px solid rgba(216,173,45,.25);border-radius:10px;background:linear-gradient(135deg,rgba(216,173,45,.055),#080909 58%)}.standings-hero h1{margin:4px 0 0;color:#eee9dc;font-size:1.2rem}.standings-hero p{max-width:760px;margin:6px 0 0;color:#858680;font-size:.58rem;line-height:1.45}.standings-summary{display:flex;gap:8px}.standings-summary span{min-width:105px;padding:8px 11px;border:1px solid rgba(216,173,45,.17);border-radius:7px;background:#0b0c0d;color:#757670;font-size:.48rem;text-transform:uppercase}.standings-summary strong{display:block;color:var(--gold-bright);font-size:.86rem}.standings-tabs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}.standings-tabs button{min-height:51px;padding:8px 13px;border:1px solid rgba(216,173,45,.18);border-radius:8px;background:#090a0b;color:#888;text-align:left;cursor:pointer}.standings-tabs span{display:block;font-size:.43rem;font-weight:900;letter-spacing:.11em;text-transform:uppercase}.standings-tabs strong{display:block;margin-top:3px;font-size:.66rem}.standings-tabs button.active{border-color:rgba(216,173,45,.55);background:linear-gradient(135deg,rgba(216,173,45,.12),#090a0b 65%);color:var(--gold-bright)}.standings-table-panel{position:relative;overflow:hidden;border:1px solid rgba(216,173,45,.23);border-radius:10px;background:#090a0b}.standings-table-scroll{overflow:auto}.standings-table{width:100%;min-width:980px;border-collapse:collapse;font-size:.57rem}.standings-table th{position:sticky;top:0;z-index:1;padding:9px 10px;border-bottom:1px solid rgba(216,173,45,.25);background:#111213;color:#9e8d56;font-size:.44rem;letter-spacing:.08em;text-align:center;text-transform:uppercase}.standings-sort-button{display:inline-flex;align-items:center;justify-content:center;gap:4px;width:100%;padding:0;border:0;background:transparent;color:inherit;font:inherit;font-weight:900;letter-spacing:inherit;text-transform:inherit;cursor:pointer;white-space:nowrap}.standings-sort-button:hover,.standings-sort-button.active{color:var(--gold-bright)}.standings-sort-indicator{min-width:10px;color:#726944;font-size:.52rem;line-height:1}.standings-sort-button.active .standings-sort-indicator{color:var(--gold-bright)}.standings-table th:nth-child(2),.standings-table td:nth-child(2){text-align:left}.standings-table td{padding:9px 10px;border-bottom:1px solid rgba(255,255,255,.045);color:#b9b7af;text-align:center}.standings-table tbody tr:hover{background:rgba(216,173,45,.035)}.standings-table tr.is-current-manager{background:rgba(216,173,45,.085)}.standings-table tr.is-current-manager td{color:#e2dac2}.standings-rank{display:inline-grid;width:23px;height:23px;place-items:center;border:1px solid rgba(216,173,45,.22);border-radius:50%;color:#bca75d;font-weight:900}.standings-manager{display:flex;align-items:center;gap:7px}.standings-manager strong{color:#ded9ca;font-size:.62rem}.standings-manager small{color:#666;font-size:.43rem}.standings-manager em{padding:2px 5px;border-radius:99px;background:var(--gold-bright);color:#090909;font-size:.4rem;font-style:normal;font-weight:950;text-transform:uppercase}.positive-rd{color:#cdbb70!important;font-weight:900}.negative-rd{color:#9f7b73!important}
+
+/* Standings mobile scroll discoverability: the table itself already
+   scrolls horizontally (min-width:980px inside an overflow:auto wrapper)
+   and every column's <td> has always been present in the DOM — the gap
+   was that nothing on screen told a mobile manager there was more to the
+   right, so Win%/RS/RA/RS-G/RA-G/RD/RD% read as simply missing. The
+   .can-scroll-left/.can-scroll-right classes are toggled from
+   StandingsPage's onScroll handler. */
+.standings-scroll-hint {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  margin: 0;
+  padding: 6px 10px;
+  border-bottom: 1px solid rgba(216,173,45,.16);
+  background: rgba(216,173,45,.05);
+  color: #bca75d;
+  font-size: .5rem;
+  font-weight: 800;
+  letter-spacing: .04em;
+  text-align: right;
+}
+.standings-scroll-hint span { font-size: .62rem; animation: standingsScrollHintNudge 1.4s ease-in-out infinite; }
+@keyframes standingsScrollHintNudge {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(3px); }
+}
+.standings-table-panel.can-scroll-right::after,
+.standings-table-panel.can-scroll-left::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 28px;
+  z-index: 2;
+  pointer-events: none;
+}
+.standings-table-panel.can-scroll-right::after {
+  right: 0;
+  background: linear-gradient(90deg, transparent, #090a0b 88%);
+}
+.standings-table-panel.can-scroll-left::before {
+  left: 0;
+  background: linear-gradient(270deg, transparent, #090a0b 88%);
+}
+@media (prefers-reduced-motion: reduce) {
+  .standings-scroll-hint span { animation: none; }
+}
 @media(max-width:900px){.milestones-manager-row,.standings-hero{align-items:stretch;flex-direction:column}.consistency-week-grid{grid-template-columns:repeat(3,1fr)}.standings-summary{flex-wrap:wrap}.standings-summary span{flex:1}.standings-tabs{grid-template-columns:1fr 1fr}}
 @media(max-width:560px){.milestones-live-summary span{flex:1}.consistency-week-grid{grid-template-columns:1fr 1fr}.standings-tabs{grid-template-columns:1fr}.standings-hero{padding:12px}.standings-summary{display:grid;grid-template-columns:1fr 1fr}.standings-manager small{display:none}}
 
@@ -903,6 +952,10 @@
   .rules-editorial .rules-rule-item { grid-template-columns:24px minmax(0,1fr); gap:8px; padding:9px; }
   .rules-editorial .rules-rule-symbol { width:21px; height:21px; }
   .rules-editorial .rules-rule-copy p { font-size:.63rem!important; }
+  /* The 760px breakpoint above only takes .consistency-week-markers from
+     13 down to 7 columns, which is still cramped at phone widths — reflow
+     it further here instead of just letting the 7 columns keep shrinking. */
+  .consistency-week-markers { grid-template-columns:repeat(4,minmax(0,1fr)); }
 }
 
 /* v1.3.21 — Original Rulebook structure translated into an interactive digital manual */
@@ -1379,6 +1432,18 @@
 .rules-card-media-frame {
   position:relative;
   overflow:hidden;
+  /* Reserves the card's real 820x1150 proportions before the lazy-loaded
+     image arrives. Without this the frame collapses to ~0 height, so
+     loading="lazy" never has a visible area to intersect and the image
+     never loads until something else on the page forces a reflow.
+     width:100% is required alongside aspect-ratio: .rules-card-media-grid
+     sets justify-content:center, which sizes grid items from their content
+     instead of stretching them to the track — without an explicit width
+     the frame's size depends on the img's content size, which depends on
+     the frame's width (via the img's width:100%), a circular reference
+     that resolves to a ~12px collapse regardless of the aspect-ratio fix. */
+  width:100%;
+  aspect-ratio:820/1150;
   border:1px solid rgba(216,173,45,.48);
   border-radius:15px;
   padding:7px;
@@ -1397,7 +1462,11 @@
   display:block;
   width:100%;
   height:auto;
-  aspect-ratio:auto;
+  /* The <img> itself (not just the frame) needs a reserved box: the
+     browser's loading="lazy" intersection check measures the img's own
+     layout box, which stays 0-height independent of its parent unless
+     the img has its own ratio too. */
+  aspect-ratio:820/1150;
   object-fit:contain;
   border-radius:9px;
 }
