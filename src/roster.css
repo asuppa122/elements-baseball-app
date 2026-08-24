@@ -13650,12 +13650,24 @@ span {
   scrollbar-gutter: stable;
 }
 
+/* height:auto + max-height:none here (both !important) used to beat the base
+   .roster-picker-content.roster-picker-content-stacked rule's
+   height: calc(100vh - 142px) purely on specificity (this selector is three
+   classes deep vs. two) — never on purpose per the v1.3.23 comment above,
+   which says height should come "from remaining viewport space, not stacked
+   vh calcs." With no height ceiling, the ~300-card eligible-player grid
+   rendered at full natural height (measured 52,122px for a single slot's
+   picker) instead of being clipped/scrollable, which also stretched the
+   compare-panel's grid row to match, burying it off-screen. Dropping the
+   height/max-height overrides lets the base rule's viewport-relative height
+   (plus its overflow: hidden) win, restoring the internal-scroll boundary;
+   flex/width/min-height stay, since none of those conflict and min-height:0
+   is what lets this flex child shrink below its content size in the first
+   place (required for the internal scroll to work at all). */
 .roster-player-drawer .roster-picker-content.roster-picker-content-stacked {
   flex: 1 1 auto !important;
   width: 100% !important;
-  height: auto !important;
   min-height: 0 !important;
-  max-height: none !important;
 }
 
 /* Short laptop / landscape displays: keep the action rail and results usable
