@@ -1,3 +1,52 @@
+# v1.3.81 — Team Builder Autosave + Mobile First-Class Pass
+
+- Team Builder roster mutations now autosave through a serialized Supabase queue with Saving/Saved/error feedback.
+- Manual Save Team is no longer required; failed saves are retryable and navigation is protected.
+- Season Eligible filtering is manager-specific instead of treating another manager's source_yes_field as universally eligible.
+- Player picker mobile layout now reflows to full-width readable cards, locks background scrolling, and keeps confirmation sticky.
+- Mobile roster/DH selectors receive explicit dropdown affordances.
+- Responsive roster rows protect point/2-WAY values before truncating player names.
+- Added MOBILE_PARITY_STANDARD.md as the permanent app-wide responsive acceptance standard.
+
+# v1.3.80 — Coverage Registry Non-GB Patch
+
+- Includes the Non-GB deterministic Scenario Matrix in Rulebook Coverage totals.
+- Adds a synthetic frozen coverage fixture so the registry can run fixture-dependent deterministic tests without a saved game.
+- Corrects the No-Wheel successful sacrifice-bunt regression assertion to expect the batter out while forced runners advance.
+- Verified coverage result: 198/198 runnable branch checks pass.
+
+## v1.3.79 — Game 3 integration fixes
+
+- Restricts 1B→2B tag-ups to offenses leading by 8+ runs.
+- Adds editable pre-confirmation manager-action flow with Change Action support.
+- Expands double switches to allow an active fielder to move to pitcher while one bench player enters at the vacated position.
+- Side-scopes mutable pitcher fatigue/run/SOB state so identical card keys on opposite teams cannot contaminate one another.
+- Adds deterministic regression coverage for +7/+8 tag-up eligibility, active-player double switches, and duplicate-card pitcher-state isolation.
+
+# v1.3.78 — SOB coverage + playable-shell load resilience
+
+- Corrected the SOB demo assertion to match the approved rule: C5 → C4 at 7.33 IP, C3 after the next out, C1 immediately when a run breaks the shutout at that point, then C-1 after the next out.
+- Made game-event history non-blocking when opening the playable shell so a newly created game can still load even if its event stream is empty/unavailable.
+- Improved playable-shell load errors to surface the actual Supabase error message instead of the generic fallback when possible.
+
+## v1.3.76 — Executable gameplay demos + targeted verification
+- Added one 10-scenario framework shared by automated verification, interactive demos, Rules demos, and full-game regression planning.
+- Added private Targeted Gameplay Verification page and live GIF-style Rules demos.
+- Preserved existing gameplay engine and Game 2 corrections.
+
+## v1.3.74 — First Playthrough Fix Verification
+- Makes TypeScript gameplay modules authoritative by removing stale compiled `.js` twins that were shadowing several v1.3.73 fixes at runtime.
+- Verifies all 10 first-playthrough corrections: No Wheel, automatic No Pitch, default OB, failed-bunt messaging, +3 Home/+3 two-out BsR, single-target auto-selection, force-only BB advancement, SOB Control progression/break, 2B RTH flow, and independent DBP base checks.
+- Keeps the condensed Team Builder point-value protection from v1.3.73.
+
+## v1.3.73 — First Manual Playthrough Corrections
+- Playable shell: No Wheel terminology, automatic NO PITCH pitcher advantage, effective default OB/Control display, clearer failed-bunt and RTH feedback.
+- Corrected BB force-only advancement and extra-base effective BSR display/targeting; single extra-base throw targets now auto-select.
+- Integrated live pitcher distance/Shutout Bonus Control into pitch resolution and shell display, including .33/.67 baseball-IP conversion and run tracking.
+- Clarified runner-on-2B ground-ball branch as RTH (1–10 advance, 11–20 hold) with automatic batter out / runner-on-3B scoring behavior.
+- Preserved independent DBP fielding checks at each base and added manual-playthrough regression coverage.
+- Active Roster Overview reserves a non-clipping point-value column at condensed widths.
+
 ## v1.3.70 — Certification invariant trace instrumentation
 - Adds a rolling state-transition trace only to failed Complete-Game Certification simulations.
 - Captures inning/half, outs, batting-order cursor, batter card key, all three base identities/card keys, status/waiting state, and pending decision around the final transitions before an invariant failure.
@@ -1760,3 +1809,12 @@ No other Home tile artwork or application functionality was intentionally change
 - Kept the developer Gameplay Lab and all certification tools intact and separate from the playable shell.
 - Added a direct "Open Playable Shell" path from the existing developer game-state screen.
 - New-game creation remains intentionally disabled until a real opponent active roster validates for Season 10.1; existing lab fixtures can be used to test the shell in the meantime.
+
+## v1.3.76 — Gameplay Verification + Rule Demos
+- Adds a private `/games/lab/verification` workspace that runs the original 10 gameplay-fix scenarios as targeted verification instead of waiting for random full-game occurrences.
+- Adds reusable looping `GameplayRuleDemo` components and embeds the same demonstrations in the digital Rules page so the verification examples double as new-player teaching demos.
+- Uses shared production rule helpers for key demonstrations, including +6 hit-advancement BsR, default-vs-printed hitter OB behavior, SOB progression, independent DBP checks, and the No-Wheel sacrifice-bunt table.
+- Centralizes the No-Wheel sacrifice-bunt d20 table: 1-2 failed bunt / attempt swing on pitcher chart; 3-4 K; 5 lead runner out; 6-20 successful bunt / runners advance.
+- Makes both the playable shell and developer game-state screen report the exact No-Wheel bunt outcome instead of a generic decision-roll message.
+- Clarifies default-chart behavior: OB 5 applies only when Default Attributes/default chart is actually selected; a CPU copy with a valid printed OB (such as Tristan Gray OB 7) correctly retains its printed rating.
+- Keeps full-game playthroughs as the final interaction/regression layer after targeted automated and demo verification.

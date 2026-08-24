@@ -1,7 +1,7 @@
 {
   "name": "elements-baseball-app",
   "private": true,
-  "version": "1.3.72",
+  "version": "1.3.81",
   "type": "module",
   "scripts": {
     "dev": "vite",
