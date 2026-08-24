@@ -1,6 +1,7 @@
 import {
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
@@ -18,6 +19,7 @@ import {
   getCardYear,
   isCardOwnedByManager,
   isSeasonEligibleCard,
+  isSeasonEligibleCardForManager,
 } from '../utils/cardHelpers'
 import { useAuth } from '../auth/AuthContext'
 import { supabase } from '../lib/supabase'
@@ -472,7 +474,7 @@ function RosterPage() {
   const [rosterFormat, setRosterFormat] = useState<RosterFormat>('full')
   const [useDh, setUseDh] = useState(true)
   const [seasonEligibleOnly, setSeasonEligibleOnly] = useState(true)
-  const [, setLineupLoaded] = useState(false)
+  const [lineupLoaded, setLineupLoaded] = useState(false)
   const [section, setSection] =
     useState<Section>('overview')
   const [selectedSlotId, setSelectedSlotId] =
@@ -515,7 +517,12 @@ function RosterPage() {
     useState('')
   const [message, setMessage] =
     useState('')
-  const [savingRoster, setSavingRoster] = useState(false)
+  const [autosaveStatus, setAutosaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>(isDemo ? 'idle' : 'saved')
+  const [autosaveError, setAutosaveError] = useState('')
+  const saveInFlightRef = useRef(false)
+  const pendingSaveRef = useRef<{ fingerprint: string; payload: Record<string, unknown> } | null>(null)
+  const lastPersistedFingerprintRef = useRef('')
+  const mountedRef = useRef(true)
   const [
     draggedLineupSlotId,
     setDraggedLineupSlotId,
@@ -637,12 +644,21 @@ function RosterPage() {
         }
 
         const state = (data.roster_state ?? {}) as Partial<SavedLineup>
-        setName(data.name)
-        setAssigned(state.assigned ?? {})
-        setRosterFormat(state.rosterFormat ?? 'full')
-        setUseDh(data.use_dh ?? state.useDh ?? true)
-        setSeasonEligibleOnly(state.seasonEligibleOnly ?? true)
+        const loadedSnapshot = {
+          name: data.name,
+          assigned: state.assigned ?? {},
+          rosterFormat: (state.rosterFormat ?? 'full') as RosterFormat,
+          useDh: data.use_dh ?? state.useDh ?? true,
+          seasonEligibleOnly: state.seasonEligibleOnly ?? true,
+        }
+        lastPersistedFingerprintRef.current = JSON.stringify(loadedSnapshot)
+        setName(loadedSnapshot.name)
+        setAssigned(loadedSnapshot.assigned)
+        setRosterFormat(loadedSnapshot.rosterFormat)
+        setUseDh(loadedSnapshot.useDh)
+        setSeasonEligibleOnly(loadedSnapshot.seasonEligibleOnly)
         setLineupLoaded(true)
+        setAutosaveStatus('saved')
       })
   }, [lineupId, user?.id, isDemo])
 
@@ -829,8 +845,11 @@ function RosterPage() {
           return false
         }
 
-        if (seasonEligibleOnly && !isSeasonEligibleCard(card)) {
-          return false
+        if (seasonEligibleOnly) {
+          const eligible = isDemo
+            ? isSeasonEligibleCard(card)
+            : isSeasonEligibleCardForManager(card, currentManager)
+          if (!eligible) return false
         }
 
         if (!isEligible(card, selectedSlot)) {
@@ -1320,47 +1339,108 @@ function RosterPage() {
   const totalPlayers =
     rosterCardKeys.size
 
+  useEffect(() => {
+    mountedRef.current = true
+    return () => { mountedRef.current = false }
+  }, [])
 
-  async function saveRoster() {
-    if (isDemo) {
-      setMessage('Demo changes are not saved')
-      window.setTimeout(() => setMessage(''), 1800)
-      return
-    }
-    if (!user || !lineupId || savingRoster) {
-      return
-    }
+  useEffect(() => {
+    if (isDemo || !lineupLoaded || !user || !lineupId) return
 
-    setSavingRoster(true)
-    setMessage('Saving team…')
+    const snapshot = { name, assigned, rosterFormat, useDh, seasonEligibleOnly }
+    const fingerprint = rosterFingerprint(snapshot)
+    if (fingerprint === lastPersistedFingerprintRef.current && !saveInFlightRef.current && !pendingSaveRef.current) return
 
-    const { error: saveError } = await supabase
-      .from('lineups')
-      .update({
+    pendingSaveRef.current = {
+      fingerprint,
+      payload: {
         name: name.trim() || `${ACTIVE_SEASON} Team`,
         use_dh: useDh,
         player_count: totalPlayers,
         total_points: totalPoints,
-        roster_state: {
-          assigned,
-          rosterFormat,
-          useDh,
-          seasonEligibleOnly,
-        },
+        roster_state: { assigned, rosterFormat, useDh, seasonEligibleOnly },
         updated_at: new Date().toISOString(),
-      })
+      },
+    }
+
+    void drainAutosaveQueue()
+  }, [assigned, isDemo, lineupId, lineupLoaded, name, rosterFormat, seasonEligibleOnly, totalPlayers, totalPoints, useDh, user?.id])
+
+  useEffect(() => {
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      if (isDemo || (autosaveStatus !== 'saving' && autosaveStatus !== 'error' && !pendingSaveRef.current)) return
+      event.preventDefault()
+      event.returnValue = ''
+    }
+    window.addEventListener('beforeunload', handleBeforeUnload)
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload)
+  }, [autosaveStatus, isDemo])
+
+  useEffect(() => {
+    if (!selectedSlotId) return
+    const previousOverflow = document.body.style.overflow
+    const previousOverscroll = document.body.style.overscrollBehavior
+    document.body.style.overflow = 'hidden'
+    document.body.style.overscrollBehavior = 'none'
+    return () => {
+      document.body.style.overflow = previousOverflow
+      document.body.style.overscrollBehavior = previousOverscroll
+    }
+  }, [selectedSlotId])
+
+
+  function rosterFingerprint(snapshot: {
+    name: string
+    assigned: Record<string, string>
+    rosterFormat: RosterFormat
+    useDh: boolean
+    seasonEligibleOnly: boolean
+  }) {
+    return JSON.stringify(snapshot)
+  }
+
+  async function drainAutosaveQueue() {
+    if (saveInFlightRef.current || isDemo || !user || !lineupId) return
+    const nextSave = pendingSaveRef.current
+    if (!nextSave) return
+
+    pendingSaveRef.current = null
+    saveInFlightRef.current = true
+    if (mountedRef.current) {
+      setAutosaveStatus('saving')
+      setAutosaveError('')
+    }
+
+    const { error: saveError } = await supabase
+      .from('lineups')
+      .update(nextSave.payload)
       .eq('id', lineupId)
       .eq('user_id', user.id)
 
+    saveInFlightRef.current = false
+
     if (saveError) {
-      setMessage(saveError.message)
-      setSavingRoster(false)
+      pendingSaveRef.current = nextSave
+      if (mountedRef.current) {
+        setAutosaveStatus('error')
+        setAutosaveError(saveError.message)
+      }
       return
     }
 
-    setSavingRoster(false)
-    setMessage('Team saved')
-    window.setTimeout(() => setMessage(''), 1600)
+    lastPersistedFingerprintRef.current = nextSave.fingerprint
+
+    if (pendingSaveRef.current) {
+      void drainAutosaveQueue()
+      return
+    }
+
+    if (mountedRef.current) setAutosaveStatus('saved')
+  }
+
+  function retryAutosave() {
+    if (!pendingSaveRef.current) return
+    void drainAutosaveQueue()
   }
 
   function clearTeam() {
@@ -2156,7 +2236,10 @@ function RosterPage() {
         <button
           type="button"
           className="roster-side-back"
-          onClick={() => navigate(appPath('/lineup-builder', isDemo))}
+          onClick={() => {
+            if (!isDemo && autosaveStatus === 'error' && !window.confirm('Your latest Team Builder change has not saved. Leave anyway?')) return
+            navigate(appPath('/lineup-builder', isDemo))
+          }}
           title="Back to lineups"
         >
           <span>←</span>
@@ -2207,9 +2290,17 @@ function RosterPage() {
             <button type="button" className="roster-clear-button" onClick={clearCurrentPage}>Clear Page</button>
             <button type="button" className="roster-clear-button roster-clear-team-button" onClick={clearTeam}>Clear Team</button>
             {isDemo ? (
-              <button type="button" className="roster-save-button demo-disabled-save" onClick={saveRoster}>Demo — Not Saved</button>
+              <div className="roster-autosave-status demo" aria-live="polite">Demo — Not Saved</div>
             ) : (
-              <button type="button" className="roster-save-button" onClick={saveRoster} disabled={savingRoster}>{savingRoster ? 'Saving…' : 'Save Team'}</button>
+              <button
+                type="button"
+                className={`roster-autosave-status ${autosaveStatus}`}
+                onClick={autosaveStatus === 'error' ? retryAutosave : undefined}
+                title={autosaveStatus === 'error' ? autosaveError : 'Team Builder autosaves every change'}
+                aria-live="polite"
+              >
+                {autosaveStatus === 'saving' ? 'Saving…' : autosaveStatus === 'error' ? 'Save Failed — Retry' : 'Saved'}
+              </button>
             )}
           </div>
         </header>
@@ -2474,7 +2565,7 @@ function RosterPage() {
               ]}
               appliedFilters={[
                 ...(seasonEligibleOnly
-                  ? [{ id: 'season-eligible', label: 'Season Eligible', onRemove: () => setSeasonEligibleOnly(false) }]
+                  ? [{ id: 'season-eligible', label: isDemo ? 'Season Eligible' : `Eligible for ${currentManager}`, onRemove: () => setSeasonEligibleOnly(false) }]
                   : []),
                 ...(search.trim()
                   ? [{ id: 'search', label: `Search: ${search.trim()}`, onRemove: () => setSearch('') }]
@@ -2733,10 +2824,24 @@ function RosterPage() {
                 </div>
               </section>
 
+              <div className={`roster-mobile-confirm-bar ${selectedSubstituteCard ? 'is-ready' : ''}`}>
+                <div>
+                  <span>{currentCard ? 'Replace with' : `Add to ${selectedSlot.label}`}</span>
+                  <strong>{selectedSubstituteCard?.player_name ?? 'Select a player'}</strong>
+                </div>
+                <button
+                  type="button"
+                  disabled={!selectedSubstituteCard}
+                  onClick={() => selectedSubstituteCard && assignCard(selectedSubstituteCard)}
+                >
+                  {currentCard ? 'Confirm Swap' : 'Confirm Add'}
+                </button>
+              </div>
+
               <div className={`roster-replacement-browser roster-replacement-browser-${selectedSlot.section}`}>
                 <div className="roster-drawer-rules">
                   <span>{isDemo ? 'All 2025 Cards' : `Owned by ${currentManager}`}</span>
-                  <span>{seasonEligibleOnly ? 'Season Eligible' : 'All Years'}</span>
+                  <span>{seasonEligibleOnly ? (isDemo ? 'Season Eligible' : `Eligible for ${currentManager}`) : 'All Years'}</span>
                   <span>Published</span>
                   <span>
                     {selectedSlot.eligibility ===

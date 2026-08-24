@@ -199,6 +199,27 @@ export function isSeasonEligibleCard(
   return ELEMENTS_MANAGER_NAMES.has(sourceValue)
 }
 
+export function isSeasonEligibleCardForManager(
+  card: CardRow,
+  managerName: string,
+): boolean {
+  if (getCardYear(card) === CURRENT_ELEMENTS_SEASON_YEAR) {
+    return true
+  }
+
+  const sourceValue = String(card.source_yes_field ?? '')
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+
+  if (sourceValue === 'yes') {
+    return true
+  }
+
+  const normalizedManager = normalizeManagerName(managerName)
+  return Boolean(normalizedManager) && sourceValue === normalizedManager
+}
+
 export function getCardTeamCode(
   card: CardRow,
 ): string | null {
