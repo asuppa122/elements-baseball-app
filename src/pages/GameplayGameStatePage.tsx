@@ -8,6 +8,8 @@ import {
   resolvePitchRoll,
   resolveSwingRoll,
   startGame,
+  effectiveCurrentHitterOnBase,
+  effectiveCurrentPitcherControl,
 } from '../gameplay/engine'
 import {
   hasGameplayLabAccess,
@@ -18,7 +20,7 @@ import {
 } from '../gameplay/gameRepository'
 import type { GameSide, GameState } from '../gameplay/types'
 import { resolveForDevelopmentHarness, resolveSwingChart } from '../gameplay/coreGame'
-import { beginPrePitchDecision, confirmManagerDecision, getDecisionView, getPrePitchActions, resolveDecisionRoll } from '../gameplay/decisionEngine'
+import { beginPrePitchDecision, confirmManagerDecision, getDecisionView, getPrePitchActions, resolveDecisionRoll, noWheelSacBuntOutcome } from '../gameplay/decisionEngine'
 import { runCoreGameHarness, runDecisionStressHarness, type DecisionStressReport, type HarnessReport } from '../gameplay/testHarness'
 import { runNonGbScenarioMatrix, type ScenarioReport } from '../gameplay/scenarioHarness'
 import { runGroundBallScenarioMatrix } from '../gameplay/groundBallScenarioHarness'
@@ -353,7 +355,9 @@ export default function GameplayGameStatePage() {
       })
       setGame(saved); setEvents(await loadGameplayLabEvents(game.id))
       setDecisionSelection([])
-      setSuccess(`d20 ${roll} resolved for ${priorType.replaceAll('_',' ')}.${next.pendingDecision ? ` Next: ${next.pendingDecision.decisionType.replaceAll('_',' ')}.` : ''}`)
+      const buntOutcome = priorType === 'SAC_BUNT_RTS' ? noWheelSacBuntOutcome(roll) : null
+      const resultMessage = buntOutcome === 'FAILED_PITCHER_CHART' ? `Bunt roll ${roll}: FAILED BUNT — attempt swing on PITCHER chart.` : buntOutcome === 'STRIKEOUT' ? `Bunt roll ${roll}: K.` : buntOutcome === 'LEAD_RUNNER_OUT' ? `Bunt roll ${roll}: lead runner OUT.` : buntOutcome === 'SUCCESS' ? `Bunt roll ${roll}: bunt successful; runners advance.` : `d20 ${roll} resolved for ${priorType.replaceAll('_',' ')}.${next.pendingDecision ? ` Next: ${next.pendingDecision.decisionType.replaceAll('_',' ')}.` : ''}`
+      setSuccess(resultMessage)
     } catch (e) { setError(e instanceof Error ? e.message : 'Could not resolve the Rulebook roll.') }
     finally { setSaving(false) }
   }
@@ -535,9 +539,9 @@ export default function GameplayGameStatePage() {
           <section className="gameplay-lab-panel">
             <header><div><span>Current Matchup</span><h2>{batter?.playerName ?? '—'} vs. {pitcher?.playerName ?? '—'}</h2></div><em>This is engine verification, not the final game-screen design.</em></header>
             <div className="gameplay-state-matchup">
-              <div><small>BATTER · {offense.toUpperCase()} #{(state.lineupCursor?.[offense] ?? 0) + 1}</small><strong>{batter?.playerName ?? '—'}</strong><span>OB {batter?.hitter.onBase ?? '—'} · BSR {batter?.hitter.baserunning ?? '—'} · SB {batter?.hitter.stolenBase ?? '—'}</span></div>
+              <div><small>BATTER · {offense.toUpperCase()} #{(state.lineupCursor?.[offense] ?? 0) + 1}</small><strong>{batter?.playerName ?? '—'}</strong><span>OB {effectiveCurrentHitterOnBase(state)} · BSR {batter?.hitter.baserunning ?? '—'} · SB {batter?.hitter.stolenBase ?? '—'}</span></div>
               <div className="gameplay-state-waiting"><small>WAITING FOR</small><strong>{state.waitingFor?.replaceAll('_',' ') ?? '—'}</strong><span>Next actor: {nextActor}</span></div>
-              <div><small>{defense.toUpperCase()} PITCHER</small><strong>{pitcher?.playerName ?? '—'}</strong><span>Control {pitcher?.pitcher.control ?? '—'} · IP {pitcher?.pitcher.ip ?? '—'}</span></div>
+              <div><small>{defense.toUpperCase()} PITCHER</small><strong>{pitcher?.playerName ?? '—'}</strong><span>Control {effectiveCurrentPitcherControl(state)} · IP {pitcher?.pitcher.ip ?? '—'}</span></div>
             </div>
           </section>
 
@@ -568,8 +572,8 @@ export default function GameplayGameStatePage() {
             ) : state.plateAppearance.pitchRoll !== null ? (
               <div className="gameplay-pitch-result">
                 <div><small>D20</small><strong>{state.plateAppearance.pitchRoll}</strong></div>
-                <div><small>PITCH TOTAL</small><strong>{state.plateAppearance.pitchTotal}</strong><span>{state.plateAppearance.pitchRoll} + {((state.pregame[defense].defaultPitcherCardKeys?.includes(state.plateAppearance.pitcherCardKey ?? '') ?? false) || pitcher?.pitcher.control == null) ? -5 : (pitcher?.pitcher.control ?? -5)} Control</span></div>
-                <div><small>HITTER OB</small><strong>{state.pregame[offense].defaultBatterCardKeys.includes(state.plateAppearance.batterCardKey ?? '') || batter?.hitter.onBase == null ? 5 : (batter?.hitter.onBase ?? 5)}</strong></div>
+                <div><small>PITCH TOTAL</small><strong>{state.plateAppearance.pitchTotal}</strong><span>{state.plateAppearance.pitchRoll} + {effectiveCurrentPitcherControl(state)} Control</span></div>
+                <div><small>HITTER OB</small><strong>{effectiveCurrentHitterOnBase(state)}</strong></div>
                 <div className="gameplay-pitch-advantage"><small>ADVANTAGE</small><strong>{state.plateAppearance.advantage?.toUpperCase()}</strong><span>Next: Swing Roll</span></div>
               </div>
             ) : null}

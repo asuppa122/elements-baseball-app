@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
-import { resolvePitchRoll, resolveSwingRoll } from '../gameplay/engine'
+import { resolvePitchRoll, resolveSwingRoll , effectiveCurrentHitterOnBase, effectiveCurrentPitcherControl, pitcherAdvantageIsAutomatic, resolveAutomaticPitcherAdvantage } from '../gameplay/engine'
 import {
   hasGameplayLabAccess,
   loadGameplayLabEvents,
@@ -16,7 +16,7 @@ import {
   confirmManagerDecision,
   getDecisionView,
   getPrePitchActions,
-  resolveDecisionRoll,
+  resolveDecisionRoll, noWheelSacBuntOutcome,
 } from '../gameplay/decisionEngine'
 
 function sideLabel(side: GameSide) { return side === 'home' ? 'HOME' : 'AWAY' }
@@ -53,9 +53,22 @@ export default function GameplayPlayableShellPage() {
     async function load() {
       try {
         if (!await hasGameplayLabAccess()) throw new Error('Playable shell access is not enabled for this account.')
-        const [loaded, loadedEvents] = await Promise.all([loadGameplayLabGame(gameId), loadGameplayLabEvents(gameId)])
+        const loaded = await loadGameplayLabGame(gameId)
+        let loadedEvents: Array<{state_version:number;event_type:string;payload:Record<string,unknown>;created_at:string}> = []
+        try {
+          loadedEvents = await loadGameplayLabEvents(gameId)
+        } catch (eventError) {
+          // A newly-created game may not have readable event history yet. Event history is
+          // supplemental to the playable shell, so do not block the game from loading.
+          console.warn('Playable shell loaded game but could not load event history.', eventError)
+        }
         if (!cancelled) { setGame(loaded); setEvents(loadedEvents) }
-      } catch (e) { if (!cancelled) setError(e instanceof Error ? e.message : 'Could not load playable shell.') }
+      } catch (e) {
+        if (!cancelled) {
+          const message = e instanceof Error ? e.message : (typeof e === 'object' && e && 'message' in e ? String((e as {message?:unknown}).message) : 'Could not load playable shell.')
+          setError(message)
+        }
+      }
       finally { if (!cancelled) setLoading(false) }
     }
     void load()
@@ -70,6 +83,8 @@ export default function GameplayPlayableShellPage() {
   const pitcher = useMemo(() => state?.plateAppearance.pitcherCardKey ? state.pregame[defense].roster?.cards[state.plateAppearance.pitcherCardKey] ?? null : null, [state, defense])
   const decision = state ? getDecisionView(state) : null
   const prePitchActions = state ? getPrePitchActions(state) : []
+  const editablePrePitchDecision = Boolean(state?.pendingDecision && ['PINCH_HITTER_SELECTION','PINCH_RUNNER_TARGET','PINCH_RUNNER_REPLACEMENT','DEF_SUB_POSITION','DEF_SUB_REPLACEMENT','DOUBLE_SWITCH_PITCHER','DOUBLE_SWITCH_FIELDER','DOUBLE_SWITCH_OUTGOING_FIELDER','ENTRY_ATTRIBUTE_MODE'].includes(state.pendingDecision.decisionType))
+  const finalSubstitutionCommit = state?.pendingDecision?.decisionType === 'ENTRY_ATTRIBUTE_MODE'
 
   function d20() { const values = new Uint32Array(1); crypto.getRandomValues(values); return (values[0] % 20) + 1 }
 
@@ -81,6 +96,12 @@ export default function GameplayPlayableShellPage() {
       setGame(saved); await refreshEvents(game.id); setNotice(message)
     } catch (e) { setError(e instanceof Error ? e.message : 'Could not save game state.') }
     finally { setSaving(false) }
+  }
+
+  async function noPitch() {
+    if (!state) return
+    const next = resolveAutomaticPitcherAdvantage(state)
+    await persist(next, 'DECISION_RESOLVED', { resolutionKind: 'AUTOMATIC_PITCHER_ADVANTAGE', automatic: true, playableShell: true }, 'NO PITCH — PITCHER ADVANTAGE.')
   }
 
   async function rollPitch() {
@@ -101,17 +122,27 @@ export default function GameplayPlayableShellPage() {
     await persist(next, 'DECISION_RESOLVED', { resolutionKind: 'PRE_PITCH_ACTION_STARTED', action: actionId, playableShell: true }, `${actionId.replaceAll('_',' ')} started.`)
   }
 
+  async function changeAction() {
+    if (!state || !editablePrePitchDecision) return
+    const next: GameState = { ...state, status: 'in_progress', waitingFor: 'PITCH_ROLL', pendingDecision: null, nextActor: defense, stateVersion: state.stateVersion + 1, updatedAt: new Date().toISOString() }
+    await persist(next, 'DECISION_RESOLVED', { resolutionKind: 'PRE_PITCH_ACTION_CANCELLED', playableShell: true }, 'Action cleared. Choose a different manager action.')
+    setSelection([])
+  }
+
   async function confirmDecision() {
     if (!state || !decision) return
     const next = confirmManagerDecision(state, selection); next.stateVersion = state.stateVersion + 1; next.updatedAt = new Date().toISOString()
-    await persist(next, 'DECISION_RESOLVED', { decisionType: state.pendingDecision?.decisionType, selected: selection, playableShell: true }, 'Decision locked.')
+    const message = finalSubstitutionCommit ? 'Decision locked.' : editablePrePitchDecision ? 'Selection saved. You can still change the action before final confirmation.' : 'Decision locked.'
+    await persist(next, 'DECISION_RESOLVED', { decisionType: state.pendingDecision?.decisionType, selected: selection, playableShell: true }, message)
     setSelection([])
   }
 
   async function rollDecision() {
     if (!state || !decision) return
     const roll = d20(); const next = resolveDecisionRoll(state, roll); next.stateVersion = state.stateVersion + 1; next.updatedAt = new Date().toISOString()
-    await persist(next, 'DECISION_RESOLVED', { decisionType: state.pendingDecision?.decisionType, resolutionKind: 'ROLL', roll, playableShell: true }, `Decision roll: ${roll}.`)
+    const buntOutcome = state.pendingDecision?.decisionType === 'SAC_BUNT_RTS' ? noWheelSacBuntOutcome(roll) : null
+    const message = buntOutcome === 'FAILED_PITCHER_CHART' ? `Bunt roll: ${roll} — FAILED BUNT. Attempt swing on PITCHER chart.` : buntOutcome === 'STRIKEOUT' ? `Bunt roll: ${roll} — K.` : buntOutcome === 'LEAD_RUNNER_OUT' ? `Bunt roll: ${roll} — lead runner OUT.` : buntOutcome === 'SUCCESS' ? `Bunt roll: ${roll} — bunt successful; runners advance.` : state.pendingDecision?.decisionType === 'GB_RUNNER_2B_RTH' ? `RTH roll: ${roll} — ${roll <= 10 ? 'runner advances to 3B' : 'runner stays at 2B'}.` : `Decision roll: ${roll}.`
+    await persist(next, 'DECISION_RESOLVED', { decisionType: state.pendingDecision?.decisionType, resolutionKind: 'ROLL', roll, playableShell: true }, message)
   }
 
   if (loading) return <main className="retro-game-page"><div className="retro-loading">LOADING GAME…</div></main>
@@ -137,9 +168,9 @@ export default function GameplayPlayableShellPage() {
         <section className="retro-field-panel"><Diamond state={state} /></section>
 
         <section className="retro-matchup">
-          <div><span>BATTER</span><strong>{batter?.playerName ?? '—'}</strong><small>OB {batter?.hitter.onBase ?? 'DEF'} · BSR {batter?.hitter.baserunning ?? '—'}</small></div>
+          <div><span>BATTER</span><strong>{batter?.playerName ?? '—'}</strong><small>OB {effectiveCurrentHitterOnBase(state)} · BSR {batter?.hitter.baserunning ?? '—'}</small></div>
           <div className="retro-vs">VS</div>
-          <div><span>PITCHER</span><strong>{pitcher?.playerName ?? '—'}</strong><small>CTRL {pitcher?.pitcher.control ?? 'DEF'} · IP {pitcher?.pitcher.ip ?? '—'}</small></div>
+          <div><span>PITCHER</span><strong>{pitcher?.playerName ?? '—'}</strong><small>CTRL {effectiveCurrentPitcherControl(state)} · IP {pitcher?.pitcher.ip ?? '—'}</small></div>
         </section>
 
         <section className="retro-action-panel">
@@ -152,7 +183,7 @@ export default function GameplayPlayableShellPage() {
           {!decision && state.status !== 'complete' && state.waitingFor === 'PITCH_ROLL' && (
             <>
               <div className="retro-roll-readout"><span>PITCH</span><b>{state.plateAppearance.pitchRoll ?? '—'}</b><span>ADV</span><b>{state.plateAppearance.advantage?.toUpperCase() ?? '—'}</b></div>
-              <button className="retro-primary" disabled={saving} onClick={() => void rollPitch()}>ROLL PITCH</button>
+              {pitcherAdvantageIsAutomatic(state) ? <button className="retro-primary" disabled={saving} onClick={() => void noPitch()}>NO PITCH — PITCHER ADVANTAGE</button> : <button className="retro-primary" disabled={saving} onClick={() => void rollPitch()}>ROLL PITCH</button>}
               {prePitchActions.length > 0 && <div className="retro-manager-actions">{prePitchActions.map((action) => <button key={action.id} disabled={saving} onClick={() => void startAction(action.id)}>{action.label}</button>)}</div>}
             </>
           )}
@@ -164,6 +195,7 @@ export default function GameplayPlayableShellPage() {
           {decision && (
             <div className="retro-decision">
               <h2>{decision.title}</h2><p>{decision.description}</p>
+              {editablePrePitchDecision && <button className="retro-secondary" disabled={saving} onClick={() => void changeAction()}>CHANGE ACTION</button>}
               {decision.mode === 'roll' ? <button className="retro-primary" disabled={saving} onClick={() => void rollDecision()}>ROLL d20</button> : (
                 <>
                   <div className="retro-options">{decision.options.map((option) => {
