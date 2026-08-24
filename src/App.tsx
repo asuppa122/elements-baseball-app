@@ -19,6 +19,7 @@ import GameplayLabPage from './pages/GameplayLabPage'
 import GameplayPregamePage from './pages/GameplayPregamePage'
 import GameplayGameStatePage from './pages/GameplayGameStatePage'
 import GameplayPlayableShellPage from './pages/GameplayPlayableShellPage'
+import GameplayVerificationPage from './pages/GameplayVerificationPage'
 import GamesPage from './pages/GamesPage'
 import NotFoundPage from './pages/NotFoundPage'
 import './App.css'
@@ -28,6 +29,7 @@ import './roster.css'
 import './league-content.css'
 import './gameplay-lab.css'
 import './gameplay-shell.css'
+import './gameplay-demos.css'
 import './responsive-v1.2.23.css'
 
 function ProtectedApp() {
@@ -49,6 +51,7 @@ function ProtectedApp() {
           <Route path="/games/lab/:gameId/pregame" element={<GameplayPregamePage />} />
           <Route path="/games/lab/:gameId/state" element={<GameplayGameStatePage />} />
           <Route path="/games/lab/:gameId/play" element={<GameplayPlayableShellPage />} />
+          <Route path="/games/lab/verification" element={<GameplayVerificationPage />} />
           <Route path="/trades" element={<ComingSoonPage title="Trades" description="Trade proposals and league transaction tools are coming soon." />} />
           <Route path="/standings" element={<StandingsPage />} />
           <Route path="/milestones" element={<MilestonesPage />} />

@@ -1,4 +1,6 @@
 import { useMemo, useState } from 'react'
+import GameplayRuleDemo from '../components/GameplayRuleDemo'
+import { GAMEPLAY_DEMO_SCENARIOS } from '../gameplay/gameplayDemoScenarios'
 import { RULE_SECTIONS } from '../data/rulesData'
 import { DIGITAL_RULE_REVIEW_MARKERS, markersAfter } from '../data/digitalRuleReview'
 import michaelHarrisCard from '../assets/rulebook/section-3a-michael-harris-ii.jpeg'
@@ -151,6 +153,7 @@ function makeAnchor(sectionId: string, text: string) {
 }
 
 export default function RulesPage() {
+  const [activeDemoId, setActiveDemoId] = useState(GAMEPLAY_DEMO_SCENARIOS[0].id)
   const [experience, setExperience] = useState<'rulebook' | 'demos'>('rulebook')
   const [activeSection, setActiveSection] = useState<string>(RULE_SECTIONS[0].id)
   const [search, setSearch] = useState('')
@@ -360,23 +363,17 @@ export default function RulesPage() {
           <div className="rules-demos-heading">
             <div>
               <span className="league-eyebrow">Simulated Demos</span>
-              <h2>Game Situations</h2>
-              <p>The Rulebook remains authoritative. This separate workspace will demonstrate selected rules visually without rewriting them.</p>
+              <h2>Executable Rule Demos</h2>
+              <p>The Rulebook remains authoritative. These short looping demos are backed by the same rule helpers and regression examples used for gameplay verification.</p>
             </div>
-            <span className="league-status-pill">Structure Ready • Demos Coming Later</span>
+            <span className="league-status-pill">10 Live Verification Demos</span>
           </div>
-          <div className="rules-demo-grid">
-            {QUICK_RULES.map((item, index) => (
-              <article className="rules-demo-card rules-demo-card-v4" key={item.demoKey}>
-                <span className="rules-demo-number">{String(index + 1).padStart(2, '0')}</span>
-                <div className="rules-demo-card-copy">
-                  <strong>{item.label}</strong>
-                  <p>Visual example planned for this gameplay situation.</p>
-                  <div className="rules-demo-mini-stage"><span>◆</span><i>→</i><span>⚾</span><i>→</i><span>◇</span></div>
-                </div>
-                <span className="rules-demo-coming-soon">Demo Coming Soon</span>
-              </article>
-            ))}
+          <div className="rules-live-demos">
+            <div className="rules-live-demos-nav">
+              {GAMEPLAY_DEMO_SCENARIOS.map((scenario)=><button type="button" className={activeDemoId===scenario.id?'active':''} onClick={()=>setActiveDemoId(scenario.id)} key={scenario.id}>{scenario.shortLabel}</button>)}
+            </div>
+            <p className="rules-live-demos-note">Use Next Step for a manual walkthrough or Play Demo for a repeating GIF-style explanation.</p>
+            <GameplayRuleDemo scenario={GAMEPLAY_DEMO_SCENARIOS.find((scenario)=>scenario.id===activeDemoId)??GAMEPLAY_DEMO_SCENARIOS[0]} autoplay />
           </div>
         </section>
       )}

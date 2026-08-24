@@ -216,6 +216,7 @@ export default function GameplayLabPage() {
           <p>Create a frozen Season 10.1 game record and prove that it survives a browser refresh before we add pregame locking or live gameplay.</p>
         </div>
         <div className="gameplay-lab-season-card">
+          <Link className="gameplay-lab-open-button" to="/games/lab/verification">Targeted Verification</Link>
           <small>Active Configuration</small>
           <strong>{ACTIVE_SEASON_CONFIG.seasonLabel} · {ACTIVE_SEASON_CONFIG.blueprintLabel}</strong>
           <span>{ACTIVE_SEASON_CONFIG.rosterSize} players · {ACTIVE_SEASON_CONFIG.pointCap.toLocaleString()} pts · DH {ACTIVE_SEASON_CONFIG.useDh ? 'ON' : 'OFF'}</span>
