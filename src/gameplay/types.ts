@@ -158,6 +158,9 @@ export type GameState = {
   infieldDoublePlayUsage?: Record<GameSide, Partial<Record<'1B+2B+SS' | '1B+2B+3B' | '1B+3B+SS', number>>>
   naturalStolenBaseUsed?: Record<GameSide, boolean>
   appearedCardKeys?: Record<GameSide, string[]>
+  pitcherEntryDefenseOuts?: Record<string, number>
+  pitcherRunsAllowed?: Record<string, number>
+  pitcherShutoutBonusBrokenAtOuts?: Record<string, number>
   waitingFor: GameplayWaitingFor | null
   nextActor: GameSide | null
   paused: {

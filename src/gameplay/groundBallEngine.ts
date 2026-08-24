@@ -27,7 +27,7 @@ export function resolveAutoOut(s:GbState,rfo:number):GbResult{
  }
  if(b.first&&b.second){const r1=b.first,r2=b.second,r3=b.third;b.first=null;b.second=null;b.third=null;if(rfo<=5){put(b,'second',r1);put(b,'third',r2);if(r3)runs++}else if(rfo<=15){put(b,'first',s.batter);put(b,'third',r2);if(r3)runs++}else{put(b,'first',s.batter);put(b,'second',r1);if(r3)runs++}return{outsAdded:1,bases:b,runs,complete:true,note:'1B/2B automatic-out RFO'}}
  if(b.first){const r1=b.first,r2=b.second,r3=b.third;b.first=null;if(rfo<=5){put(b,'second',r1);put(b,'first',null)}else{put(b,'first',s.batter)}if(r2)put(b,'third',r2);if(r3)runs++;return{outsAdded:1,bases:b,runs,complete:true,note:'1B automatic-out RFO'}}
- if(b.second){if(rfo<=10){b.third=b.second;b.second=null}return{outsAdded:1,bases:b,runs,complete:true,note:'2B hold/advance RFO; hitter out'}}
+ if(b.second){if(rfo<=10){b.third=b.second;b.second=null}return{outsAdded:1,bases:b,runs,complete:true,note:'2B Roll To Hold; hitter out'}}
  if(b.third){b.third=null;runs++;return{outsAdded:1,bases:b,runs,complete:true,note:'3B scores; hitter out'}}
  return{outsAdded:1,bases:b,runs,complete:true,note:'Bases empty: hitter out'}
 }

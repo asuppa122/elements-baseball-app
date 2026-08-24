@@ -1,6 +1,8 @@
 import { cloneSeasonConfiguration, type ActiveSeasonConfiguration } from './seasonConfig'
 import { canAssignDefensivePosition } from './defense'
 import { resolveCoreResult, resolveSwingChart } from './coreGame'
+import { effectiveHitterOnBase, effectivePitcherControl } from './fatigueEngine'
+import { readPitcherStateValue } from './pitcherStateKey'
 import type {
   GameManagerSnapshot,
   GameState,
@@ -72,6 +74,9 @@ export function createInitialGameState(args: {
     nextActor: null,
     naturalStolenBaseUsed: { home:false, away:false },
     appearedCardKeys: { home:[], away:[] },
+    pitcherEntryDefenseOuts: {},
+    pitcherRunsAllowed: {},
+    pitcherShutoutBonusBrokenAtOuts: {},
     paused: {
       pausedAt: null,
       pausedByUserId: null,
@@ -343,6 +348,65 @@ function resolveEqualPitchAdvantage(args: {
   throw new Error('Pitch total tied On Base, but handedness is missing or unrecognized for platoon resolution.')
 }
 
+export function defensiveOutsRecorded(state: GameState, side: GameSide): number {
+  const completed = (state.inning - 1) * 3
+  const currentHalfDefense: GameSide = state.half === 'top' ? 'home' : 'away'
+  return completed + (currentHalfDefense === side ? state.outs : 0)
+}
+
+export function effectiveCurrentHitterOnBase(state: GameState): number {
+  const offense=battingSide(state)
+  const key=state.plateAppearance.batterCardKey
+  const batter=key?state.pregame[offense].roster?.cards[key]:null
+  if(!batter)return 5
+  const useDefault=state.pregame[offense].defaultBatterCardKeys.includes(batter.cardKey)||batter.hitter.onBase===null
+  return effectiveHitterOnBase(batter.hitter.onBase,0,useDefault)
+}
+
+export function effectiveCurrentPitcherControl(state: GameState): number {
+  const defense=fieldingSide(state)
+  const key=state.plateAppearance.pitcherCardKey
+  const pitcher=key?state.pregame[defense].roster?.cards[key]:null
+  if(!pitcher)return -5
+  const useDefault=(state.pregame[defense].defaultPitcherCardKeys?.includes(pitcher.cardKey)??false)||pitcher.pitcher.control===null
+  const entry=readPitcherStateValue(state.pitcherEntryDefenseOuts,defense,pitcher.cardKey)??0
+  const outs=Math.max(0,defensiveOutsRecorded(state,defense)-entry)
+  const runs=readPitcherStateValue(state.pitcherRunsAllowed,defense,pitcher.cardKey)??0
+  return effectivePitcherControl({printedControl:pitcher.pitcher.control,useDefaultAttributes:useDefault,cardIp:pitcher.pitcher.ip,outsRecorded:outs,earnedRunsAllowed:runs,shutoutBonusBrokenAtOuts:readPitcherStateValue(state.pitcherShutoutBonusBrokenAtOuts,defense,pitcher.cardKey)})
+}
+
+export function pitcherAdvantageIsAutomatic(state: GameState): boolean {
+  const control=effectiveCurrentPitcherControl(state)
+  const onBase=effectiveCurrentHitterOnBase(state)
+  const minimumPitchTotal=control+1
+  if(minimumPitchTotal>onBase)return true
+  if(minimumPitchTotal<onBase)return false
+
+  // If even a natural 1 only ties OB, NO PITCH is still valid when the Rulebook
+  // handedness tiebreak gives that tie to the pitcher (e.g. C5R vs OB6R).
+  const offense=battingSide(state)
+  const defense=fieldingSide(state)
+  const batterKey=state.plateAppearance.batterCardKey
+  const pitcherKey=state.plateAppearance.pitcherCardKey
+  const batter=batterKey?state.pregame[offense].roster?.cards[batterKey]:null
+  const pitcher=pitcherKey?state.pregame[defense].roster?.cards[pitcherKey]:null
+  if(!batter||!pitcher)return false
+  try {
+    return resolveEqualPitchAdvantage({
+      pitcherArm:pitcher.pitcher.arm??pitcher.hitter.bats,
+      hitterBats:batter.hitter.bats??batter.pitcher.arm,
+    })==='pitcher'
+  } catch {
+    return false
+  }
+}
+
+export function resolveAutomaticPitcherAdvantage(state: GameState): GameState {
+  if(state.status!=='in_progress'||state.waitingFor!=='PITCH_ROLL')throw new Error('Automatic advantage is only available before the pitch roll.')
+  if(!pitcherAdvantageIsAutomatic(state))throw new Error('Pitcher advantage is not automatic in this matchup.')
+  return withVersion(state,{...state,waitingFor:'SWING_ROLL',nextActor:battingSide(state),plateAppearance:{...state.plateAppearance,pitchRoll:null,pitchTotal:null,advantage:'pitcher',swingRoll:null,chartResult:null}})
+}
+
 export function resolvePitchRoll(state: GameState, roll: number): GameState {
   if (state.status !== 'in_progress') throw new Error('A pitch can only be rolled while the game is in progress.')
   if (state.waitingFor !== 'PITCH_ROLL') throw new Error('The game is not currently waiting for a pitch roll.')
@@ -362,13 +426,8 @@ export function resolvePitchRoll(state: GameState, roll: number): GameState {
   // A player explicitly locked to Default Attributes uses them even when the printed side exists.
   // A player with no printed Control automatically pitches at Control -5; a player with no
   // printed On Base automatically bats at On Base 5.
-  const isDefaultPitcher = (state.pregame[defense].defaultPitcherCardKeys?.includes(pitcher.cardKey) ?? false)
-    || pitcher.pitcher.control === null
-  const control = isDefaultPitcher ? -5 : (pitcher.pitcher.control ?? -5)
-
-  const isDefaultBatter = state.pregame[offense].defaultBatterCardKeys.includes(batter.cardKey)
-    || batter.hitter.onBase === null
-  const onBase = isDefaultBatter ? 5 : (batter.hitter.onBase ?? 5)
+  const control = effectiveCurrentPitcherControl(state)
+  const onBase = effectiveCurrentHitterOnBase(state)
 
   const pitchTotal = roll + control
   const advantage =

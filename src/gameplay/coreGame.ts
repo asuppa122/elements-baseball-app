@@ -1,4 +1,6 @@
 import { getFieldingRating } from './defense'
+import { cardIpOuts } from './fatigueEngine'
+import { pitcherInstanceKey, readPitcherStateValue } from './pitcherStateKey'
 import type {
   BaseRunnerState,
   GameCardSnapshot,
@@ -198,7 +200,21 @@ function decision(state: GameState, type: string, actingSide: GameSide, legalAct
 }
 
 function scoreRunner(state: GameState, side: GameSide, count=1): GameState {
-  return {...state, score:{...state.score,[side]:state.score[side]+count}}
+  const defense=other(side)
+  const pitcherKey=state.plateAppearance.pitcherCardKey ?? state.pregame[defense].defensiveAlignment.P ?? state.pregame[defense].startingPitcherCardKey
+  let pitcherShutoutBonusBrokenAtOuts=state.pitcherShutoutBonusBrokenAtOuts
+  const pitcherStateKey=pitcherKey?pitcherInstanceKey(defense,pitcherKey):null
+  if(pitcherKey && pitcherStateKey && (readPitcherStateValue(state.pitcherRunsAllowed,defense,pitcherKey)??0)===0 && readPitcherStateValue(state.pitcherShutoutBonusBrokenAtOuts,defense,pitcherKey)===undefined){
+    const pitcher=state.pregame[defense].roster?.cards[pitcherKey]
+    const totalDefenseOuts=(state.inning-1)*3+state.outs
+    const entry=readPitcherStateValue(state.pitcherEntryDefenseOuts,defense,pitcherKey)??0
+    const appearanceOuts=Math.max(0,totalDefenseOuts-entry)
+    if(pitcher && appearanceOuts>=15 && appearanceOuts>=cardIpOuts(pitcher.pitcher.ip)){
+      pitcherShutoutBonusBrokenAtOuts={...(state.pitcherShutoutBonusBrokenAtOuts??{}),[pitcherStateKey]:appearanceOuts}
+    }
+  }
+  const pitcherRunsAllowed=pitcherKey&&pitcherStateKey?{...(state.pitcherRunsAllowed??{}),[pitcherStateKey]:(readPitcherStateValue(state.pitcherRunsAllowed,defense,pitcherKey)??0)+count}:state.pitcherRunsAllowed
+  return {...state, score:{...state.score,[side]:state.score[side]+count},pitcherRunsAllowed,pitcherShutoutBonusBrokenAtOuts}
 }
 
 function clearPlateAppearance(state: GameState): GameState {
@@ -295,7 +311,20 @@ function automaticHit(state: GameState, result: 'BB'|'1B'|'1B+'|'2B'|'3B'|'HR', 
   // the upstream state/cursor error rather than allowing hit resolution to mask it.
   const b=structuredClone(state.bases)
   let next={...state,bases:b}
-  if (result==='BB' || result==='1B' || result==='1B+') {
+  if (result==='BB') {
+    // Walks advance only runners who are forced by the batter-runner taking 1B.
+    // A runner on 2B or 3B never advances on a BB unless a continuous force exists behind them.
+    if (b.first) {
+      if (b.second) {
+        if (b.third) next=scoreRunner(next,offense)
+        next={...next,bases:{first:batter,second:b.first,third:b.second}}
+      } else {
+        next={...next,bases:{first:batter,second:b.first,third:b.third}}
+      }
+    } else {
+      next={...next,bases:{first:batter,second:b.second,third:b.third}}
+    }
+  } else if (result==='1B' || result==='1B+') {
     if (b.third) next=scoreRunner(next,offense)
     next={...next,bases:{first:batter,second:b.first,third:b.second}}
   } else if (result==='2B') {
@@ -357,7 +386,11 @@ export function resolveCoreResult(state: GameState, result: CoreChartResult): Ga
     // With 1B unoccupied, the Rulebook has two direct branches instead of a DP choice:
     // runner on 2B -> RFO hold/advance; runner only on 3B -> scores automatically, batter out.
     if (!preBases.first && preBases.second) {
-      return decision(next,'GB_RUNNER_2B_RFO',defense,['ROLL_RFO'],{result,outs:state.outs,preBases,infieldIn:false})
+      // Rulebook order: batter is automatically out at 1B; runner on 3B scores immediately;
+      // only then does the runner from 2B receive the 1-10 advance / 11-20 hold RTH.
+      next={...next,bases:{first:null,second:preBases.second,third:null},outs:Math.min(3,next.outs+1) as 0|1|2|3}
+      if(preBases.third) next=scoreRunner(next,offense,1)
+      return decision(next,'GB_RUNNER_2B_RTH',defense,['ROLL_RTH'],{result,outs:state.outs,preBases,infieldIn:false})
     }
     if (!preBases.first && !preBases.second && preBases.third) {
       next={...next,bases:{...next.bases,third:null},outs:Math.min(3,next.outs+1) as 0|1|2|3}
