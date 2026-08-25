@@ -1,4 +1,5 @@
 import { getFieldingRating } from './defense'
+import { defensiveOutsRecorded } from './engine'
 import { cardIpOuts } from './fatigueEngine'
 import { pitcherInstanceKey, readPitcherStateValue } from './pitcherStateKey'
 import type { BaseRunnerState, BasesState, DefensivePosition, GameCardSnapshot, GameSide, GameState, PendingDecision } from './types'
@@ -30,7 +31,6 @@ function comboDefense(state:GameState,side:GameSide,combo:INFCombo){return combo
 const other=(s:GameSide):GameSide=>s==='home'?'away':'home'
 const offenseSide=(state:GameState):GameSide=>state.half==='top'?'away':'home'
 const defenseSide=(state:GameState):GameSide=>other(offenseSide(state))
-function defensiveOutsRecorded(state:GameState,side:GameSide){const completed=(state.inning-1)*3;const current:GameSide=state.half==='top'?'home':'away';return completed+(current===side?state.outs:0)}
 function replaceDecision(state:GameState,pending:PendingDecision):GameState{return {...state,status:'awaiting_decision',waitingFor:'CONDITIONAL_DECISION',nextActor:pending.actingSide,pendingDecision:pending}}
 function nextDecision(state:GameState,args:{type:string;actingSide:GameSide;legalActions:string[];context:Record<string,unknown>}):GameState{return replaceDecision(state,{id:crypto.randomUUID(),ruleCondition:'RC5_CONDITIONAL_GAME_STATE',decisionType:args.type,actingSide:args.actingSide,legalActions:args.legalActions,context:args.context,createdAt:new Date().toISOString()})}
 function attemptId(a:RunnerAttempt){return `${a.runner.cardKey}::${a.from}->${a.to}`}

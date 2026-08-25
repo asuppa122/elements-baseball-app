@@ -224,6 +224,15 @@ export function getCardYear(
   )
 }
 
+// Was independently duplicated (identical implementation) in
+// rosterSnapshot.ts and RosterPage.tsx -- consolidated here (health-audit
+// finding 3.3).
+export function getCardPoints(
+  card: CardRow,
+): number {
+  return card.hitter_points ?? 0
+}
+
 
 export const CURRENT_ELEMENTS_SEASON_YEAR = ACTIVE_SEASON_CONFIG.mlbYear
 

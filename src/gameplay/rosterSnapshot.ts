@@ -1,5 +1,5 @@
 import type { CardRecord } from '../types/card'
-import { getCardYear, isSeasonEligibleCard } from '../utils/cardHelpers'
+import { getCardPoints, getCardYear, isSeasonEligibleCard } from '../utils/cardHelpers'
 import type { ActiveSeasonConfiguration } from './seasonConfig'
 import type { GameCardSnapshot, GameRosterSnapshot } from './types'
 
@@ -33,10 +33,6 @@ export type RosterEligibilityResult = {
   issues: RosterEligibilityIssue[]
 }
 
-function getPoints(card: CardRecord): number {
-  return card.hitter_points ?? 0
-}
-
 function snapshotCard(card: CardRecord): GameCardSnapshot {
   const defense: GameCardSnapshot['defense'] = {}
   const pairs = [
@@ -59,7 +55,7 @@ function snapshotCard(card: CardRecord): GameCardSnapshot {
     playerName: card.player_name,
     imageUrl: card.image_url,
     year: getCardYear(card),
-    points: getPoints(card),
+    points: getCardPoints(card),
     hitter: {
       bats: card.hitter_bats,
       onBase: card.hitter_on_base,
@@ -120,7 +116,7 @@ export function validateRosterForGame(
     .map((cardKey) => cardsByKey.get(cardKey))
     .filter((card): card is CardRecord => Boolean(card))
 
-  const recalculatedPoints = assignedCards.reduce((sum, card) => sum + getPoints(card), 0)
+  const recalculatedPoints = assignedCards.reduce((sum, card) => sum + getCardPoints(card), 0)
   if (recalculatedPoints > configuration.pointCap) {
     issues.push({
       code: 'POINT_CAP',

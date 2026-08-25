@@ -1,22 +1,14 @@
 import type { ReactNode } from 'react'
+import type {
+  UniversalFilterField,
+  UniversalSelectOption,
+  UniversalSortOption,
+} from './UniversalFilterDrawer'
 
-export type UniversalSortOption<T extends string> = {
-  value: T
-  label: string
-}
-
-export type UniversalSelectOption = {
-  value: string
-  label: string
-}
-
-export type UniversalFilterField = {
-  label: string
-  value: string
-  kind?: 'select' | 'search' | 'locked'
-  placeholder?: string
-  options?: UniversalSelectOption[]
-  onChange?: (value: string) => void
+export type {
+  UniversalFilterField,
+  UniversalSelectOption,
+  UniversalSortOption,
 }
 
 type Props<TSort extends string> = {

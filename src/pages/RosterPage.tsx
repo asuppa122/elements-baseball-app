@@ -16,6 +16,7 @@ import { resolveDemoRosterAssignments } from '../data/demoRoster'
 import {
   cleanSearchTerm,
   getCardImageUrl,
+  getCardPoints,
   getCardPositions,
   getCardTeamCode,
   getCardYear,
@@ -120,7 +121,7 @@ const attributeLabels: Partial<Record<DrawerSort, string>> = {
 }
 
 function numericCardValue(card: CardRecord, attribute: DrawerSort): number | null {
-  if (attribute === 'points') return getPoints(card)
+  if (attribute === 'points') return getCardPoints(card)
   if (attribute === 'year') return getCardYear(card)
   if (attribute === 'name' || attribute === 'defense') return null
   const value = card[attribute as keyof CardRecord]
@@ -359,10 +360,6 @@ const ALL_SLOTS = [
   ...ROTATION,
   ...BULLPEN,
 ]
-
-function getPoints(card: CardRecord) {
-  return card.hitter_points ?? 0
-}
 
 function isPublished(card: CardRecord) {
   return card.hitter_points !== null &&
@@ -1028,7 +1025,7 @@ function RosterPage() {
           }
 
           if (drawerSort === 'points') {
-            return getPoints(card)
+            return getCardPoints(card)
           }
 
           const value = card[
@@ -1126,7 +1123,7 @@ function RosterPage() {
   const totalPoints =
     selectedCards.reduce(
       (sum, card) =>
-        sum + getPoints(card),
+        sum + getCardPoints(card),
       0,
     )
 
@@ -1478,11 +1475,11 @@ function RosterPage() {
     const projectedPoints =
       totalPoints +
       (isNewUniqueCard
-        ? getPoints(card)
+        ? getCardPoints(card)
         : 0) -
       (replacingUniqueCard &&
       existingCard
-        ? getPoints(
+        ? getCardPoints(
             cardMap.get(
               existingCard,
             ) as CardRecord,
@@ -1948,11 +1945,11 @@ function RosterPage() {
 
               <span
                 className={`roster-player-points${isTwoWaySecondaryAssignment ? ' roster-player-points--counted' : ''}`}
-                title={isTwoWaySecondaryAssignment ? `${getPoints(card).toLocaleString()} points counted with the hitter/fielding assignment` : undefined}
+                title={isTwoWaySecondaryAssignment ? `${getCardPoints(card).toLocaleString()} points counted with the hitter/fielding assignment` : undefined}
               >
                 {isTwoWaySecondaryAssignment
                   ? '2-WAY'
-                  : getPoints(card).toLocaleString()}
+                  : getCardPoints(card).toLocaleString()}
               </span>
             </>
           ) : (
@@ -2865,11 +2862,11 @@ function RosterPage() {
                     const afterPoints =
                       totalPoints +
                       (isNew
-                        ? getPoints(card)
+                        ? getCardPoints(card)
                         : 0) -
                       (replacesUnique &&
                       existingCard
-                        ? getPoints(
+                        ? getCardPoints(
                             cardMap.get(
                               existingCard,
                             ) as CardRecord,
