@@ -86,6 +86,7 @@ node scripts/audit-card-source.mjs # npm run audit:cards
 - `APPLY_UPDATE.command` — rsyncs a delivered project ZIP into `~/Desktop/elements-baseball-app`, preserving `.env`, `.git`, `node_modules`, `json.txt`; runs `npm install`.
 - `RUN_LOCAL.command` — `npm run dev` against `~/Desktop/elements-baseball-app`.
 - `PUSH_LIVE.command` — prompts to confirm desktop+mobile / app+`/demo` were tested, then `git add`, `git commit`, `git push origin main`. Vercel auto-deploys both the league app and `/demo` from one push (same Vercel project).
+- `RESTORE_GIT.command` — if `.git` is ever missing, re-initializes it and re-clones tracking from `github.com/asuppa122/elements-baseball-app` (`git init` → add `origin` → `fetch origin main` → `reset --mixed origin/main`), then sets `main` to track `origin/main`. No-ops if `.git` already exists.
 
 Local demo route: append `/demo` to the dev URL (e.g. `http://localhost:5173/demo`). Live: `https://elements-baseball.vercel.app` and `https://elements-baseball.vercel.app/demo`.
 
