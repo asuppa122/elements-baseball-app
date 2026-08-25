@@ -376,7 +376,13 @@
   height: 48px;
 }
 
-.back-to-cards-button {
+.back-to-cards-button,
+/* .profile-return-button: NotFoundPage's "Return Home" and CardProfilePage's
+   own "card could not be loaded" error state's "Return to Cards" button.
+   Previously had no CSS rule anywhere and rendered as a raw unstyled browser
+   button (light grey box, black outset border) -- shares this button's real
+   styling instead so both error states match the app's branded UI. */
+.profile-return-button {
   display: inline-flex;
   width: fit-content;
   min-height: 44px;
@@ -397,7 +403,8 @@
     background 160ms ease;
 }
 
-.back-to-cards-button:hover {
+.back-to-cards-button:hover,
+.profile-return-button:hover {
   border-color: var(--gold-bright);
   background: var(--panel-light);
   transform: translateY(-2px);
@@ -1039,7 +1046,8 @@
     overflow: hidden;
   }
 
-  .simplified-profile-page .back-to-cards-button {
+  .simplified-profile-page .back-to-cards-button,
+  .profile-status-page .profile-return-button {
     flex: 0 0 auto;
     min-height: 36px;
     margin: 0 auto 10px;
