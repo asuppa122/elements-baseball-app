@@ -189,7 +189,12 @@
   .home-feature-card,
   .home-feature-card:nth-child(4),
   .home-feature-card:nth-child(5) { grid-column: auto; }
-  .global-user-menu > div:not(.global-user-avatar) { display: none; }
+  /* Was `> div:not(.global-user-avatar)`, which also caught the demo-mode
+     badge/copy divs (also direct children of .global-user-menu) and hid
+     them entirely on mobile -- an oversight, not intentional; App.css
+     already has its own deliberate, narrower rule (`.demo-mode-copy` only)
+     for that case. Scoped to the actual intended target. */
+  .global-user-menu > .profile-menu-wrap { display: none; }
 }
 
 

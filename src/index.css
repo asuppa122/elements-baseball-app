@@ -70,7 +70,14 @@ h1,
 h2 {
   font-family: var(--heading);
   font-weight: 500;
-  color: var(--text-h);
+  /* --text-h is a light-mode-default boilerplate variable (near-black,
+     meant for a white background this app never uses) left over from the
+     original Vite scaffold. Real bug: any h1/h2 that doesn't set its own
+     explicit color (e.g. ComingSoonPage.tsx, GamesPage.tsx's hero) falls
+     through to this and renders near-invisible against this app's dark
+     theme. Every page's own container already sets an explicit, correct
+     `color` that h1/h2 should simply inherit -- removing the override here
+     lets that happen instead of silently beating it. */
 }
 
 h1 {

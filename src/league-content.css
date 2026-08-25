@@ -2244,6 +2244,7 @@
   .milestones-page-v3 .phase-label { font-size:.38rem!important; }
   .milestones-page-v3 .milestones-phase-card strong { font-size:.57rem!important; }
   .milestones-page-v3 .milestones-next-feature { grid-template-columns:40px minmax(0,1fr)!important; }
+  .milestones-page-v3 .milestones-next-feature::after { font-size:1.1rem!important; top:3px!important; }
   .milestones-page-v3 .milestones-next-meter { grid-column:1/-1; }
   .milestones-page-v3 .milestone-achievement { grid-template-columns:22px 78px minmax(0,1fr)!important; }
   .milestones-page-v3 .milestone-diamond-progress { grid-template-columns:minmax(0,1fr) 58px!important; gap:7px!important; padding:8px!important; }

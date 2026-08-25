@@ -12618,6 +12618,14 @@ span {
   gap: 4px;
   overflow-x: auto;
   scrollbar-width: thin;
+  /* Real overflow confirmed at mobile widths (scrollWidth > clientWidth)
+     with no prior affordance signaling more chips exist off-screen. Fades
+     the row's own right edge so the last visible chip visibly trails off
+     instead of looking clipped -- a discoverability hint, not JS-driven
+     scroll tracking (kept simple/static; see .standings-scroll-hint for
+     the fuller scroll-position-reactive pattern if this ever needs it). */
+  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent 100%);
+  mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent 100%);
 }
 
 .cards-filter-detail-panel .cards-filter-grid {
