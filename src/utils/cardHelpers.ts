@@ -99,6 +99,68 @@ export function normalizeImageUrl(
   return correctedUrl
 }
 
+export type CardImageSize = 'thumb' | 'grid' | 'original'
+
+// Matches the R2 key convention in scripts/lib/imageVariants.mjs's
+// variantKey() — duplicated here in logic (not import) since this is a Vite
+// client bundle and that's a plain Node script with no shared build step:
+//   card-images/<season>/<file>.<ext>        <- original
+//   card-images/<season>/grid/<file>.webp    <- 400w q82
+//   card-images/<season>/thumb/<file>.webp   <- 100w q82
+const R2_CARD_IMAGE_PATTERN =
+  /^(https:\/\/[^/]+\/card-images\/[^/]+\/)([^/]+)\.[a-zA-Z0-9]+$/
+
+// Derives the URL for a resized/compressed variant of an already-normalized
+// card image URL. Falls back to the original URL untouched when the size is
+// 'original', or when the URL isn't in the expected R2 card-image shape (e.g.
+// a Google Drive fallback URL from normalizeImageUrl) — there's no variant to
+// derive in that case, so the caller gets back exactly what it passed in.
+export function getCardImageUrl(
+  normalizedUrl: string | null,
+  size: CardImageSize,
+): string | null {
+  if (!normalizedUrl || size === 'original') {
+    return normalizedUrl
+  }
+
+  const match = normalizedUrl.match(R2_CARD_IMAGE_PATTERN)
+
+  if (!match) {
+    return normalizedUrl
+  }
+
+  const [, prefix, basename] = match
+
+  return `${prefix}${size}/${basename}.webp`
+}
+
+// Attach to an <img>'s onError when its src came from getCardImageUrl() with
+// a 'thumb'/'grid' size. If the resized variant fails to load (missing,
+// generation failure, not yet synced), falls back once to the original
+// full-size image and returns true (caller should wait for that image's own
+// load/error rather than treating this as final). If the original also fails
+// (e.g. one of the handful of rows with no source image in R2 at all) — or
+// there was no original to fall back to — does nothing further and returns
+// false, so the caller can run its own "no image" placeholder logic exactly
+// as it did before this fallback existed.
+export function handleCardImageLoadError(
+  img: HTMLImageElement,
+  originalUrl: string | null,
+): boolean {
+  if (img.dataset.cardImageFallbackApplied === 'true') {
+    return false
+  }
+
+  img.dataset.cardImageFallbackApplied = 'true'
+
+  if (originalUrl && img.src !== originalUrl) {
+    img.src = originalUrl
+    return true
+  }
+
+  return false
+}
+
 export function cleanSearchTerm(
   value: string,
 ): string {

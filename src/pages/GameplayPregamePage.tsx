@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
+import { getCardImageUrl, handleCardImageLoadError } from '../utils/cardHelpers'
 import { lockPregame, setPregameSelections } from '../gameplay/engine'
 import { canAssignDefensivePosition, getFieldingRating } from '../gameplay/defense'
 import {
@@ -52,7 +53,16 @@ function PlayerMini({ card, label }: { card: GameCardSnapshot; label?: string })
   return (
     <div className="pregame-player-mini">
       <div className="pregame-player-thumb">
-        {card.imageUrl ? <img src={card.imageUrl} alt="" referrerPolicy="no-referrer" /> : <span>{card.playerName[0]}</span>}
+        {card.imageUrl ? (
+          <img
+            src={getCardImageUrl(card.imageUrl, 'thumb') ?? card.imageUrl}
+            alt=""
+            referrerPolicy="no-referrer"
+            onError={(event) => handleCardImageLoadError(event.currentTarget, card.imageUrl)}
+          />
+        ) : (
+          <span>{card.playerName[0]}</span>
+        )}
       </div>
       <div>
         {label && <small>{label}</small>}
@@ -342,7 +352,7 @@ export default function GameplayPregamePage() {
               className={`pregame-choice-card ${startingPitcher === card.cardKey ? 'selected' : ''}`}
               onClick={() => selectStartingPitcher(card.cardKey)}
             >
-              <div className="pregame-choice-image">{card.imageUrl ? <img src={card.imageUrl} alt={card.playerName} referrerPolicy="no-referrer" /> : <span>{card.playerName[0]}</span>}</div>
+              <div className="pregame-choice-image">{card.imageUrl ? <img src={getCardImageUrl(card.imageUrl, 'grid') ?? card.imageUrl} alt={card.playerName} referrerPolicy="no-referrer" onError={(event) => handleCardImageLoadError(event.currentTarget, card.imageUrl)} /> : <span>{card.playerName[0]}</span>}</div>
               <strong>{card.playerName}</strong>
               <span>Control {card.pitcher.control ?? '—'} · IP {card.pitcher.ip ?? '—'}</span>
             </button>
@@ -390,7 +400,7 @@ export default function GameplayPregamePage() {
                 className={`pregame-default-player ${selected ? 'selected' : ''}`}
                 onClick={() => toggleDefault(card.cardKey)}
               >
-                <div className="pregame-player-thumb">{card.imageUrl ? <img src={card.imageUrl} alt="" referrerPolicy="no-referrer" /> : <span>{card.playerName[0]}</span>}</div>
+                <div className="pregame-player-thumb">{card.imageUrl ? <img src={getCardImageUrl(card.imageUrl, 'thumb') ?? card.imageUrl} alt="" referrerPolicy="no-referrer" onError={(event) => handleCardImageLoadError(event.currentTarget, card.imageUrl)} /> : <span>{card.playerName[0]}</span>}</div>
                 <div><strong>{card.playerName}</strong><span>{selected ? 'USE DEFAULT ATTRIBUTES' : 'Use card attributes'}</span></div>
                 <b>{selected ? 'DEFAULT' : 'CARD'}</b>
               </button>

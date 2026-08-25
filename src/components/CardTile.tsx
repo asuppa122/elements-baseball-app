@@ -1,7 +1,9 @@
 import { useNavigate } from 'react-router-dom'
 import type { CardRecord } from '../types/card'
 import {
+  getCardImageUrl,
   getCardYear,
+  handleCardImageLoadError,
   isCardOwnedByManager,
 } from '../utils/cardHelpers'
 import { useAuth } from '../auth/AuthContext'
@@ -40,18 +42,26 @@ function CardTile({
       <div className="card-image-area">
         {card.image_url ? (
           <img
-            src={card.image_url}
+            src={getCardImageUrl(card.image_url, 'grid') ?? card.image_url}
             alt={`${card.player_name} baseball card`}
             className="card-preview-image"
             loading="lazy"
             referrerPolicy="no-referrer"
             onError={(event) => {
-              event.currentTarget.style.display =
-                'none'
+              const img = event.currentTarget
+              const fellBackToOriginal = handleCardImageLoadError(
+                img,
+                card.image_url,
+              )
+
+              if (fellBackToOriginal) {
+                return
+              }
+
+              img.style.display = 'none'
 
               const placeholder =
-                event.currentTarget
-                  .nextElementSibling
+                img.nextElementSibling
 
               if (
                 placeholder instanceof

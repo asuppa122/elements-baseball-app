@@ -14,9 +14,11 @@ import {
 import type { CardRecord } from '../types/card'
 import {
   cleanSearchTerm,
+  getCardImageUrl,
   getCardPositions,
   getCardTeamCode,
   getCardYear,
+  handleCardImageLoadError,
   isCardOwnedByManager,
   isSeasonEligibleCard,
   isSeasonEligibleCardForManager,
@@ -1921,9 +1923,13 @@ function RosterPage() {
               <span className="roster-player-thumb">
                 {card.image_url ? (
                   <img
-                    src={card.image_url}
+                    src={getCardImageUrl(card.image_url, 'thumb') ?? card.image_url}
                     alt=""
+                    loading="lazy"
                     referrerPolicy="no-referrer"
+                    onError={(event) =>
+                      handleCardImageLoadError(event.currentTarget, card.image_url)
+                    }
                   />
                 ) : (
                   card.player_name[0]
@@ -2071,9 +2077,13 @@ function RosterPage() {
           <span className="roster-field-card-image">
             {card.image_url ? (
               <img
-                src={card.image_url}
+                src={getCardImageUrl(card.image_url, 'grid') ?? card.image_url}
                 alt={card.player_name}
+                loading="lazy"
                 referrerPolicy="no-referrer"
+                onError={(event) =>
+                  handleCardImageLoadError(event.currentTarget, card.image_url)
+                }
               />
             ) : (
               <span>{card.player_name[0]}</span>
@@ -2781,9 +2791,12 @@ function RosterPage() {
                   <div className="roster-compare-card">
                     {currentCard?.image_url ? (
                       <img
-                        src={currentCard.image_url}
+                        src={getCardImageUrl(currentCard.image_url, 'thumb') ?? currentCard.image_url}
                         alt={`${currentCard.player_name} current card`}
                         referrerPolicy="no-referrer"
+                        onError={(event) =>
+                          handleCardImageLoadError(event.currentTarget, currentCard.image_url)
+                        }
                       />
                     ) : (
                       <em>Empty {selectedSlot.label} slot</em>
@@ -2796,9 +2809,12 @@ function RosterPage() {
                   <div className="roster-compare-card preview">
                     {previewCard?.image_url ? (
                       <img
-                        src={previewCard.image_url}
+                        src={getCardImageUrl(previewCard.image_url, 'thumb') ?? previewCard.image_url}
                         alt={`${previewCard.player_name} preview card`}
                         referrerPolicy="no-referrer"
+                        onError={(event) =>
+                          handleCardImageLoadError(event.currentTarget, previewCard.image_url)
+                        }
                       />
                     ) : (
                       <em>Tap or click a card to select</em>
@@ -2932,9 +2948,13 @@ function RosterPage() {
                     <div className="roster-card-image">
                       {card.image_url ? (
                         <img
-                          src={card.image_url}
+                          src={getCardImageUrl(card.image_url, 'grid') ?? card.image_url}
                           alt={`${card.player_name} card`}
+                          loading="lazy"
                           referrerPolicy="no-referrer"
+                          onError={(event) =>
+                            handleCardImageLoadError(event.currentTarget, card.image_url)
+                          }
                         />
                       ) : (
                         <span>
