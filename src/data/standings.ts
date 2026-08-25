@@ -10,8 +10,6 @@ export type StandingRow = {
 
 // Source of truth: Document1 → STANDINGS workbook snapshot supplied/verified August 10, 2026.
 // Current standings include only managers with at least one Season 10.1 game.
-export const CURRENT_STANDINGS_UPDATED = 'Workbook snapshot • August 10, 2026'
-
 export const CURRENT_STANDINGS: StandingRow[] = [
   {manager:'Will',wins:19,losses:23,games:42,rs:205,ra:216},
   {manager:'Anthony',wins:26,losses:20,games:46,rs:260,ra:201},

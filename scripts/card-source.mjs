@@ -1,8 +1,8 @@
 import crypto from 'node:crypto'
 
-export const SPREADSHEET_ID = '1u23DbvIv0w17rMVBfZb9jq6TGvE3bWDsaMRMUzICvgM'
-export const CARDS_GID = '0'
-export const CARDS_CSV_URL = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/export?format=csv&gid=${CARDS_GID}`
+const SPREADSHEET_ID = '1u23DbvIv0w17rMVBfZb9jq6TGvE3bWDsaMRMUzICvgM'
+const CARDS_GID = '0'
+const CARDS_CSV_URL = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/export?format=csv&gid=${CARDS_GID}`
 
 const EXPECTED_COLUMN_COUNT = 52
 const HITTER_CHART_FIELDS = [
@@ -56,7 +56,7 @@ function applyKnownSourceCorrections(padded, cardKey, spreadsheetRow, sourceCorr
   })
 }
 
-export function parseCsv(text) {
+function parseCsv(text) {
   const rows = []
   let row = []
   let value = ''
@@ -146,7 +146,7 @@ function createSourceHash(values) {
   return crypto.createHash('sha256').update(JSON.stringify(values)).digest('hex')
 }
 
-export function findHeaderRow(rows) {
+function findHeaderRow(rows) {
   const index = rows.findIndex((row) =>
     row[4]?.trim() === 'Player Name' &&
     row[11]?.trim() === 'On Base' &&
@@ -157,7 +157,7 @@ export function findHeaderRow(rows) {
   return index
 }
 
-export function mapCsvRow(values, spreadsheetRow, sourceCorrections = []) {
+function mapCsvRow(values, spreadsheetRow, sourceCorrections = []) {
   const padded = Array.from({ length: EXPECTED_COLUMN_COUNT }, (_, index) => values[index] ?? '')
   const cardKey = asText(padded[0])
   const playerName = asText(padded[4])

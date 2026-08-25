@@ -10,7 +10,7 @@ export type PitcherFatigueInput = {
   shutoutBonusBrokenAtOuts?: number
 }
 
-export function clampPitcherControl(value:number){ return Math.max(-5,value) }
+function clampPitcherControl(value:number){ return Math.max(-5,value) }
 export function effectiveHitterOnBase(printed:number|null,gamesFromRested=0,useDefault=false){
   if(useDefault || printed===null) return 5
   return Math.max(5,printed-Math.max(0,gamesFromRested))
@@ -30,7 +30,7 @@ export function cardIpOuts(ip:number|null){
   const extraOuts=fraction>=0.5?2:fraction>=0.3?1:fraction>=0.15?2:fraction>=0.05?1:0
   return whole*3+extraOuts
 }
-export function distanceControlPenalty(input:PitcherFatigueInput){
+function distanceControlPenalty(input:PitcherFatigueInput){
   if(input.useDefaultAttributes)return 0
   const limit=cardIpOuts(input.cardIp)
   const beyond=Math.max(0,input.outsRecorded-limit)

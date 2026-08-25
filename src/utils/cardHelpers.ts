@@ -234,7 +234,7 @@ export function getCardPoints(
 }
 
 
-export const CURRENT_ELEMENTS_SEASON_YEAR = ACTIVE_SEASON_CONFIG.mlbYear
+const CURRENT_ELEMENTS_SEASON_YEAR = ACTIVE_SEASON_CONFIG.mlbYear
 
 const ELEMENTS_MANAGER_NAMES = new Set([
   'anthony',

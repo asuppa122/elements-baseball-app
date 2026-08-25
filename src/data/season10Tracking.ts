@@ -25,5 +25,3 @@ export const SEASON10_COMMUNITY = {
   managersAt75: seasonTotals.filter(games => games >= 75).length,
   managersAt100: seasonTotals.filter(games => games >= 100).length,
 }
-
-export const SEASON10_TRACKING_UPDATED = 'Document1 workbook snapshot • August 10, 2026'

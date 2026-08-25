@@ -1,4 +1,4 @@
-export const SUPABASE_PAGE_SIZE = 1000
+const SUPABASE_PAGE_SIZE = 1000
 
 // Speculative page count fired up front, before the real total is known.
 // Deliberately kept close to today's actual scale (~14 pages) rather than a

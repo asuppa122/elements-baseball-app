@@ -6,7 +6,6 @@ import { readPitcherStateValue } from './pitcherStateKey'
 import type {
   GameManagerSnapshot,
   GameState,
-  GameLifecycleStatus,
   GameSide,
   PregameManagerState,
   GameRosterSnapshot,
@@ -507,6 +506,3 @@ export function assertExpectedStateVersion(state: GameState, expectedVersion: nu
   }
 }
 
-export function isGameplayActiveStatus(status: GameLifecycleStatus): boolean {
-  return ['in_progress', 'awaiting_decision', 'inning_transition'].includes(status)
-}

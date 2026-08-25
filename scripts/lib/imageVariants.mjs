@@ -42,15 +42,6 @@ export function variantKey(season, basename, variantName) {
   return `card-images/${season}/${variantName}/${basename}.webp`;
 }
 
-export function variantKeysForObjectKey(objectKey) {
-  const parsed = splitKey(objectKey);
-  if (!parsed) return null;
-
-  const { season, basename } = parsed;
-  return Object.fromEntries(
-    VARIANTS.map((v) => [v.name, variantKey(season, basename, v.name)]),
-  );
-}
 
 export async function generateVariantBuffer(originalBuffer, variantConfig) {
   return sharp(originalBuffer)

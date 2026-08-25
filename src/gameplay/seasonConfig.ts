@@ -43,16 +43,6 @@ if (!ACTIVE_SEASON_CONFIG) {
   throw new Error(`Missing gameplay configuration for active Elements season ${ACTIVE_SEASON_ID}.`)
 }
 
-export function getSeasonConfiguration(seasonId: string): ActiveSeasonConfiguration {
-  const configuration = SEASON_CONFIGURATIONS[seasonId]
-
-  if (!configuration) {
-    throw new Error(`No gameplay configuration exists for Elements season ${seasonId}.`)
-  }
-
-  return configuration
-}
-
 export function cloneSeasonConfiguration(
   configuration: ActiveSeasonConfiguration,
 ): ActiveSeasonConfiguration {
