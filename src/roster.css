@@ -9802,6 +9802,31 @@ span {
 }
 
 
+/* KNOWN DEAD, NOT YET REMOVED (2026-08-25, health-audit findings 2.1/7.3):
+   this entire section (through the @media (max-width:420px) block below,
+   ending right before "2026-08-03 HORIZONTAL SWAP WORKSPACE") is fully
+   superseded by that later section for every property it shares -- live-
+   verified, current rendering is correct, this is confirmed dead weight,
+   not a live bug.
+
+   NOT safe to delete as one block, though -- already tried once and caught
+   a real regression: this section's desktop rule (@media (min-width:721px))
+   is the ONLY place that still sets `display: grid` on
+   .roster-picker-content.roster-picker-content-stacked; HORIZONTAL SWAP
+   never redeclares it, so removing this section wholesale flips the layout
+   to `display: flex` (the older, unscoped rule ~L8567) and roughly doubles
+   its rendered height at tablet width.
+
+   Real fix, next time: (1) add `display: grid !important;` explicitly into
+   HORIZONTAL SWAP's own @media (min-width:721px) block so it's fully self-
+   contained, (2) re-verify nothing else is silently load-bearing the same
+   way -- check every declaration in this section against what HORIZONTAL
+   SWAP actually redeclares, not just `display`, (3) only then remove this
+   section, (4) re-verify at every real breakpoint, including the 760/720/
+   420px boundaries specifically (the two sections don't share the same
+   breakpoint set, and PostCSS/static tools that compare by exact media-
+   query string won't catch a 760px rule quietly overriding a 720px one). */
+
 /* =========================================================
    2026-08-03 SUBSTITUTE WORKSPACE — SIDEBAR + CARD-FIRST GRID
    Shared by production and Demo Mode. Desktop uses a compact
