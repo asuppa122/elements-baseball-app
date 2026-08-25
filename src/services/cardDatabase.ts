@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabase'
+import { fetchAllPaginated } from '../lib/supabasePagination'
 import type {
   CardImageRow,
   CardRecord,
@@ -10,79 +11,51 @@ import {
 } from '../utils/cardHelpers'
 import { ACTIVE_SEASON_CONFIG } from '../gameplay/seasonConfig'
 
-const DATABASE_BATCH_SIZE = 1000
 export const ACTIVE_SEASON = ACTIVE_SEASON_CONFIG.mlbYear
 
 async function loadAllCardRows(): Promise<CardRow[]> {
-  const rows: CardRow[] = []
-  let startingRow = 0
-  let moreRowsAvailable = true
-
-  while (moreRowsAvailable) {
-    const endingRow =
-      startingRow + DATABASE_BATCH_SIZE - 1
-
-    const { data, error } = await supabase
-      .from('cards')
-      .select(CARD_COLUMNS)
-      .gte('hitter_points', 0)
-      .order('card_key', {
-        ascending: true,
-      })
-      .range(startingRow, endingRow)
-
-    if (error) {
-      throw error
-    }
-
-    const batch = (data ?? []) as CardRow[]
-    rows.push(...batch)
-
-    moreRowsAvailable =
-      batch.length === DATABASE_BATCH_SIZE
-
-    startingRow += DATABASE_BATCH_SIZE
-  }
-
-  return rows
+  return fetchAllPaginated<CardRow>(
+    (range) =>
+      supabase
+        .from('cards')
+        .select(CARD_COLUMNS)
+        .gte('hitter_points', 0)
+        .order('card_key', { ascending: true })
+        .range(range.from, range.to),
+    () =>
+      supabase
+        .from('cards')
+        .select('card_key', { count: 'exact', head: true })
+        .gte('hitter_points', 0),
+  )
 }
 
 async function loadAllCardImages(): Promise<CardImageRow[]> {
-  const images: CardImageRow[] = []
-  let startingRow = 0
-  let moreRowsAvailable = true
-
-  while (moreRowsAvailable) {
-    const endingRow =
-      startingRow + DATABASE_BATCH_SIZE - 1
-
-    const { data, error } = await supabase
-      .from('card_images')
-      .select('card_key, image_url')
-      .order('card_key', {
-        ascending: true,
-      })
-      .range(startingRow, endingRow)
-
-    if (error) {
-      throw error
-    }
-
-    const batch =
-      (data ?? []) as CardImageRow[]
-
-    images.push(...batch)
-
-    moreRowsAvailable =
-      batch.length === DATABASE_BATCH_SIZE
-
-    startingRow += DATABASE_BATCH_SIZE
-  }
-
-  return images
+  return fetchAllPaginated<CardImageRow>(
+    (range) =>
+      supabase
+        .from('card_images')
+        .select('card_key, image_url')
+        .order('card_key', { ascending: true })
+        .range(range.from, range.to),
+    () =>
+      supabase
+        .from('card_images')
+        .select('card_key', { count: 'exact', head: true }),
+  )
 }
 
-export async function loadSeasonCards(): Promise<CardRecord[]> {
+// In-memory cache for the lifetime of this tab/session -- navigating away
+// from Team Builder and back re-mounts the component but does not re-fetch.
+// Trade-off: any change to the underlying data (e.g. an ownership change
+// from a trade) made elsewhere while this session is open won't be reflected
+// until a hard reload. See IMAGE_PIPELINE.md-style note in the commit message
+// for the one place this matters beyond minor staleness: the Select Player
+// picker's eligibility filter reads `card.ownership` from this cached data.
+let cachedSeasonCards: CardRecord[] | null = null
+let cachedSeasonCardsPromise: Promise<CardRecord[]> | null = null
+
+async function loadSeasonCardsUncached(): Promise<CardRecord[]> {
   const [cards, images] = await Promise.all([
     loadAllCardRows(),
     loadAllCardImages(),
@@ -104,6 +77,30 @@ export async function loadSeasonCards(): Promise<CardRecord[]> {
     image_url:
       imageMap.get(card.card_key) ?? null,
   }))
+}
+
+export async function loadSeasonCards(): Promise<CardRecord[]> {
+  if (cachedSeasonCards) {
+    return cachedSeasonCards
+  }
+
+  if (cachedSeasonCardsPromise) {
+    return cachedSeasonCardsPromise
+  }
+
+  cachedSeasonCardsPromise = loadSeasonCardsUncached()
+    .then((result) => {
+      cachedSeasonCards = result
+      cachedSeasonCardsPromise = null
+      return result
+    })
+    .catch((error: unknown) => {
+      // Don't cache a failure -- the next call should retry from scratch.
+      cachedSeasonCardsPromise = null
+      throw error
+    })
+
+  return cachedSeasonCardsPromise
 }
 
 export async function loadCardByKey(

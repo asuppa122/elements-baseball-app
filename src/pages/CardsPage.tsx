@@ -17,6 +17,7 @@ import type {
   StatsContext,
 } from '../components/FilterDrawer'
 import { supabase } from '../lib/supabase'
+import { fetchAllPaginated } from '../lib/supabasePagination'
 import type {
   CardImageRow,
   CardRecord,
@@ -33,7 +34,76 @@ import {
 } from '../utils/cardHelpers'
 
 const PAGE_SIZE = 100
-const DATABASE_BATCH_SIZE = 1000
+
+// In-memory cache for the lifetime of this tab/session -- deliberately
+// separate from cardDatabase.ts's own cache for loadSeasonCards() (this page
+// hard-locks the Year filter to 2025 in demo mode, a real behavioral
+// difference from how Team Builder uses loadSeasonCards(); kept as two
+// implementations for now, see IMAGE_PIPELINE.md-style investigation notes).
+// Same staleness trade-off as the Team Builder cache: a change made
+// elsewhere while this session is open won't show until a hard reload.
+let cachedCardsAndImages: [CardImageRow[], CardRow[]] | null = null
+let cachedCardsAndImagesPromise: Promise<[CardImageRow[], CardRow[]]> | null =
+  null
+
+async function loadAllCardsAndImagesUncached(): Promise<
+  [CardImageRow[], CardRow[]]
+> {
+  return Promise.all([
+    fetchAllPaginated<CardImageRow>(
+      (range) =>
+        supabase
+          .from('card_images')
+          .select('card_key, image_url')
+          .order('card_key', { ascending: true })
+          .range(range.from, range.to),
+      () =>
+        supabase
+          .from('card_images')
+          .select('card_key', { count: 'exact', head: true }),
+    ),
+    fetchAllPaginated<CardRow>(
+      (range) =>
+        supabase
+          .from('cards')
+          .select(CARD_COLUMNS)
+          .gte('hitter_points', 0)
+          .order('hitter_points', { ascending: false, nullsFirst: false })
+          .order('all_number', { ascending: true, nullsFirst: false })
+          .range(range.from, range.to),
+      () =>
+        supabase
+          .from('cards')
+          .select('card_key', { count: 'exact', head: true })
+          .gte('hitter_points', 0),
+    ),
+  ])
+}
+
+async function loadAllCardsAndImagesCached(): Promise<
+  [CardImageRow[], CardRow[]]
+> {
+  if (cachedCardsAndImages) {
+    return cachedCardsAndImages
+  }
+
+  if (cachedCardsAndImagesPromise) {
+    return cachedCardsAndImagesPromise
+  }
+
+  cachedCardsAndImagesPromise = loadAllCardsAndImagesUncached()
+    .then((result) => {
+      cachedCardsAndImages = result
+      cachedCardsAndImagesPromise = null
+      return result
+    })
+    .catch((error: unknown) => {
+      cachedCardsAndImagesPromise = null
+      throw error
+    })
+
+  return cachedCardsAndImagesPromise
+}
 
 
 const ATTRIBUTE_FILTER_LABELS: Partial<Record<AttributeFilter, string>> = {
@@ -1145,118 +1215,11 @@ function CardsPage() {
       setErrorMessage('')
 
       try {
-        const loadedImages:
-          CardImageRow[] = []
-
-        let imageStartingRow = 0
-        let moreImagesAvailable =
-          true
-
-        while (
-          moreImagesAvailable
-        ) {
-          const imageEndingRow =
-            imageStartingRow +
-            DATABASE_BATCH_SIZE -
-            1
-
-          const {
-            data: imageData,
-            error: imageError,
-          } = await supabase
-            .from('card_images')
-            .select(
-              'card_key, image_url',
-            )
-            .order('card_key', {
-              ascending: true,
-            })
-            .range(
-              imageStartingRow,
-              imageEndingRow,
-            )
-
-          if (imageError) {
-            throw imageError
-          }
-
-          const imageBatch =
-            (imageData ??
-              []) as CardImageRow[]
-
-          loadedImages.push(
-            ...imageBatch,
-          )
-
-          moreImagesAvailable =
-            imageBatch.length ===
-            DATABASE_BATCH_SIZE
-
-          imageStartingRow +=
-            DATABASE_BATCH_SIZE
-        }
+        const [loadedImages, loadedCards] = await loadAllCardsAndImagesCached()
 
         setCardImages(
           loadedImages,
         )
-
-        const loadedCards:
-          CardRow[] = []
-
-        let startingRow = 0
-        let moreCardsAvailable =
-          true
-
-        while (
-          moreCardsAvailable
-        ) {
-          const endingRow =
-            startingRow +
-            DATABASE_BATCH_SIZE -
-            1
-
-          const {
-            data,
-            error,
-          } = await supabase
-            .from('cards')
-            .select(CARD_COLUMNS)
-            .gte(
-              'hitter_points',
-              0,
-            )
-            .order('hitter_points', {
-              ascending: false,
-              nullsFirst: false,
-            })
-            .order('all_number', {
-              ascending: true,
-              nullsFirst: false,
-            })
-            .range(
-              startingRow,
-              endingRow,
-            )
-
-          if (error) {
-            throw error
-          }
-
-          const batch =
-            (data ??
-              []) as CardRow[]
-
-          loadedCards.push(
-            ...batch,
-          )
-
-          moreCardsAvailable =
-            batch.length ===
-            DATABASE_BATCH_SIZE
-
-          startingRow +=
-            DATABASE_BATCH_SIZE
-        }
 
         const loadedImageMap =
           new Map<string, string>()

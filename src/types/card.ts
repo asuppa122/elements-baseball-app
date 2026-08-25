@@ -2,7 +2,6 @@ export type CardRow = {
   card_key: string
   all_number: number | null
   card_number: number | null
-  icon: string | null
   player_name: string
   league: string | null
   team_name: string | null
@@ -57,10 +56,6 @@ export type CardRow = {
   pitcher_hr: string | null
 
   source_yes_field: string | number | null
-  source_row: number | null
-  source_hash: string | null
-  first_synced_at: string | null
-  last_synced_at: string | null
 }
 
 export type CardImageRow = {
@@ -76,7 +71,6 @@ export const CARD_COLUMNS = `
   card_key,
   all_number,
   card_number,
-  icon,
   player_name,
   league,
   team_name,
@@ -124,9 +118,5 @@ export const CARD_COLUMNS = `
   pitcher_2b,
   pitcher_3b,
   pitcher_hr,
-  source_yes_field,
-  source_row,
-  source_hash,
-  first_synced_at,
-  last_synced_at
+  source_yes_field
 `
