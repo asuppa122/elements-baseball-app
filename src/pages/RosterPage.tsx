@@ -193,6 +193,7 @@ function SidebarIcon({ section }: { section: Section }) {
     strokeWidth: 1.8,
     strokeLinecap: 'round' as const,
     strokeLinejoin: 'round' as const,
+    'aria-hidden': true as const,
   }
 
   // Active Roster: lineup card
@@ -2225,6 +2226,8 @@ function RosterPage() {
               className={section === value ? 'active' : ''}
               onClick={() => setSection(value)}
               key={value}
+              aria-label={label}
+              aria-current={section === value ? 'page' : undefined}
             >
               <SidebarIcon section={value} />
               <span>{label}</span>
