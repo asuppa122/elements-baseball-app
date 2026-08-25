@@ -12,6 +12,7 @@ import {
   loadSeasonCards,
 } from '../services/cardDatabase'
 import type { CardRecord } from '../types/card'
+import { resolveDemoRosterAssignments } from '../data/demoRoster'
 import {
   cleanSearchTerm,
   getCardImageUrl,
@@ -574,50 +575,7 @@ function RosterPage() {
   useEffect(() => {
     if (!isDemo || cards.length === 0) return
 
-    const byName = new Map(cards.map((card) => [card.player_name.trim().toLowerCase(), card.card_key]))
-    const pick = (name: string) => byName.get(name.toLowerCase())
-    const demoAssignments: Record<string, string> = {}
-    const seed: Array<[string, string]> = [
-      ['defense-c', 'Salvador Perez'],
-      ['defense-1b', 'Nolan Schanuel'],
-      ['defense-2b', 'Brendan Donovan'],
-      ['defense-3b', 'Brice Matthews'],
-      ['defense-ss', 'Francisco Lindor'],
-      ['defense-lf', 'Nathan Lukes'],
-      ['defense-cf', 'Ángel Martínez'],
-      ['defense-rf', 'Addison Barger'],
-      ['defense-dh', 'Shohei Ohtani'],
-      ['lineup-1', 'Shohei Ohtani'],
-      ['lineup-2', 'Nolan Schanuel'],
-      ['lineup-3', 'Francisco Lindor'],
-      ['lineup-4', 'Brendan Donovan'],
-      ['lineup-5', 'Addison Barger'],
-      ['lineup-6', 'Nathan Lukes'],
-      ['lineup-7', 'Salvador Perez'],
-      ['lineup-8', 'Ángel Martínez'],
-      ['lineup-9', 'Brice Matthews'],
-      ['bench-1', 'Chad Wallach'],
-      ['bench-2', 'Ali Sánchez'],
-      ['bench-3', 'Aramis Garcia'],
-      ['bench-4', 'CJ Alexander'],
-      ['rotation-1', 'Garrett Crochet'],
-      ['rotation-2', 'Bryan Woo'],
-      ['rotation-3', 'Framber Valdez'],
-      ['rotation-4', 'Zack Littell'],
-      ['rotation-5', 'Max Scherzer'],
-      ['bullpen-1', 'Gabe Speier'],
-      ['bullpen-2', 'Jeff Hoffman'],
-      ['bullpen-3', 'Valente Bellozo'],
-      ['bullpen-4', 'Mitch Spence'],
-      ['bullpen-5', 'Tyler Alexander'],
-      ['bullpen-6', 'Antonio Senzatela'],
-      ['bullpen-7', 'Ryan Weathers'],
-      ['bullpen-8', 'Héctor Neris'],
-    ]
-    seed.forEach(([slot, player]) => {
-      const key = pick(player)
-      if (key) demoAssignments[slot] = key
-    })
+    const demoAssignments = resolveDemoRosterAssignments(cards)
 
     setName('2025 Elements Demo')
     setAssigned(demoAssignments)
@@ -2286,7 +2244,7 @@ function RosterPage() {
           </div>
 
           <div className="roster-header-actions">
-            <div className="roster-points-status"><strong>{totalPoints.toLocaleString()} / {pointCap.toLocaleString()}</strong><span>{Math.max(pointCap-totalPoints,0).toLocaleString()} remaining</span></div>
+            <div className="roster-points-status"><strong>{totalPoints.toLocaleString()} / {pointCap.toLocaleString()}</strong>{totalPoints > pointCap ? <span className="roster-points-over">{(totalPoints - pointCap).toLocaleString()} over cap</span> : <span>{(pointCap - totalPoints).toLocaleString()} remaining</span>}</div>
             <button
               type="button"
               className={`roster-season-toggle ${seasonEligibleOnly ? 'active' : ''}`}

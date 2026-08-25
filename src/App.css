@@ -1470,6 +1470,11 @@ input {
 .roster-points-status{display:flex;flex-direction:column;align-items:flex-end;min-width:118px;line-height:1.05}
 .roster-points-status strong{color:#d6b35c;font-size:.88rem}
 .roster-points-status span{font-size:.7rem;opacity:.72}
+/* Over-cap state: distinguishes "0 remaining" (exactly at cap, valid) from a roster that has
+   somehow exceeded pointCap (invalid) -- previously both collapsed to an identical "0 remaining"
+   via Math.max(pointCap-totalPoints,0), silently hiding an invalid-roster condition. Reuses the
+   app's existing error-red (.error-panel h3, App.css) for visual consistency with other error states. */
+.roster-points-status .roster-points-over{color:#ff9e9e;opacity:1;font-weight:700}
 .roster-confirm-swap{margin-top:8px;border:1px solid #d1ad55;background:#b89543;color:#090909;border-radius:7px;padding:7px 12px;font-weight:800;cursor:pointer}
 .roster-save-button:disabled{opacity:.72;cursor:wait}
 

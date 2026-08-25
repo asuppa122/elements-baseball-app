@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
 import { supabase } from '../lib/supabase'
 import { appPath } from '../lib/appPaths'
+import { loadSeasonCards } from '../services/cardDatabase'
+import { computeDemoRosterTotals, resolveDemoRosterAssignments } from '../data/demoRoster'
 
 export type LineupRecord = {
   id: string
@@ -34,15 +36,23 @@ export default function LineupSelectorPage() {
 
   async function loadLineups() {
     if (isDemo) {
+      setLoading(true)
+      // Real roster, real total -- resolved from the same shared seed RosterPage
+      // uses, instead of a hardcoded number that could silently drift out of
+      // sync with the actual demo roster (see health-audit finding 8.1).
+      const cards = await loadSeasonCards()
+      const assigned = resolveDemoRosterAssignments(cards)
+      const { playerCount, totalPoints } = computeDemoRosterTotals(cards, assigned)
+
       setLineups([{
         id: 'sample',
         name: '2025 Elements Demo',
         is_active: true,
         sort_order: 0,
         use_dh: true,
-        player_count: 26,
-        total_points: 5999,
-        roster_state: { assigned: {}, rosterFormat: 'full', useDh: true },
+        player_count: playerCount,
+        total_points: totalPoints,
+        roster_state: { assigned, rosterFormat: 'full', useDh: true },
         updated_at: new Date(0).toISOString(),
       }])
       setLoading(false)
