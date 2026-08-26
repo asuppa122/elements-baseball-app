@@ -436,7 +436,12 @@ export function resolveForDevelopmentHarness(state: GameState): GameState {
   if (state.pendingDecision.decisionType==='ONE_BASE_PLUS_STOLEN_BASE') {
     return finishPlateAppearance({...state,status:'in_progress',pendingDecision:null})
   }
-  if (state.pendingDecision.decisionType==='GROUND_BALL_RESOLUTION') {
+  // The top-level GROUND_BALL_RESOLUTION gateway and every granular GB_*
+  // sub-decision (RFO, standard/3B1B/triple checks, contact fielding roll,
+  // runner-on-2B RTH, infield-combo selection) share the same conservative
+  // shortcut: this harness isn't trying to model exact fielding outcomes,
+  // just keep the core loop moving with one deterministic, always-legal out.
+  if (state.pendingDecision.decisionType==='GROUND_BALL_RESOLUTION' || state.pendingDecision.decisionType.startsWith('GB_')) {
     const next: GameState = {...state,status:'in_progress',pendingDecision:null,outs:Math.min(3,state.outs+1) as 0|1|2|3}
     return finishPlateAppearance(next)
   }
