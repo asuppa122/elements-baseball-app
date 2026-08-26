@@ -24,6 +24,7 @@ const testConfig: ActiveSeasonConfiguration = {
   useDh: false,
   requireSeasonEligibleCards: true,
   timelineRules: { automaticExtraInningRunner: false, rosterEraBaseline: '2020-plus' },
+  restMilestones: [],
 }
 
 function buildRoster(overrides: Partial<SavedRosterForGame> = {}): SavedRosterForGame {
