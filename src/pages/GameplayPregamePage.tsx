@@ -4,6 +4,7 @@ import { useAuth } from '../auth/AuthContext'
 import { getCardImageUrl, handleCardImageLoadError } from '../utils/cardHelpers'
 import { attachRestState, lockPregame, setPregameSelections } from '../gameplay/engine'
 import { canAssignDefensivePosition, getFieldingRating } from '../gameplay/defense'
+import { pregameEffectiveControl, pregameEffectiveOnBase } from '../gameplay/pregameFatigueDisplay'
 import {
   hasGameplayLabAccess,
   loadGameplayLabGame,
@@ -87,6 +88,9 @@ export default function GameplayPregamePage() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
+  const [restStateByCardKey, setRestStateByCardKey] = useState<
+    Record<string, { hitterGamesRemaining: number; pitcherGamesRemaining: number }>
+  >({})
 
   useEffect(() => {
     if (!gameId || !user || isDemo) {
@@ -104,6 +108,16 @@ export default function GameplayPregamePage() {
         const loaded = await loadGameplayLabGame(gameId)
         if (cancelled) return
         setGame(loaded)
+        // For display only, before any decision locks -- so a manager can see
+        // whether a player is actually fatigued before choosing them, not just
+        // find out mid-game. The real, authoritative fetch that actually gets
+        // frozen into the game state still happens in persistSelections below.
+        const rosterCardKeysForDisplay = Object.keys(loaded.game_state.pregame.home.roster?.cards ?? {})
+        if (rosterCardKeysForDisplay.length > 0) {
+          loadPlayerRestState(loaded.game_state.configuration.seasonId, rosterCardKeysForDisplay)
+            .then((result) => { if (!cancelled) setRestStateByCardKey(result) })
+            .catch(() => { if (!cancelled) setRestStateByCardKey({}) })
+        }
         const pg = loaded.game_state.pregame.home
         setStartingPitcher(pg.startingPitcherCardKey ?? '')
         setDefaultBatters(pg.defaultBatterCardKeys ?? [])
@@ -353,19 +367,30 @@ export default function GameplayPregamePage() {
           <em>Choose from the frozen starting rotation. This choice becomes permanent when you lock pregame.</em>
         </header>
         <div className="pregame-choice-grid pitcher-grid">
-          {startingPitcherOptions.map((card) => (
-            <button
-              type="button"
-              key={card.cardKey}
-              disabled={locked}
-              className={`pregame-choice-card ${startingPitcher === card.cardKey ? 'selected' : ''}`}
-              onClick={() => selectStartingPitcher(card.cardKey)}
-            >
-              <div className="pregame-choice-image">{card.imageUrl ? <img src={getCardImageUrl(card.imageUrl, 'grid') ?? card.imageUrl} alt={card.playerName} referrerPolicy="no-referrer" onError={(event) => handleCardImageLoadError(event.currentTarget, card.imageUrl)} /> : <span>{card.playerName[0]}</span>}</div>
-              <strong>{card.playerName}</strong>
-              <span>Control {card.pitcher.control ?? '—'} · IP {card.pitcher.ip ?? '—'}</span>
-            </button>
-          ))}
+          {startingPitcherOptions.map((card) => {
+            const effectiveControl = pregameEffectiveControl(card, restStateByCardKey)
+            return (
+              <button
+                type="button"
+                key={card.cardKey}
+                disabled={locked}
+                className={`pregame-choice-card ${startingPitcher === card.cardKey ? 'selected' : ''}`}
+                onClick={() => selectStartingPitcher(card.cardKey)}
+              >
+                <div className="pregame-choice-image">{card.imageUrl ? <img src={getCardImageUrl(card.imageUrl, 'grid') ?? card.imageUrl} alt={card.playerName} referrerPolicy="no-referrer" onError={(event) => handleCardImageLoadError(event.currentTarget, card.imageUrl)} /> : <span>{card.playerName[0]}</span>}</div>
+                <strong>{card.playerName}</strong>
+                <span>
+                  Control {card.pitcher.control ?? '—'}
+                  {effectiveControl !== null && (
+                    <span className="pregame-fatigue-adjusted" title="Fatigue-adjusted effective Control, carrying rest debt from prior games">
+                      {' '}→ {effectiveControl}
+                    </span>
+                  )}
+                  {' '}· IP {card.pitcher.ip ?? '—'}
+                </span>
+              </button>
+            )
+          })}
         </div>
       </section>
 
@@ -401,6 +426,7 @@ export default function GameplayPregamePage() {
         <div className="pregame-default-grid">
           {startingBatters.map((card) => {
             const selected = defaultBatters.includes(card.cardKey)
+            const effectiveOnBase = pregameEffectiveOnBase(card, restStateByCardKey)
             return (
               <button
                 type="button"
@@ -410,7 +436,17 @@ export default function GameplayPregamePage() {
                 onClick={() => toggleDefault(card.cardKey)}
               >
                 <div className="pregame-player-thumb">{card.imageUrl ? <img src={getCardImageUrl(card.imageUrl, 'thumb') ?? card.imageUrl} alt="" referrerPolicy="no-referrer" onError={(event) => handleCardImageLoadError(event.currentTarget, card.imageUrl)} /> : <span>{card.playerName[0]}</span>}</div>
-                <div><strong>{card.playerName}</strong><span>{selected ? 'USE DEFAULT ATTRIBUTES' : 'Use card attributes'}</span></div>
+                <div>
+                  <strong>{card.playerName}</strong>
+                  <span>
+                    {selected ? 'USE DEFAULT ATTRIBUTES' : 'Use card attributes'}
+                    {effectiveOnBase !== null && !selected && (
+                      <span className="pregame-fatigue-adjusted" title="Fatigue-adjusted effective On Base, carrying rest debt from prior games -- declaring default attributes below would avoid this penalty for this game">
+                        {' '}· On Base {card.hitter.onBase} → {effectiveOnBase}
+                      </span>
+                    )}
+                  </span>
+                </div>
                 <b>{selected ? 'DEFAULT' : 'CARD'}</b>
               </button>
             )

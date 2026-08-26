@@ -326,6 +326,14 @@
 .pregame-default-player.selected span { color: #efc83d; }
 .pregame-default-player:disabled { cursor: default; }
 
+/* Fatigue-adjusted rating callout, shown inline next to a printed rating
+   only when a player actually carries persistent rest debt -- same amber
+   the rest-state badge uses in Team Builder, kept consistent app-wide. */
+.pregame-fatigue-adjusted {
+  color: #e6c65c;
+  font-weight: 600;
+}
+
 .pregame-opponent-pending {
   display: flex;
   align-items: center;
