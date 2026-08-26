@@ -59,7 +59,9 @@ function coverageRoster(side: GameSide): GameRosterSnapshot {
   }
 }
 
-function buildNonGbCoverageFixture(): GameState {
+// Exported for reuse by the Vitest port of scenarioHarness.ts's own suite
+// (src/gameplay/__tests__/scenarioHarness.test.ts) — same fixture, one source of truth.
+export function buildNonGbCoverageFixture(): GameState {
   const awayRoster=coverageRoster('away'), homeRoster=coverageRoster('home')
   const makePre=(side:GameSide, roster:GameRosterSnapshot)=>({
     side, manager:{userId:`coverage-${side}`,managerName:`Coverage ${side}`}, roster, startingPitcherCardKey:`${side.toUpperCase()}-8`,

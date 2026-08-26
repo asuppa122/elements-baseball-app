@@ -8,6 +8,8 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "inspect:cards": "node scripts/inspect-gviz.mjs",
     "import:cards": "node scripts/import-cards.mjs",
     "import:images": "f(){ node scripts/import-images.mjs \"$@\" && node scripts/sync-images-to-r2.mjs; }; f",
@@ -37,6 +39,7 @@
     "sharp": "^0.35.3",
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.45.0",
-    "vite": "^7.1.7"
+    "vite": "^7.1.7",
+    "vitest": "^4.1.11"
   }
 }
