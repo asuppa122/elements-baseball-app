@@ -73,6 +73,8 @@ export function createInitialGameState(args: {
     nextActor: null,
     naturalStolenBaseUsed: { home:false, away:false },
     appearedCardKeys: { home:[], away:[] },
+    hitterPlateAppearanceCardKeys: { home:[], away:[] },
+    pitcherAppearanceCardKeys: { home:[], away:[] },
     pitcherEntryDefenseOuts: {},
     pitcherRunsAllowed: {},
     pitcherShutoutBonusBrokenAtOuts: {},

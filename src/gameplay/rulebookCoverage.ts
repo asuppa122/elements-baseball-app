@@ -2,6 +2,7 @@ import { runGameplayDemoVerification } from './gameplayDemoScenarios'
 import { runGroundBallScenarioMatrix } from './groundBallScenarioHarness'
 import { runFatigueScenarioMatrix } from './fatigueScenarioHarness'
 import { runRestTrackingScenarioMatrix } from './restTrackingScenarioHarness'
+import { runPaMarkerScenarioMatrix } from './paMarkerScenarioHarness'
 import { runGameBoundaryScenarioMatrix } from './gameBoundaryScenarioHarness'
 import { runNonGbScenarioMatrix, type ScenarioReport, type ScenarioResult } from './scenarioHarness'
 import { ACTIVE_SEASON_CONFIG } from './seasonConfig'
@@ -16,7 +17,7 @@ export type CoverageCase = {
   description: string
   passed: boolean
   detail: string
-  source: 'demo' | 'non_gb_matrix' | 'ground_ball_matrix' | 'fatigue_matrix' | 'rest_tracking_matrix' | 'boundary_matrix'
+  source: 'demo' | 'non_gb_matrix' | 'ground_ball_matrix' | 'fatigue_matrix' | 'rest_tracking_matrix' | 'pa_marker_matrix' | 'boundary_matrix'
 }
 
 export type MechanicCoverage = {
@@ -114,8 +115,9 @@ export function runRulebookCoverage(): RulebookCoverageReport {
   const groundBall = normalizeReport(runGroundBallScenarioMatrix(undefined as never), 'ground_ball_matrix', 'VII')
   const fatigue = normalizeReport(runFatigueScenarioMatrix(), 'fatigue_matrix', 'VIII')
   const restTracking = normalizeReport(runRestTrackingScenarioMatrix(), 'rest_tracking_matrix', 'Online League Structure / VIII')
+  const paMarker = normalizeReport(runPaMarkerScenarioMatrix(buildNonGbCoverageFixture()), 'pa_marker_matrix', 'VIII (fatigue-accrual wiring)')
   const boundary = normalizeReport(runGameBoundaryScenarioMatrix(), 'boundary_matrix', 'Game / season boundaries')
-  const cases = [...demoCases, ...nonGb, ...groundBall, ...fatigue, ...restTracking, ...boundary]
+  const cases = [...demoCases, ...nonGb, ...groundBall, ...fatigue, ...restTracking, ...paMarker, ...boundary]
 
   const byMechanic = new Map<string, CoverageCase[]>()
   for (const item of cases) {

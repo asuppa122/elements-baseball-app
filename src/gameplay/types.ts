@@ -157,7 +157,20 @@ export type GameState = {
   outfieldThrowUsage?: Record<GameSide, Record<'LF' | 'CF' | 'RF', number>>
   infieldDoublePlayUsage?: Record<GameSide, Partial<Record<'1B+2B+SS' | '1B+2B+3B' | '1B+3B+SS', number>>>
   naturalStolenBaseUsed?: Record<GameSide, boolean>
+  // Substitution no-re-entry tracking ("which cards can no longer be pulled
+  // from the bench") -- seeded with the full starting lineup at game start.
+  // NOT a fatigue/appearance signal -- see hitterPlateAppearanceCardKeys /
+  // pitcherAppearanceCardKeys below for that.
   appearedCardKeys?: Record<GameSide, string[]>
+  // Real, precise per-game plate-appearance/pitching-appearance record, set
+  // exclusively inside finishPlateAppearance() the moment a plate appearance
+  // actually concludes (chart result, intentional walk, sac/squeeze bunt,
+  // any RTS-driven finish -- every legal path funnels through that one
+  // function). Starts empty at game start, unlike appearedCardKeys above.
+  // This is the source of truth persistent rest-tracking reads at game
+  // completion to decide who accrues Ftg -- see restTracking.ts.
+  hitterPlateAppearanceCardKeys?: Record<GameSide, string[]>
+  pitcherAppearanceCardKeys?: Record<GameSide, string[]>
   pitcherEntryDefenseOuts?: Record<string, number>
   pitcherRunsAllowed?: Record<string, number>
   pitcherShutoutBonusBrokenAtOuts?: Record<string, number>

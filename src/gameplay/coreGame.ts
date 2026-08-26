@@ -262,12 +262,40 @@ function walkoffReached(state: GameState): boolean {
   return state.inning >= 9 && state.half === 'bottom' && state.score.home > state.score.away
 }
 
+/**
+ * Records that the current batter/pitcher genuinely completed a plate
+ * appearance, before finishPlateAppearance clears state.plateAppearance for
+ * the next one. This is the ONLY place these two sets are written -- every
+ * legal way a plate appearance can end (chart result, intentional walk,
+ * sac/squeeze bunt, any RTS-driven finish) calls finishPlateAppearance, so
+ * marking it here once covers every path without touching each of them.
+ */
+function markPlateAppearanceCompleted(state: GameState, offense: GameSide, defense: GameSide): GameState {
+  const batterKey = state.plateAppearance.batterCardKey
+  const pitcherKey = state.plateAppearance.pitcherCardKey
+  if (!batterKey && !pitcherKey) return state
+
+  const hitterKeys = state.hitterPlateAppearanceCardKeys ?? { home: [], away: [] }
+  const pitcherKeys = state.pitcherAppearanceCardKeys ?? { home: [], away: [] }
+
+  return {
+    ...state,
+    hitterPlateAppearanceCardKeys: batterKey
+      ? { ...hitterKeys, [offense]: [...new Set([...hitterKeys[offense], batterKey])] }
+      : hitterKeys,
+    pitcherAppearanceCardKeys: pitcherKey
+      ? { ...pitcherKeys, [defense]: [...new Set([...pitcherKeys[defense], pitcherKey])] }
+      : pitcherKeys,
+  }
+}
+
 export function finishPlateAppearance(state: GameState): GameState {
   const offense = sideAtBat(state)
   const defense = sideFielding(state)
-  const nextCursor = (state.lineupCursor[offense] + 1) % 9
-  const cursors = {...state.lineupCursor,[offense]:nextCursor}
-  let next = {...state,lineupCursor:cursors}
+  const marked = markPlateAppearanceCompleted(state, offense, defense)
+  const nextCursor = (marked.lineupCursor[offense] + 1) % 9
+  const cursors = {...marked.lineupCursor,[offense]:nextCursor}
+  let next = {...marked,lineupCursor:cursors}
 
   // Bottom 9+ ends immediately when the home team takes the lead.
   if (walkoffReached(next)) return completeGame(next)
