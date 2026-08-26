@@ -190,3 +190,19 @@ player genuinely not among them (one, Chuck's 1972 folder, exists but is complet
 further 7 of the 38 have no matching year subfolder under an otherwise-real, populated owner folder
 (e.g. Anthony has 1875 and 1883 but no 1881; Nate jumps 1984 to 1994, no 1991 or 1998) — genuinely
 absent, not a naming mismatch, confirmed by listing each owner's complete real year range.
+
+**2026-08-26 update — the 2 held typo candidates confirmed and imported.** The project owner
+visually confirmed both `Ed Klieman 1944 CLE` (Drive file `CLE Ed Kileman.png`) and
+`Mike O'Berry 1982 CIN` (Drive file `CIN Mike O'Barry.png`) are the correct players. Both imported
+with the same narrow-script approach and verified with independent, fresh `HeadObjectCommand`
+checks (6 objects: 2 originals + 4 variants) plus live rendering confirmed in the app. All 8 of the
+38 checkable candidates from this pass are now resolved (6 auto-confirmed + these 2).
+
+Also worth recording: `Reference Data/elements-final-129-diagnostic.csv` (the original external
+diagnostic these two names came from) had weaker or wrong conclusions for both before this —
+Ed Klieman was classified `SAME_PLAYER_OTHER_YEAR` pointing at a *different* year in a *different*
+manager's folder (`James/1945/CLE Ed Klieman.png`, correctly spelled, but not this card's own year
+or owner), and Mike O'Berry was classified `NO_CANDIDATE` — the original search found nothing for
+him at all. Both rows in that CSV have been updated in place to `LIKELY_TYPO_SAME_YEAR` with the
+real same-year, same-owner match that was actually found this week, with the original diagnostic's
+weaker finding preserved as an additional-candidates note for provenance rather than discarded.
