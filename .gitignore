@@ -19,6 +19,11 @@ dist-ssr
 .env.*
 !.env.example
 
+# Google service-account credentials (Sheets API reads, e.g.
+# CARD_PUBLISHED_STATUS_PLAN.md's published-status import). GCP names these
+# <project-id>-<hex>.json at the repo root by default.
+elements-baseball-*.json
+
 # Source data
 json.txt
 
