@@ -7,6 +7,8 @@ import {
 import { useNavigate, useParams } from 'react-router-dom'
 import DefenseStage from '../components/DefenseStage'
 import UniversalFilterDrawer from '../components/UniversalFilterDrawer'
+import RosterPointsStatus from '../components/RosterPointsStatus'
+import RosterMobileConfirmBar from '../components/RosterMobileConfirmBar'
 import {
   ACTIVE_SEASON,
   loadSeasonCards,
@@ -2244,7 +2246,7 @@ function RosterPage() {
           </div>
 
           <div className="roster-header-actions">
-            <div className="roster-points-status"><strong>{totalPoints.toLocaleString()} / {pointCap.toLocaleString()}</strong>{totalPoints > pointCap ? <span className="roster-points-over">{(totalPoints - pointCap).toLocaleString()} over cap</span> : <span>{(pointCap - totalPoints).toLocaleString()} remaining</span>}</div>
+            <RosterPointsStatus totalPoints={totalPoints} pointCap={pointCap} />
             <button
               type="button"
               className={`roster-season-toggle ${seasonEligibleOnly ? 'active' : ''}`}
@@ -2798,19 +2800,12 @@ function RosterPage() {
                 </div>
               </section>
 
-              <div className={`roster-mobile-confirm-bar ${selectedSubstituteCard ? 'is-ready' : ''}`}>
-                <div>
-                  <span>{currentCard ? 'Replace with' : `Add to ${selectedSlot.label}`}</span>
-                  <strong>{selectedSubstituteCard?.player_name ?? 'Select a player'}</strong>
-                </div>
-                <button
-                  type="button"
-                  disabled={!selectedSubstituteCard}
-                  onClick={() => selectedSubstituteCard && assignCard(selectedSubstituteCard)}
-                >
-                  {currentCard ? 'Confirm Swap' : 'Confirm Add'}
-                </button>
-              </div>
+              <RosterMobileConfirmBar
+                hasCurrentCard={Boolean(currentCard)}
+                slotLabel={selectedSlot.label}
+                selectedSubstituteCard={selectedSubstituteCard}
+                onConfirm={assignCard}
+              />
 
               <div className={`roster-replacement-browser roster-replacement-browser-${selectedSlot.section}`}>
                 <div className="roster-drawer-rules">
