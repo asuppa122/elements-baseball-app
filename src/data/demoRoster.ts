@@ -1,4 +1,5 @@
 import type { CardRecord } from '../types/card'
+import { getCardYear } from '../utils/cardHelpers'
 
 /**
  * The Elements Baseball demo experience's showcase roster: a hand-picked
@@ -9,14 +10,14 @@ import type { CardRecord } from '../types/card'
  * sync with each other (see health-audit finding 8.1: LineupSelectorPage
  * used to show a hardcoded, never-recomputed `total_points: 5999` here while
  * RosterPage computed a real, different total from the same intended roster).
- *
- * Known limitation, not fixed here (tracked separately, low urgency): `pick`
- * resolves by player name alone against the *entire* cards table (every
- * season ever imported, not just the active one) and only lands on the
- * right year today because card_key ("{name} {year} {team}") sorts
- * alphabetically the same as chronologically for a given name. Works
- * correctly today; worth hardening later if it ever stops being coincidence.
  */
+
+// The specific real MLB season this hand-picked demo roster showcases --
+// unrelated to ACTIVE_SEASON_CONFIG.mlbYear (the League's own 1925
+// rules-blueprint year; the `cards` table separately holds real players
+// across many real MLB seasons, 2025 among them).
+const DEMO_ROSTER_YEAR = 2025
+
 export const DEMO_ROSTER_SEED: Array<[slotId: string, playerName: string]> = [
   ['defense-c', 'Salvador Perez'],
   ['defense-1b', 'Nolan Schanuel'],
@@ -59,10 +60,24 @@ export const DEMO_ROSTER_SEED: Array<[slotId: string, playerName: string]> = [
  * Resolves each seed player name to a real card_key against the given card
  * pool (case-insensitive name match) and returns the `{ slotId: card_key }`
  * shape RosterPage's `assigned` state uses. Silently skips any name that
- * doesn't resolve to a real card in the given pool.
+ * doesn't resolve to a real DEMO_ROSTER_YEAR card in the given pool.
+ *
+ * Scoped to DEMO_ROSTER_YEAR explicitly -- the cards table holds every real
+ * MLB season ever imported, not just this one, so matching by name alone
+ * would drift the moment a later season's cards (e.g. 2026) get imported:
+ * a name with both a 2025 and a 2026 row would start silently resolving to
+ * whichever one happens to sort last by card_key, not necessarily 2025.
+ * A player traded mid-season can still have multiple same-year rows (one
+ * per team stint, e.g. "Ryan Weathers 2025 SDP"/"...MIA"/"...TOT" -- keeping
+ * the last-by-card_key tie-break for same-year rows preserves today's
+ * existing pick (the season aggregate "TOT" row, which already sorts last).
  */
 export function resolveDemoRosterAssignments(cards: CardRecord[]): Record<string, string> {
-  const byName = new Map(cards.map((card) => [card.player_name.trim().toLowerCase(), card.card_key]))
+  const byName = new Map(
+    cards
+      .filter((card) => getCardYear(card) === DEMO_ROSTER_YEAR)
+      .map((card) => [card.player_name.trim().toLowerCase(), card.card_key]),
+  )
   const assignments: Record<string, string> = {}
 
   for (const [slot, player] of DEMO_ROSTER_SEED) {
