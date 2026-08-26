@@ -59,25 +59,6 @@ export function normalizeImageUrl(
       ? `http${trimmedUrl}`
       : trimmedUrl
 
-  // 2025 card images have been migrated from Supabase Storage to
-  // Cloudflare R2. Keep the database table as the source of card/image
-  // relationships, while transparently serving matching 2025 objects from R2.
-  try {
-    const parsedUrl = new URL(correctedUrl)
-    const supabase2025Prefix =
-      '/storage/v1/object/public/card-images/2025/'
-
-    if (parsedUrl.pathname.startsWith(supabase2025Prefix)) {
-      const objectName = parsedUrl.pathname.slice(supabase2025Prefix.length)
-
-      if (objectName) {
-        return `https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/2025/${objectName}`
-      }
-    }
-  } catch {
-    // Preserve the existing URL when it is not a valid absolute URL.
-  }
-
   if (
     correctedUrl.includes(
       'drive.google.com',
