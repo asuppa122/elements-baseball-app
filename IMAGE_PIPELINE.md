@@ -141,3 +141,52 @@ Rows fixed: `Bill Nuttall 1925 TOT`, `Evelio Hernandez 1956 WSH`, `Drew Butera 2
 `Connor Overton 2021 TOT`, `Grady Sizemore 2015 TOT`. Verified with real `HeadObjectCommand` checks
 against R2 (independent of the fix script's own reported success) for all 15 objects (5 originals +
 5 grid + 5 thumb), plus live rendering confirmed in the app for two of the five.
+
+## 2026-08-26 (Part 2) — re-verifying the remaining ~124-125 missing-image cards
+
+Following up on the same "130 broken images" finding: the other bucket (published cards with **no**
+`card_images` row at all, not a broken one — ~124-125 of them, per `Reference Data/
+elements-definitive-missing-for-james.txt`, dated 2026-08-08) was independently re-checked against
+real Drive access, the same standard as the 5 above — not trusting that document's own conclusions.
+
+**Real result: only 38 of the 124 listed cards are actually checkable by the manager → year →
+filename method at all.** The document's `Owner` field is accurate (cross-checked against the live
+`cards.ownership` column, exact match) — but 3 of the recorded owners have **no Drive folder
+anywhere** in the synced `Elements Baseball League` structure, active or `Inactive GMs`:
+
+- **Zach** — 29 cards, no folder
+- **Ramel** — 18 cards, no folder
+- **Miles** — 12 cards, no folder
+- **No owner recorded at all** — 27 cards, nothing to even search against (the one folder that
+  might plausibly apply, `Complete Sets/`, only covers 1969/1997/2022-2025 — none of these 27
+  cards' years fall in that range)
+
+**86 of 124 cards are genuinely unable to be searched right now — not "confirmed missing," just
+inaccessible.** This needs Drive access to Zach's, Ramel's, and Miles's folders (or their
+whereabouts, if they've since left the league and their submissions live somewhere else), and/or
+recovering who actually owns/submitted the 27 no-owner cards. **This requires reaching out to James
+or those managers directly outside of this pipeline — not something resolvable from local tooling.**
+Flagging it here specifically so it has a durable home and doesn't get lost the same way the
+original "already fixed" claim for the first 5 did.
+
+Of the real, checkable 38: **6 recovered and imported** (fresh `card_images` rows — these cards had
+none before, unlike Part 1's rows which existed but pointed nowhere): `Hobe Ferris 1907 BOS`,
+`Tex Pruiett 1908 BOS`, `Miller Huggins 1909 CIN`, `George McBride 1913 WSH`,
+`George Strickland 1952 TOT`, `Cap Peterson 1968 WSA`. Same narrow-script approach as Part 1 (not
+committed, one-off), R2 object key built from each card's own canonical `hitter_team_code`/
+`player_name` (not the raw Drive filename — confirmed by precedent by Grady Sizemore's real key
+using team code `TOT`, the card's own team, even though its Drive file was filed under `TBR`).
+Verified with independent, fresh `HeadObjectCommand` checks for all 18 objects (6 originals + 6 grid
++ 6 thumb) plus live rendering confirmed in the app.
+
+**2 more held, not imported** — high name-similarity matches but not exact, so not trusted without
+a human look first: `Ed Klieman 1944 CLE` (candidate filed as `CLE Ed Kileman.png`, Inactive GM Mark)
+and `Mike O'Berry 1982 CIN` (candidate filed as `CIN Mike O'Barry.png`, Zeek). Sent to the project
+owner directly for visual confirmation before either goes in.
+
+The remaining 23 of the 38 checkable cards were manually confirmed absent — not just a low fuzzy-
+match score, but the owner's real year folder checked in full by eye, contents present, target
+player genuinely not among them (one, Chuck's 1972 folder, exists but is completely empty). A
+further 7 of the 38 have no matching year subfolder under an otherwise-real, populated owner folder
+(e.g. Anthony has 1875 and 1883 but no 1881; Nate jumps 1984 to 1994, no 1991 or 1998) — genuinely
+absent, not a naming mismatch, confirmed by listing each owner's complete real year range.
