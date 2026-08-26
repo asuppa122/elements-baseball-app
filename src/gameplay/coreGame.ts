@@ -295,7 +295,7 @@ export function finishPlateAppearance(state: GameState): GameState {
   const marked = markPlateAppearanceCompleted(state, offense, defense)
   const nextCursor = (marked.lineupCursor[offense] + 1) % 9
   const cursors = {...marked.lineupCursor,[offense]:nextCursor}
-  let next = {...marked,lineupCursor:cursors}
+  const next = {...marked,lineupCursor:cursors}
 
   // Bottom 9+ ends immediately when the home team takes the lead.
   if (walkoffReached(next)) return completeGame(next)
