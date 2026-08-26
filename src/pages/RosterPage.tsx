@@ -30,6 +30,8 @@ import {
 import { useAuth } from '../auth/AuthContext'
 import { supabase } from '../lib/supabase'
 import { appPath } from '../lib/appPaths'
+import { loadPlayerRestState } from '../gameplay/gameRepository'
+import { ACTIVE_SEASON_CONFIG } from '../gameplay/seasonConfig'
 
 type Section =
   | 'overview'
@@ -538,6 +540,27 @@ function RosterPage() {
     tapReorderMode,
     setTapReorderMode,
   ] = useState(false)
+  const [restStateByCardKey, setRestStateByCardKey] = useState<
+    Record<string, { hitterGamesRemaining: number; pitcherGamesRemaining: number }>
+  >({})
+
+  // Current rest state for this manager's own rostered players, so Team
+  // Builder can show whether a player is actually available to start without
+  // a manual spreadsheet lookup. Demo mode has no persistent rest history --
+  // skip the fetch entirely rather than showing a misleading "Rested" badge.
+  useEffect(() => {
+    if (isDemo) return
+    const rosterCardKeys = [...new Set(Object.values(assigned).filter(Boolean))]
+    if (rosterCardKeys.length === 0) {
+      setRestStateByCardKey({})
+      return
+    }
+    let cancelled = false
+    loadPlayerRestState(ACTIVE_SEASON_CONFIG.seasonId, rosterCardKeys)
+      .then((result) => { if (!cancelled) setRestStateByCardKey(result) })
+      .catch(() => { if (!cancelled) setRestStateByCardKey({}) })
+    return () => { cancelled = true }
+  }, [isDemo, assigned])
 
   useEffect(() => {
     const query = window.matchMedia('(pointer: coarse), (max-width: 820px)')
@@ -1904,6 +1927,25 @@ function RosterPage() {
                     card.team_name ??
                     '—'}
                 </small>
+                {(() => {
+                  const restEntry = restStateByCardKey[card.card_key]
+                  const hitterDebt = restEntry?.hitterGamesRemaining ?? 0
+                  const pitcherDebt = restEntry?.pitcherGamesRemaining ?? 0
+                  const relevantDebt = isPitchingAssignment ? pitcherDebt : hitterDebt
+                  const rested = relevantDebt === 0
+                  return (
+                    <small
+                      className={`roster-rest-badge${rested ? ' roster-rest-badge--rested' : ' roster-rest-badge--fatigued'}`}
+                      title={
+                        rested
+                          ? 'Fully rested -- no active fatigue effects'
+                          : `${relevantDebt} game${relevantDebt === 1 ? '' : 's'} from resetting this player's ${isPitchingAssignment ? 'pitching' : 'hitting'} fatigue score`
+                      }
+                    >
+                      {rested ? 'Rested' : `${relevantDebt}g ${isPitchingAssignment ? 'pitcher' : 'hitter'}`}
+                    </small>
+                  )
+                })()}
               </span>
 
               <span className="pitcher-rating-pair">
