@@ -116,3 +116,28 @@ npm run generate:image-variants     # one-time backfill; supports --dry-run, --f
 **All three write to production Supabase and/or R2.** Per the working-style rule in `CLAUDE.md`,
 none of these should ever be run as a side effect of checking something else — running one of them
 must be the explicit, singular, confirmed purpose of that command.
+
+## 2026-08-26 — 5 rows recovered from the health-audit's "130 broken images" finding
+
+5 published cards had `card_images` rows with correctly-shaped `image_url`/`r2_object_key` values
+that pointed at nothing — no object at that key in R2 at all (found and reconciled during the
+2026-08-25 health audit; see that report's Category 6). All 5 turned out to have a real source PNG
+in the raw per-manager Drive folder (`.../Elements Baseball League/<Manager>/<Year>/`), once Google
+Drive for Desktop gave real local filesystem access to it — including Grady Sizemore 2015 TOT,
+which an earlier (undocumented, ChatGPT-assisted) search had concluded didn't exist anywhere; it
+was in `Will/2015/TBR Grady Sizemore.png`, exactly where the row's own `drive_folder_name` metadata
+already said it was.
+
+Fixed with a narrow, single-purpose script (not committed — one-off, hardcoded to these 5
+`card_key`s, not reusable tooling) that uploaded each original PNG to R2 at the row's own
+already-correct `r2_object_key`, generated the same grid/thumb WebP variants via
+`scripts/lib/imageVariants.mjs` (the same shared module `sync-images-to-r2.mjs` and
+`generate-image-variants.mjs` use, not reimplemented), and updated `image_url`/`thumbnail_url`/
+`last_synced_at`. Deliberately did not touch `import-images.mjs`'s season-wide batch path, since
+the 5 rows span 4 different seasons and a full-season reimport would have been a disproportionate
+blast radius for 5 rows.
+
+Rows fixed: `Bill Nuttall 1925 TOT`, `Evelio Hernandez 1956 WSH`, `Drew Butera 2015 KCR`,
+`Connor Overton 2021 TOT`, `Grady Sizemore 2015 TOT`. Verified with real `HeadObjectCommand` checks
+against R2 (independent of the fix script's own reported success) for all 15 objects (5 originals +
+5 grid + 5 thumb), plus live rendering confirmed in the app for two of the five.
