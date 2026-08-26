@@ -68,6 +68,7 @@ async function loadAllCardsAndImagesUncached(): Promise<
           .from('cards')
           .select(CARD_COLUMNS)
           .gte('hitter_points', 0)
+          .eq('is_published', true)
           .order('hitter_points', { ascending: false, nullsFirst: false })
           .order('all_number', { ascending: true, nullsFirst: false })
           .range(range.from, range.to),
@@ -75,7 +76,8 @@ async function loadAllCardsAndImagesUncached(): Promise<
         supabase
           .from('cards')
           .select('card_key', { count: 'exact', head: true })
-          .gte('hitter_points', 0),
+          .gte('hitter_points', 0)
+          .eq('is_published', true),
     ),
   ])
 }

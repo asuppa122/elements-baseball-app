@@ -24,23 +24,30 @@ const { state, resetState, supabase } = vi.hoisted(() => {
   function tableBuilder(table: 'cards' | 'card_images') {
     state.fromCallCount += 1
     let mode: 'count' | 'data' | 'single' = 'data'
-    let eqValue: string | undefined
+    // Real Supabase ANDs every chained .eq() -- e.g. loadCardByKey chains
+    // .eq('card_key', key).eq('is_published', true). A single overwritten
+    // eqValue silently dropped the first filter the moment a second .eq()
+    // was added; this map applies all of them together, matching real
+    // WHERE-clause semantics.
+    const eqFilters = new Map<string, unknown>()
     let rangeFrom = 0
     let rangeTo = 0
 
     const rows = () => (table === 'cards' ? state.cards : state.cardImages)
+    const matchesFilters = (row: Row) =>
+      [...eqFilters].every(([col, value]) => row[col] === value)
 
     function resolveResult(): { data?: unknown; error: unknown; count?: number } {
       if (state.shouldErrorOnce) {
         state.shouldErrorOnce = false
         return { data: null, error: new Error('simulated fetch failure') }
       }
-      if (mode === 'count') return { count: rows().length, error: null }
+      const filtered = rows().filter(matchesFilters)
+      if (mode === 'count') return { count: filtered.length, error: null }
       if (mode === 'single') {
-        const row = rows().find((r) => r.card_key === eqValue) ?? null
-        return { data: row, error: null }
+        return { data: filtered[0] ?? null, error: null }
       }
-      return { data: rows().slice(rangeFrom, rangeTo + 1), error: null }
+      return { data: filtered.slice(rangeFrom, rangeTo + 1), error: null }
     }
 
     const builder = {
@@ -49,8 +56,8 @@ const { state, resetState, supabase } = vi.hoisted(() => {
         return builder
       },
       gte: () => builder,
-      eq: (_col: string, value: string) => {
-        eqValue = value
+      eq: (col: string, value: unknown) => {
+        eqFilters.set(col, value)
         return builder
       },
       order: () => builder,
@@ -100,6 +107,16 @@ function makeCardRow(overrides: Partial<CardRow> = {}): CardRow {
   }
 }
 
+// is_published isn't part of CardRow/CARD_COLUMNS (it's a filter-only
+// column, never selected) -- fixture rows carry it purely so the mock's eq()
+// filtering above has something real to match against, defaulting to true
+// so every existing test keeps describing an already-published card unless
+// a test explicitly opts a row into is_published: false.
+function makePublishedCardRow(overrides: Partial<CardRow> & { is_published?: boolean } = {}): CardRow & { is_published: boolean } {
+  const { is_published = true, ...cardOverrides } = overrides
+  return { ...makeCardRow(cardOverrides), is_published }
+}
+
 function makeImageRow(overrides: Partial<CardImageRow> = {}): CardImageRow {
   return { card_key: 'KEY', image_url: null, ...overrides }
 }
@@ -111,7 +128,7 @@ beforeEach(() => {
 
 describe('loadSeasonCards', () => {
   it('merges each card with its normalized image url by card_key', async () => {
-    state.cards = [makeCardRow({ card_key: 'A' }), makeCardRow({ card_key: 'B' })]
+    state.cards = [makePublishedCardRow({ card_key: 'A' }), makePublishedCardRow({ card_key: 'B' })]
     state.cardImages = [makeImageRow({ card_key: 'A', image_url: 's://example.com/a.png' })]
 
     const { loadSeasonCards } = await import('../cardDatabase')
@@ -124,7 +141,7 @@ describe('loadSeasonCards', () => {
   })
 
   it('caches the result -- a second call does not refetch from Supabase', async () => {
-    state.cards = [makeCardRow({ card_key: 'A' })]
+    state.cards = [makePublishedCardRow({ card_key: 'A' })]
     const { loadSeasonCards } = await import('../cardDatabase')
 
     await loadSeasonCards()
@@ -135,7 +152,7 @@ describe('loadSeasonCards', () => {
   })
 
   it('does not cache a failed load -- the next call retries from scratch', async () => {
-    state.cards = [makeCardRow({ card_key: 'A' })]
+    state.cards = [makePublishedCardRow({ card_key: 'A' })]
     state.shouldErrorOnce = true
     const { loadSeasonCards } = await import('../cardDatabase')
 
@@ -146,18 +163,46 @@ describe('loadSeasonCards', () => {
   })
 
   it('dedupes concurrent calls into a single in-flight fetch', async () => {
-    state.cards = [makeCardRow({ card_key: 'A' })]
+    state.cards = [makePublishedCardRow({ card_key: 'A' })]
     const { loadSeasonCards } = await import('../cardDatabase')
 
     const [first, second] = await Promise.all([loadSeasonCards(), loadSeasonCards()])
 
     expect(first).toBe(second)
   })
+
+  // CARD_PUBLISHED_STATUS_PLAN.md gating -- real regression coverage for the
+  // actual filter, not just the merge/cache behavior above.
+  it('excludes an unpublished (phantom-loaded) card from the results', async () => {
+    state.cards = [
+      makePublishedCardRow({ card_key: 'PUBLISHED' }),
+      makePublishedCardRow({ card_key: 'UNPUBLISHED', is_published: false }),
+    ]
+    const { loadSeasonCards } = await import('../cardDatabase')
+
+    const result = await loadSeasonCards()
+
+    expect(result.map((c) => c.card_key)).toEqual(['PUBLISHED'])
+  })
+
+  it('a deliberately broken filter would show this test catching a real regression', async () => {
+    // Same shape as the test above, but proves the assertion actually bites:
+    // with is_published left off the fixture (undefined), the mock's strict
+    // equality filter (undefined !== true) excludes it same as an explicit
+    // false would -- confirming the gate fails closed, not open, on
+    // unexpected/missing data.
+    state.cards = [makeCardRow({ card_key: 'NO_PUBLISH_FIELD_AT_ALL' })]
+    const { loadSeasonCards } = await import('../cardDatabase')
+
+    const result = await loadSeasonCards()
+
+    expect(result).toHaveLength(0)
+  })
 })
 
 describe('loadCardByKey', () => {
   it('merges a single card with its normalized image url', async () => {
-    state.cards = [makeCardRow({ card_key: 'A' })]
+    state.cards = [makePublishedCardRow({ card_key: 'A' })]
     state.cardImages = [makeImageRow({ card_key: 'A', image_url: 's://example.com/a.png' })]
 
     const { loadCardByKey } = await import('../cardDatabase')
@@ -171,6 +216,15 @@ describe('loadCardByKey', () => {
     const { loadCardByKey } = await import('../cardDatabase')
 
     const result = await loadCardByKey('MISSING')
+
+    expect(result).toBeNull()
+  })
+
+  it('returns null for an unpublished card -- not reachable by direct link either', async () => {
+    state.cards = [makePublishedCardRow({ card_key: 'HIDDEN', is_published: false })]
+    const { loadCardByKey } = await import('../cardDatabase')
+
+    const result = await loadCardByKey('HIDDEN')
 
     expect(result).toBeNull()
   })

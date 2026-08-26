@@ -14,19 +14,26 @@ import { ACTIVE_SEASON_CONFIG } from '../gameplay/seasonConfig'
 export const ACTIVE_SEASON = ACTIVE_SEASON_CONFIG.mlbYear
 
 async function loadAllCardRows(): Promise<CardRow[]> {
+  // is_published gates cards phantom-loaded into the DB ahead of their real
+  // stat release (CARD_PUBLISHED_STATUS_PLAN.md) -- every card that existed
+  // before that column was added was backfilled to true, so this filter is
+  // a no-op for the existing catalog and only ever hides a genuinely new,
+  // not-yet-released card.
   return fetchAllPaginated<CardRow>(
     (range) =>
       supabase
         .from('cards')
         .select(CARD_COLUMNS)
         .gte('hitter_points', 0)
+        .eq('is_published', true)
         .order('card_key', { ascending: true })
         .range(range.from, range.to),
     () =>
       supabase
         .from('cards')
         .select('card_key', { count: 'exact', head: true })
-        .gte('hitter_points', 0),
+        .gte('hitter_points', 0)
+        .eq('is_published', true),
   )
 }
 
@@ -106,11 +113,16 @@ export async function loadSeasonCards(): Promise<CardRecord[]> {
 export async function loadCardByKey(
   cardKey: string,
 ): Promise<CardRecord | null> {
+  // Same is_published gate as loadAllCardRows -- a separate query path
+  // (direct /cards/:cardKey navigation), so it needs its own filter. Without
+  // this, a phantom-loaded unpublished card would be invisible in the
+  // gallery but still reachable by a direct link.
   const { data: cardData, error: cardError } =
     await supabase
       .from('cards')
       .select(CARD_COLUMNS)
       .eq('card_key', cardKey)
+      .eq('is_published', true)
       .limit(1)
       .maybeSingle()
 
