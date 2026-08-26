@@ -115,6 +115,41 @@ export async function loadCardsForGameplayRoster(cardKeys: string[]): Promise<Ca
   }))
 }
 
+/**
+ * The calling manager's own persistent Ftg/Rm rest rows for a season, keyed
+ * by card_key. RLS already scopes this to the authenticated user's own
+ * rows -- there is no user_id filter here because there does not need to be
+ * one; a manager cannot fetch an opponent's rest state through this call
+ * regardless of what's asked for. A missing card_key means fully rested
+ * (0/0), not an error -- the caller (attachRestState) already treats a
+ * missing entry that way, so no row is synthesized here for cards that have
+ * never played.
+ */
+export async function loadPlayerRestState(
+  seasonId: string,
+  cardKeys: string[],
+): Promise<Record<string, { hitterGamesRemaining: number; pitcherGamesRemaining: number }>> {
+  const uniqueKeys = [...new Set(cardKeys.filter(Boolean))]
+  if (uniqueKeys.length === 0) return {}
+
+  const { data, error } = await supabase
+    .from('player_rest_state')
+    .select('card_key, hitter_games_remaining, pitcher_games_remaining')
+    .eq('season_id', seasonId)
+    .in('card_key', uniqueKeys)
+
+  if (error) throw error
+
+  const result: Record<string, { hitterGamesRemaining: number; pitcherGamesRemaining: number }> = {}
+  for (const row of data ?? []) {
+    result[row.card_key] = {
+      hitterGamesRemaining: row.hitter_games_remaining,
+      pitcherGamesRemaining: row.pitcher_games_remaining,
+    }
+  }
+  return result
+}
+
 export async function createGameplayLabGame(state: GameState): Promise<PersistedGameplayLabGame> {
   const { data, error } = await supabase
     .from('games')

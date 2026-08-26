@@ -2,11 +2,12 @@ import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
 import { getCardImageUrl, handleCardImageLoadError } from '../utils/cardHelpers'
-import { lockPregame, setPregameSelections } from '../gameplay/engine'
+import { attachRestState, lockPregame, setPregameSelections } from '../gameplay/engine'
 import { canAssignDefensivePosition, getFieldingRating } from '../gameplay/defense'
 import {
   hasGameplayLabAccess,
   loadGameplayLabGame,
+  loadPlayerRestState,
   saveGameplayLabState,
   type PersistedGameplayLabGame,
 } from '../gameplay/gameRepository'
@@ -249,10 +250,18 @@ export default function GameplayPregamePage() {
         defensiveAlignment,
       })
 
+      // Fetch this manager's own persistent Ftg/Rm rest rows (RLS-scoped --
+      // an opponent's rows are never reachable from here) and freeze them
+      // into the game state now, once, the same moment the roster itself is
+      // already frozen -- an in-progress game never re-reads this live.
+      const homeRosterCardKeys = Object.keys(currentState.pregame.home.roster?.cards ?? {})
+      const restStateForHome = await loadPlayerRestState(currentState.configuration.seasonId, homeRosterCardKeys)
+      const withRestState = attachRestState(withSelections, 'home', restStateForHome)
+
       let saved = await saveGameplayLabState({
         gameId: game.id,
         expectedStateVersion: game.state_version,
-        nextState: withSelections,
+        nextState: withRestState,
         eventType: 'PREGAME_SUBMITTED',
         eventPayload: {
           startingPitcherCardKey: startingPitcher,

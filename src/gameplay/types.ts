@@ -171,6 +171,13 @@ export type GameState = {
   // completion to decide who accrues Ftg -- see restTracking.ts.
   hitterPlateAppearanceCardKeys?: Record<GameSide, string[]>
   pitcherAppearanceCardKeys?: Record<GameSide, string[]>
+  // Each side's persistent cross-game Ftg/Rm rest counters (player_rest_state
+  // rows), fetched once by that side's own manager at pregame time and
+  // frozen into the state from then on -- an in-progress game never re-reads
+  // a live row, matching how the roster snapshot itself is frozen. Missing
+  // entirely, or missing a given card_key, both mean "fully rested" (0/0),
+  // not an error -- a brand-new card with no prior games has no row yet.
+  restState?: Record<GameSide, Record<string, { hitterGamesRemaining: number; pitcherGamesRemaining: number }>>
   pitcherEntryDefenseOuts?: Record<string, number>
   pitcherRunsAllowed?: Record<string, number>
   pitcherShutoutBonusBrokenAtOuts?: Record<string, number>

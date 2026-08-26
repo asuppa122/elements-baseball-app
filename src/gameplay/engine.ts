@@ -355,13 +355,25 @@ export function defensiveOutsRecorded(state: GameState, side: GameSide): number 
   return completed + (currentHalfDefense === side ? state.outs : 0)
 }
 
+/**
+ * Persistent cross-game rest debt for one card, from state.restState (see
+ * attachRestState below). Missing side/card both mean fully rested (0), the
+ * same "no row yet = never played" default player_rest_state itself uses.
+ */
+function hitterGamesFromRested(state: GameState, side: GameSide, cardKey: string): number {
+  return state.restState?.[side]?.[cardKey]?.hitterGamesRemaining ?? 0
+}
+function pitcherGamesFromRested(state: GameState, side: GameSide, cardKey: string): number {
+  return state.restState?.[side]?.[cardKey]?.pitcherGamesRemaining ?? 0
+}
+
 export function effectiveCurrentHitterOnBase(state: GameState): number {
   const offense=battingSide(state)
   const key=state.plateAppearance.batterCardKey
   const batter=key?state.pregame[offense].roster?.cards[key]:null
   if(!batter)return 5
   const useDefault=state.pregame[offense].defaultBatterCardKeys.includes(batter.cardKey)||batter.hitter.onBase===null
-  return effectiveHitterOnBase(batter.hitter.onBase,0,useDefault)
+  return effectiveHitterOnBase(batter.hitter.onBase,hitterGamesFromRested(state,offense,batter.cardKey),useDefault)
 }
 
 export function effectiveCurrentPitcherControl(state: GameState): number {
@@ -373,7 +385,26 @@ export function effectiveCurrentPitcherControl(state: GameState): number {
   const entry=readPitcherStateValue(state.pitcherEntryDefenseOuts,defense,pitcher.cardKey)??0
   const outs=Math.max(0,defensiveOutsRecorded(state,defense)-entry)
   const runs=readPitcherStateValue(state.pitcherRunsAllowed,defense,pitcher.cardKey)??0
-  return effectivePitcherControl({printedControl:pitcher.pitcher.control,useDefaultAttributes:useDefault,cardIp:pitcher.pitcher.ip,outsRecorded:outs,earnedRunsAllowed:runs,shutoutBonusBrokenAtOuts:readPitcherStateValue(state.pitcherShutoutBonusBrokenAtOuts,defense,pitcher.cardKey)})
+  return effectivePitcherControl({printedControl:pitcher.pitcher.control,useDefaultAttributes:useDefault,gamesFromRested:pitcherGamesFromRested(state,defense,pitcher.cardKey),cardIp:pitcher.pitcher.ip,outsRecorded:outs,earnedRunsAllowed:runs,shutoutBonusBrokenAtOuts:readPitcherStateValue(state.pitcherShutoutBonusBrokenAtOuts,defense,pitcher.cardKey)})
+}
+
+/**
+ * Attaches one side's already-fetched player_rest_state rows to the game.
+ * Pure -- the actual Supabase read (RLS-scoped to that manager's own rows)
+ * happens in the calling page, same pattern as setPregameSelections. Meant
+ * to be called once per side during pregame, before the roster snapshot's
+ * numbers are ever read for a real roll -- an in-progress game does not
+ * re-fetch this live, matching the roster snapshot's own freeze.
+ */
+export function attachRestState(
+  state: GameState,
+  side: GameSide,
+  restStateForSide: Record<string, { hitterGamesRemaining: number; pitcherGamesRemaining: number }>,
+): GameState {
+  return {
+    ...state,
+    restState: { ...state.restState, [side]: restStateForSide },
+  }
 }
 
 export function pitcherAdvantageIsAutomatic(state: GameState): boolean {
