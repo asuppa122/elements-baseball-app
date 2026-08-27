@@ -206,3 +206,52 @@ or owner), and Mike O'Berry was classified `NO_CANDIDATE` — the original searc
 him at all. Both rows in that CSV have been updated in place to `LIKELY_TYPO_SAME_YEAR` with the
 real same-year, same-owner match that was actually found this week, with the original diagnostic's
 weaker finding preserved as an additional-candidates note for provenance rather than discarded.
+
+## 2026-08-27 — the 30 reclassified; the 86 escalated to a real data-loss situation
+
+Two updates to the numbers above, both confirmed by James (the archive owner), not assumed.
+
+**The 30 confirmed-absent cards are not a real gap — they're an expected byproduct of the ladder
+milestone reroll mechanic.** A ladder milestone reward generates a real card (real ratings, a real
+`cards` row, attributed to a real owner) for each roll; a rejected reroll still leaves that
+generated row behind, but since no manager ends up keeping that specific year-card, it never needed
+a sourced image. James confirmed this explanation. Independently re-derived the actual 30
+`card_key`s (not listed individually anywhere in the repo before now — the original manual check
+was eyeballed against real Drive folders, not captured as a list) by elimination against
+`Reference Data/elements-final-129-diagnostic.csv`: the 129 total rows, minus the 5 already-fixed
+Part 1 rows, minus the 8 Part 2 recovered rows, minus the 86 access-blocked rows (Zach/Ramel/Miles/
+no-owner) — lands on exactly 30, matching the count in the `fab60ff` commit message. Then checked
+that list against real data, live, before accepting the reclassification:
+
+- **All 30 carry real ownership** in both the diagnostic CSV and the live `cards.ownership` column
+  today (verified via direct query) — consistent with "the roll was attributed to a real manager,"
+  not consistent with orphaned/unattributed data.
+- **11 of the 30 are the same real player with a different, already-imaged year already in the same
+  manager's folder** (`classification = SAME_PLAYER_OTHER_YEAR` in the diagnostic, e.g. `Mickey
+  Mantle 1954 NYY` has no image, but the same manager's folder has a real, sourced `Mickey Mantle
+  1960 NYY`) — this is the single most direct, checkable signal consistent with "this specific
+  year-card was generated but not the one ultimately kept." Genuinely strong support for the
+  explanation, not a coincidence across 11 independent rows.
+- The other 19 are `NO_CANDIDATE` (no version of that player found anywhere in the owner's folder at
+  all) — no corroborating signal either way from this specific check, though fully consistent with a
+  reroll result that was rejected before ever being searched for. Worth flagging on its own: 9 of
+  these 19 are a single cluster — the entire 1904 St. Louis Browns roster (`Harry Gleason`, `Harry
+  Howell`, `Hunter Hill`, `Jack O'Connor`, `Jesse Burkett`, `Pat Hynes`, `Pinky Swander`, `Tom
+  Jones`, `Willie Sudhoff`), all owned by Zeek. A striking pattern either way; not independently
+  provable from data alone, but not contradicted by it.
+- Re-checked live against `public.cards`/`public.card_images` today (not trusting the 2026-08-08
+  snapshot): all 30 still exist, all 30 still carry real ownership, all 30 still have zero
+  `card_images` rows. Nothing stale.
+
+**Status: closed, not a gap.** These 30 do not need Drive access, do not need James or a manager to
+search for anything, and should not be carried forward as open missing-image work.
+
+**The 86 access-blocked cards are no longer just "blocked on access" — James reports the Zach,
+Ramel, and Miles folders (covering 59 of the 86: 29 + 18 + 12) appear to have disappeared from the
+master Drive entirely, not merely unshared.** This is now a possible data-loss situation, not a
+permissions gap this pipeline can route around by getting access granted. James is attempting his
+own Drive-side recovery (Trash, activity history, direct search). This pipeline has no tooling that
+can act on that — it's flagged here so the escalation has a durable home, same reason the original
+"already fixed" claim for the first 5 rows got a durable home instead of getting lost. The remaining
+27 (no recorded owner at all) are a separate, unrelated problem — still needs someone to identify who
+actually owns/submitted those 27, not a Drive-access or data-loss question.
