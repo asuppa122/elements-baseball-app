@@ -1,7 +1,7 @@
 import { cloneSeasonConfiguration, type ActiveSeasonConfiguration } from './seasonConfig'
 import { canAssignDefensivePosition } from './defense'
 import { resolveCoreResult, resolveSwingChart } from './coreGame'
-import { effectiveHitterOnBase, effectivePitcherControl } from './fatigueEngine'
+import { effectiveHitterOnBase, effectivePitcherControl, type PitcherFatigueInput } from './fatigueEngine'
 import { readPitcherStateValue } from './pitcherStateKey'
 import type {
   GameManagerSnapshot,
@@ -10,6 +10,7 @@ import type {
   PregameManagerState,
   GameRosterSnapshot,
   DefensivePosition,
+  GameCardSnapshot,
 } from './types'
 
 function nowIso(): string {
@@ -367,25 +368,72 @@ function pitcherGamesFromRested(state: GameState, side: GameSide, cardKey: strin
   return state.restState?.[side]?.[cardKey]?.pitcherGamesRemaining ?? 0
 }
 
-export function effectiveCurrentHitterOnBase(state: GameState): number {
+/**
+ * The exact fatigue inputs the live plate appearance feeds to fatigueEngine.ts.
+ * Extracted (Phase 1, GAMEPLAY_PRESENTATION_PLAN.md) so the presentation layer
+ * can explain *why* a rating moved without rebuilding this input-gathering
+ * itself -- a second copy would be free to drift from the numbers real rolls
+ * actually use. Pure reads of already-resolved state; no resolution logic here,
+ * and effectiveCurrent* below stay the only callers that turn it into a rating.
+ */
+export type CurrentHitterFatigueContext = {
+  card: GameCardSnapshot
+  printedOnBase: number | null
+  gamesFromRested: number
+  useDefaultAttributes: boolean
+}
+
+export function currentHitterFatigueContext(state: GameState): CurrentHitterFatigueContext | null {
   const offense=battingSide(state)
   const key=state.plateAppearance.batterCardKey
   const batter=key?state.pregame[offense].roster?.cards[key]:null
-  if(!batter)return 5
-  const useDefault=state.pregame[offense].defaultBatterCardKeys.includes(batter.cardKey)||batter.hitter.onBase===null
-  return effectiveHitterOnBase(batter.hitter.onBase,hitterGamesFromRested(state,offense,batter.cardKey),useDefault)
+  if(!batter)return null
+  return {
+    card: batter,
+    printedOnBase: batter.hitter.onBase,
+    gamesFromRested: hitterGamesFromRested(state,offense,batter.cardKey),
+    useDefaultAttributes: state.pregame[offense].defaultBatterCardKeys.includes(batter.cardKey)||batter.hitter.onBase===null,
+  }
 }
 
-export function effectiveCurrentPitcherControl(state: GameState): number {
+export function effectiveCurrentHitterOnBase(state: GameState): number {
+  const context=currentHitterFatigueContext(state)
+  if(!context)return 5
+  return effectiveHitterOnBase(context.printedOnBase,context.gamesFromRested,context.useDefaultAttributes)
+}
+
+export type CurrentPitcherFatigueContext = {
+  card: GameCardSnapshot
+  input: PitcherFatigueInput
+}
+
+export function currentPitcherFatigueContext(state: GameState): CurrentPitcherFatigueContext | null {
   const defense=fieldingSide(state)
   const key=state.plateAppearance.pitcherCardKey
   const pitcher=key?state.pregame[defense].roster?.cards[key]:null
-  if(!pitcher)return -5
+  if(!pitcher)return null
   const useDefault=(state.pregame[defense].defaultPitcherCardKeys?.includes(pitcher.cardKey)??false)||pitcher.pitcher.control===null
   const entry=readPitcherStateValue(state.pitcherEntryDefenseOuts,defense,pitcher.cardKey)??0
   const outs=Math.max(0,defensiveOutsRecorded(state,defense)-entry)
   const runs=readPitcherStateValue(state.pitcherRunsAllowed,defense,pitcher.cardKey)??0
-  return effectivePitcherControl({printedControl:pitcher.pitcher.control,useDefaultAttributes:useDefault,gamesFromRested:pitcherGamesFromRested(state,defense,pitcher.cardKey),cardIp:pitcher.pitcher.ip,outsRecorded:outs,earnedRunsAllowed:runs,shutoutBonusBrokenAtOuts:readPitcherStateValue(state.pitcherShutoutBonusBrokenAtOuts,defense,pitcher.cardKey)})
+  return {
+    card: pitcher,
+    input: {
+      printedControl: pitcher.pitcher.control,
+      useDefaultAttributes: useDefault,
+      gamesFromRested: pitcherGamesFromRested(state,defense,pitcher.cardKey),
+      cardIp: pitcher.pitcher.ip,
+      outsRecorded: outs,
+      earnedRunsAllowed: runs,
+      shutoutBonusBrokenAtOuts: readPitcherStateValue(state.pitcherShutoutBonusBrokenAtOuts,defense,pitcher.cardKey),
+    },
+  }
+}
+
+export function effectiveCurrentPitcherControl(state: GameState): number {
+  const context=currentPitcherFatigueContext(state)
+  if(!context)return -5
+  return effectivePitcherControl(context.input)
 }
 
 /**

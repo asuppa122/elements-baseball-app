@@ -11,6 +11,8 @@ import {
 } from '../gameplay/gameRepository'
 import type { GameSide, GameState } from '../gameplay/types'
 import { resolveSwingChart } from '../gameplay/coreGame'
+import RatingReadout from '../gameplay/presentation/RatingReadout'
+import { currentHitterOnBaseAdjustment, currentPitcherControlAdjustment } from '../gameplay/presentation/inGameFatigueDisplay'
 import {
   beginPrePitchDecision,
   confirmManagerDecision,
@@ -90,6 +92,8 @@ export default function GameplayPlayableShellPage() {
   const defense: GameSide = offense === 'home' ? 'away' : 'home'
   const batter = useMemo(() => state?.plateAppearance.batterCardKey ? state.pregame[offense].roster?.cards[state.plateAppearance.batterCardKey] ?? null : null, [state, offense])
   const pitcher = useMemo(() => state?.plateAppearance.pitcherCardKey ? state.pregame[defense].roster?.cards[state.plateAppearance.pitcherCardKey] ?? null : null, [state, defense])
+  const hitterAdjustment = useMemo(() => (state ? currentHitterOnBaseAdjustment(state) : null), [state])
+  const pitcherAdjustment = useMemo(() => (state ? currentPitcherControlAdjustment(state) : null), [state])
   const decision = state ? getDecisionView(state) : null
   const prePitchActions = state ? getPrePitchActions(state) : []
   const editablePrePitchDecision = Boolean(state?.pendingDecision && ['PINCH_HITTER_SELECTION','PINCH_RUNNER_TARGET','PINCH_RUNNER_REPLACEMENT','DEF_SUB_POSITION','DEF_SUB_REPLACEMENT','DOUBLE_SWITCH_PITCHER','DOUBLE_SWITCH_FIELDER','DOUBLE_SWITCH_OUTGOING_FIELDER','ENTRY_ATTRIBUTE_MODE'].includes(state.pendingDecision.decisionType))
@@ -177,9 +181,9 @@ export default function GameplayPlayableShellPage() {
         <section className="retro-field-panel"><Diamond state={state} /></section>
 
         <section className="retro-matchup">
-          <div><span>BATTER</span><strong>{batter?.playerName ?? '—'}</strong><small>OB {effectiveCurrentHitterOnBase(state)} · BSR {batter?.hitter.baserunning ?? '—'}</small></div>
+          <div><span>BATTER</span><strong>{batter?.playerName ?? '—'}</strong><small><RatingReadout label="OB" effective={effectiveCurrentHitterOnBase(state)} adjustment={hitterAdjustment} /> · BSR {batter?.hitter.baserunning ?? '—'}</small></div>
           <div className="retro-vs">VS</div>
-          <div><span>PITCHER</span><strong>{pitcher?.playerName ?? '—'}</strong><small>CTRL {effectiveCurrentPitcherControl(state)} · IP {pitcher?.pitcher.ip ?? '—'}</small></div>
+          <div><span>PITCHER</span><strong>{pitcher?.playerName ?? '—'}</strong><small><RatingReadout label="CTRL" effective={effectiveCurrentPitcherControl(state)} adjustment={pitcherAdjustment} /> · IP {pitcher?.pitcher.ip ?? '—'}</small></div>
         </section>
 
         <section className="retro-action-panel">

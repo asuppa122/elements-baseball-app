@@ -718,3 +718,78 @@
     left: 0;
   }
 }
+
+/* Fatigue-aware rating readout (Phase 1, GAMEPLAY_PRESENTATION_PLAN.md).
+ * The shell previously rendered only the fatigue-adjusted number, so an
+ * engine-lowered rating looked identical to a card printed that way. These
+ * styles carry the delta's visual weight; deliberately static, because
+ * Phase 1's motion budget belongs to the pitch/swing reveal sequence -- a
+ * rating that animates on every state change would compete with it. */
+
+.gp-rating {
+  display: inline-flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.gp-rating-printed {
+  color: var(--gp-text-muted);
+  opacity: 0.75;
+}
+
+.gp-rating-arrow {
+  color: var(--gp-accent);
+  margin: 0 3px;
+}
+
+.gp-rating-effective {
+  font-weight: 700;
+}
+
+.gp-rating.is-fatigue .gp-rating-effective {
+  color: var(--gp-outcome-negative);
+}
+
+.gp-rating.is-default .gp-rating-effective {
+  color: var(--gp-outcome-neutral);
+}
+
+.gp-rating-tags {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.gp-rating-tag {
+  border: 1px solid currentColor;
+  border-radius: 2px;
+  padding: 0 4px;
+  font-size: 0.58rem;
+  letter-spacing: 0.1em;
+  line-height: 1.5;
+  opacity: 0.9;
+}
+
+.gp-rating.is-fatigue .gp-rating-tag {
+  color: var(--gp-outcome-negative);
+}
+
+.gp-rating.is-default .gp-rating-tag {
+  color: var(--gp-outcome-neutral);
+}
+
+/* At ~390-430px the matchup cells are narrow enough that a rating carrying
+ * both an arrow and two or three cause tags would push the row's other
+ * content out of view. Let the readout own its own line there instead of
+ * shrinking it below legibility (MOBILE_PARITY_STANDARD.md). */
+@media (max-width: 560px) {
+  .gp-rating {
+    display: flex;
+    width: 100%;
+  }
+
+  .retro-matchup > div:last-child .gp-rating {
+    justify-content: flex-end;
+  }
+}
