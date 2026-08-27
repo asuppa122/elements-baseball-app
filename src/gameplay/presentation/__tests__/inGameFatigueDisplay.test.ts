@@ -89,7 +89,10 @@ describe('currentPitcherControlAdjustment', () => {
 
   it('attributes work past card IP to DISTANCE', () => {
     // 8 innings pitched = 24 outs, past HOME-8's 22 outs of card distance.
-    const s = pitcherWorkload(fixture(), { inning: 9 })
+    // The single earned run matters: with a clean sheet this same workload is
+    // the Shutout Bonus, not overwork (see the SHUTOUT_BONUS cases below).
+    // One run is under the 4-run performance tier, so DISTANCE stands alone.
+    const s = pitcherWorkload(fixture(), { inning: 9, earnedRuns: 1 })
     const adjustment = currentPitcherControlAdjustment(s)
     expect(adjustment?.kind).toBe('FATIGUE')
     expect(adjustment && 'causes' in adjustment ? adjustment.causes : []).toEqual(['DISTANCE'])
@@ -126,6 +129,56 @@ describe('currentPitcherControlAdjustment', () => {
     const s = attachRestState(fixture(), 'home', { 'HOME-8': { hitterGamesRemaining: 0, pitcherGamesRemaining: 2 } })
     s.pregame.home.roster!.cards['HOME-8'].pitcher.control = -5
     expect(currentPitcherControlAdjustment(s)).toEqual({ kind: 'FATIGUE', printed: -5, effective: -5, causes: ['REST'] })
+  })
+
+  // The Shutout Bonus is a reward, not overwork: -1/out instead of -2/out,
+  // floored at 0. Reporting it as DISTANCE told a manager holding a shutout
+  // that his pitcher was breaking down. HOME-8 prints Control 5 at 7.33 IP
+  // (22 outs), so 9 innings of defense with 0 earned runs is 27 outs -- 5 past
+  // the limit, paying 5 and landing exactly on the floor.
+  it('attributes a shutout past card IP to SHUTOUT_BONUS, not DISTANCE', () => {
+    const s = pitcherWorkload(fixture(), { inning: 10 })
+    const adjustment = currentPitcherControlAdjustment(s)
+    expect(adjustment).toEqual({ kind: 'FATIGUE', printed: 5, effective: 0, causes: ['SHUTOUT_BONUS'] })
+    expect(adjustment && 'causes' in adjustment ? adjustment.causes : []).not.toContain('DISTANCE')
+    expect(adjustment?.effective).toBe(effectiveCurrentPitcherControl(s))
+  })
+
+  it('the same workload with a run allowed is ordinary DISTANCE, and costs far more', () => {
+    // One earned run makes him ineligible for the bonus, so the identical
+    // out count is charged -2/out instead of -1/out.
+    const shutout = currentPitcherControlAdjustment(pitcherWorkload(fixture(), { inning: 10 }))
+    const scored = currentPitcherControlAdjustment(pitcherWorkload(fixture(), { inning: 10, earnedRuns: 1 }))
+    expect(shutout && 'causes' in shutout ? shutout.causes : []).toEqual(['SHUTOUT_BONUS'])
+    expect(scored && 'causes' in scored ? scored.causes : []).toEqual(['DISTANCE'])
+    // Same outs, strictly worse Control -- proves the two branches are really different.
+    expect(scored.effective).toBeLessThan(shutout.effective)
+  })
+
+  it('once the bonus is broken it is no longer SHUTOUT_BONUS', () => {
+    const s = pitcherWorkload(fixture(), { inning: 10, earnedRuns: 1 })
+    s.pitcherShutoutBonusBrokenAtOuts = { [pitcherInstanceKey('home', 'HOME-8')]: 26 }
+    const adjustment = currentPitcherControlAdjustment(s)
+    expect(adjustment && 'causes' in adjustment ? adjustment.causes : []).toEqual(['DISTANCE'])
+    expect(adjustment?.effective).toBe(effectiveCurrentPitcherControl(s))
+  })
+
+  it('reports rest debt alongside the bonus -- an involuntary cause is still real', () => {
+    let s = pitcherWorkload(fixture(), { inning: 10 })
+    s = attachRestState(s, 'home', { 'HOME-8': { hitterGamesRemaining: 0, pitcherGamesRemaining: 2 } })
+    const adjustment = currentPitcherControlAdjustment(s)
+    expect(adjustment && 'causes' in adjustment ? adjustment.causes : []).toEqual(['REST', 'SHUTOUT_BONUS'])
+    expect(adjustment?.effective).toBe(effectiveCurrentPitcherControl(s))
+  })
+
+  it('omits the bonus entirely when the cap leaves it costing nothing', () => {
+    // Already at/below 0 from rest debt, the bonus is capped to max(0, base)
+    // and takes nothing further -- so it is not a cause of any delta.
+    let s = pitcherWorkload(fixture(), { inning: 10 })
+    s = attachRestState(s, 'home', { 'HOME-8': { hitterGamesRemaining: 0, pitcherGamesRemaining: 9 } })
+    const adjustment = currentPitcherControlAdjustment(s)
+    expect(adjustment && 'causes' in adjustment ? adjustment.causes : []).not.toContain('SHUTOUT_BONUS')
+    expect(adjustment?.effective).toBe(effectiveCurrentPitcherControl(s))
   })
 
   it('a wrong attribution would fail this -- a rested first-inning starter has no causes at all', () => {

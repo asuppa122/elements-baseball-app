@@ -30,6 +30,25 @@ export function cardIpOuts(ip:number|null){
   const extraOuts=fraction>=0.5?2:fraction>=0.3?1:fraction>=0.15?2:fraction>=0.05?1:0
   return whole*3+extraOuts
 }
+/**
+ * True when the Shutout Bonus is the branch of distanceControlPenalty that
+ * applies: the pitcher is at/past card IP while the shutout is still intact,
+ * paying -1 per out (and never pushed below 0 by the bonus itself) instead of
+ * the ordinary -2 per out for working past his card.
+ *
+ * Extracted so presentation can tell the *reward* apart from overwork without
+ * restating the condition and drifting from it -- the Rulebook treats these as
+ * different situations, and rendering both as "past IP" tells a manager his
+ * pitcher is in trouble when he has in fact earned the right to stay in.
+ * distanceControlPenalty below is the only other caller.
+ */
+export function shutoutBonusApplies(input:PitcherFatigueInput){
+  if(input.useDefaultAttributes)return false
+  // Once the bonus has been broken by a run, the broken branch owns the result.
+  if(input.shutoutBonusBrokenAtOuts!==undefined)return false
+  const limit=cardIpOuts(input.cardIp)
+  return input.outsRecorded>=15 && input.earnedRunsAllowed===0 && (input.inheritedRunnersScored??0)===0 && !input.shutoutBrokenAfterBonus && input.outsRecorded>=limit
+}
 export function distanceControlPenalty(input:PitcherFatigueInput){
   if(input.useDefaultAttributes)return 0
   const limit=cardIpOuts(input.cardIp)
@@ -46,8 +65,7 @@ export function distanceControlPenalty(input:PitcherFatigueInput){
     const subsequentOuts=Math.max(0,input.outsRecorded-brokenAt)
     return bonusPenalty+2+(subsequentOuts*2)
   }
-  const shutoutEligible=input.outsRecorded>=15 && input.earnedRunsAllowed===0 && (input.inheritedRunnersScored??0)===0 && !input.shutoutBrokenAfterBonus
-  if(shutoutEligible && input.outsRecorded>=limit){
+  if(shutoutBonusApplies(input)){
     // Shutout Bonus: the threshold-completing out is the first -1, then -1 for every later out.
     // The bonus cannot by itself push Control below 0.
     return Math.min(sobOutsAtOrBeyond,Math.max(0,baseBeforeDistance))

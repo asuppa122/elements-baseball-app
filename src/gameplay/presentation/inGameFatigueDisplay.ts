@@ -3,6 +3,7 @@ import {
   effectiveHitterOnBase,
   effectivePitcherControl,
   performanceControlPenalty,
+  shutoutBonusApplies,
 } from '../fatigueEngine'
 import { currentHitterFatigueContext, currentPitcherFatigueContext } from '../engine'
 import type { GameState } from '../types'
@@ -21,7 +22,14 @@ import type { GameState } from '../types'
  * card attributes renders exactly as it does today.
  */
 
-export type FatigueCause = 'REST' | 'PERFORMANCE' | 'DISTANCE'
+/**
+ * SHUTOUT_BONUS is not a penalty like the other three. A pitcher past card IP
+ * with the shutout intact pays -1 per out instead of -2 and cannot be pushed
+ * below 0 by it -- he has earned the right to stay in, and callers must not
+ * present it as overwork. It is mutually exclusive with DISTANCE: they are
+ * different branches of the same distance calculation, never both.
+ */
+export type FatigueCause = 'REST' | 'PERFORMANCE' | 'DISTANCE' | 'SHUTOUT_BONUS'
 
 export type RatingAdjustment =
   /**
@@ -86,7 +94,11 @@ export function currentPitcherControlAdjustment(state: GameState): RatingAdjustm
   const causes: FatigueCause[] = []
   if (Math.max(0, input.gamesFromRested ?? 0) > 0) causes.push('REST')
   if (performanceControlPenalty(input.earnedRunsAllowed) > 0) causes.push('PERFORMANCE')
-  if (distanceControlPenalty(input) > 0) causes.push('DISTANCE')
+  // One distance figure, two very different reasons for it. Only report it as a
+  // cause when it actually cost something -- past card IP with the shutout
+  // intact but already at/below 0, the bonus is capped to nothing.
+  const distance = distanceControlPenalty(input)
+  if (distance > 0) causes.push(shutoutBonusApplies(input) ? 'SHUTOUT_BONUS' : 'DISTANCE')
 
   if (causes.length === 0 && effective === printed) return null
 

@@ -755,6 +755,15 @@
   color: var(--gp-outcome-neutral);
 }
 
+/* The Shutout Bonus is the one adjustment a manager should be pleased to see:
+ * Control traded down -1/out (never below 0) for staying in with the shutout
+ * intact. It gets the positive token precisely so it cannot be mistaken for
+ * the overwork treatment -- rendering an earned trade in the penalty red
+ * teaches the wrong lesson about the pitcher's situation. */
+.gp-rating.is-earned .gp-rating-effective {
+  color: var(--gp-outcome-positive);
+}
+
 .gp-rating-tags {
   display: inline-flex;
   flex-wrap: wrap;
@@ -777,6 +786,10 @@
 
 .gp-rating.is-default .gp-rating-tag {
   color: var(--gp-outcome-neutral);
+}
+
+.gp-rating.is-earned .gp-rating-tag {
+  color: var(--gp-outcome-positive);
 }
 
 /* At ~390-430px the matchup cells are narrow enough that a rating carrying

@@ -16,12 +16,27 @@ const CAUSE_LABEL: Record<FatigueCause, string> = {
   REST: 'REST',
   PERFORMANCE: 'RUNS',
   DISTANCE: 'PAST IP',
+  SHUTOUT_BONUS: 'SHUTOUT',
 }
 
 const CAUSE_DESCRIPTION: Record<FatigueCause, string> = {
   REST: 'rest debt',
   PERFORMANCE: 'earned runs allowed',
   DISTANCE: 'work past card IP',
+  SHUTOUT_BONUS: 'the Shutout Bonus, holding the shutout past card IP',
+}
+
+/**
+ * Which treatment the readout wears. The Shutout Bonus lowers Control as the
+ * price of staying in with the shutout intact -- it is earned, so it must not
+ * wear the penalty treatment that rest debt, earned runs and ordinary overwork
+ * share. If any involuntary cause is also active, the penalty treatment wins:
+ * that pitcher really is being degraded, bonus or not.
+ */
+function toneFor(adjustment: RatingAdjustment): string {
+  if (adjustment.kind === 'DEFAULT_ATTRIBUTES') return 'is-default'
+  if (adjustment.causes.some((cause) => cause !== 'SHUTOUT_BONUS')) return 'is-fatigue'
+  return adjustment.causes.includes('SHUTOUT_BONUS') ? 'is-earned' : 'is-fatigue'
 }
 
 function describe(label: string, adjustment: RatingAdjustment): string {
@@ -36,7 +51,7 @@ function describe(label: string, adjustment: RatingAdjustment): string {
       ? `${label} ${adjustment.effective}, already at the rating floor despite ${causes}`
       : `${label} ${adjustment.effective}`
   }
-  return `${label} ${adjustment.printed}, reduced to ${adjustment.effective}${causes ? ` by ${causes}` : ''}`
+  return `${label} ${adjustment.printed}, ${toneFor(adjustment) === 'is-earned' ? 'traded down to' : 'reduced to'} ${adjustment.effective}${causes ? ` by ${causes}` : ''}`
 }
 
 export default function RatingReadout({
@@ -62,7 +77,7 @@ export default function RatingReadout({
 
   return (
     <span
-      className={`gp-rating ${isDefault ? 'is-default' : 'is-fatigue'}`}
+      className={`gp-rating ${toneFor(adjustment)}`}
       aria-label={describe(label, adjustment)}
     >
       <span aria-hidden="true">
