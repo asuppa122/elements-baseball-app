@@ -1,0 +1,46 @@
+/* Gameplay presentation tokens (Phase 0, GAMEPLAY_PRESENTATION_PLAN.md).
+ * Gameplay never invents its own black/gold values -- it names semantic
+ * roles for the same tokens App.css already defines for the rest of the
+ * app. This file only adds what didn't exist anywhere yet: motion timing,
+ * and the two new semantic colors (advantage, outcome) the app-wide
+ * palette has no opinion on. */
+
+:root {
+  --gp-surface: var(--black);
+  --gp-panel: var(--panel);
+  --gp-panel-raised: var(--panel-light);
+  --gp-accent: var(--gold);
+  --gp-accent-bright: var(--gold-bright);
+  --gp-text: var(--cream);
+  --gp-text-muted: var(--gray);
+  --gp-border: var(--border);
+
+  /* Advantage/outcome colors -- deliberate, muted additions, not a
+     competing accent family. Chosen to read clearly against both --panel
+     (#111214) and --black (#070809) at real text weights; verified via
+     screenshot, not just picked by eye against a swatch. */
+  --gp-advantage-hitter: #7fce8c;
+  --gp-advantage-pitcher: #e08a5c;
+  --gp-outcome-positive: #7fce8c;
+  --gp-outcome-negative: #e2726b;
+  --gp-outcome-neutral: var(--gold-bright);
+
+  /* Motion timing -- nothing like this existed anywhere in gameplay CSS
+     before Phase 0 (confirmed: zero @keyframes/transition/animation in
+     gameplay-shell.css, gameplay-lab.css, gameplay-demos.css). */
+  --gp-motion-instant: 90ms;
+  --gp-motion-quick: 180ms;
+  --gp-motion-reveal: 320ms;
+  --gp-motion-dramatic: 560ms;
+  --gp-ease-standard: cubic-bezier(0.2, 0.7, 0.3, 1);
+  --gp-ease-emphasis: cubic-bezier(0.34, 1.4, 0.4, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --gp-motion-instant: 0ms;
+    --gp-motion-quick: 0ms;
+    --gp-motion-reveal: 0ms;
+    --gp-motion-dramatic: 0ms;
+  }
+}

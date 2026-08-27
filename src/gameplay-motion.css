@@ -1,0 +1,32 @@
+/* Gameplay motion primitives (Phase 0). Small, reusable set -- the actual
+ * pitch/swing/result reveal sequencing is Phase 1 work; Phase 0 only proves
+ * the pattern exists and is wired to the timing tokens in
+ * gameplay-tokens.css, not the full sequence itself. */
+
+@keyframes gp-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes gp-rise-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes gp-pulse-emphasis {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.04); }
+  100% { transform: scale(1); }
+}
+
+.gp-fade-in {
+  animation: gp-fade-in var(--gp-motion-reveal) var(--gp-ease-standard) both;
+}
+
+.gp-rise-in {
+  animation: gp-rise-in var(--gp-motion-reveal) var(--gp-ease-standard) both;
+}
+
+.gp-pulse-emphasis {
+  animation: gp-pulse-emphasis var(--gp-motion-dramatic) var(--gp-ease-emphasis) both;
+}

@@ -21,6 +21,15 @@ import {
 
 function sideLabel(side: GameSide) { return side === 'home' ? 'HOME' : 'AWAY' }
 
+// Phase 0 (GAMEPLAY_PRESENTATION_PLAN.md): the one piece of applied color
+// from the new advantage tokens, not just a defined-but-unused pair --
+// verified via screenshot against both --panel and --black grounds.
+function advantageClassName(advantage: 'hitter' | 'pitcher' | null | undefined): string {
+  if (advantage === 'hitter') return 'gp-advantage-hitter'
+  if (advantage === 'pitcher') return 'gp-advantage-pitcher'
+  return ''
+}
+
 function Diamond({ state }: { state: GameState }) {
   const runner = (base: 'first' | 'second' | 'third') => state.bases[base]?.playerName ?? ''
   return (
@@ -182,14 +191,14 @@ export default function GameplayPlayableShellPage() {
 
           {!decision && state.status !== 'complete' && state.waitingFor === 'PITCH_ROLL' && (
             <>
-              <div className="retro-roll-readout"><span>PITCH</span><b>{state.plateAppearance.pitchRoll ?? '—'}</b><span>ADV</span><b>{state.plateAppearance.advantage?.toUpperCase() ?? '—'}</b></div>
+              <div className="retro-roll-readout"><span>PITCH</span><b>{state.plateAppearance.pitchRoll ?? '—'}</b><span>ADV</span><b className={advantageClassName(state.plateAppearance.advantage)}>{state.plateAppearance.advantage?.toUpperCase() ?? '—'}</b></div>
               {pitcherAdvantageIsAutomatic(state) ? <button className="retro-primary" disabled={saving} onClick={() => void noPitch()}>NO PITCH — PITCHER ADVANTAGE</button> : <button className="retro-primary" disabled={saving} onClick={() => void rollPitch()}>ROLL PITCH</button>}
               {prePitchActions.length > 0 && <div className="retro-manager-actions">{prePitchActions.map((action) => <button key={action.id} disabled={saving} onClick={() => void startAction(action.id)}>{action.label}</button>)}</div>}
             </>
           )}
 
           {!decision && state.status !== 'complete' && state.waitingFor === 'SWING_ROLL' && (
-            <><div className="retro-roll-readout"><span>PITCH</span><b>{state.plateAppearance.pitchRoll ?? '—'}</b><span>ADV</span><b>{state.plateAppearance.advantage?.toUpperCase() ?? '—'}</b></div><button className="retro-primary" disabled={saving} onClick={() => void rollSwing()}>ROLL SWING</button></>
+            <><div className="retro-roll-readout"><span>PITCH</span><b>{state.plateAppearance.pitchRoll ?? '—'}</b><span>ADV</span><b className={advantageClassName(state.plateAppearance.advantage)}>{state.plateAppearance.advantage?.toUpperCase() ?? '—'}</b></div><button className="retro-primary" disabled={saving} onClick={() => void rollSwing()}>ROLL SWING</button></>
           )}
 
           {decision && (
