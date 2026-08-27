@@ -34,9 +34,16 @@ All 8 imported and verified via independent `HeadObjectCommand` checks.
 
 Confirmed by James: a rejected reroll leaves a real generated `cards` row behind (real ratings, real
 attributed owner) but never needed a sourced image, since no manager ends up keeping that specific
-year-card. Verified against real data (all 30 carry real ownership; 11/30 are the same real player
-with a different, already-imaged kept year in the same owner's folder — full reasoning in
-`IMAGE_PIPELINE.md`'s 2026-08-27 entry). **No further action needed on these.**
+year-card. Closed on the strength of James's confirmation — but data independently corroborates only
+part of it, not all 30 equally; full reasoning in `IMAGE_PIPELINE.md`'s 2026-08-27 entry. **No
+further action needed on these**, but the three tiers below matter for how much weight this precedent
+should carry if a similar case comes up later:
+
+| Tier | Count | Evidence |
+|---|---|---|
+| Strong — independently confirmed | 11 | Same real player, different year, already imaged, **same owner's** folder |
+| Weak — not counted as confirmed | 1 | Imaged sibling year exists, but owned by a *different* manager — likely unrelated |
+| Unconfirmed — rests on James's word alone | 18 | Zero imaged variant anywhere in the catalog for that player, any year, any owner |
 
 <details>
 <summary>All 30 card_keys</summary>

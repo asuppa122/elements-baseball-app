@@ -226,25 +226,38 @@ that list against real data, live, before accepting the reclassification:
 - **All 30 carry real ownership** in both the diagnostic CSV and the live `cards.ownership` column
   today (verified via direct query) — consistent with "the roll was attributed to a real manager,"
   not consistent with orphaned/unattributed data.
-- **11 of the 30 are the same real player with a different, already-imaged year already in the same
-  manager's folder** (`classification = SAME_PLAYER_OTHER_YEAR` in the diagnostic, e.g. `Mickey
-  Mantle 1954 NYY` has no image, but the same manager's folder has a real, sourced `Mickey Mantle
-  1960 NYY`) — this is the single most direct, checkable signal consistent with "this specific
-  year-card was generated but not the one ultimately kept." Genuinely strong support for the
-  explanation, not a coincidence across 11 independent rows.
-- The other 19 are `NO_CANDIDATE` (no version of that player found anywhere in the owner's folder at
-  all) — no corroborating signal either way from this specific check, though fully consistent with a
-  reroll result that was rejected before ever being searched for. Worth flagging on its own: 9 of
-  these 19 are a single cluster — the entire 1904 St. Louis Browns roster (`Harry Gleason`, `Harry
-  Howell`, `Hunter Hill`, `Jack O'Connor`, `Jesse Burkett`, `Pat Hynes`, `Pinky Swander`, `Tom
-  Jones`, `Willie Sudhoff`), all owned by Zeek. A striking pattern either way; not independently
-  provable from data alone, but not contradicted by it.
+**Precision requested and checked: what's actually confirmed by data vs. resting only on James's
+word.** Three distinct tiers, not one undifferentiated "all 30 confirmed":
+
+- **11 of 30 — strong, independently confirmed.** Same real player, different year, already imaged,
+  in the *same owner's* folder (`classification = SAME_PLAYER_OTHER_YEAR` in the diagnostic, e.g.
+  `Mickey Mantle 1954 NYY` has no image, but the same manager's folder has a real, sourced `Mickey
+  Mantle 1960 NYY`). This is the direct, checkable signature of "this specific year-card was
+  generated but not the one ultimately kept," and it holds for 11 independent rows, not one.
+- **1 of 30 — weak, not counted as confirmed.** `Bobby Mathews 1881 TOT` (owned by Anthony) has no
+  imaged sibling under Anthony, but a broader cross-catalog check (every owner, not just the same
+  one — the diagnostic tool's own search never checked this) found `Bobby Mathews 1882 BSN` *is*
+  imaged, owned by **Will**. Different owner, almost certainly an unrelated card/roll entirely, not
+  evidence this specific 1881 row was a reject from the same event. Flagged, not folded into the 11.
+- **18 of 30 — no independent evidence either way.** Ran the same cross-catalog check for every
+  remaining player (any owner, any year, anywhere in `public.cards`/`card_images`): these 18 have
+  **zero** imaged variant anywhere in the entire system, for any year, under any owner. Nothing in
+  the data confirms or contradicts the reroll explanation for these — they're plausible by extension
+  of James's confirmation and the pattern in the other 12, but not independently verified the way
+  the 11 are. Worth flagging on its own: 9 of these 18 are a single cluster — the entire 1904 St.
+  Louis Browns roster (`Harry Gleason`, `Harry Howell`, `Hunter Hill`, `Jack O'Connor`, `Jesse
+  Burkett`, `Pat Hynes`, `Pinky Swander`, `Tom Jones`, `Willie Sudhoff`), all owned by Zeek — a
+  striking pattern either way, but still not independently provable from data alone.
 - Re-checked live against `public.cards`/`public.card_images` today (not trusting the 2026-08-08
   snapshot): all 30 still exist, all 30 still carry real ownership, all 30 still have zero
   `card_images` rows. Nothing stale.
 
-**Status: closed, not a gap.** These 30 do not need Drive access, do not need James or a manager to
-search for anything, and should not be carried forward as open missing-image work.
+**Status: closed, not a gap — on the strength of James's direct confirmation for all 30, with data
+independently corroborating 11 of them and neither confirming nor contradicting the other 19.** None
+of the 30 need Drive access or further searching. If a genuinely new missing-image case ever
+resembles the 18-without-corroboration pattern (an owned card, no image, no imaged sibling anywhere),
+don't auto-assume "another reroll artifact" from this precedent alone — that inference is only solid
+for the 12 that showed the actual signature, not the mechanic in general.
 
 **The 86 access-blocked cards are no longer just "blocked on access" — James reports the Zach,
 Ramel, and Miles folders (covering 59 of the 86: 29 + 18 + 12) appear to have disappeared from the
