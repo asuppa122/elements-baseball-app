@@ -45,6 +45,17 @@ should carry if a similar case comes up later:
 | Weak — not counted as confirmed | 1 | Imaged sibling year exists, but owned by a *different* manager — likely unrelated |
 | Unconfirmed — rests on James's word alone | 18 | Zero imaged variant anywhere in the catalog for that player, any year, any owner |
 
+**2026-08-27 update — visibility decision, and it's the opposite of the original assumption.**
+James: these 30 should be **published**, not unpublished. Real generated ratings + legitimately
+"posted" during the reroll mechanic means published, regardless of image or ownership — same
+treatment as unowned complete-set cards (1969/1997/2022–2026), which are also published with no
+owner. Ownership and image existence don't gate `is_published`; only whether the card was actually
+generated/posted does. James flipped the CARDS tab's Published column to "yes" for all 30 (confirmed
+directly, live: 30/30 read "yes"). Checked `cards.is_published` before assuming anything needed to
+change: **all 30 already read `true`** — the sheet's flip must have already been in place by the time
+the full `is_published --write` ran earlier tonight, so that run already applied this correctly
+without anyone realizing it at the time. No write was needed; verified directly rather than assumed.
+
 <details>
 <summary>All 30 card_keys</summary>
 
