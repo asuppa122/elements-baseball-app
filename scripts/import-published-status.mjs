@@ -105,9 +105,18 @@ async function loadRealCardKeys(supabase) {
   const pageSize = 1000;
   let from = 0;
   for (;;) {
+    // .order() is required, not optional -- a sibling script's unordered
+    // .range() pagination against this same table was caught this week
+    // silently duplicating/dropping rows across page boundaries (135,203
+    // rows fetched, only 86,886 distinct keys). This script's own already-
+    // completed --write run predated that discovery and is not being
+    // re-verified retroactively here, but any future re-run needs this fix
+    // in place first. Matches the established pattern in
+    // cardDatabase.ts/CardsPage.tsx.
     const { data, error } = await supabase
       .from("cards")
       .select("card_key")
+      .order("card_key", { ascending: true })
       .range(from, from + pageSize - 1);
     if (error) throw error;
     if (!data || data.length === 0) break;

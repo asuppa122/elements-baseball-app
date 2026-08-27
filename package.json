@@ -16,7 +16,8 @@
     "audit:cards": "node scripts/audit-card-source.mjs",
     "generate:image-variants": "node scripts/generate-image-variants.mjs",
     "sync:images-to-r2": "node scripts/sync-images-to-r2.mjs",
-    "import:published-status": "node scripts/import-published-status.mjs"
+    "import:published-status": "node scripts/import-published-status.mjs",
+    "import:ownership-refresh": "node scripts/import-ownership-refresh.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.111.0",
