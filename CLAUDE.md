@@ -73,7 +73,7 @@ npm run lint              # eslint .
 npm run preview          # preview a production build
 ```
 
-There is no unit test runner (no vitest/jest, no `npm test`). Gameplay-engine correctness is instead verified by deterministic, in-app scenario harnesses — see "Testing model" below.
+`npm test` (Vitest 4, jsdom + Testing Library) runs the suite; `npm run test:watch` for watch mode. The runner is a thin layer over the deterministic scenario harnesses that carry the real gameplay-engine assertions — see "Testing model" below.
 
 Card-data import scripts (Node, read `.env` via `dotenv`):
 
@@ -120,15 +120,17 @@ This is the largest and most architecturally significant part of the app — rea
 - **Dice:** all production rolls happen client-side via `dice.ts`; `QueuedTestDiceProvider`-style deterministic providers exist only for scenario harnesses/dev testing and must never be reachable from real user gameplay.
 - **`/games/lab`** is a private, unlinked route gated by the `gameplay_feature_access` Supabase allowlist — it's the active gameplay-engine development surface (pregame setup, live game state, playable shell, verification), separate from the public `/play` and `/games` routes which still show "coming soon" in Demo Mode.
 
-### Testing model (no test runner)
+### Testing model (harness-first, Vitest-run)
 
-Correctness is proven by deterministic, hand-written scenario suites that run *inside the app* (and can be invoked from the private `/games/lab/verification` page), not by a `jest`/`vitest` command:
+Correctness is proven by deterministic, hand-written scenario suites. They run *inside the app* (invocable from the private `/games/lab/verification` page) **and** under `npm test` — the same assertions reached two ways:
 
 - `scenarioHarness.ts`, `groundBallScenarioHarness.ts`, `fatigueScenarioHarness.ts`, `gameBoundaryScenarioHarness.ts` — deterministic branch/regression matrices (`runNonGbScenarioMatrix` etc.) that construct an exact `GameState` fixture, drive it through the engine/decision APIs, and assert an exact Rulebook outcome.
 - `testHarness.ts` — seeded, longer-running certification-style playthroughs with state invariants (no duplicate baserunners, no negative scores, batting-order integrity, etc.) checked after every transition.
 - `rulebookCoverage.ts` aggregates the fixture-independent suites above into branch counts by mechanic; see `RULEBOOK_COVERAGE_ARCHITECTURE.md` for the evidence-layer model (deterministic branch tests → regression tests → interactive verification → rules demos → complete-game simulation → statistical validation) and the standing regression rule: any bug found via manual/complete-game play must get a reproducing scenario added with a stable ID *before* being called fixed, and that scenario stays permanently.
 
-When you touch gameplay logic, extend the relevant scenario harness/matrix rather than adding an ad hoc script, and prefer reproducing a bug as a new deterministic scenario before fixing it.
+- `src/**/__tests__/*.test.ts(x)` — Vitest wrappers, not a parallel test suite. Each gameplay wrapper calls its matrix once and asserts every result passed via `it.each(report.results)`, so harness scenarios surface as individual named `npm test` cases. A handful of non-gameplay units (`supabasePagination`, `cardDatabase`, `demoRoster`, two roster components) are tested directly. Current total: **317 tests across 17 files**.
+
+When you touch gameplay logic, extend the relevant scenario harness/matrix rather than adding an ad hoc script or writing a standalone `.test.ts` beside it — the wrapper picks up new scenarios automatically. Prefer reproducing a bug as a new deterministic scenario before fixing it.
 
 ### Mobile parity
 
