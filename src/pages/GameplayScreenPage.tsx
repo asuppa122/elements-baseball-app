@@ -7,8 +7,8 @@ import DefBar from '../gameplay/presentation/DefBar'
 import GameField from '../gameplay/presentation/GameField'
 import LineupRail from '../gameplay/presentation/LineupRail'
 import AvailabilityPanel from '../gameplay/presentation/AvailabilityPanel'
-import MatchupPanel from '../gameplay/presentation/MatchupPanel'
-import ChartReadout from '../gameplay/presentation/ChartReadout'
+import RollControls from '../gameplay/presentation/RollControls'
+import GameMenu from '../gameplay/presentation/GameMenu'
 import GameLogPanel, { type LogEvent } from '../gameplay/presentation/GameLogPanel'
 import HalfInningTransition from '../gameplay/presentation/HalfInningTransition'
 import PostGameBoard from '../gameplay/presentation/PostGameBoard'
@@ -16,7 +16,6 @@ import { buildHalfInningTransition, previousHalf } from '../gameplay/halfInningT
 import DecisionBoard from '../gameplay/presentation/DecisionBoard'
 import { getPrePitchActions } from '../gameplay/decisionEngine'
 import { useGameplayActions } from '../gameplay/presentation/useGameplayActions'
-import { pitcherAdvantageIsAutomatic } from '../gameplay/engine'
 import { loadGameplayLabEvents } from '../gameplay/gameRepository'
 import type { GameSide, GameState } from '../gameplay/types'
 
@@ -36,6 +35,11 @@ import type { GameSide, GameState } from '../gameplay/types'
  * resolves it. Interactivity is the last step, after parity is confirmed.
  */
 
+function basesLabel(state: GameState): string {
+  const on = [state.bases.first && '1st', state.bases.second && '2nd', state.bases.third && '3rd'].filter(Boolean)
+  return on.length ? `Runners on ${on.join(', ')}` : 'Bases empty'
+}
+
 function Scorebug({ state }: { state: GameState }) {
   const batting = battingSide(state.half)
   const side = (which: GameSide) => (
@@ -52,6 +56,14 @@ function Scorebug({ state }: { state: GameState }) {
       <div className="gp-scorebug-centre">
         <span className="gp-scorebug-inning">
           {state.half === 'top' ? '▲' : '▼'} {state.inning}
+        </span>
+        {/* Bases at a glance. The runners themselves are pills on a 600px
+            field, which is great for detail and poor for a quick read of
+            "who's on" -- this is the quick read. */}
+        <span className="gp-bases" aria-label={basesLabel(state)}>
+          <i className={`gp-base is-second${state.bases.second ? ' is-on' : ''}`} />
+          <i className={`gp-base is-third${state.bases.third ? ' is-on' : ''}`} />
+          <i className={`gp-base is-first${state.bases.first ? ' is-on' : ''}`} />
         </span>
         <span className="gp-scorebug-outs" aria-label={`${state.outs} out`}>
           {[0, 1, 2].map((i) => <i key={i} className={`gp-out-dot${i < state.outs ? ' is-on' : ''}`} />)}
@@ -144,11 +156,74 @@ export default function GameplayScreenPage() {
         {/* Centre is a transparent stack, not a panel — matching the artboards,
             where only the two rails are panels and the scorebug sits at the
             centre column's width rather than spanning the page. */}
+        {/* Centre is strictly the game: score, the field, the defence. The
+            matchup is the batter at the plate against the pitcher on the
+            mound, so it needs no panel of its own. */}
         <section className="gp-region-field" aria-label="Field">
           <Scorebug state={state} />
-          <DefBar state={state} />
           <GameField state={state} />
-          <MatchupPanel state={state} />
+          <DefBar state={state} />
+        </section>
+
+        <section className="gp-panel gp-region gp-region-rail" aria-label="Game rail">
+          <GameMenu
+            state={state}
+            saving={saving}
+            onTogglePause={() => void togglePause()}
+            onExit={() => navigate('/games')}
+          />
+
+          <GameLogPanel events={events} />
+
+          {/* The decision board is the one already built and verified against
+              both saved awaiting_decision games -- reused, not rewritten. */}
+          <div className={`gp-decision-dock${decision ? ' is-open' : ''}`}>
+            {decision && <i className="gp-sheet-grip" aria-hidden="true" />}
+            {decision && (
+              <DecisionBoard
+                state={state}
+                view={decision}
+                selection={selection}
+                /* The lab game is RLS-scoped to its home manager. */
+                viewerSide="home"
+                onToggle={(id) => toggleSelection(id, decision.mode === 'single')}
+                onConfirm={() => void confirmDecision()}
+                onRoll={() => void rollDecision()}
+                saving={saving}
+              />
+            )}
+            {decision && editablePrePitchDecision && (
+              <button className="gp-action gp-action-secondary" disabled={saving} onClick={() => void changeAction()}>
+                Change action
+              </button>
+            )}
+          </div>
+
+          <RollControls
+            state={state}
+            saving={saving}
+            hasDecision={Boolean(decision)}
+            onRollPitch={() => void rollPitch()}
+            onRollSwing={() => void rollSwing()}
+            onNoPitch={() => void noPitch()}
+          />
+
+          {!decision && state.status !== 'complete' && prePitchActions.length > 0 && (
+            <section className="gp-manager-actions" aria-label="Manager actions">
+              <b className="s-lbl">Manager actions</b>
+              <div className="gp-action-list">
+                {prePitchActions.map((a) => (
+                  <button key={a.id} className="gp-action gp-action-secondary" disabled={saving}
+                    title={a.detail} onClick={() => void startAction(a.id)}>{a.label}</button>
+                ))}
+              </div>
+            </section>
+          )}
+
+          <AvailabilityPanel state={state} />
+
+          {error && <p className="gp-actions-msg is-error">{error}</p>}
+          {notice && !error && <p className="gp-actions-msg">{notice}</p>}
 
           {transition && !decision && (
             <HalfInningTransition
@@ -159,72 +234,8 @@ export default function GameplayScreenPage() {
           )}
 
           {!decision && state.status === 'complete' && <PostGameBoard state={state} />}
-
-          <section className="gp-panel gp-actions" aria-label="Your move">
-            {error && <p className="gp-actions-msg is-error">{error}</p>}
-            {notice && !error && <p className="gp-actions-msg">{notice}</p>}
-
-            {state.status === 'complete' && <p className="gp-actions-msg">This game is final.</p>}
-
-            {!decision && state.status !== 'complete' && state.waitingFor === 'PITCH_ROLL' && (
-              <>
-                {pitcherAdvantageIsAutomatic(state)
-                  ? <button className="gp-action" disabled={saving} onClick={() => void noPitch()}>No pitch — pitcher advantage</button>
-                  : <button className="gp-action" disabled={saving} onClick={() => void rollPitch()}>Roll pitch</button>}
-                {prePitchActions.length > 0 && (
-                  <div className="gp-action-list">
-                    {prePitchActions.map((a) => (
-                      <button key={a.id} className="gp-action gp-action-secondary" disabled={saving}
-                        title={a.detail} onClick={() => void startAction(a.id)}>{a.label}</button>
-                    ))}
-                  </div>
-                )}
-              </>
-            )}
-
-            {!decision && state.status !== 'complete' && state.waitingFor === 'SWING_ROLL' && (
-              <button className="gp-action" disabled={saving} onClick={() => void rollSwing()}>Roll swing</button>
-            )}
-
-            {state.status !== 'complete' && (
-              <button className="gp-action gp-action-quiet" disabled={saving} onClick={() => void togglePause()}>
-                {state.status === 'paused' ? 'Resume game' : 'Pause game'}
-              </button>
-            )}
-          </section>
         </section>
 
-        <section className="gp-panel gp-region gp-region-rail" aria-label="Game rail">
-          {/* The decision board is the one already built and verified against
-              both saved awaiting_decision games — reused, not rewritten. */}
-          {/* On a phone this whole dock lifts out of the rail and pins to the
-              bottom of the screen -- a blocking decision must not be three
-              scrolls below the field. */}
-          <div className={`gp-decision-dock${decision ? ' is-open' : ''}`}>
-          {decision && <i className="gp-sheet-grip" aria-hidden="true" />}
-          {decision && (
-            <DecisionBoard
-              state={state}
-              view={decision}
-              selection={selection}
-              /* The lab game is RLS-scoped to its home manager. */
-              viewerSide="home"
-              onToggle={(id) => toggleSelection(id, decision.mode === 'single')}
-              onConfirm={() => void confirmDecision()}
-              onRoll={() => void rollDecision()}
-              saving={saving}
-            />
-          )}
-          {decision && editablePrePitchDecision && (
-            <button className="gp-action gp-action-secondary" disabled={saving} onClick={() => void changeAction()}>
-              Change action
-            </button>
-          )}
-          </div>
-          <ChartReadout state={state} />
-          <AvailabilityPanel state={state} />
-          <GameLogPanel events={events} />
-        </section>
       </div>
     </main>
   )

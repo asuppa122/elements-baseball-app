@@ -127,37 +127,50 @@
  * viewport and got clipped. `height` plus `min-height: 0` on the descendants
  * is what actually makes the rails scroll instead of stretch. */
 @media (min-width: 1024px) {
-  .gp-screen { height: 100dvh; overflow: hidden; }
+  /* 100dvh would be right if this were the whole page, but it sits under the
+   * global app header -- so a full viewport height always overflowed by a
+   * header's worth, which is what pushed the DEF strip off screen.
+   *
+   * min-height must be overridden too: the base rule sets `min-height: 100dvh`
+   * and a min-height beats a height, so setting height alone changed nothing.
+   * 50px is the measured header at desktop widths; if the shell ever exposes
+   * its height as a custom property, this should read that instead. */
+  .gp-screen {
+    height: calc(100dvh - 50px);
+    min-height: 0;
+    overflow: hidden;
+  }
   .gp-region-lineup,
   .gp-region-rail { overflow-y: auto; min-height: 0; }
 }
 
-/* Compressed desktop: rails give up width before the field does. */
+/* The three columns stay side by side. The rails narrow progressively; they
+ * never drop below the field and never stack. Seeing the lineup, the field and
+ * the rail at once is the layout, not a wide-screen luxury. Only a true phone
+ * stacks, because three columns of ~110px would show nothing. */
 @media (max-width: 1279px) {
-  .gp-screen { --s-rail-left: 250px; --s-rail-right: 270px; --s-pad: 12px; }
+  .gp-screen { --s-rail-left: 250px; --s-rail-right: 272px; --s-pad: 12px; --s-gap: 10px; }
 }
 
-/* Tablet: the field keeps the top of the screen with the right rail beside
- * it; the lineup moves underneath rather than being squeezed to nothing. */
-@media (max-width: 1023px) {
-  .gp-layout {
-    grid-template-columns: minmax(0, 1fr) 260px;
-    flex: none;
-  }
-  .gp-region-lineup { grid-column: 1 / -1; grid-row: 2; }
-  .gp-region-field  { grid-column: 1; grid-row: 1; }
-  .gp-region-rail   { grid-column: 2; grid-row: 1; }
+@media (max-width: 1099px) {
+  .gp-screen { --s-rail-left: 214px; --s-rail-right: 232px; }
+  .gp-lineup-card { width: 46px; height: 64px; }
+  .gp-lineup-who b { font-size: 12px; }
 }
 
-/* Phone: one column, field first. The rails become disclosure sections so
- * every piece of content stays reachable -- MOBILE_PARITY_STANDARD.md asks for
- * the same content and functionality, not a reduced screen. */
+@media (max-width: 900px) {
+  .gp-screen { --s-rail-left: 186px; --s-rail-right: 200px; --s-pad: 9px; --s-gap: 8px; }
+  .gp-lineup-card { width: 38px; height: 53px; }
+  .gp-lineup-row { gap: 6px; }
+}
+
 @media (max-width: 767px) {
-  .gp-screen { --s-pad: 10px; --s-gap: 10px; }
+  .gp-screen { --s-pad: 10px; --s-gap: 10px; height: auto; overflow: visible; }
   .gp-layout { grid-template-columns: minmax(0, 1fr); flex: none; }
   .gp-region-field  { grid-column: 1; grid-row: 1; }
   .gp-region-lineup { grid-column: 1; grid-row: 2; }
   .gp-region-rail   { grid-column: 1; grid-row: 3; }
+  .gp-region-lineup, .gp-region-rail { overflow-y: visible; }
 }
 
 /* --- scoreboard ---------------------------------------------------------- */
@@ -214,6 +227,28 @@
   letter-spacing: 0.06em;
   white-space: nowrap;
 }
+
+/* Bases as a diamond: 2nd on top, 3rd left, 1st right, lit when occupied. */
+.gp-bases {
+  position: relative;
+  width: 26px;
+  height: 26px;
+  flex-shrink: 0;
+}
+
+.gp-base {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border: 1px solid var(--s-gold-muted);
+  background: transparent;
+  transform: rotate(45deg);
+}
+
+.gp-base.is-second { top: 0; left: 9px; }
+.gp-base.is-third  { top: 9px; left: 0; }
+.gp-base.is-first  { top: 9px; right: 0; }
+.gp-base.is-on { background: var(--s-gold-bright); border-color: var(--s-gold-bright); }
 
 .gp-scorebug-outs { display: flex; gap: 4px; align-items: center; }
 
@@ -738,3 +773,148 @@
     @keyframes gp-sheet-in { from { transform: translateY(14%); opacity: 0.6 } to { transform: none; opacity: 1 } }
   }
 }
+
+
+/* --- cards on the field -------------------------------------------------- */
+
+/* Each fielder and the batter are the actual card, not a text chip. Sized in
+ * container-query units against the field itself so nine of them stay legible
+ * whatever width the centre column ends up with. */
+.gp-fc {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  pointer-events: none;
+  width: max-content;
+}
+
+/* The seven positional fielders are context, so they are small. The batter and
+ * the pitcher are the matchup, so they are large enough to read the card --
+ * which is also what un-crowds the infield, since the seven that were
+ * competing for space shrank. */
+.gp-fc-art {
+  width: 30px;
+  height: 42px;
+  border-radius: 4px;
+  overflow: hidden;
+  border: 1px solid rgba(216, 173, 45, 0.55);
+  background: linear-gradient(158deg, #262830 0%, #191b21 50%, #101116 100%);
+  box-shadow: 0 3px 10px rgba(7, 8, 9, 0.75);
+  flex-shrink: 0;
+}
+
+.gp-fc-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+.gp-fc-meta { display: flex; flex-direction: column; align-items: center; gap: 0; line-height: 1.15; }
+
+.gp-fc-meta b {
+  font-size: 8.5px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  color: var(--s-gold-bright);
+  text-shadow: 0 1px 3px rgba(7, 8, 9, 0.95);
+}
+
+.gp-fc-name {
+  font-size: 9.5px;
+  font-weight: 700;
+  color: var(--s-cream);
+  white-space: nowrap;
+  text-shadow: 0 1px 3px rgba(7, 8, 9, 0.95), 0 0 8px rgba(7, 8, 9, 0.8);
+}
+
+.gp-fc-rating {
+  font-size: 8.5px;
+  font-weight: 800;
+  color: var(--s-gray);
+  text-shadow: 0 1px 3px rgba(7, 8, 9, 0.95);
+}
+
+/* The batter is the other half of the matchup, so he reads louder. */
+.gp-fc-batter { z-index: 4; }
+.gp-fc-batter .gp-fc-art,
+.gp-fc-fielder.is-pitcher .gp-fc-art {
+  width: 96px;
+  height: 135px;
+  border-width: 2px;
+  box-shadow: 0 6px 20px rgba(7, 8, 9, 0.85);
+}
+
+.gp-fc-batter { z-index: 5; }
+.gp-fc-batter .gp-fc-art { border-color: var(--s-gold-bright); }
+.gp-fc-batter .gp-fc-name { color: var(--s-gold-bright); font-size: 12px; }
+.gp-fc-batter .gp-fc-meta b { font-size: 9.5px; }
+
+.gp-fc-fielder.is-pitcher { z-index: 5; }
+.gp-fc-fielder.is-pitcher .gp-fc-art { border-color: var(--s-adv-pitcher); }
+.gp-fc-fielder.is-pitcher .gp-fc-name { font-size: 12px; }
+.gp-fc-fielder.is-pitcher .gp-fc-meta b { font-size: 9.5px; }
+
+/* Nine cards on a narrow field would collide; they shrink with it. */
+@container field (max-width: 560px) {
+  .gp-fc-art { width: 25px; height: 35px; }
+  .gp-fc-batter .gp-fc-art, .gp-fc-fielder.is-pitcher .gp-fc-art { width: 74px; height: 104px; }
+  .gp-fc-meta b { font-size: 7.5px; }
+  .gp-fc-name { font-size: 8.5px; }
+  .gp-fc-rating { font-size: 7.5px; }
+}
+
+@container field (max-width: 420px) {
+  .gp-fc-art { width: 20px; height: 28px; }
+  .gp-fc-batter .gp-fc-art, .gp-fc-fielder.is-pitcher .gp-fc-art { width: 56px; height: 79px; }
+  .gp-fc-name { font-size: 7.5px; }
+  .gp-fc-meta b { font-size: 7px; }
+  .gp-fc-rating { display: none; }
+}
+
+/* --- rail: menu, roll box, manager actions ------------------------------- */
+
+.gp-menu {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-bottom: 7px;
+  border-bottom: 1px solid var(--s-line-soft);
+}
+
+.gp-menu-controls { display: flex; gap: 6px; }
+
+.gp-menu-btn {
+  border: 1px solid var(--s-line-soft);
+  background: transparent;
+  color: var(--s-gray);
+  border-radius: var(--s-r-control);
+  font: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 5px 11px;
+  min-height: 30px;
+  cursor: pointer;
+}
+
+.gp-menu-btn:hover:not(:disabled) { color: var(--s-cream); border-color: var(--s-gold); }
+.gp-menu-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+.gp-rollbox { display: grid; gap: 8px; }
+.gp-manager-actions { display: grid; gap: 6px; }
+
+/* Collapsible availability. */
+.gp-avail-group > summary {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  cursor: pointer;
+  padding: 5px 0;
+  list-style: none;
+  border-bottom: 1px solid var(--s-line-soft);
+}
+
+.gp-avail-group > summary::-webkit-details-marker { display: none; }
+.gp-avail-group > summary::after { content: '+'; color: var(--s-gold); font-weight: 900; font-size: 12px; }
+.gp-avail-group[open] > summary::after { content: '−'; }
+.gp-avail-group[open] > summary { margin-bottom: 5px; }

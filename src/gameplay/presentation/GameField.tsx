@@ -1,15 +1,18 @@
 import { getFieldingRating } from '../defense'
-import { FIELDER_PAINT_ORDER, FIELDER_POINTS, RUNNER_POINTS, formatDef } from './fieldGeometry'
+import { BATTER_BOX, FIELDER_PAINT_ORDER, FIELDER_POINTS, RUNNER_POINTS, formatDef } from './fieldGeometry'
 import type { BaseRunnerState, DefensivePosition, GameSide, GameState } from '../types'
 
 /**
- * The field: nine fielders at their true positions with live DEF, and whoever
- * is on base.
+ * The field: nine fielders as cards at their true positions, the batter at the
+ * plate on the side he actually bats from, and whoever is on base.
  *
- * Replaces the developer shell's `Diamond` -- three base markers and the word
- * HOME. Everything here is read from public game state: the defensive
- * alignment (which follows substitutions on its own), the frozen card
- * snapshots, and `state.bases`. No engine call, no writes.
+ * The batter being here is why there is no separate matchup panel -- the
+ * confrontation IS the card at the plate against the card on the mound, which
+ * is how it reads on a real board.
+ *
+ * Everything is public game state: the defensive alignment (which follows
+ * substitutions on its own), the frozen card snapshots, and state.bases. No
+ * engine call, no writes.
  */
 
 function shortName(full: string): string {
@@ -18,27 +21,72 @@ function shortName(full: string): string {
   return `${parts[0][0]}. ${parts.slice(1).join(' ')}`
 }
 
+function CardChip({ imageUrl, label, name, rating, className, style }: {
+  imageUrl: string | null
+  label: string
+  name: string
+  rating: string | null
+  className: string
+  style: React.CSSProperties
+}) {
+  return (
+    <div className={className} style={style}>
+      <span className="gp-fc-art">
+        {imageUrl ? <img src={imageUrl} alt="" loading="lazy" /> : <i aria-hidden="true" />}
+      </span>
+      <span className="gp-fc-meta">
+        <b>{label}</b>
+        <span className="gp-fc-name">{name}</span>
+        {rating && <span className="gp-fc-rating s-num">{rating}</span>}
+      </span>
+    </div>
+  )
+}
+
 function Fielder({ state, side, position }: { state: GameState; side: GameSide; position: DefensivePosition }) {
   const cardKey = state.pregame[side].defensiveAlignment[position]
   const card = cardKey ? state.pregame[side].roster?.cards[cardKey] : null
   const point = FIELDER_POINTS[position as Exclude<DefensivePosition, 'DH'>]
   if (!point) return null
 
-  // The pitcher has no fielding rating in Elements, so the chip shows the
-  // position alone rather than a fabricated "+0".
-  const rating = card ? getFieldingRating(card, position) : null
+  // Pitchers carry no fielding rating in Elements, so the pitcher shows his
+  // Control instead of a fabricated "+0".
+  const rating = position === 'P'
+    ? (card?.pitcher.control !== null && card?.pitcher.control !== undefined ? `CTRL ${card.pitcher.control}` : null)
+    : (card ? formatDef(getFieldingRating(card, position)) : null)
 
   return (
-    <div
-      className={`gp-fielder${position === 'P' ? ' is-pitcher' : ''}${card ? '' : ' is-empty'}`}
+    <CardChip
+      className={`gp-fc gp-fc-fielder${position === 'P' ? ' is-pitcher' : ''}`}
       style={{ left: `${point.left}%`, top: `${point.top}%` }}
-    >
-      <span className="gp-fielder-pos">{position}</span>
-      <span className="gp-fielder-name">{card ? shortName(card.playerName) : '—'}</span>
-      {rating !== null && (
-        <span className={`gp-fielder-def s-num${rating < 0 ? ' is-negative' : ''}`}>{formatDef(rating)}</span>
-      )}
-    </div>
+      imageUrl={card?.imageUrl ?? null}
+      label={position}
+      name={card ? shortName(card.playerName) : '—'}
+      rating={rating}
+    />
+  )
+}
+
+function Batter({ state }: { state: GameState }) {
+  const offense: GameSide = state.half === 'top' ? 'away' : 'home'
+  const key = state.plateAppearance.batterCardKey
+  const card = key ? state.pregame[offense].roster?.cards[key] : null
+  if (!card) return null
+
+  // Only an explicit L bats from the left box; switch hitters and unrecorded
+  // handedness stand in the right-handed box rather than being guessed at.
+  const bats = card.hitter.bats === 'L' ? 'L' : 'R'
+  const point = BATTER_BOX[bats]
+
+  return (
+    <CardChip
+      className="gp-fc gp-fc-batter"
+      style={{ left: `${point.left}%`, top: `${point.top}%` }}
+      imageUrl={card.imageUrl}
+      label={`AT BAT · ${card.hitter.bats ?? '?'}`}
+      name={shortName(card.playerName)}
+      rating={card.hitter.onBase !== null ? `OB ${card.hitter.onBase}` : null}
+    />
   )
 }
 
@@ -69,6 +117,7 @@ export default function GameField({ state }: { state: GameState }) {
       {FIELDER_PAINT_ORDER.map((position) => (
         <Fielder key={position} state={state} side={fielding} position={position} />
       ))}
+      <Batter state={state} />
       {bases.map(([base, runner]) => (runner ? <Runner key={base} base={base} runner={runner} /> : null))}
     </div>
   )

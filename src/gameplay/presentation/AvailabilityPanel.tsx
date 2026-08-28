@@ -21,14 +21,20 @@ function Row({ card }: { card: GameCardSnapshot }) {
   )
 }
 
+/* Collapsible: the rail carries a lot, and who is left in the bullpen only
+ * matters when a manager is about to use them. Open by default would push the
+ * log and the roll controls off the rail on a short screen. */
 function Group({ label, cards }: { label: string; cards: GameCardSnapshot[] }) {
   return (
-    <div className="gp-avail-group">
-      <header><b className="s-lbl">{label}</b><span className="s-sub s-num">{cards.length}</span></header>
+    <details className="gp-avail-group">
+      <summary>
+        <b className="s-lbl">{label}</b>
+        <span className="s-sub s-num">{cards.length}</span>
+      </summary>
       {cards.length === 0
         ? <p className="gp-avail-empty">None remaining.</p>
         : <ul className="gp-avail-list">{cards.map((c) => <Row key={c.cardKey} card={c} />)}</ul>}
-    </div>
+    </details>
   )
 }
 
@@ -38,12 +44,8 @@ export default function AvailabilityPanel({ state }: { state: GameState }) {
 
   return (
     <section className="gp-avail" aria-label="Available players">
-      <header className="gp-avail-head">
-        <b className="s-lbl">Available</b>
-        <span className="s-sub">{state.managers[fielding].managerName}</span>
-      </header>
-      <Group label="Bullpen" cards={bullpen} />
-      <Group label="Bench" cards={bench} />
+      <Group label={`Bullpen · ${state.managers[fielding].managerName}`} cards={bullpen} />
+      <Group label={`Bench · ${state.managers[fielding].managerName}`} cards={bench} />
     </section>
   )
 }

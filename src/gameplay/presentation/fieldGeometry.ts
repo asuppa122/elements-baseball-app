@@ -39,6 +39,20 @@ export const RUNNER_POINTS: Record<'first' | 'second' | 'third', FieldPoint> = {
   first: { left: 76.71, top: 62.76 },
 }
 
+/**
+ * The two batter's boxes, mirrored about the centre line.
+ *
+ * This render looks out from behind home plate, so third base is on the
+ * viewer's left and first base on the right. A right-handed batter stands on
+ * the third-base side; a left-handed batter on the first-base side. The
+ * artboard's own batter marker sat at 64% -- the left-handed box -- which is
+ * where these come from.
+ */
+export const BATTER_BOX: Record<'L' | 'R', FieldPoint> = {
+  R: { left: 36.0, top: 89.0 },
+  L: { left: 64.0, top: 89.0 },
+}
+
 /** The order fielders are painted, so the pitcher and catcher sit above the rest. */
 export const FIELDER_PAINT_ORDER: Array<Exclude<DefensivePosition, 'DH'>> =
   ['LF', 'CF', 'RF', 'SS', '2B', '3B', '1B', 'C', 'P']
