@@ -118,8 +118,8 @@ export default function GameplayScreenPage() {
   })
   const prePitchActions = state ? getPrePitchActions(state) : []
 
-  if (loading) return <main className="gp-screen"><div className="gp-panel gp-region">Loading…</div></main>
-  if (!state || !game) return <main className="gp-screen"><div className="gp-panel gp-region">{loadError || 'Game not found.'}</div></main>
+  if (loading) return <main className={`gp-screen${decision ? ' has-decision' : ''}`}><div className="gp-panel gp-region">Loading…</div></main>
+  if (!state || !game) return <main className={`gp-screen${decision ? ' has-decision' : ''}`}><div className="gp-panel gp-region">{loadError || 'Game not found.'}</div></main>
 
   const halfKey = `${state.inning}-${state.half}`
   const justEnded = lastHalfSeen !== null && lastHalfSeen !== halfKey ? previousHalf(state.inning, state.half) : null
@@ -128,7 +128,7 @@ export default function GameplayScreenPage() {
     : null
 
   return (
-    <main className="gp-screen">
+    <main className={`gp-screen${decision ? ' has-decision' : ''}`}>
       <div className="gp-wip">
         <b>Building</b>
         <span>New gameplay screen, assembled region by region. The working shell is untouched at{' '}
@@ -197,6 +197,11 @@ export default function GameplayScreenPage() {
         <section className="gp-panel gp-region gp-region-rail" aria-label="Game rail">
           {/* The decision board is the one already built and verified against
               both saved awaiting_decision games — reused, not rewritten. */}
+          {/* On a phone this whole dock lifts out of the rail and pins to the
+              bottom of the screen -- a blocking decision must not be three
+              scrolls below the field. */}
+          <div className={`gp-decision-dock${decision ? ' is-open' : ''}`}>
+          {decision && <i className="gp-sheet-grip" aria-hidden="true" />}
           {decision && (
             <DecisionBoard
               state={state}
@@ -215,6 +220,7 @@ export default function GameplayScreenPage() {
               Change action
             </button>
           )}
+          </div>
           <ChartReadout state={state} />
           <AvailabilityPanel state={state} />
           <GameLogPanel events={events} />

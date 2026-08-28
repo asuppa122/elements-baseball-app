@@ -674,3 +674,64 @@
 
 .gp-actions-msg { margin: 0; font-size: 11.5px; line-height: 1.5; color: var(--s-gray); }
 .gp-actions-msg.is-error { color: var(--s-bad); }
+
+/* --- decision dock ------------------------------------------------------- */
+
+.gp-decision-dock { display: grid; gap: 8px; }
+.gp-decision-dock:not(.is-open) { display: none; }
+.gp-sheet-grip { display: none; }
+
+/* On a phone a pending decision is the only thing that matters, and the rail
+ * it lives in stacks third -- below the field and the whole lineup. So the
+ * dock lifts out of flow and pins to the bottom of the viewport, over the
+ * field, where it can actually be acted on.
+ *
+ * The screen gains bottom padding while it is open so the content underneath
+ * can still be scrolled out from behind the sheet rather than being
+ * permanently covered. */
+@media (max-width: 767px) {
+  .gp-decision-dock.is-open {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 40;
+    max-height: 68dvh;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    gap: 10px;
+    padding: 8px 12px calc(14px + env(safe-area-inset-bottom, 0px));
+    background: var(--s-panel);
+    border-top: 1px solid var(--s-gold-bright);
+    border-radius: 16px 16px 0 0;
+    box-shadow: 0 -20px 44px rgba(7, 8, 9, 0.86);
+  }
+
+  /* The sheet already carries the panel; the board inside it should not draw a
+   * second frame around the same content. */
+  .gp-decision-dock.is-open .gp-decision {
+    border: none;
+    background: transparent;
+    padding: 2px 0 0;
+    border-radius: 0;
+  }
+
+  .gp-sheet-grip {
+    display: block;
+    width: 36px;
+    height: 4px;
+    border-radius: 2px;
+    background: var(--s-gold-muted);
+    justify-self: center;
+    margin: 2px 0 0;
+  }
+
+  .gp-screen.has-decision { padding-bottom: 70dvh; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  @media (max-width: 767px) {
+    .gp-decision-dock.is-open { animation: gp-sheet-in var(--gp-motion-reveal, 320ms) var(--gp-ease-standard, ease) both; }
+    @keyframes gp-sheet-in { from { transform: translateY(14%); opacity: 0.6 } to { transform: none; opacity: 1 } }
+  }
+}
