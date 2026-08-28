@@ -643,3 +643,34 @@
 .gp-log-list li:not(.is-narrated) .gp-log-text { font-size: 10px; opacity: 0.75; }
 .gp-log-text.is-scoring { color: var(--s-good); font-weight: 700; }
 .gp-log-text.is-out { color: var(--s-gray); }
+
+/* --- action bar ---------------------------------------------------------- */
+
+.gp-actions { padding: 10px 12px; display: grid; gap: 8px; flex-shrink: 0; }
+
+.gp-action {
+  min-height: var(--s-control-h);
+  border-radius: var(--s-r-control);
+  border: 1px solid var(--s-gold-bright);
+  background: var(--s-gold-soft);
+  color: var(--s-gold-bright);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  padding: 0 16px;
+}
+
+.gp-action:hover:not(:disabled) { background: var(--s-gold); color: var(--s-ink); }
+.gp-action:disabled { opacity: 0.45; cursor: not-allowed; }
+.gp-action:focus-visible { outline: 2px solid var(--s-gold-bright); outline-offset: 2px; }
+
+.gp-action-secondary { border-color: var(--s-line); background: transparent; color: var(--s-gray); font-weight: 700; font-size: 12px; }
+.gp-action-secondary:hover:not(:disabled) { color: var(--s-cream); border-color: var(--s-gold); background: transparent; }
+.gp-action-quiet { border-color: var(--s-line-soft); background: transparent; color: var(--s-gray-muted); font-weight: 700; font-size: 12px; }
+
+.gp-action-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 6px; }
+
+.gp-actions-msg { margin: 0; font-size: 11.5px; line-height: 1.5; color: var(--s-gray); }
+.gp-actions-msg.is-error { color: var(--s-bad); }

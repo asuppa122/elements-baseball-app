@@ -11,7 +11,9 @@ import MatchupPanel from '../gameplay/presentation/MatchupPanel'
 import ChartReadout from '../gameplay/presentation/ChartReadout'
 import GameLogPanel, { type LogEvent } from '../gameplay/presentation/GameLogPanel'
 import DecisionBoard from '../gameplay/presentation/DecisionBoard'
-import { getDecisionView } from '../gameplay/decisionEngine'
+import { getPrePitchActions } from '../gameplay/decisionEngine'
+import { useGameplayActions } from '../gameplay/presentation/useGameplayActions'
+import { pitcherAdvantageIsAutomatic } from '../gameplay/engine'
 import { loadGameplayLabEvents } from '../gameplay/gameRepository'
 import type { GameSide, GameState } from '../gameplay/types'
 
@@ -64,7 +66,7 @@ export default function GameplayScreenPage() {
   const [game, setGame] = useState<PersistedGameplayLabGame | null>(null)
   const [events, setEvents] = useState<LogEvent[]>([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
+  const [loadError, setLoadError] = useState('')
 
   useEffect(() => {
     if (!gameId || !user || isDemo) { setLoading(false); return }
@@ -77,7 +79,7 @@ export default function GameplayScreenPage() {
         try { loadedEvents = await loadGameplayLabEvents(gameId) } catch { /* log is supplemental */ }
         if (!cancelled) { setGame(loaded); setEvents(loadedEvents) }
       } catch (e) {
-        if (!cancelled) setError(e instanceof Error ? e.message : 'Could not load this game.')
+        if (!cancelled) setLoadError(e instanceof Error ? e.message : 'Could not load this game.')
       } finally {
         if (!cancelled) setLoading(false)
       }
@@ -87,10 +89,21 @@ export default function GameplayScreenPage() {
   }, [gameId, user?.id, isDemo])
 
   const state = game?.game_state as GameState | undefined
-  const decision = state ? getDecisionView(state) : null
+
+  // The same hook the shell uses -- one action layer, so the two screens
+  // cannot drift apart.
+  const {
+    saving, error, notice, selection, toggleSelection, decision, editablePrePitchDecision,
+    noPitch, rollPitch, rollSwing, startAction, changeAction, confirmDecision, rollDecision, togglePause,
+  } = useGameplayActions({
+    game, userId: user?.id, surface: 'screen',
+    onSaved: setGame,
+    onAfterSave: async (id) => { try { setEvents(await loadGameplayLabEvents(id)) } catch { /* log is supplemental */ } },
+  })
+  const prePitchActions = state ? getPrePitchActions(state) : []
 
   if (loading) return <main className="gp-screen"><div className="gp-panel gp-region">Loading…</div></main>
-  if (!state || !game) return <main className="gp-screen"><div className="gp-panel gp-region">{error || 'Game not found.'}</div></main>
+  if (!state || !game) return <main className="gp-screen"><div className="gp-panel gp-region">{loadError || 'Game not found.'}</div></main>
 
   return (
     <main className="gp-screen">
@@ -114,6 +127,39 @@ export default function GameplayScreenPage() {
           <DefBar state={state} />
           <GameField state={state} />
           <MatchupPanel state={state} />
+
+          <section className="gp-panel gp-actions" aria-label="Your move">
+            {error && <p className="gp-actions-msg is-error">{error}</p>}
+            {notice && !error && <p className="gp-actions-msg">{notice}</p>}
+
+            {state.status === 'complete' && <p className="gp-actions-msg">This game is final.</p>}
+
+            {!decision && state.status !== 'complete' && state.waitingFor === 'PITCH_ROLL' && (
+              <>
+                {pitcherAdvantageIsAutomatic(state)
+                  ? <button className="gp-action" disabled={saving} onClick={() => void noPitch()}>No pitch — pitcher advantage</button>
+                  : <button className="gp-action" disabled={saving} onClick={() => void rollPitch()}>Roll pitch</button>}
+                {prePitchActions.length > 0 && (
+                  <div className="gp-action-list">
+                    {prePitchActions.map((a) => (
+                      <button key={a.id} className="gp-action gp-action-secondary" disabled={saving}
+                        title={a.detail} onClick={() => void startAction(a.id)}>{a.label}</button>
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
+
+            {!decision && state.status !== 'complete' && state.waitingFor === 'SWING_ROLL' && (
+              <button className="gp-action" disabled={saving} onClick={() => void rollSwing()}>Roll swing</button>
+            )}
+
+            {state.status !== 'complete' && (
+              <button className="gp-action gp-action-quiet" disabled={saving} onClick={() => void togglePause()}>
+                {state.status === 'paused' ? 'Resume game' : 'Pause game'}
+              </button>
+            )}
+          </section>
         </section>
 
         <section className="gp-panel gp-region gp-region-rail" aria-label="Game rail">
@@ -123,15 +169,19 @@ export default function GameplayScreenPage() {
             <DecisionBoard
               state={state}
               view={decision}
-              selection={[]}
+              selection={selection}
+              /* The lab game is RLS-scoped to its home manager. */
               viewerSide="home"
-              onToggle={() => {}}
-              onConfirm={() => {}}
-              onRoll={() => {}}
-              /* Read-only until the interactive pass: this screen renders the
-                 decision, the working shell at /play still resolves it. */
-              saving
+              onToggle={(id) => toggleSelection(id, decision.mode === 'single')}
+              onConfirm={() => void confirmDecision()}
+              onRoll={() => void rollDecision()}
+              saving={saving}
             />
+          )}
+          {decision && editablePrePitchDecision && (
+            <button className="gp-action gp-action-secondary" disabled={saving} onClick={() => void changeAction()}>
+              Change action
+            </button>
           )}
           <ChartReadout state={state} />
           <AvailabilityPanel state={state} />
