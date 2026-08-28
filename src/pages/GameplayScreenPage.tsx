@@ -3,6 +3,8 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
 import { hasGameplayLabAccess, loadGameplayLabGame, type PersistedGameplayLabGame } from '../gameplay/gameRepository'
 import { battingSide } from '../gameplay/gameBoundaryEngine'
+import DefBar from '../gameplay/presentation/DefBar'
+import GameField from '../gameplay/presentation/GameField'
 import type { GameSide, GameState } from '../gameplay/types'
 
 /**
@@ -98,8 +100,8 @@ export default function GameplayScreenPage() {
             centre column's width rather than spanning the page. */}
         <section className="gp-region-field" aria-label="Field">
           <Scorebug state={state} />
-          <Todo title="DEF bar" detail="C / INF / OF ratings for the fielding side, from the live defensive alignment." />
-          <Todo title="Field and fielders" detail="Nine fielders at true positions with live DEF, plus runners on base with BsR/SB — from defensiveAlignment and state.bases." />
+          <DefBar state={state} />
+          <GameField state={state} />
           <Todo title="Matchup and roll" detail="Batter and pitcher with fatigue-adjusted OB/CTRL, then pitch → advantage → swing → result." />
         </section>
 
