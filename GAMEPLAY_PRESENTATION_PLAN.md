@@ -296,3 +296,48 @@ The mockup source is tracked in `.design-mockup/` (artboards + `canvas.json` + `
 published as an Artifact. `_shared-notes.md` and `_rail.txt` carry the exact palette, radii, control
 heights and rail row anatomy, so the implementation has real specs rather than screenshots to work
 from.
+
+## Screen implementation status — 2026-08-28 (autonomous session)
+
+The mockup is being implemented at **`/games/lab/:gameId/screen`**, side by side with the working
+shell at `/play`, which is untouched and still the only surface that resolves a game. Every region
+is now built and rendering live state.
+
+| Region | State |
+|---|---|
+| Three-column responsive shell | **Done** — 1440 three columns, ~1024 two, phone single stack |
+| Scorebug | **Done** — score, inning, out dots |
+| DEF bar (C / INF / OF) | **Done** — via `getFieldingRating`, the engine's own exported helper |
+| Field, nine fielders, runners | **Done** — true positions, live DEF, BsR/SB pills |
+| Lineup rail | **Done** — real card art, active/on-deck verified against the engine |
+| Matchup + roll readout | **Done** — fatigue-adjusted OB/CTRL via the existing RatingReadout |
+| Chart readout | **Done** — printed ranges, live chart marked |
+| Decision board | **Done** — the verified component reused as-is, rendered read-only |
+| Availability (bullpen/bench) | **Done** — see the drift note in `availability.ts` |
+| Game log | **Done, narrated** — `playNarration.ts`; pre-widening events stay raw on purpose |
+
+**Not built, and stated on the surface where it is missing:** per-batter stat lines (AB/H not
+tracked), play-by-play for events written before 2026-08-28 (their payloads recorded the dice, not
+the play), the result rule headline (`confirmationSummary` is empty in all 27 decision types — an
+engine change), moment takeover (the classifier exists; the treatment is a design piece), resign.
+
+**The screen is read-only.** It renders a game; `/play` resolves it. Making it playable means either
+duplicating the shell's action layer or refactoring the shell to share it — a decision left open
+deliberately.
+
+## Season game count for the rest projection — blocked on an RLS decision, not on code
+
+Recorded 2026-08-28. `postGameSummary.restProjectionFor` still returns `MISSING_SEASON_GAME_COUNT`
+because no caller supplies the count. Wiring it turns out NOT to be the small job it was listed as,
+for a reason only found by reading with a service role:
+
+`player_rest_state` carries a **select policy scoped to the owning manager**, and `games` is
+home-scoped. So from one manager's session you can see neither the opponent's rest rows nor
+necessarily their full completed-game count. Any client-side count is therefore right for your own
+side and potentially wrong for theirs — and a rest projection that is silently wrong for one side is
+worse than one that says it does not know.
+
+The options are a decision, not a guess: expose a counting RPC that runs server-side (where the
+existing rest SQL already does exactly this `count(*)`), or show the projection for your own side
+only and say so, or read back the persisted rows post-completion and accept the same one-sided
+limit. Left for review.
