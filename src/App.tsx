@@ -16,6 +16,7 @@ import './cards-final-cleanup.css'
 import './roster.css'
 import './league-content.css'
 import './gameplay-tokens.css'
+import './gameplay-screen.css'
 import './gameplay-motion.css'
 import './gameplay-lab.css'
 import './gameplay-shell.css'
@@ -40,6 +41,7 @@ const GameplayLabPage = lazy(() => import('./pages/GameplayLabPage'))
 const GameplayPregamePage = lazy(() => import('./pages/GameplayPregamePage'))
 const GameplayGameStatePage = lazy(() => import('./pages/GameplayGameStatePage'))
 const GameplayPlayableShellPage = lazy(() => import('./pages/GameplayPlayableShellPage'))
+const GameplayScreenPage = lazy(() => import('./pages/GameplayScreenPage'))
 const GameplayVerificationPage = lazy(() => import('./pages/GameplayVerificationPage'))
 const GamesPage = lazy(() => import('./pages/GamesPage'))
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'))
@@ -76,6 +78,7 @@ function ProtectedApp() {
             <Route path="/games/lab/:gameId/pregame" element={<GameplayPregamePage />} />
             <Route path="/games/lab/:gameId/state" element={<GameplayGameStatePage />} />
             <Route path="/games/lab/:gameId/play" element={<GameplayPlayableShellPage />} />
+            <Route path="/games/lab/:gameId/screen" element={<GameplayScreenPage />} />
             <Route path="/games/lab/verification" element={<GameplayVerificationPage />} />
             <Route path="/trades" element={<ComingSoonPage title="Trades" description="Trade proposals and league transaction tools are coming soon." />} />
             <Route path="/standings" element={<StandingsPage />} />

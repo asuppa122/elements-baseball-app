@@ -1,0 +1,265 @@
+/* The gameplay screen (GameplayScreenPage.tsx) -- the implementation of the
+ * .design-mockup canvas, replacing the single-column developer shell.
+ *
+ * SCOPING: every token here is declared on `.gp-screen`, not `:root`. The old
+ * shell, the decision board, the post-game board and the transition card all
+ * read the app-wide tokens, and this screen must not be able to change what
+ * they render while it is being built alongside them. Values are lifted from
+ * .design-mockup/_shared-notes.md and _rail.txt, which record the exact
+ * palette, radii and row anatomy the artboards were drawn with.
+ *
+ * RESPONSIVE: built fluid from the first commit rather than retrofitted. The
+ * mockup is a fixed 1440x900 of inline styles; reproducing that literally and
+ * making it responsive later would mean laying out the screen twice. */
+
+.gp-screen {
+  /* Surfaces + line, from _shared-notes.md */
+  --s-ink: #070809;
+  --s-ink-soft: #0b0c0e;
+  --s-panel: #111214;
+  --s-panel-lift: #18191c;
+  --s-panel-hover: #1d1e21;
+  --s-gold: #d8ad2d;
+  --s-gold-bright: #f1ca45;
+  --s-gold-soft: rgba(216, 173, 45, 0.12);
+  --s-gold-muted: #6f5b1e;
+  --s-cream: #f5f1e6;
+  --s-gray: #aeafb2;
+  --s-gray-muted: #777a80;
+  --s-line: rgba(216, 173, 45, 0.34);
+  --s-line-soft: rgba(216, 173, 45, 0.22);
+
+  /* Gameplay semantics -- same values the existing surfaces already use. */
+  --s-adv-hitter: #7fce8c;
+  --s-adv-pitcher: #e08a5c;
+  --s-good: #7fce8c;
+  --s-bad: #e2726b;
+
+  /* Radii: 12 panel / 8 sub / 6 control, per the notes. */
+  --s-r-panel: 12px;
+  --s-r-sub: 8px;
+  --s-r-control: 6px;
+
+  /* Rail widths. The mockup is 300 / 1fr / 320 at 1440; these shrink at
+   * narrower desktop widths rather than forcing a horizontal scroll. */
+  --s-rail-left: 300px;
+  --s-rail-right: 320px;
+  --s-gap: 12px;
+  --s-pad: 16px;
+
+  /* Controls are finger-sized from the start, not shrunk for desktop and
+   * enlarged later -- 44px is the floor on every viewport. */
+  --s-control-h: 44px;
+
+  /* Column so the layout can take the remaining height and let each rail
+   * scroll inside itself -- the mockup is a fixed 900px frame with the rails
+   * clipped; this is the fluid equivalent. */
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+  background: var(--s-ink);
+  color: var(--s-cream);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  padding: var(--s-pad);
+  box-sizing: border-box;
+}
+
+.gp-screen *,
+.gp-screen *::before,
+.gp-screen *::after { box-sizing: border-box; }
+
+/* Uppercase micro-label: 10px/900/0.14em gold-bright, per _shared-notes.md */
+.gp-screen .s-lbl {
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--s-gold-bright);
+}
+
+.gp-screen .s-sub { font-size: 10px; color: var(--s-gray-muted); }
+.gp-screen .s-num { font-variant-numeric: tabular-nums; }
+
+.gp-panel {
+  background: var(--s-panel);
+  border: 1px solid var(--s-line);
+  border-radius: var(--s-r-panel);
+  min-width: 0;
+  min-height: 0;
+}
+
+/* ---------------------------------------------------------------------------
+ * Layout
+ *
+ * Three columns on a wide desktop; the rails compress before anything is
+ * dropped; then the left rail moves below the field; then a single stack.
+ * `minmax(0, 1fr)` on the centre keeps a wide child (the field, a table) from
+ * forcing the whole grid wider than the viewport.
+ * ------------------------------------------------------------------------ */
+
+.gp-layout {
+  display: grid;
+  grid-template-columns: var(--s-rail-left) minmax(0, 1fr) var(--s-rail-right);
+  gap: var(--s-gap);
+  /* Rails run the full height of the screen, per the artboards. */
+  align-items: stretch;
+  max-width: 1600px;
+  width: 100%;
+  margin: 0 auto;
+  flex: 1;
+  min-height: 0;
+}
+
+/* The centre is NOT a panel in the mockup -- it is a transparent column of
+ * stacked panels (scorebug, def bar, field, roll). Only the rails are panels. */
+.gp-region-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-gap);
+  min-width: 0;
+  min-height: 0;
+}
+
+/* A rail taller than the screen scrolls inside itself rather than pushing the
+ * field off the page -- but only where the layout is height-constrained. */
+@media (min-width: 1024px) {
+  .gp-region-lineup,
+  .gp-region-rail { overflow-y: auto; }
+}
+
+/* Compressed desktop: rails give up width before the field does. */
+@media (max-width: 1279px) {
+  .gp-screen { --s-rail-left: 250px; --s-rail-right: 270px; --s-pad: 12px; }
+}
+
+/* Tablet: the field keeps the top of the screen with the right rail beside
+ * it; the lineup moves underneath rather than being squeezed to nothing. */
+@media (max-width: 1023px) {
+  .gp-layout {
+    grid-template-columns: minmax(0, 1fr) 260px;
+    flex: none;
+  }
+  .gp-region-lineup { grid-column: 1 / -1; grid-row: 2; }
+  .gp-region-field  { grid-column: 1; grid-row: 1; }
+  .gp-region-rail   { grid-column: 2; grid-row: 1; }
+}
+
+/* Phone: one column, field first. The rails become disclosure sections so
+ * every piece of content stays reachable -- MOBILE_PARITY_STANDARD.md asks for
+ * the same content and functionality, not a reduced screen. */
+@media (max-width: 767px) {
+  .gp-screen { --s-pad: 10px; --s-gap: 10px; }
+  .gp-layout { grid-template-columns: minmax(0, 1fr); flex: none; }
+  .gp-region-field  { grid-column: 1; grid-row: 1; }
+  .gp-region-lineup { grid-column: 1; grid-row: 2; }
+  .gp-region-rail   { grid-column: 1; grid-row: 3; }
+}
+
+/* --- scoreboard ---------------------------------------------------------- */
+
+.gp-scorebug {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 14px;
+  padding: 10px 14px;
+  flex-shrink: 0;
+}
+
+.gp-scorebug-side {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.gp-scorebug-side.is-home { justify-content: flex-end; }
+
+.gp-scorebug-name {
+  font-size: 15px;
+  font-weight: 800;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--s-cream);
+}
+
+.gp-scorebug-side.is-batting .gp-scorebug-name { color: var(--s-gold-bright); }
+
+.gp-scorebug-runs {
+  font-size: 26px;
+  font-weight: 900;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.gp-scorebug-centre {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 0 8px;
+  border-left: 1px solid var(--s-line-soft);
+  border-right: 1px solid var(--s-line-soft);
+}
+
+.gp-scorebug-inning {
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+
+.gp-scorebug-outs { display: flex; gap: 4px; align-items: center; }
+
+.gp-out-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  border: 1px solid var(--s-gold-muted);
+}
+
+.gp-out-dot.is-on { background: var(--s-gold-bright); border-color: var(--s-gold-bright); }
+
+/* --- region placeholders (removed as each region is implemented) --------- */
+
+.gp-todo {
+  display: grid;
+  gap: 6px;
+  padding: 14px;
+  border: 1px dashed var(--s-line-soft);
+  border-radius: var(--s-r-sub);
+  background: var(--s-ink-soft);
+}
+
+.gp-todo b { font-size: 11px; font-weight: 900; letter-spacing: 0.12em; text-transform: uppercase; color: var(--s-gold-bright); }
+.gp-todo span { font-size: 11px; line-height: 1.5; color: var(--s-gray-muted); }
+
+.gp-region {
+  padding: 10px;
+  display: grid;
+  gap: 10px;
+  /* Content sits at the top of a full-height rail rather than being spread
+   * down it -- grid rows stretch by default once the rail is stretched. */
+  align-content: start;
+}
+
+/* --- build-time banner --------------------------------------------------- */
+
+.gp-wip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  max-width: 1600px;
+  margin: 0 auto var(--s-gap);
+  padding: 8px 12px;
+  border: 1px solid var(--s-adv-pitcher);
+  border-radius: var(--s-r-sub);
+  background: rgba(224, 138, 92, 0.08);
+  font-size: 11px;
+  color: var(--s-gray);
+}
+
+.gp-wip b { color: var(--s-adv-pitcher); font-weight: 900; letter-spacing: 0.1em; text-transform: uppercase; font-size: 10px; }
+.gp-wip a { color: var(--s-gold-bright); }
