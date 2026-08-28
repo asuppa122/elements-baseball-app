@@ -1,0 +1,14 @@
+# Working files for the gameplay-screen design canvas (published as an Artifact).
+#
+# TRACKED: the .dc.html artboards, canvas.json, field.webp, and the design
+# notes. That is the full set needed to re-seed the canvas from scratch --
+# Main.dc.html references field.webp by filename, so excluding it (as this file
+# previously did) would have left the artboards unable to render their field.
+#
+# IGNORED below: only the two genuinely large, genuinely regenerable files.
+# elements-gameplay-screen.html is the ~2.5MB seeded payload the helper rebuilds
+# from the artboards; field-src.png is the ~2.6MB original render that field.webp
+# was derived from -- if it is ever needed again it comes from the user, not the
+# repo.
+elements-gameplay-screen.html
+field-src.png

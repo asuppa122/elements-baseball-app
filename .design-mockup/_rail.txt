@@ -1,0 +1,6 @@
+Rail row anatomy (250px rail, 230 content):
+[3px state bar][order 14][name flex 13px][pos 9px muted][line 11px tabular]
+active   = gold bar + rgba(216,173,45,0.12) bg + #f1ca45 name
+on deck  = gold-muted bar, no bg
+subbed   = small PH/PR badge, name is the CURRENT occupant
+pitcher  = when his side is fielding, gold ring on the P row

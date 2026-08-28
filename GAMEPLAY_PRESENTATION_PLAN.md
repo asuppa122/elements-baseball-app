@@ -237,3 +237,35 @@ score-diffing derivation, no matter which page wrote it. The transition card the
 its derived runs against `runsByInning` and presents the list as **partial** when they disagree,
 rather than showing a short list as the summary. Fixing this properly means recording runs at the
 moment `decisionEngine.ts` scores them, alongside the existing `creditRunsToInning` call.
+
+## Built but wired into nothing — do not rebuild, do not delete
+
+Recorded 2026-08-28 from a full stock-take of the gameplay screen. Both of these exist, compile and
+are covered; neither is reachable from any page. Without this note the likely failure is someone
+rebuilding one from scratch or deleting it as dead code.
+
+### `src/gameplay/presentation/sequence.ts` — KEEP, wire it later
+
+`runSequence()` is Phase 1's third piece (the pitch → advantage → swing → result reveal). It is
+written and has its own tests, and is imported by **nothing but its own test file**. The visual
+motion it drives lives in `gameplay-motion.css`, which *is* imported by `App.tsx`.
+
+**This gets wired in during the presentation thread. Do not delete it as dead code** — `knip` does
+not flag it precisely because its test imports it, so the only signal it is unwired is this note.
+
+### `src/gameplay/dice.ts` — unused, decide deliberately
+
+`knip` reports it as a fully unused file. It holds `QueuedTestDiceProvider`, which `CLAUDE.md`
+describes as the deterministic dev/test roll source. The scenario harnesses force their rolls by
+other means, so nothing imports it. Either the harnesses should use it or it should go — but that is
+a deliberate call about the testing model, not a cleanup to do in passing.
+
+### The mockup is now tracked
+
+`.design-mockup/` was untracked until 2026-08-28 — the entire three-column design existed only as
+loose files on one machine. The artboards, `canvas.json`, `field.webp` (referenced by name from
+`Main.dc.html`) and the design notes are now in git. Only the ~2.5MB seeded payload and the ~2.6MB
+source render stay ignored, both regenerable.
+
+**What the mockup is NOT:** implemented. The real screen is a single-column shell. See the stock-take
+for the piece-by-piece split.

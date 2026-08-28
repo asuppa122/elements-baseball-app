@@ -1,0 +1,61 @@
+{
+  "artboards": [
+    {
+      "file": "Main.dc.html",
+      "x": 0,
+      "y": 0,
+      "w": 1440,
+      "h": 900,
+      "title": "Desktop \u2014 gameplay screen"
+    },
+    {
+      "file": "States.dc.html",
+      "x": 1560,
+      "y": 0,
+      "w": 1440,
+      "h": 900,
+      "title": "Sync + half-inning states"
+    },
+    {
+      "file": "MomentTakeover.dc.html",
+      "x": 3120,
+      "y": 0,
+      "w": 1440,
+      "h": 900,
+      "title": "Big moment \u2014 walk-off"
+    }
+  ],
+  "annotations": [
+    {
+      "id": "anchoring",
+      "x": -470,
+      "y": 0,
+      "w": 430,
+      "text": "THE ANCHORING MODEL\n\nROLE-ANCHORED -- left rail and centre, following the half-inning. Left is whoever is hitting, centre whoever is fielding. The DEF bar lives here for the same reason.\n\nUSER-ANCHORED -- right rail. Always you: menu, sync state, game log, result, manager decisions, your pitcher, your resources, bullpen, bench.\n\nTop bar carries scoreboard and roll mechanic together, spanning exactly the centre column.\n\nThe second artboard covers the two states this screen cannot show at rest -- a rejected save and the half-inning swap. Both are engine-backed: assertExpectedStateVersion already rejects stale writes, and the swap inverts every column at once."
+    },
+    {
+      "id": "decisions",
+      "x": -470,
+      "y": 380,
+      "w": 430,
+      "text": "WHY THE RIGHT RAIL SOLVES DECISIONS\n\nBecause the rail is always you, one list covers both roles with no placement logic.\n\nFielding this half: Intentional Walk, Infield In, Pitching Change, Double Switch.\nBatting next half: the same slot fills with Natural Steal, Sacrifice Bunt, Squeeze, Pinch Hitter, Pinch Runner.\n\nOnly legal actions appear -- the engine's getPrePitchActions already computes exactly this list, gated on base state, bench contents, DH setting and the catcher's DEF. The rail renders what it returns, nothing more.\n\nBelow it, bullpen and bench are yours too, expandable, with rest debt visible because that is what decides whether a reliever is usable."
+    },
+    {
+      "id": "centre",
+      "x": 1560,
+      "y": -280,
+      "w": 460,
+      "text": "DEF BAR MOVED OFF THE ART\n\nIt now sits as a strip directly under the field, above the action button, in Team Builder's format.\n\nWhy the centre column and not the right rail: these are the FIELDING team's ratings, so they have to flip with the half-inning. The right rail is user-anchored -- parking them there would show your own defence while fielding and the opponent's while batting, from the same slot. The centre is role-anchored, which is exactly what this data is.\n\nWhy under the field rather than on it: the ratings are reference data that only change on a substitution, so they do not need the visual centre -- and the ballpark took too long to get right to cover it. Sitting above the action button also puts them in the eye path when deciding whether to send a runner.\n\nNames remain aligned to their markers; zero overlaps on the field."
+    },
+    {
+      "id": "open",
+      "x": 1560,
+      "y": 330,
+      "w": 460,
+      "text": "WHAT WENT IN THIS PASS\n\nRESULT BOX -- between Game Log and Manager Decisions, as you asked. It names the RULE the engine applied ('Safe at home, run scores'), keeps the chart letter as a badge, shows the roll trail that produced it, and states what changed. Placing it above the decisions matches the causal order: a result is what creates the decision beneath it.\n\nDEF BAR -- moved off the art to a strip under the field. It stays in the centre column because these are the FIELDING team's ratings and must flip with the half-inning; the right rail is user-anchored and would show your own defence while fielding and the opponent's while batting from the same slot.\n\nSYNC SURFACE -- a permanent slot at the top of the right rail, quiet when healthy.\n\nPITCHER RUNWAY -- outs this appearance against card IP as a bar, with the Shutout Bonus state called out. The one number that decides when to go to the pen.\n\nNATURAL STEAL TOKEN -- one per team per game, shown as a standing resource rather than only appearing as a button when legal."
+    }
+  ],
+  "launch": {
+    "view": "canvas"
+  }
+}

@@ -1,0 +1,413 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><script src="./support.js"></script></head><body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap">
+  <style>
+    body { margin:0; font-family:Inter, ui-sans-serif, system-ui, sans-serif; background:#070809; color:#f5f1e6; }
+    a { color:#d8ad2d; } a:hover { color:#f1ca45; }
+    .lbl { font-size:10px; font-weight:900; letter-spacing:0.14em; text-transform:uppercase; color:#f1ca45; }
+    .sub { font-size:10px; color:#777a80; }
+    .num { font-variant-numeric:tabular-nums; }
+    .panel { background:#111214; border:1px solid rgba(216,173,45,0.34); border-radius:12px; }
+    .exp { display:flex; align-items:center; justify-content:space-between; padding:9px 11px; border:1px solid rgba(216,173,45,0.24); border-radius:7px; background:#0b0c0e; }
+    .act { border:1px solid rgba(216,173,45,0.4); border-radius:6px; padding:8px 10px; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:space-between; gap:8px; }
+  </style>
+</helmet>
+
+<div style="width:1440px; height:900px; padding:16px; box-sizing:border-box; background:#070809;">
+
+  <!-- SCOREBUG: same footprint, more legible -->
+  <div style="display:grid; grid-template-columns:300px minmax(0,1fr) 320px; gap:12px; height:100%; min-height:0;">
+
+    <div class="panel" style="padding:10px; display:flex; flex-direction:column; gap:2px; overflow:hidden;">
+      <div style="display:flex; align-items:baseline; justify-content:space-between; border-bottom:1px solid rgba(216,173,45,0.22); padding-bottom:6px;">
+        <div style="display:flex; align-items:baseline; gap:8px;"><span style="font-size:15px; font-weight:900;">Ben</span></div>
+      </div>
+        <div style="display:flex; align-items:center; gap:10px; padding:3px 8px 3px 6px; border-radius:7px; border:1px solid #f1ca45;  ">
+          <span style="font-size:10.5px; font-weight:800; color:#8c8f95; width:11px; flex-shrink:0; font-variant-numeric:tabular-nums;">1</span>
+          <span style="width:57px; height:80px; flex-shrink:0; box-sizing:border-box; border-radius:5px; border:1px solid #f1ca45; background:linear-gradient(158deg,#262830 0%,#191b21 50%,#101116 100%); display:flex; align-items:center; justify-content:center; box-shadow:inset 0 1px 0 rgba(216,173,45,0.18);"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#565962" stroke-width="1.6"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-4-9 8"/></svg></span>
+          <span style="flex-grow:1; min-width:0;">
+            <span style="display:block; font-size:13px; font-weight:800; color:#f5f1e6; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; ">Otto Briggs</span>
+            <span style="display:block; font-size:9.5px; color:#9a9da3; margin-top:2px;">CF &middot; 2-3</span>
+          </span>
+          <span style="background:#d8ad2d; color:#070809; font-size:9.5px; font-weight:900; letter-spacing:0.08em; border-radius:3px; padding:2px 8px;">3B</span>
+        </div>
+        <div style="display:flex; align-items:center; gap:10px; padding:3px 8px 3px 6px; border-radius:7px; border:1px solid #f1ca45;  ">
+          <span style="font-size:10.5px; font-weight:800; color:#8c8f95; width:11px; flex-shrink:0; font-variant-numeric:tabular-nums;">2</span>
+          <span style="width:57px; height:80px; flex-shrink:0; box-sizing:border-box; border-radius:5px; border:1px solid #f1ca45; background:linear-gradient(158deg,#262830 0%,#191b21 50%,#101116 100%); display:flex; align-items:center; justify-content:center; box-shadow:inset 0 1px 0 rgba(216,173,45,0.18);"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#565962" stroke-width="1.6"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-4-9 8"/></svg></span>
+          <span style="flex-grow:1; min-width:0;">
+            <span style="display:block; font-size:13px; font-weight:800; color:#f5f1e6; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; ">Luther Farrell</span>
+            <span style="display:block; font-size:9.5px; color:#9a9da3; margin-top:2px;">LF &middot; 1-2</span>
+          </span>
+          <span style="background:#d8ad2d; color:#070809; font-size:9.5px; font-weight:900; letter-spacing:0.08em; border-radius:3px; padding:2px 8px;">2B</span>
+        </div>
+        <div style="display:flex; align-items:center; gap:10px; padding:3px 8px 3px 6px; border-radius:7px; border:1px solid #d8ad2d; background:rgba(216,173,45,0.1); ">
+          <span style="font-size:10.5px; font-weight:800; color:#f1ca45; width:11px; flex-shrink:0; font-variant-numeric:tabular-nums;">3</span>
+          <span style="width:57px; height:80px; flex-shrink:0; box-sizing:border-box; border-radius:5px; border:1px solid #d8ad2d; background:linear-gradient(158deg,#262830 0%,#191b21 50%,#101116 100%); display:flex; align-items:center; justify-content:center; box-shadow:inset 0 1px 0 rgba(216,173,45,0.18);"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#565962" stroke-width="1.6"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-4-9 8"/></svg></span>
+          <span style="flex-grow:1; min-width:0;">
+            <span style="display:block; font-size:13px; font-weight:800; color:#f1ca45; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; ">Tristan Gray</span>
+            <span style="display:block; font-size:9.5px; color:#9a9da3; margin-top:2px;">RF &middot; 0-2</span>
+          </span>
+          <span style="background:#d8ad2d; color:#070809; font-size:8px; font-weight:900; letter-spacing:0.09em; border-radius:3px; padding:2px 6px;">AT BAT</span>
+        </div>
+        <div style="display:flex; align-items:center; gap:10px; padding:3px 8px 3px 6px; border-radius:7px; border:1px solid #6f5b1e;  ">
+          <span style="font-size:10.5px; font-weight:800; color:#8c8f95; width:11px; flex-shrink:0; font-variant-numeric:tabular-nums;">4</span>
+          <span style="width:57px; height:80px; flex-shrink:0; box-sizing:border-box; border-radius:5px; border:1px solid #6f5b1e; background:linear-gradient(158deg,#262830 0%,#191b21 50%,#101116 100%); display:flex; align-items:center; justify-content:center; box-shadow:inset 0 1px 0 rgba(216,173,45,0.18);"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#565962" stroke-width="1.6"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-4-9 8"/></svg></span>
+          <span style="flex-grow:1; min-width:0;">
+            <span style="display:block; font-size:13px; font-weight:800; color:#f5f1e6; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; ">O. Charleston</span>
+            <span style="display:block; font-size:9.5px; color:#9a9da3; margin-top:2px;">1B &middot; 1-3</span>
+          </span>
+          <span style="border:1px solid #6f5b1e; color:#6f5b1e; font-size:8px; font-weight:900; letter-spacing:0.09em; border-radius:3px; padding:1px 6px;">ON DECK</span>
+        </div>
+        <div style="display:flex; align-items:center; gap:10px; padding:3px 8px 3px 6px; border-radius:7px; border:1px solid rgba(216,173,45,0.22);  ">
+          <span style="font-size:10.5px; font-weight:800; color:#8c8f95; width:11px; flex-shrink:0; font-variant-numeric:tabular-nums;">5</span>
+          <span style="width:57px; height:80px; flex-shrink:0; box-sizing:border-box; border-radius:5px; border:1px solid rgba(216,173,45,0.22); background:linear-gradient(158deg,#262830 0%,#191b21 50%,#101116 100%); display:flex; align-items:center; justify-content:center; box-shadow:inset 0 1px 0 rgba(216,173,45,0.18);"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#565962" stroke-width="1.6"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-4-9 8"/></svg></span>
+          <span style="flex-grow:1; min-width:0;">
+            <span style="display:block; font-size:13px; font-weight:800; color:#f5f1e6; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; ">Jud Wilson</span>
+            <span style="display:block; font-size:9.5px; color:#9a9da3; margin-top:2px;">3B &middot; 0-3</span>
+          </span>
+          
+        </div>
+        <div style="display:flex; align-items:center; gap:10px; padding:3px 8px 3px 6px; border-radius:7px; border:1px solid rgba(216,173,45,0.22);  ">
+          <span style="font-size:10.5px; font-weight:800; color:#8c8f95; width:11px; flex-shrink:0; font-variant-numeric:tabular-nums;">6</span>
+          <span style="width:57px; height:80px; flex-shrink:0; box-sizing:border-box; border-radius:5px; border:1px solid rgba(216,173,45,0.22); background:linear-gradient(158deg,#262830 0%,#191b21 50%,#101116 100%); display:flex; align-items:center; justify-content:center; box-shadow:inset 0 1px 0 rgba(216,173,45,0.18);"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#565962" stroke-width="1.6"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-4-9 8"/></svg></span>
+          <span style="flex-grow:1; min-width:0;">
+            <span style="display:block; font-size:13px; font-weight:800; color:#f5f1e6; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; ">Bill Perkins</span>
+            <span style="display:block; font-size:9.5px; color:#9a9da3; margin-top:2px;">C &middot; 0-1</span>
+          </span>
+          
+        </div>
+        <div style="display:flex; align-items:center; gap:10px; padding:3px 8px 3px 6px; border-radius:7px; border:1px solid rgba(216,173,45,0.22);  ">
+          <span style="font-size:10.5px; font-weight:800; color:#8c8f95; width:11px; flex-shrink:0; font-variant-numeric:tabular-nums;">7</span>
+          <span style="width:57px; height:80px; flex-shrink:0; box-sizing:border-box; border-radius:5px; border:1px solid rgba(216,173,45,0.22); background:linear-gradient(158deg,#262830 0%,#191b21 50%,#101116 100%); display:flex; align-items:center; justify-content:center; box-shadow:inset 0 1px 0 rgba(216,173,45,0.18);"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#565962" stroke-width="1.6"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-4-9 8"/></svg></span>
+          <span style="flex-grow:1; min-width:0;">
+            <span style="display:block; font-size:13px; font-weight:800; color:#f5f1e6; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; ">Dick Lundy</span>
+            <span style="display:block; font-size:9.5px; color:#9a9da3; margin-top:2px;">SS &middot; 1-3</span>
+          </span>
+          
+        </div>
+        <div style="display:flex; align-items:center; gap:10px; padding:3px 8px 3px 6px; border-radius:7px; border:1px solid rgba(216,173,45,0.22);  opacity:0.6;">
+          <span style="font-size:10.5px; font-weight:800; color:#8c8f95; width:11px; flex-shrink:0; font-variant-numeric:tabular-nums;">8</span>
+          <span style="width:57px; height:80px; flex-shrink:0; box-sizing:border-box; border-radius:5px; border:1px solid rgba(216,173,45,0.22); background:repeating-linear-gradient(135deg,#15161a 0 5px,#101116 5px 10px); display:flex; align-items:center; justify-content:center; box-shadow:inset 0 1px 0 rgba(216,173,45,0.18);"></span>
+          <span style="flex-grow:1; min-width:0;">
+            <span style="display:block; font-size:13px; font-weight:800; color:#f5f1e6; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; text-decoration:line-through; text-decoration-color:rgba(226,114,107,0.65);">F. Warfield</span>
+            <span style="display:block; font-size:9.5px; color:#9a9da3; margin-top:2px;">2B &middot; 0-2</span>
+          </span>
+          <span style="background:#2a1616; border:1px solid #e2726b; color:#e2726b; font-size:8px; font-weight:900; letter-spacing:0.1em; border-radius:3px; padding:2px 6px;">OUT</span>
+        </div>
+        <div style="display:flex; align-items:center; gap:10px; padding:3px 8px 3px 6px; border-radius:7px; border:1px solid rgba(216,173,45,0.22);  opacity:0.6;">
+          <span style="font-size:10.5px; font-weight:800; color:#8c8f95; width:11px; flex-shrink:0; font-variant-numeric:tabular-nums;">9</span>
+          <span style="width:57px; height:80px; flex-shrink:0; box-sizing:border-box; border-radius:5px; border:1px solid rgba(216,173,45,0.22); background:repeating-linear-gradient(135deg,#15161a 0 5px,#101116 5px 10px); display:flex; align-items:center; justify-content:center; box-shadow:inset 0 1px 0 rgba(216,173,45,0.18);"></span>
+          <span style="flex-grow:1; min-width:0;">
+            <span style="display:block; font-size:13px; font-weight:800; color:#f5f1e6; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; text-decoration:line-through; text-decoration-color:rgba(226,114,107,0.65);">Rube Currie</span>
+            <span style="display:block; font-size:9.5px; color:#9a9da3; margin-top:2px;">P &middot; 0-2</span>
+          </span>
+          <span style="background:#2a1616; border:1px solid #e2726b; color:#e2726b; font-size:8px; font-weight:900; letter-spacing:0.1em; border-radius:3px; padding:2px 6px;">OUT</span>
+        </div>
+    </div>
+
+    <div style="display:flex; flex-direction:column; gap:12px; min-width:0;">
+    <div style="height:60px; box-sizing:border-box; background:#0b0c0e; border:1px solid rgba(216,173,45,0.34); border-radius:10px; display:flex; align-items:center; justify-content:space-between; gap:8px; padding:0 16px; flex-shrink:0;">
+      <div style="display:flex; flex-direction:column; gap:3px;">
+        <div style="display:flex; align-items:center; gap:6px;">
+          <span style="width:3px; height:12px; background:#aeafb2; border-radius:1px;"></span>
+          <span style="font-size:12px; font-weight:900; width:52px;">Ben</span>
+          <span class="num" style="font-size:16px; font-weight:900; line-height:1;">3</span>
+        </div>
+        <div style="display:flex; align-items:center; gap:6px;">
+          <span style="width:3px; height:12px; background:#d8ad2d; border-radius:1px;"></span>
+          <span style="font-size:12px; font-weight:900; width:52px; color:#f1ca45;">Anthony</span>
+          <span class="num" style="font-size:16px; font-weight:900; line-height:1; color:#f1ca45;">5</span>
+        </div>
+      </div>
+      <svg width="30" height="30" viewBox="0 0 46 46" fill="none" style="flex-shrink:0;">
+        <rect x="23" y="5" width="12.5" height="12.5" transform="rotate(45 23 5)" fill="#f1ca45" stroke="#fff8e1" stroke-width="1.3"/>
+        <rect x="7.5" y="20.5" width="12.5" height="12.5" transform="rotate(45 7.5 20.5)" fill="#f1ca45" stroke="#fff8e1" stroke-width="1.3"/>
+        <rect x="38.5" y="20.5" width="12.5" height="12.5" transform="rotate(45 38.5 20.5)" fill="#16171a" stroke="#6b6e74" stroke-width="1.5"/>
+      </svg>
+      <div style="display:flex; align-items:center; gap:4px; flex-shrink:0;">
+        <span style="width:9px; height:9px; border-radius:50%; background:#e2726b;"></span>
+        <span style="width:9px; height:9px; border-radius:50%; background:#e2726b;"></span>
+        <span style="width:9px; height:9px; border-radius:50%; border:1.5px solid #4a4b4f; box-sizing:border-box;"></span>
+        <span class="num" style="font-size:13px; font-weight:900; margin-left:2px;">2</span>
+        <span class="sub" style="font-size:8.5px;">OUT</span>
+      </div>
+      <div style="display:flex; align-items:center; gap:5px; flex-shrink:0;">
+        <svg width="10" height="10" viewBox="0 0 14 14" fill="none"><path d="M7 11.5L2 3.5h10L7 11.5Z" fill="#f1ca45"/></svg>
+        <span class="num" style="font-size:16px; font-weight:900; line-height:1;">9</span>
+      </div>
+
+      <div style="display:flex; align-items:center; gap:10px;">
+        <div style="display:flex; align-items:stretch; border:1px solid rgba(216,173,45,0.3); border-radius:7px; overflow:hidden;">
+          <div style="padding:5px 14px; text-align:center; min-width:54px;"><div class="sub" style="font-size:8px;">PITCH</div><div class="num" style="font-size:15px; font-weight:900; color:#3a3b3f; line-height:1.15;">&mdash;</div></div>
+          <div style="padding:5px 14px; text-align:center; min-width:72px; border-left:1px solid rgba(216,173,45,0.2);"><div class="sub" style="font-size:8px;">ADVANTAGE</div><div style="font-size:15px; font-weight:900; color:#3a3b3f; line-height:1.15;">&mdash;</div></div>
+          <div style="padding:5px 14px; text-align:center; min-width:54px; border-left:1px solid rgba(216,173,45,0.2);"><div class="sub" style="font-size:8px;">SWING</div><div class="num" style="font-size:15px; font-weight:900; color:#3a3b3f; line-height:1.15;">&mdash;</div></div>
+        </div>
+        
+      </div>
+    </div>
+
+    <div style="flex:1 1 0; min-height:0; display:flex; justify-content:center;">
+      <div style="position:relative; height:100%; aspect-ratio:1/1; border:1px solid rgba(216,173,45,0.34); border-radius:12px; overflow:hidden; background:#08090a;">
+        <img src="field.webp" alt="" style="position:absolute; inset:0; width:100%; height:100%; object-fit:fill; display:block;">
+
+        <div style="position:absolute; left:14px; top:11px; z-index:9; font-size:9.5px; font-weight:900; letter-spacing:0.14em; color:#f1ca45;">ANTHONY</div>
+        
+        <div style="position:absolute; left:18.90%; top:19.21%; transform:translate(-50%,-50%); width:64px; z-index:5;">
+          <div style="height:84px; border-radius:5px; border:1px solid rgba(216,173,45,0.45); background:linear-gradient(166deg,#23252b 0%,#16171c 60%,#0e0f13 100%); display:flex; align-items:center; justify-content:center;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4e5057" stroke-width="1.6"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-4-9 8"/></svg>
+          </div>
+          <div style="margin-top:2px; text-align:center;"><div style="font-size:7.5px; font-weight:900; letter-spacing:0.1em; color:#a98a34;">LF</div>
+            <div style="font-size:9px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Turkey Stearnes</div>
+            
+          </div>
+        </div>
+        <div style="position:absolute; left:49.60%; top:15.50%; transform:translate(-50%,-50%); width:64px; z-index:5;">
+          <div style="height:84px; border-radius:5px; border:1px solid rgba(216,173,45,0.45); background:linear-gradient(166deg,#23252b 0%,#16171c 60%,#0e0f13 100%); display:flex; align-items:center; justify-content:center;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4e5057" stroke-width="1.6"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-4-9 8"/></svg>
+          </div>
+          <div style="margin-top:2px; text-align:center;"><div style="font-size:7.5px; font-weight:900; letter-spacing:0.1em; color:#a98a34;">CF</div>
+            <div style="font-size:9px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Cool Papa Bell</div>
+            
+          </div>
+        </div>
+        <div style="position:absolute; left:81.10%; top:19.21%; transform:translate(-50%,-50%); width:64px; z-index:5;">
+          <div style="height:84px; border-radius:5px; border:1px solid rgba(216,173,45,0.45); background:linear-gradient(166deg,#23252b 0%,#16171c 60%,#0e0f13 100%); display:flex; align-items:center; justify-content:center;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4e5057" stroke-width="1.6"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-4-9 8"/></svg>
+          </div>
+          <div style="margin-top:2px; text-align:center;"><div style="font-size:7.5px; font-weight:900; letter-spacing:0.1em; color:#a98a34;">RF</div>
+            <div style="font-size:9px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">C. Torriente</div>
+            
+          </div>
+        </div>
+        <div style="position:absolute; left:34.61%; top:40.02%; transform:translate(-50%,-50%); width:64px; z-index:5;">
+          <div style="height:84px; border-radius:5px; border:1px solid rgba(216,173,45,0.45); background:linear-gradient(166deg,#23252b 0%,#16171c 60%,#0e0f13 100%); display:flex; align-items:center; justify-content:center;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4e5057" stroke-width="1.6"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-4-9 8"/></svg>
+          </div>
+          <div style="margin-top:2px; text-align:center;"><div style="font-size:7.5px; font-weight:900; letter-spacing:0.1em; color:#a98a34;">SS</div>
+            <div style="font-size:9px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Willie Wells</div>
+            
+          </div>
+        </div>
+        <div style="position:absolute; left:65.39%; top:40.02%; transform:translate(-50%,-50%); width:64px; z-index:5;">
+          <div style="height:84px; border-radius:5px; border:1px solid rgba(216,173,45,0.45); background:linear-gradient(166deg,#23252b 0%,#16171c 60%,#0e0f13 100%); display:flex; align-items:center; justify-content:center;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4e5057" stroke-width="1.6"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-4-9 8"/></svg>
+          </div>
+          <div style="margin-top:2px; text-align:center;"><div style="font-size:7.5px; font-weight:900; letter-spacing:0.1em; color:#a98a34;">2B</div>
+            <div style="font-size:9px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Newt Allen</div>
+            
+          </div>
+        </div>
+        <div style="position:absolute; left:23.13%; top:50.71%; transform:translate(-50%,-50%); width:64px; z-index:5;">
+          <div style="height:84px; border-radius:5px; border:1px solid rgba(216,173,45,0.45); background:linear-gradient(166deg,#23252b 0%,#16171c 60%,#0e0f13 100%); display:flex; align-items:center; justify-content:center;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4e5057" stroke-width="1.6"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-4-9 8"/></svg>
+          </div>
+          <div style="margin-top:2px; text-align:center;"><div style="font-size:7.5px; font-weight:900; letter-spacing:0.1em; color:#a98a34;">3B</div>
+            <div style="font-size:9px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">D. Malarcher</div>
+            
+          </div>
+        </div>
+        <div style="position:absolute; left:76.87%; top:50.71%; transform:translate(-50%,-50%); width:64px; z-index:5;">
+          <div style="height:84px; border-radius:5px; border:1px solid rgba(216,173,45,0.45); background:linear-gradient(166deg,#23252b 0%,#16171c 60%,#0e0f13 100%); display:flex; align-items:center; justify-content:center;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4e5057" stroke-width="1.6"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-4-9 8"/></svg>
+          </div>
+          <div style="margin-top:2px; text-align:center;"><div style="font-size:7.5px; font-weight:900; letter-spacing:0.1em; color:#a98a34;">1B</div>
+            <div style="font-size:9px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Mule Suttles</div>
+            
+          </div>
+        </div>
+        <div style="position:absolute; left:50.00%; top:86.49%; transform:translate(-50%,-50%); width:60px; z-index:5;">
+          <div style="height:72px; border-radius:5px; border:1px solid rgba(216,173,45,0.45); background:linear-gradient(166deg,#23252b 0%,#16171c 60%,#0e0f13 100%); display:flex; align-items:center; justify-content:center;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4e5057" stroke-width="1.6"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-4-9 8"/></svg>
+          </div>
+          <div style="margin-top:2px; text-align:center;"><div style="font-size:7.5px; font-weight:900; letter-spacing:0.1em; color:#a98a34;">C</div>
+            <div style="font-size:9px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Biz Mackey</div>
+            
+          </div>
+        </div>
+        <div style="position:absolute; left:50.00%; top:50.88%; transform:translate(-50%,-50%); width:70px; z-index:7;">
+          <div style="height:92px; border-radius:5px; border:1px solid #f1ca45; background:linear-gradient(166deg,#23252b 0%,#16171c 60%,#0e0f13 100%); display:flex; align-items:center; justify-content:center;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4e5057" stroke-width="1.6"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-4-9 8"/></svg>
+          </div>
+          <div style="margin-top:2px; text-align:center;"><div style="font-size:7.5px; font-weight:900; letter-spacing:0.1em; color:#f1ca45;">PITCHER</div>
+            <div style="font-size:9px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Nelson Dean</div>
+            <div style="font-size:7.5px; color:#8c8f95;">CTRL 5 &rarr; 0</div>
+          </div>
+        </div>
+        <div style="position:absolute; left:64%; top:89.00%; transform:translate(-50%,-50%); width:70px; z-index:7;">
+          <div style="height:92px; border-radius:5px; border:1px solid #e08a5c; background:linear-gradient(166deg,#23252b 0%,#16171c 60%,#0e0f13 100%); display:flex; align-items:center; justify-content:center;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4e5057" stroke-width="1.6"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-4-9 8"/></svg>
+          </div>
+          <div style="margin-top:2px; text-align:center;"><div style="font-size:7.5px; font-weight:900; letter-spacing:0.1em; color:#e08a5c;">AT BAT &middot; BATS L</div>
+            <div style="font-size:9px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Tristan Gray</div>
+            <div style="font-size:7.5px; color:#8c8f95;">OB 7 &rarr; 5</div>
+          </div>
+        </div>
+        <div style="position:absolute; left:23.29%; top:62.76%; transform:translate(-50%,-50%); z-index:9; display:flex; align-items:center; gap:6px; background:rgba(9,10,12,0.94); border:1.5px solid #d8ad2d; border-radius:8px; padding:4px 9px 4px 5px; white-space:nowrap; box-shadow:0 0 12px rgba(216,173,45,0.3);">
+          <span style="font-size:8px; font-weight:900; color:#070809; background:#d8ad2d; border-radius:4px; padding:2px 5px;">3B</span>
+          <span style="text-align:left;">
+            <span style="display:block; font-size:10px; font-weight:800; line-height:1.2;">O. Briggs</span>
+            <span style="display:block; font-size:8.5px; color:#b9bcc1; line-height:1.2;">BsR <b style="color:#f5f1e6;">15</b> SB <b style="color:#f5f1e6;">14</b></span>
+          </span>
+        </div>
+        <div style="position:absolute; left:49.84%; top:38.60%; transform:translate(-50%,-50%); z-index:9; display:flex; align-items:center; gap:6px; background:rgba(9,10,12,0.94); border:1.5px solid #d8ad2d; border-radius:8px; padding:4px 9px 4px 5px; white-space:nowrap; box-shadow:0 0 12px rgba(216,173,45,0.3);">
+          <span style="font-size:8px; font-weight:900; color:#070809; background:#d8ad2d; border-radius:4px; padding:2px 5px;">2B</span>
+          <span style="text-align:left;">
+            <span style="display:block; font-size:10px; font-weight:800; line-height:1.2;">L. Farrell</span>
+            <span style="display:block; font-size:8.5px; color:#b9bcc1; line-height:1.2;">BsR <b style="color:#f5f1e6;">13</b> SB <b style="color:#f5f1e6;">11</b></span>
+          </span>
+        </div>
+</div>
+      </div>
+      <div style="flex-shrink:0; background:#0b0c0e; border:1px solid rgba(216,173,45,0.3); border-radius:8px; padding:7px 13px; display:flex; align-items:center; justify-content:center; gap:9px; white-space:nowrap;">
+        <span style="display:inline-flex; align-items:baseline; gap:6px;"><b style="font-size:8px; font-weight:900; letter-spacing:0.1em; color:#f1ca45;">C DEF</b><span style="display:inline-flex; align-items:baseline; gap:3px;"><small style="font-size:7.5px; color:#8c8f95;">C</small><strong style="font-size:11px; font-weight:900; color:#7fce8c;">+7</strong></span></span>
+        <span style="color:rgba(216,173,45,0.35);">|</span>
+        <span style="display:inline-flex; align-items:baseline; gap:6px;"><b style="font-size:8px; font-weight:900; letter-spacing:0.1em; color:#f1ca45;">INF DEF</b>
+          <span style="display:inline-flex; align-items:baseline; gap:3px;"><small style="font-size:7.5px; color:#8c8f95;">1B</small><strong style="font-size:11px; font-weight:900; color:#7fce8c;">+2</strong></span>
+          <span style="display:inline-flex; align-items:baseline; gap:3px;"><small style="font-size:7.5px; color:#8c8f95;">2B</small><strong style="font-size:11px; font-weight:900; color:#7fce8c;">+3</strong></span>
+          <span style="display:inline-flex; align-items:baseline; gap:3px;"><small style="font-size:7.5px; color:#8c8f95;">3B</small><strong style="font-size:11px; font-weight:900; color:#7fce8c;">+2</strong></span>
+          <span style="display:inline-flex; align-items:baseline; gap:3px;"><small style="font-size:7.5px; color:#8c8f95;">SS</small><strong style="font-size:11px; font-weight:900; color:#7fce8c;">+2</strong></span>
+        </span>
+        <span style="color:rgba(216,173,45,0.35);">|</span>
+        <span style="display:inline-flex; align-items:baseline; gap:6px;"><b style="font-size:8px; font-weight:900; letter-spacing:0.1em; color:#f1ca45;">OF DEF</b>
+          <span style="display:inline-flex; align-items:baseline; gap:3px;"><small style="font-size:7.5px; color:#8c8f95;">LF</small><strong style="font-size:11px; font-weight:900; color:#7fce8c;">+1</strong></span>
+          <span style="display:inline-flex; align-items:baseline; gap:3px;"><small style="font-size:7.5px; color:#8c8f95;">CF</small><strong style="font-size:11px; font-weight:900; color:#7fce8c;">+2</strong></span>
+          <span style="display:inline-flex; align-items:baseline; gap:3px;"><small style="font-size:7.5px; color:#8c8f95;">RF</small><strong style="font-size:11px; font-weight:900; color:#7fce8c;">+2</strong></span>
+        </span>
+      </div>
+      <button style="height:54px; flex-shrink:0; border:none; border-radius:9px; background:#d8ad2d; color:#070809; font-family:inherit; font-size:16px; font-weight:900; letter-spacing:0.1em; cursor:pointer;">ROLL PITCH</button>
+    </div>
+
+    <div class="panel" style="padding:12px; display:flex; flex-direction:column; gap:10px; overflow:hidden;">
+      <div style="display:flex; justify-content:flex-end; position:relative; z-index:40;"><div style="position:relative;">
+          <div style="width:34px; height:34px; border:1px solid #d8ad2d; background:rgba(216,173,45,0.14); border-radius:7px; display:flex; align-items:center; justify-content:center; cursor:pointer;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#f1ca45" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+          </div>
+          <div style="position:absolute; right:0; top:42px; width:186px; z-index:40; background:#0f1013; border:1px solid rgba(216,173,45,0.45); border-radius:9px; box-shadow:0 16px 34px rgba(0,0,0,0.85); overflow:hidden;">
+            <div style="padding:8px 11px 6px; border-bottom:1px solid rgba(216,173,45,0.2);">
+              <span class="lbl" style="font-size:8.5px;">Game Menu</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:9px; padding:9px 11px; cursor:pointer;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f1ca45" stroke-width="2" stroke-linecap="round"><path d="M9 5v14M15 5v14"/></svg>
+              <span style="font-size:12px; font-weight:700;">Pause</span>
+              <span class="sub" style="margin-left:auto; font-size:8.5px;">both sides</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:9px; padding:9px 11px; cursor:pointer; border-top:1px solid rgba(216,173,45,0.12);">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f1ca45" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg>
+              <span style="font-size:12px; font-weight:700;">Save</span>
+              <span class="sub" style="margin-left:auto; font-size:8.5px; color:#7fce8c;">auto &middot; v57</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:9px; padding:9px 11px; cursor:pointer; border-top:1px solid rgba(216,173,45,0.12);">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#aeafb2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/></svg>
+              <span style="font-size:12px; font-weight:700;">Exit to Games</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:9px; padding:9px 11px; cursor:pointer; border-top:1px solid rgba(216,173,45,0.12); background:rgba(226,114,107,0.07);">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#e2726b" stroke-width="2" stroke-linecap="round"><path d="M12 3l9 16H3l9-16ZM12 9v5M12 17h.01"/></svg>
+              <span style="font-size:12px; font-weight:700; color:#e2726b;">Resign</span>
+              <span class="sub" style="margin-left:auto; font-size:8.5px; color:#8a5b57;">confirm</span>
+            </div>
+          </div>
+        </div></div>
+      <div style="flex-shrink:0; display:flex; align-items:center; gap:7px; border:1px solid rgba(127,206,140,0.4); background:rgba(127,206,140,0.06); border-radius:7px; padding:6px 10px;">
+        <span style="width:7px; height:7px; border-radius:50%; background:#7fce8c; flex-shrink:0;"></span>
+        <span style="font-size:10.5px; font-weight:700; color:#7fce8c;">In sync</span>
+        <span class="sub" style="margin-left:auto; font-size:9px;">state v57 &middot; Ben up to date</span>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:6px; flex:0 0 auto;">
+        <div style="display:flex; align-items:center; justify-content:space-between;">
+          <span class="lbl" style="font-size:9px;">Game Log</span>
+          <span class="sub" style="display:flex; align-items:center; gap:4px;">expand
+            <svg width="8" height="8" viewBox="0 0 10 10" fill="none"><path d="M1.5 3L5 7l3.5-4" stroke="#777a80" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </span>
+        </div>
+        <div style="border:1px solid rgba(216,173,45,0.2); border-radius:7px; background:#0b0c0e; padding:9px 10px; display:flex; flex-direction:column; gap:8px; height:186px; box-sizing:border-box; overflow:hidden;">
+          <div><span class="sub" style="color:#6f5b1e;">Roll 14 &rarr; 7</span><div style="font-size:11.5px; margin-top:2px; line-height:1.35;">Otto Briggs singles to left. <span style="color:#7fce8c;">Farrell to 3B.</span></div></div>
+          <div><span class="sub" style="color:#6f5b1e;">Roll 9 &rarr; 11</span><div style="font-size:11.5px; margin-top:2px; color:#aeafb2; line-height:1.35;">Rube Currie grounds out, 6&ndash;3. <span style="color:#e2726b;">Out #2.</span></div></div>
+          <div><span class="sub" style="color:#6f5b1e;">Roll 3 &rarr; 18</span><div style="font-size:11.5px; margin-top:2px; color:#aeafb2; line-height:1.35;">F. Warfield flies out. <span style="color:#e2726b;">Out #1.</span></div></div>
+        </div>
+      </div>
+      <div style="flex-shrink:0; display:flex; flex-direction:column; gap:6px;">
+        <div style="display:flex; align-items:baseline; justify-content:space-between;">
+          <span class="lbl" style="font-size:9px;">Result</span>
+          <span class="sub">this plate appearance</span>
+        </div>
+        <div style="border:1.5px solid #7fce8c; border-radius:8px; background:rgba(127,206,140,0.07); padding:10px 11px; display:flex; flex-direction:column; gap:8px;">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <span style="width:42px; height:42px; flex-shrink:0; border-radius:7px; background:rgba(127,206,140,0.16); border:1px solid #7fce8c; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+              <span style="font-size:15px; font-weight:900; color:#7fce8c; line-height:1;">1B</span>
+              <span style="font-size:6.5px; color:#7fce8c; letter-spacing:0.08em; margin-top:1px;">CHART</span>
+            </span>
+            <span>
+              <span style="display:block; font-size:14px; font-weight:900; line-height:1.2;">Safe at home &mdash; run scores</span>
+              <span style="display:block; font-size:10.5px; color:#aeafb2; margin-top:2px; line-height:1.35;">O. Briggs singles to left. L. Farrell scores from 2B.</span>
+            </span>
+          </div>
+          <div style="display:flex; align-items:center; gap:7px; border-top:1px solid rgba(127,206,140,0.25); padding-top:7px; flex-wrap:wrap;">
+            <span style="font-size:9px; color:#8c8f95;">Pitch <b style="color:#f5f1e6;">14</b></span>
+            <span style="color:#3f4044;">&rsaquo;</span>
+            <span style="font-size:9px; color:#8c8f95;">Adv <b style="color:#7fce8c;">HITTER</b></span>
+            <span style="color:#3f4044;">&rsaquo;</span>
+            <span style="font-size:9px; color:#8c8f95;">Swing <b style="color:#f5f1e6;">15</b></span>
+            <span style="color:#3f4044;">&rsaquo;</span>
+            <span style="font-size:9px; color:#8c8f95;">RTS <b style="color:#f5f1e6;">8</b> vs BsR 19</span>
+          </div>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span style="font-size:9px; font-weight:900; letter-spacing:0.08em; background:#7fce8c; color:#070809; border-radius:3px; padding:2px 6px;">ANTHONY 6&ndash;3</span>
+            <span style="font-size:9.5px; color:#aeafb2;">Briggs to 1B &middot; 2 out</span>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:6px; flex:1 1 auto; min-height:0;">
+        <div style="display:flex; align-items:baseline; justify-content:space-between;">
+          <span class="lbl" style="font-size:9px;">Manager Decisions</span><span class="sub">legal now &middot; fielding</span>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:5px;">
+          <div class="act">Intentional Walk <span class="sub">awards 1B</span></div>
+          <div class="act">Pitching Change <span class="sub">3 available</span></div>
+          <div class="act">Double Switch <span class="sub">no DH</span></div>
+        </div>
+      </div>
+      <div style="flex-shrink:0; display:flex; flex-direction:column; gap:6px;">
+        <div style="display:flex; align-items:baseline; justify-content:space-between;">
+          <span class="lbl" style="font-size:9px;">Your Pitcher</span>
+          <span class="sub">27 of 22 outs</span>
+        </div>
+        <div style="border:1px solid rgba(216,173,45,0.24); border-radius:7px; background:#0b0c0e; padding:8px 10px; display:flex; flex-direction:column; gap:6px;">
+          <div style="display:flex; align-items:baseline; gap:6px;">
+            <span style="font-size:11.5px; font-weight:800;">Nelson Dean</span>
+            <span class="sub" style="margin-left:auto;">CTRL <b style="color:#7fce8c;">0</b></span>
+          </div>
+          <div style="height:6px; border-radius:3px; background:#1a1b1f; overflow:hidden; display:flex;">
+            <span style="width:81%; background:linear-gradient(90deg,#7fce8c,#d8ad2d);"></span>
+            <span style="width:19%; background:#e2726b;"></span>
+          </div>
+          <div style="display:flex; align-items:center; gap:6px;">
+            <span style="font-size:8.5px; font-weight:900; letter-spacing:0.06em; border:1px solid #7fce8c; color:#7fce8c; border-radius:3px; padding:1px 5px;">SHUTOUT BONUS</span>
+            <span class="sub" style="font-size:9px;">&minus;1/out &middot; floors at 0</span>
+          </div>
+        </div>
+        <div style="display:flex; align-items:center; gap:7px; border:1px solid rgba(216,173,45,0.24); border-radius:7px; background:#0b0c0e; padding:7px 10px;">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#f1ca45" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="4.5" r="2"/><path d="M12 21l1.5-5-3-2.5.8-4.5"/><path d="M11.3 9l-3.6 1.8L6 14"/><path d="M11.3 9l4 1.4 1.7 3.1"/></svg>
+          <span style="font-size:10.5px; font-weight:700;">Natural steal</span>
+          <span style="margin-left:auto; font-size:9px; font-weight:900; letter-spacing:0.06em; background:#d8ad2d; color:#070809; border-radius:3px; padding:2px 6px;">AVAILABLE</span>
+        </div>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:7px;">
+        <div style="border:1px solid rgba(216,173,45,0.34); border-radius:7px; background:#0b0c0e; overflow:hidden;">
+          <div style="display:flex; align-items:center; justify-content:space-between; padding:9px 11px;">
+            <span style="font-size:11px; font-weight:800; letter-spacing:0.08em; color:#f1ca45;">BULLPEN</span><span class="sub">3</span>
+          </div>
+          <div style="border-top:1px solid rgba(216,173,45,0.16); padding:5px 9px 8px; display:flex; flex-direction:column; gap:4px;">
+            <div style="display:flex; justify-content:space-between; font-size:10.5px;"><span>Bullet Rogan</span><span style="color:#7fce8c;">Rested</span></div>
+            <div style="display:flex; justify-content:space-between; font-size:10.5px;"><span>Bill Foster</span><span style="color:#7fce8c;">Rested</span></div>
+            <div style="display:flex; justify-content:space-between; font-size:10.5px;"><span style="color:#777a80;">Rube Chambers</span><span style="color:#e2726b;">2 games</span></div>
+          </div>
+        </div>
+        <div class="exp"><span style="font-size:11px; font-weight:800; letter-spacing:0.08em;">BENCH</span><span class="sub">4 left</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+</body></html>

@@ -1,0 +1,103 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><script src="./support.js"></script></head><body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap">
+  <style>
+    body { margin:0; font-family:Inter, ui-sans-serif, system-ui, sans-serif; background:#070809; color:#f5f1e6; }
+    a { color:#d8ad2d; } a:hover { color:#f1ca45; }
+    .lbl { font-size:10px; font-weight:900; letter-spacing:0.14em; text-transform:uppercase; color:#f1ca45; }
+    .sub { font-size:10px; color:#777a80; }
+    .panel { background:#111214; border:1px solid rgba(216,173,45,0.34); border-radius:12px; }
+    .cap { font-size:11px; color:#8c8f95; line-height:1.5; }
+  </style>
+</helmet>
+
+<div style="width:1440px; height:900px; padding:26px 28px; box-sizing:border-box; background:#070809; display:flex; flex-direction:column; gap:18px;">
+  <div>
+    <h2 style="margin:0; font-size:20px; font-weight:900; letter-spacing:-0.01em;">States the main screen cannot show at rest</h2>
+    <p style="margin:6px 0 0; font-size:13px; color:#aeafb2; line-height:1.5;">Two things a real PvP game will hit constantly. Both are engine-backed, not invented for the mockup.</p>
+  </div>
+
+  <div style="display:grid; grid-template-columns:400px minmax(0,1fr); gap:20px; flex-grow:1; min-height:0;">
+
+    <!-- ── sync / conflict ── -->
+    <div class="panel" style="padding:16px; display:flex; flex-direction:column; gap:14px;">
+      <div>
+        <span class="lbl">1 &middot; Save &amp; conflict surface</span>
+        <p class="cap" style="margin:6px 0 0;">assertExpectedStateVersion rejects a write whose stateVersion is stale. With two managers acting near-simultaneously that is routine, not exceptional. It needs a permanent slot, because a decision that silently failed to save is the worst outcome in a game where decisions lock.</p>
+      </div>
+
+      <div style="display:flex; flex-direction:column; gap:9px;">
+        <div>
+          <div class="sub" style="margin-bottom:4px;">healthy &mdash; quiet, always present</div>
+          <div style="display:flex; align-items:center; gap:7px; border:1px solid rgba(127,206,140,0.4); background:rgba(127,206,140,0.06); border-radius:7px; padding:7px 11px;">
+            <span style="width:7px; height:7px; border-radius:50%; background:#7fce8c;"></span>
+            <span style="font-size:11px; font-weight:700; color:#7fce8c;">In sync</span>
+            <span class="sub" style="margin-left:auto; font-size:9px;">state v57 &middot; Ben up to date</span>
+          </div>
+        </div>
+
+        <div>
+          <div class="sub" style="margin-bottom:4px;">writing</div>
+          <div style="display:flex; align-items:center; gap:7px; border:1px solid rgba(216,173,45,0.4); background:rgba(216,173,45,0.07); border-radius:7px; padding:7px 11px;">
+            <span style="width:7px; height:7px; border-radius:50%; background:#d8ad2d;"></span>
+            <span style="font-size:11px; font-weight:700; color:#f1ca45;">Saving your roll&hellip;</span>
+            <span class="sub" style="margin-left:auto; font-size:9px;">v57 &rarr; v58</span>
+          </div>
+        </div>
+
+        <div>
+          <div class="sub" style="margin-bottom:4px;">rejected &mdash; blocks the action, states the recovery</div>
+          <div style="border:1.5px solid #e2726b; background:rgba(226,114,107,0.09); border-radius:7px; padding:10px 11px; display:flex; flex-direction:column; gap:7px;">
+            <div style="display:flex; align-items:center; gap:7px;">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#e2726b" stroke-width="2" stroke-linecap="round"><path d="M12 3l9 16H3l9-16ZM12 9v5M12 17h.01"/></svg>
+              <span style="font-size:11.5px; font-weight:800; color:#e2726b;">Out of date &mdash; roll not saved</span>
+            </div>
+            <div class="cap" style="color:#c9a3a0;">Ben resolved the tag-up first. The game is at v58; your roll was written against v57 and was rejected, so nothing was applied.</div>
+            <div style="display:flex; gap:7px;">
+              <span style="font-size:10.5px; font-weight:800; background:#e2726b; color:#070809; border-radius:5px; padding:6px 12px;">Reload to v58</span>
+              <span style="font-size:10.5px; font-weight:700; border:1px solid rgba(226,114,107,0.5); color:#e2726b; border-radius:5px; padding:6px 12px;">View what changed</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <p class="cap" style="margin-top:auto;">Rejection is <strong style="color:#f5f1e6;">safe</strong> &mdash; the engine refused the write, so no half-applied state exists. The message says that, because a manager whose click did nothing will otherwise assume the opposite and click again.</p>
+    </div>
+
+    <!-- ── half-inning transition ── -->
+    <div class="panel" style="padding:16px; display:flex; flex-direction:column; gap:14px; min-height:0;">
+      <div>
+        <span class="lbl">2 &middot; Half-inning transition</span>
+        <p class="cap" style="margin:6px 0 0;">On the third out everything on screen inverts &mdash; both rails swap teams, the field repopulates with the other nine, the batter card changes sides. Without an announcement a manager loses their place. Smaller than a big-moment takeover, and it must be dismissible rather than timed, because the other manager may still be acting.</p>
+      </div>
+
+      <div style="position:relative; flex-grow:1; min-height:0; border:1px solid rgba(216,173,45,0.22); border-radius:10px; overflow:hidden; background:#0b0c0e;">
+        <div style="position:absolute; inset:0; display:grid; grid-template-columns:74px 1fr 78px; gap:6px; padding:8px; filter:blur(2px); opacity:0.3;">
+          <div style="background:#111214; border:1px solid rgba(216,173,45,0.3); border-radius:6px;"></div>
+          <div style="background:#152012; border:1px solid rgba(216,173,45,0.3); border-radius:6px;"></div>
+          <div style="background:#111214; border:1px solid rgba(216,173,45,0.3); border-radius:6px;"></div>
+        </div>
+        <div style="position:absolute; inset:0; background:rgba(7,8,9,0.72);"></div>
+        <div style="position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:13px;">
+          <div style="display:flex; align-items:center; gap:9px;">
+            <span style="height:1px; width:34px; background:rgba(216,173,45,0.5);"></span>
+            <span style="font-size:10px; font-weight:900; letter-spacing:0.3em; color:#d8ad2d;">SIDE RETIRED</span>
+            <span style="height:1px; width:34px; background:rgba(216,173,45,0.5);"></span>
+          </div>
+          <div style="font-size:38px; font-weight:900; letter-spacing:-0.02em; line-height:1; color:#f1ca45;">Middle of the 9th</div>
+          <div style="font-size:14px; color:#aeafb2;">Ben 3 &middot; Anthony 5 &mdash; you bat now</div>
+          <div style="display:flex; align-items:center; gap:22px; border-top:1px solid rgba(216,173,45,0.25); border-bottom:1px solid rgba(216,173,45,0.25); padding:11px 26px; margin-top:3px;">
+            <div style="text-align:center;"><div class="sub" style="letter-spacing:0.14em;">YOU WERE</div><div style="font-size:14px; font-weight:900; color:#8c8f95;">FIELDING</div></div>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#d8ad2d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+            <div style="text-align:center;"><div class="sub" style="letter-spacing:0.14em; color:#a98a34;">YOU ARE NOW</div><div style="font-size:14px; font-weight:900; color:#f1ca45;">HITTING</div></div>
+          </div>
+          <div style="font-size:11px; font-weight:900; letter-spacing:0.1em; background:#d8ad2d; color:#070809; border-radius:6px; padding:9px 22px; margin-top:3px;">CONTINUE</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+</body></html>
