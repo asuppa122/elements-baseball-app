@@ -351,10 +351,26 @@ function resolveEqualPitchAdvantage(args: {
   throw new Error('Pitch total tied On Base, but handedness is missing or unrecognized for platoon resolution.')
 }
 
+/**
+ * Outs a side has recorded ON DEFENSE. Home defends top halves, away defends
+ * bottom halves, so each side's count is 3 per fully-completed half of its own
+ * plus whatever it has recorded in a half currently in progress.
+ *
+ * The `half === 'bottom'` case for home is the one worth stating: the top half
+ * is over by then, so home has a completed half in the CURRENT inning that
+ * `(inning - 1) * 3` does not count. Every caller before the post-game summary
+ * only ever asked about the side that was fielding at that moment -- live
+ * fatigue via `fieldingSide()`, pitcher entry-outs on a defensive substitution
+ * -- and for the fielding side this returns exactly what it always did. A
+ * summary asks about both sides at once, which is what surfaced it.
+ */
 export function defensiveOutsRecorded(state: GameState, side: GameSide): number {
-  const completed = (state.inning - 1) * 3
-  const currentHalfDefense: GameSide = state.half === 'top' ? 'home' : 'away'
-  return completed + (currentHalfDefense === side ? state.outs : 0)
+  const completedInnings = (state.inning - 1) * 3
+  const defendsCurrentHalf = side === (state.half === 'top' ? 'home' : 'away')
+  if (defendsCurrentHalf) return completedInnings + state.outs
+  // Not defending the half in progress: home has already finished this
+  // inning's top half; away has not yet started this inning's bottom half.
+  return completedInnings + (side === 'home' ? 3 : 0)
 }
 
 /**
