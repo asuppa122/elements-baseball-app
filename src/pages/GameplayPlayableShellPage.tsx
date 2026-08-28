@@ -1,30 +1,22 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
-import { resolvePitchRoll, resolveSwingRoll , effectiveCurrentHitterOnBase, effectiveCurrentPitcherControl, pitcherAdvantageIsAutomatic, resolveAutomaticPitcherAdvantage, pauseGame, resumeGame } from '../gameplay/engine'
-import { buildEventEnvelope } from '../gameplay/eventPayload'
+import { effectiveCurrentHitterOnBase, effectiveCurrentPitcherControl, pitcherAdvantageIsAutomatic } from '../gameplay/engine'
 import {
   hasGameplayLabAccess,
   loadGameplayLabEvents,
   loadGameplayLabGame,
-  saveGameplayLabState,
   type PersistedGameplayLabGame,
 } from '../gameplay/gameRepository'
 import type { GameSide, GameState } from '../gameplay/types'
-import { resolveSwingChart } from '../gameplay/coreGame'
 import RatingReadout from '../gameplay/presentation/RatingReadout'
 import DecisionBoard from '../gameplay/presentation/DecisionBoard'
+import { useGameplayActions } from '../gameplay/presentation/useGameplayActions'
 import PostGameBoard from '../gameplay/presentation/PostGameBoard'
 import HalfInningTransition from '../gameplay/presentation/HalfInningTransition'
 import { buildHalfInningTransition, previousHalf } from '../gameplay/halfInningTransition'
 import { currentHitterOnBaseAdjustment, currentPitcherControlAdjustment } from '../gameplay/presentation/inGameFatigueDisplay'
-import {
-  beginPrePitchDecision,
-  confirmManagerDecision,
-  getDecisionView,
-  getPrePitchActions,
-  resolveDecisionRoll, noWheelSacBuntOutcome,
-} from '../gameplay/decisionEngine'
+import { getPrePitchActions } from '../gameplay/decisionEngine'
 
 function sideLabel(side: GameSide) { return side === 'home' ? 'HOME' : 'AWAY' }
 
@@ -55,11 +47,7 @@ export default function GameplayPlayableShellPage() {
   const { user, isDemo } = useAuth()
   const [game, setGame] = useState<PersistedGameplayLabGame | null>(null)
   const [events, setEvents] = useState<Array<{state_version:number;event_type:string;payload:Record<string,unknown>;created_at:string}>>([])
-  const [selection, setSelection] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
-  const [saving, setSaving] = useState(false)
-  const [error, setError] = useState('')
-  const [notice, setNotice] = useState('')
   // The engine never sets `inning_transition`, so when to show the transition
   // is a presentation decision: notice the half changed and offer the card for
   // the half that just ended. Dismissing it returns to the live game -- the
@@ -116,85 +104,20 @@ export default function GameplayPlayableShellPage() {
   const pitcher = useMemo(() => state?.plateAppearance.pitcherCardKey ? state.pregame[defense].roster?.cards[state.plateAppearance.pitcherCardKey] ?? null : null, [state, defense])
   const hitterAdjustment = useMemo(() => (state ? currentHitterOnBaseAdjustment(state) : null), [state])
   const pitcherAdjustment = useMemo(() => (state ? currentPitcherControlAdjustment(state) : null), [state])
-  const decision = state ? getDecisionView(state) : null
   const prePitchActions = state ? getPrePitchActions(state) : []
-  const editablePrePitchDecision = Boolean(state?.pendingDecision && ['PINCH_HITTER_SELECTION','PINCH_RUNNER_TARGET','PINCH_RUNNER_REPLACEMENT','DEF_SUB_POSITION','DEF_SUB_REPLACEMENT','DOUBLE_SWITCH_PITCHER','DOUBLE_SWITCH_FIELDER','DOUBLE_SWITCH_OUTGOING_FIELDER','ENTRY_ATTRIBUTE_MODE'].includes(state.pendingDecision.decisionType))
-  const finalSubstitutionCommit = state?.pendingDecision?.decisionType === 'ENTRY_ATTRIBUTE_MODE'
 
-  function d20() { const values = new Uint32Array(1); crypto.getRandomValues(values); return (values[0] % 20) + 1 }
-
-  async function persist(next: GameState, eventType: Parameters<typeof saveGameplayLabState>[0]['eventType'], payload: Record<string, unknown>, message: string) {
-    if (!game || !state) return
-    setSaving(true); setError(''); setNotice('')
-    try {
-      // Every persist in this shell funnels through here, so the before/after
-      // envelope is attached once and covers decisions as well as swings --
-      // that is what makes a run scored on a manager decision attributable at
-      // all. The caller's own keys win on collision.
-      const eventPayload = { ...buildEventEnvelope(state, next), ...payload }
-      const saved = await saveGameplayLabState({ gameId: game.id, expectedStateVersion: game.state_version, nextState: next, eventType, eventPayload })
-      setGame(saved); await refreshEvents(game.id); setNotice(message)
-    } catch (e) { setError(e instanceof Error ? e.message : 'Could not save game state.') }
-    finally { setSaving(false) }
-  }
-
-  async function noPitch() {
-    if (!state) return
-    const next = resolveAutomaticPitcherAdvantage(state)
-    await persist(next, 'DECISION_RESOLVED', { resolutionKind: 'AUTOMATIC_PITCHER_ADVANTAGE', automatic: true, playableShell: true }, 'NO PITCH — PITCHER ADVANTAGE.')
-  }
-
-  async function rollPitch() {
-    if (!state) return
-    const roll = d20(); const next = resolvePitchRoll(state, roll)
-    await persist(next, 'PITCH_ROLLED', { roll, playableShell: true }, `Pitch roll: ${roll}. ${next.plateAppearance.advantage?.toUpperCase()} advantage.`)
-  }
-
-  async function rollSwing() {
-    if (!state) return
-    const roll = d20(); const result = resolveSwingChart(state, roll); const next = resolveSwingRoll(state, roll)
-    await persist(next, 'SWING_RESOLVED', { roll, chartResult: result, playableShell: true }, `Swing roll: ${roll} → ${result}.`)
-  }
-
-  async function startAction(actionId: string) {
-    if (!state) return
-    const next = beginPrePitchDecision(state, actionId); next.stateVersion = state.stateVersion + 1; next.updatedAt = new Date().toISOString()
-    await persist(next, 'DECISION_RESOLVED', { resolutionKind: 'PRE_PITCH_ACTION_STARTED', action: actionId, playableShell: true }, `${actionId.replaceAll('_',' ')} started.`)
-  }
-
-  async function changeAction() {
-    if (!state || !editablePrePitchDecision) return
-    const next: GameState = { ...state, status: 'in_progress', waitingFor: 'PITCH_ROLL', pendingDecision: null, nextActor: defense, stateVersion: state.stateVersion + 1, updatedAt: new Date().toISOString() }
-    await persist(next, 'DECISION_RESOLVED', { resolutionKind: 'PRE_PITCH_ACTION_CANCELLED', playableShell: true }, 'Action cleared. Choose a different manager action.')
-    setSelection([])
-  }
-
-  async function confirmDecision() {
-    if (!state || !decision) return
-    const next = confirmManagerDecision(state, selection); next.stateVersion = state.stateVersion + 1; next.updatedAt = new Date().toISOString()
-    const message = finalSubstitutionCommit ? 'Decision locked.' : editablePrePitchDecision ? 'Selection saved. You can still change the action before final confirmation.' : 'Decision locked.'
-    await persist(next, 'DECISION_RESOLVED', { decisionType: state.pendingDecision?.decisionType, selected: selection, playableShell: true }, message)
-    setSelection([])
-  }
-
-  async function rollDecision() {
-    if (!state || !decision) return
-    const roll = d20(); const next = resolveDecisionRoll(state, roll); next.stateVersion = state.stateVersion + 1; next.updatedAt = new Date().toISOString()
-    const buntOutcome = state.pendingDecision?.decisionType === 'SAC_BUNT_RTS' ? noWheelSacBuntOutcome(roll) : null
-    const message = buntOutcome === 'FAILED_PITCHER_CHART' ? `Bunt roll: ${roll} — FAILED BUNT. Attempt swing on PITCHER chart.` : buntOutcome === 'STRIKEOUT' ? `Bunt roll: ${roll} — K.` : buntOutcome === 'LEAD_RUNNER_OUT' ? `Bunt roll: ${roll} — lead runner OUT.` : buntOutcome === 'SUCCESS' ? `Bunt roll: ${roll} — bunt successful; runners advance.` : state.pendingDecision?.decisionType === 'GB_RUNNER_2B_RTH' ? `RTH roll: ${roll} — ${roll <= 10 ? 'runner advances to 3B' : 'runner stays at 2B'}.` : `Decision roll: ${roll}.`
-    await persist(next, 'DECISION_RESOLVED', { decisionType: state.pendingDecision?.decisionType, resolutionKind: 'ROLL', roll, playableShell: true }, message)
-  }
-
-  async function togglePause() {
-    if (!game || !state || !user) return
-    const paused = state.status === 'paused'
-    await persist(
-      paused ? resumeGame(state) : pauseGame(state, user.id),
-      paused ? 'GAME_RESUMED' : 'GAME_PAUSED',
-      { from: state.status, to: paused ? 'resumed' : 'paused', playableShell: true },
-      paused ? 'Resumed at the exact saved state.' : 'Paused. You can close this and come back to it.',
-    )
-  }
+  // Every action lives in the shared hook, so this screen and the new one
+  // cannot drift apart the way the two persist paths once did.
+  const {
+    saving, error, notice, setError,
+    selection, setSelection, toggleSelection,
+    decision, editablePrePitchDecision,
+    noPitch, rollPitch, rollSwing, startAction, changeAction, confirmDecision, rollDecision, togglePause,
+  } = useGameplayActions({
+    game, userId: user?.id, surface: 'shell',
+    onSaved: setGame,
+    onAfterSave: refreshEvents,
+  })
 
   if (loading) return <main className="retro-game-page"><div className="retro-loading">LOADING GAME…</div></main>
   if (!state || !game) return <main className="retro-game-page"><div className="retro-loading">{error || 'GAME NOT FOUND'}</div></main>
@@ -272,7 +195,7 @@ export default function GameplayPlayableShellPage() {
                 /* the lab game is RLS-scoped to its home manager, so the viewer is always home */
                 viewerSide="home"
                 saving={saving}
-                onToggle={(id) => setSelection((current) => decision.mode === 'single' ? [id] : current.includes(id) ? current.filter((existing) => existing !== id) : [...current, id])}
+                onToggle={(id) => toggleSelection(id, decision.mode === 'single')}
                 onConfirm={() => void confirmDecision()}
                 onRoll={() => void rollDecision()}
               />
