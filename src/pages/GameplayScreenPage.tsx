@@ -7,6 +7,8 @@ import DefBar from '../gameplay/presentation/DefBar'
 import GameField from '../gameplay/presentation/GameField'
 import LineupRail from '../gameplay/presentation/LineupRail'
 import AvailabilityPanel from '../gameplay/presentation/AvailabilityPanel'
+import MatchupPanel from '../gameplay/presentation/MatchupPanel'
+import ChartReadout from '../gameplay/presentation/ChartReadout'
 import GameLogPanel, { type LogEvent } from '../gameplay/presentation/GameLogPanel'
 import DecisionBoard from '../gameplay/presentation/DecisionBoard'
 import { getDecisionView } from '../gameplay/decisionEngine'
@@ -21,9 +23,12 @@ import type { GameSide, GameState } from '../gameplay/types'
  * here writes: every engine and repository import is read-only, and the
  * resolution layer verified this week is not touched.
  *
- * Built region by region. Anything not yet implemented renders as an explicit
- * `gp-todo` block naming what will fill it and where its data comes from --
- * an unfinished region should never be mistakable for a broken one.
+ * Every region is now implemented. What remains unavailable -- per-batter stat
+ * lines, play-by-play narration -- is stated on the surface by the component
+ * that owns it, so a gap is never mistakable for a bug.
+ *
+ * Still read-only: this screen renders the game, the working shell at /play
+ * resolves it. Interactivity is the last step, after parity is confirmed.
  */
 
 function Scorebug({ state }: { state: GameState }) {
@@ -50,10 +55,6 @@ function Scorebug({ state }: { state: GameState }) {
       {side('home')}
     </header>
   )
-}
-
-function Todo({ title, detail }: { title: string; detail: string }) {
-  return <div className="gp-todo"><b>{title}</b><span>{detail}</span></div>
 }
 
 export default function GameplayScreenPage() {
@@ -112,7 +113,7 @@ export default function GameplayScreenPage() {
           <Scorebug state={state} />
           <DefBar state={state} />
           <GameField state={state} />
-          <Todo title="Matchup and roll" detail="Batter and pitcher with fatigue-adjusted OB/CTRL, then pitch → advantage → swing → result." />
+          <MatchupPanel state={state} />
         </section>
 
         <section className="gp-panel gp-region gp-region-rail" aria-label="Game rail">
@@ -132,7 +133,7 @@ export default function GameplayScreenPage() {
               saving
             />
           )}
-          <Todo title="Chart readout" detail="Hitter and pitcher chart, RTS, CTRL and the Shutout Bonus state — lands with the matchup, which reads the same card data." />
+          <ChartReadout state={state} />
           <AvailabilityPanel state={state} />
           <GameLogPanel events={events} />
         </section>

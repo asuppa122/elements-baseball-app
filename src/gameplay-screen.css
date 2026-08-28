@@ -228,20 +228,6 @@
 
 .gp-out-dot.is-on { background: var(--s-gold-bright); border-color: var(--s-gold-bright); }
 
-/* --- region placeholders (removed as each region is implemented) --------- */
-
-.gp-todo {
-  display: grid;
-  gap: 6px;
-  padding: 14px;
-  border: 1px dashed var(--s-line-soft);
-  border-radius: var(--s-r-sub);
-  background: var(--s-ink-soft);
-}
-
-.gp-todo b { font-size: 11px; font-weight: 900; letter-spacing: 0.12em; text-transform: uppercase; color: var(--s-gold-bright); }
-.gp-todo span { font-size: 11px; line-height: 1.5; color: var(--s-gray-muted); }
-
 .gp-region {
   padding: 10px;
   display: grid;
@@ -564,3 +550,91 @@
  * breathe inside a narrower rail than the one it was built for. */
 .gp-region-rail .gp-decision { padding: 12px 13px; }
 .gp-region-rail .gp-decision-title h2 { font-size: 0.86rem; }
+
+/* --- matchup + roll ------------------------------------------------------ */
+
+.gp-matchup { padding: 10px 12px; display: grid; gap: 10px; flex-shrink: 0; }
+
+.gp-matchup-sides {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+}
+
+.gp-matchup-side { display: grid; gap: 6px; min-width: 0; }
+.gp-matchup-card { display: flex; align-items: center; gap: 9px; min-width: 0; }
+
+.gp-matchup-art {
+  width: 38px;
+  height: 53px;
+  flex-shrink: 0;
+  border-radius: 5px;
+  overflow: hidden;
+  border: 1px solid var(--s-line-soft);
+  background: linear-gradient(158deg, #262830 0%, #191b21 50%, #101116 100%);
+}
+
+.gp-matchup-art img { width: 100%; height: 100%; object-fit: cover; object-position: top center; display: block; }
+.gp-matchup-who { display: grid; gap: 2px; min-width: 0; }
+.gp-matchup-who strong { font-size: 14px; font-weight: 800; color: var(--s-cream); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gp-matchup-rates { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+
+.gp-matchup-vs { font-size: 10px; font-weight: 900; letter-spacing: 0.14em; text-transform: uppercase; color: var(--s-gray-muted); }
+
+.gp-roll {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  padding-top: 9px;
+  border-top: 1px solid var(--s-line-soft);
+}
+
+.gp-roll-cell { display: grid; gap: 3px; justify-items: center; text-align: center; min-width: 0; }
+.gp-roll-cell strong { font-size: 18px; font-weight: 900; color: var(--s-cream); line-height: 1; }
+.gp-roll-cell strong.is-hitter { color: var(--s-adv-hitter); font-size: 14px; }
+.gp-roll-cell strong.is-pitcher { color: var(--s-adv-pitcher); font-size: 14px; }
+
+/* On a phone the matchup stacks: two full-width rows and the roll below, so
+ * neither name is squeezed into a third of a 390px screen. */
+@media (max-width: 560px) {
+  .gp-matchup-sides { grid-template-columns: minmax(0, 1fr); gap: 8px; }
+  .gp-matchup-vs { justify-self: center; }
+  .gp-roll { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+}
+
+/* --- chart readout ------------------------------------------------------- */
+
+.gp-chart { display: grid; gap: 7px; min-width: 0; }
+
+.gp-chart-table { width: 100%; border-collapse: collapse; font-size: 10.5px; }
+
+.gp-chart-table thead th {
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--s-gray-muted);
+  text-align: right;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--s-line-soft);
+}
+
+.gp-chart-table thead th.is-live { color: var(--s-gold-bright); }
+
+.gp-chart-table tbody th {
+  text-align: left;
+  font-size: 9.5px;
+  font-weight: 800;
+  color: var(--s-gray-muted);
+  padding: 2px 0;
+}
+
+.gp-chart-table tbody td {
+  text-align: right;
+  padding: 2px 0 2px 10px;
+  color: var(--s-gray-muted);
+}
+
+/* The chart actually being consulted this plate appearance. */
+.gp-chart-table tbody td.is-live { color: var(--s-cream); font-weight: 700; }
