@@ -13,47 +13,45 @@
  * making it responsive later would mean laying out the screen twice. */
 
 .gp-screen {
-  /* Surfaces + line, from _shared-notes.md */
-  --s-ink: #070809;
-  --s-ink-soft: #0b0c0e;
-  --s-panel: #111214;
-  --s-panel-lift: #18191c;
-  --s-panel-hover: #1d1e21;
-  --s-gold: #d8ad2d;
-  --s-gold-bright: #f1ca45;
-  --s-gold-soft: rgba(216, 173, 45, 0.12);
-  --s-gold-muted: #6f5b1e;
-  --s-cream: #f5f1e6;
-  --s-gray: #aeafb2;
-  --s-gray-muted: #777a80;
-  --s-line: rgba(216, 173, 45, 0.34);
+  /* Colour comes from ONE source. Every name below aliases the canonical token
+   * in gameplay-tokens.css, which in turn aliases App.css -- these used to
+   * hardcode the same hex values a third time, so a change to --gold would
+   * have moved the rest of the app and silently left this screen behind. That
+   * is the drift class the fatigue parity test exists to prevent, and it does
+   * not belong in a stylesheet either.
+   *
+   * The short names are kept as a local vocabulary; the values are not. */
+  --s-ink: var(--gp-surface);
+  --s-ink-soft: var(--black-soft);
+  --s-panel: var(--gp-panel);
+  --s-panel-lift: var(--gp-panel-raised);
+  --s-panel-hover: var(--panel-hover);
+  --s-gold: var(--gp-accent);
+  --s-gold-bright: var(--gp-accent-bright);
+  --s-gold-soft: var(--gold-soft);
+  --s-gold-muted: var(--gold-muted);
+  --s-cream: var(--gp-text);
+  --s-gray: var(--gp-text-muted);
+  --s-gray-muted: var(--gray-muted);
+  --s-line: var(--gp-border);
   --s-line-soft: rgba(216, 173, 45, 0.22);
 
-  /* Gameplay semantics -- same values the existing surfaces already use. */
-  --s-adv-hitter: #7fce8c;
-  --s-adv-pitcher: #e08a5c;
-  --s-good: #7fce8c;
-  --s-bad: #e2726b;
+  --s-adv-hitter: var(--gp-advantage-hitter);
+  --s-adv-pitcher: var(--gp-advantage-pitcher);
+  --s-good: var(--gp-outcome-positive);
+  --s-bad: var(--gp-outcome-negative);
 
-  /* Radii: 12 panel / 8 sub / 6 control, per the notes. */
+  /* Genuinely new here -- layout metrics the app-wide tokens have no opinion
+   * on. Radii 12/8/6 and the 44px control floor are from _shared-notes.md. */
   --s-r-panel: 12px;
   --s-r-sub: 8px;
   --s-r-control: 6px;
-
-  /* Rail widths. The mockup is 300 / 1fr / 320 at 1440; these shrink at
-   * narrower desktop widths rather than forcing a horizontal scroll. */
   --s-rail-left: 300px;
   --s-rail-right: 320px;
   --s-gap: 12px;
   --s-pad: 16px;
-
-  /* Controls are finger-sized from the start, not shrunk for desktop and
-   * enlarged later -- 44px is the floor on every viewport. */
   --s-control-h: 44px;
 
-  /* Column so the layout can take the remaining height and let each rail
-   * scroll inside itself -- the mockup is a fixed 900px frame with the rails
-   * clipped; this is the fluid equivalent. */
   display: flex;
   flex-direction: column;
   min-height: 100dvh;

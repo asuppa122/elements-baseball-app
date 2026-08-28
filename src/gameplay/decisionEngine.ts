@@ -51,7 +51,11 @@ function ofOptionId(pos:OF){return `OF::${pos}`}
 function baseEntries(state:GameState):Array<[BaseName,BaseRunnerState]> {return ([['first',state.bases.first],['second',state.bases.second],['third',state.bases.third]] as Array<[BaseName,BaseRunnerState|null]>).filter((x):x is [BaseName,BaseRunnerState]=>Boolean(x[1]))}
 function starterUsed(state:GameState,side:GameSide){return [...new Set([...state.pregame[side].battingOrderCardKeys,...Object.values(state.pregame[side].defensiveAlignment).filter(Boolean) as string[]])]}
 function usedKeys(state:GameState,side:GameSide){return state.appearedCardKeys?.[side]??starterUsed(state,side)}
-function benchCards(state:GameState,side:GameSide):GameCardSnapshot[]{const roster=state.pregame[side].roster; if(!roster)return[];const used=new Set(usedKeys(state,side));return Object.values(roster.cards).filter(c=>!used.has(c.cardKey))}
+/** Everyone on the frozen roster who has not yet appeared -- the single source
+ * of truth for who a manager may still bring in. Exported so presentation can
+ * ask the engine rather than restate the rule, the same way defense.ts already
+ * exposes getFieldingRating. */
+export function benchCards(state:GameState,side:GameSide):GameCardSnapshot[]{const roster=state.pregame[side].roster; if(!roster)return[];const used=new Set(usedKeys(state,side));return Object.values(roster.cards).filter(c=>!used.has(c.cardKey))}
 function markAppeared(state:GameState,side:GameSide,key:string){const current=usedKeys(state,side);return {...state,appearedCardKeys:{away:[...(state.appearedCardKeys?.away??starterUsed(state,'away'))],home:[...(state.appearedCardKeys?.home??starterUsed(state,'home'))],[side]:[...new Set([...current,key])]}}}
 
 function extraAttempts(state:GameState):RunnerAttempt[]{const d=state.pendingDecision;const result=String(d?.context.result??'');const pre=d?.context.preBases as BasesState|undefined;if(!pre||(result!=='1B'&&result!=='2B'))return[];if(result==='1B'){const out:RunnerAttempt[]=[];let lead:string|undefined;if(pre.second){const a:RunnerAttempt={runner:pre.second,from:'2B',to:'HOME'};lead=attemptId(a);out.push(a)}if(pre.first)out.push({runner:pre.first,from:'1B',to:'3B',requiresAttemptId:lead});return out}return pre.first?[{runner:pre.first,from:'1B',to:'HOME'}]:[]}
