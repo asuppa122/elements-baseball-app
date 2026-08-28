@@ -10,6 +10,9 @@ import AvailabilityPanel from '../gameplay/presentation/AvailabilityPanel'
 import MatchupPanel from '../gameplay/presentation/MatchupPanel'
 import ChartReadout from '../gameplay/presentation/ChartReadout'
 import GameLogPanel, { type LogEvent } from '../gameplay/presentation/GameLogPanel'
+import HalfInningTransition from '../gameplay/presentation/HalfInningTransition'
+import PostGameBoard from '../gameplay/presentation/PostGameBoard'
+import { buildHalfInningTransition, previousHalf } from '../gameplay/halfInningTransition'
 import DecisionBoard from '../gameplay/presentation/DecisionBoard'
 import { getPrePitchActions } from '../gameplay/decisionEngine'
 import { useGameplayActions } from '../gameplay/presentation/useGameplayActions'
@@ -65,6 +68,11 @@ export default function GameplayScreenPage() {
   const navigate = useNavigate()
   const [game, setGame] = useState<PersistedGameplayLabGame | null>(null)
   const [events, setEvents] = useState<LogEvent[]>([])
+  // The engine never sets `inning_transition`, so showing the card is a
+  // presentation decision: notice the half changed, offer it for the half that
+  // just ended, and stop offering it once dismissed.
+  const [lastHalfSeen, setLastHalfSeen] = useState<string | null>(null)
+  const [transitionDismissed, setTransitionDismissed] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState('')
 
@@ -89,6 +97,14 @@ export default function GameplayScreenPage() {
   }, [gameId, user?.id, isDemo])
 
   const state = game?.game_state as GameState | undefined
+  const currentHalfKey = state ? `${state.inning}-${state.half}` : null
+  // Opening a game mid-inning must not announce a half the viewer never saw.
+  useEffect(() => {
+    if (currentHalfKey !== null) setLastHalfSeen((seen) => (seen === null ? currentHalfKey : seen))
+  }, [currentHalfKey])
+  useEffect(() => {
+    if (currentHalfKey !== null && transitionDismissed === currentHalfKey) setLastHalfSeen(currentHalfKey)
+  }, [transitionDismissed, currentHalfKey])
 
   // The same hook the shell uses -- one action layer, so the two screens
   // cannot drift apart.
@@ -104,6 +120,12 @@ export default function GameplayScreenPage() {
 
   if (loading) return <main className="gp-screen"><div className="gp-panel gp-region">Loading…</div></main>
   if (!state || !game) return <main className="gp-screen"><div className="gp-panel gp-region">{loadError || 'Game not found.'}</div></main>
+
+  const halfKey = `${state.inning}-${state.half}`
+  const justEnded = lastHalfSeen !== null && lastHalfSeen !== halfKey ? previousHalf(state.inning, state.half) : null
+  const transition = justEnded && transitionDismissed !== halfKey
+    ? buildHalfInningTransition(state, events, justEnded)
+    : null
 
   return (
     <main className="gp-screen">
@@ -127,6 +149,16 @@ export default function GameplayScreenPage() {
           <DefBar state={state} />
           <GameField state={state} />
           <MatchupPanel state={state} />
+
+          {transition && !decision && (
+            <HalfInningTransition
+              transition={transition}
+              managers={{ away: state.managers.away.managerName, home: state.managers.home.managerName }}
+              onDismiss={() => setTransitionDismissed(halfKey)}
+            />
+          )}
+
+          {!decision && state.status === 'complete' && <PostGameBoard state={state} />}
 
           <section className="gp-panel gp-actions" aria-label="Your move">
             {error && <p className="gp-actions-msg is-error">{error}</p>}
