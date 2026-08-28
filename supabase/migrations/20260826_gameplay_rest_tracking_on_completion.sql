@@ -8,11 +8,16 @@
 -- written before the run and never updated, so it said the opposite of the
 -- truth for two days. Corrected 2026-08-28.
 --
--- Still open, and tracked in GAMEPLAY_PRESENTATION_PLAN.md under "Live-path
--- gaps": no REAL completed game has exercised this yet (every game that has
--- ever completed predates it), nothing tests that this SQL and
--- restTracking.ts still agree, and the modeling choice noted below was
--- flagged for a second look and has not had one.
+-- The completion path was traced end to end on 2026-08-28 and is WIRED AND
+-- READY: a completing play saves like any other, every mutation routes
+-- through this RPC, and the transition guard below fires exactly once. No
+-- real game has exercised it only because real PvP games do not exist yet --
+-- that is the expected state, not a defect, and nothing needs building.
+--
+-- Still open, and tracked in GAMEPLAY_PRESENTATION_PLAN.md: nothing tests
+-- that this SQL and restTracking.ts (which implement the same three-step
+-- sequence independently) still agree, and the modeling choice noted below
+-- was flagged for a second look and has not had one.
 --
 -- Extends save_gameplay_lab_state in place (same signature -- this is a
 -- `create or replace`, not a new function) so gameRepository.ts needs no

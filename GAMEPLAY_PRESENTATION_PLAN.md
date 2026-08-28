@@ -150,60 +150,57 @@ hostage to tier two (full batting box), which depends on the Phase 2 payload wor
 line is the genuinely Elements-specific part — no other product's box score tells a manager who is
 unavailable for their next game.
 
-## Live-path gaps — built and verified, but not yet proven by real play
+## Rest tracking in the live path — status, traced 2026-08-28
 
-Recorded 2026-08-28. These are the difference between "the engine can do this" and "this happens
-when someone plays". None of them is a missing implementation; each is a way the implementation
-could be wrong or drift without anyone noticing.
+Real PvP games do not exist yet, so nothing having written to `player_rest_state` is the expected
+state of the world, not evidence of a defect. The question worth answering is whether the wiring is
+in place and will fire the moment a real game completes, or whether it is an orphan that would
+silently never run. **It was traced end to end, and it is wired and ready.**
 
-### 1. Rest persistence is verified but has never run on a real game
+### The firing path (each link verified, not assumed)
 
-**Not** an unwired feature — this is the correction to an earlier reading of it. The write-back
-exists, is applied to the live database, and was end-to-end verified (commit `42cc9d6`): the
-deployed function body was confirmed by `pg_proc` query, and all five branches were exercised
-against the live RPC on an isolated synthetic `season_id`.
+| Link | Verified |
+|---|---|
+| A completing play saves like any other | `GameplayGameStatePage.tsx` calls `saveGameplayLabState` unconditionally with the resolved state; nothing skips the save when `status === 'complete'` (the two `=== 'complete'` reads in the pages are a render condition and a pause-button disable) |
+| Every mutation routes through one RPC | `saveGameplayLabState` is `supabase.rpc('save_gameplay_lab_state', …)`. The only other `from('games')` writes are the `insert` in `createGameplayLabGame`; everything else is a select |
+| The RPC detects the transition | `if p_next_state->>'status' = 'complete' and current_game.status <> 'complete'` — fires exactly once, and a retried or duplicate save of an already-complete game cannot re-fire it |
+| It has the inputs it needs | Reads the roster snapshot, `hitterPlateAppearanceCardKeys` / `pitcherAppearanceCardKeys`, and `restMilestones` out of `p_next_state`; derives the season game count itself with `count(*)`; reads prior values straight from `player_rest_state` rather than trusting anything client-side |
+| It was actually applied | Commit `42cc9d6`: deployed function body confirmed by `pg_proc` query, all five branches exercised against the live RPC on an isolated synthetic `season_id` |
 
-What is open is that **no real completed game has ever gone through it**. All five completed lab
-games were created 2026-08-23/24 and so predate both the PA markers (`d5d8777`, 2026-08-26 14:06)
-and the RPC itself (`42cc9d6`, 2026-08-26 14:42). Every row now in `player_rest_state` shares a
-single `updated_at` of 2026-08-26T21:26:10Z and carries values like 44 and 47 — a hand-seed, not
-a computed result. So the path is verified in the lab and unexercised in the wild.
+**`applyGameCompletionRest` (TypeScript) will never be called in production, and that is correct.**
+It is not the mechanism. The authoritative write is the SQL, deliberately server-side so a client
+cannot submit its own fatigue numbers. The TypeScript is the reference implementation the SQL
+mirrors and the one `postGameSummary.ts` projects with. Its lack of a production caller is the
+design, not an orphan — an earlier reading of this file got that backwards.
 
-Closing this means playing one real game to completion and confirming the rows move. It is a
-verification task, not a build task.
+**Status: ready, awaiting the first real completed game.** No completed game has exercised it
+because all five predate both the PA markers (`d5d8777`) and the RPC (`42cc9d6`) by two days, and
+every current `player_rest_state` row is a hand-seed sharing one `updated_at` with values like 44
+and 47. Nothing needs building for this to work.
 
-### 2. The three-step rest sequence is implemented twice, and nothing tests that the two agree
+### What is genuinely open
 
-`restTracking.ts` (TypeScript, harness-covered) and the SQL body of `save_gameplay_lab_state` each
-implement appearance-increment / flat-decrement / milestone-decrement independently. The SQL is
-authoritative for what persists; the TypeScript is what `postGameSummary.ts` shows the manager
-after the game. **Nothing compares them.** If either changes alone, the projection shown on screen
-and the number actually written diverge silently — and the screen is the only place a manager would
-notice. This is the real risk in this area, and it is larger than either item the divergence would
-sit between.
+**1. The three-step sequence is implemented twice and nothing compares them.** `restTracking.ts`
+and the SQL body each implement appearance-increment / flat-decrement / milestone-decrement
+independently. The SQL decides what persists; the TypeScript decides what the manager is *shown*
+afterwards by `postGameSummary.ts`. If either moves alone they diverge silently, and the screen is
+the only place anyone would notice. This is the one real risk in this area and it is larger than
+anything else listed here.
 
-### 3. The migration file's own header contradicts what happened
-
-`20260826_gameplay_rest_tracking_on_completion.sql` opens with "NOT applied yet -- review before
-running". It was reviewed, run and verified the same day; the header was never updated. Anyone
-reading the file first would conclude the opposite of the truth. (Fixed 2026-08-28.)
-
-### 4. The client-side rest projection cannot reach the season game count
-
+**2. Small wiring job — the client projection cannot reach the season game count.**
 `postGameSummary.ts` returns `MISSING_SEASON_GAME_COUNT` because the milestone step needs the
-manager's completed-game count for the season, which lives in the `games` table rather than
-`GameState`. The SQL already derives this correctly server-side (`count(*)` over that manager's
-completed games, including the one just finished).
+manager's completed-game count for the season, which lives in the `games` table, not `GameState`.
+The SQL already derives it correctly server-side. Worth doing the right way round: after a game
+completes, the projection should read the authoritative `player_rest_state` values that were just
+written, rather than fetch a count and recompute — recomputing would add a *third* implementation
+of the same rule to the two in item 1.
 
-Small, and worth doing the right way round: the projection should read the authoritative post-write
-`player_rest_state` values rather than recompute a parallel answer from a count it fetches itself.
-Recomputing would add a third implementation of the same rule to the two in item 2.
+**3. A flagged modeling choice never got its second look.** The migration reads the Rulebook's
+default-attributes override ("in order to avoid accruing fatigue effects") as exempting **only**
+the appearance increment — the flat per-game decrement and any milestone bonus still apply, on the
+reasoning that those are rest-day grants rather than accrual and the Rulebook offers no carve-out
+from a benefit. That was deliberately flagged as a judgment call rather than treated as
+self-evident. It will persist real values the first time a real game completes.
 
-### 5. One modeling choice was flagged for a second look and never revisited
-
-The migration reads the Rulebook's default-attributes override ("in order to avoid accruing fatigue
-effects") as exempting **only** the appearance increment — the flat per-game decrement and any
-milestone bonus still apply, on the reasoning that those are rest-day grants rather than accrual and
-the Rulebook offers no carve-out from a benefit. That was deliberately flagged as a judgment call
-rather than treated as self-evident, and is now persisting real values. It deserves a rules
-confirmation.
+**4. The migration header said the opposite of the truth.** It opened "NOT applied yet — review
+before running" for two days after it had been reviewed, run and verified. Fixed 2026-08-28.
