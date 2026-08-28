@@ -11,6 +11,7 @@ import {
   effectiveCurrentHitterOnBase,
   effectiveCurrentPitcherControl,
 } from '../gameplay/engine'
+import { buildEventEnvelope } from '../gameplay/eventPayload'
 import {
   hasGameplayLabAccess,
   loadGameplayLabGame,
@@ -242,24 +243,16 @@ export default function GameplayGameStatePage() {
     try {
       const roll = rollD20()
       const rawResult = resolveSwingChart(state, roll)
-      const before = {
-        inning: state.inning, half: state.half, outs: state.outs,
-        score: structuredClone(state.score), bases: structuredClone(state.bases),
-        batter: batter?.playerName ?? null, pitcher: pitcher?.playerName ?? null,
-        advantage: state.plateAppearance.advantage,
-      }
       const next = resolveSwingRoll(state, roll)
       const saved = await saveGameplayLabState({
         gameId: game.id,
         expectedStateVersion: game.state_version,
         nextState: next,
         eventType: 'SWING_RESOLVED',
-        eventPayload: {
-          ...before, swingRoll: roll, chartResult: rawResult,
-          resultingOuts: next.outs, resultingScore: next.score, resultingBases: next.bases,
-          pendingDecision: next.pendingDecision?.decisionType ?? null,
-          nextInning: next.inning, nextHalf: next.half, gameStatus: next.status,
-        },
+        // Same envelope the playable shell writes -- this page's hand-rolled
+        // version was the one the shell lacked, and two copies is how they
+        // drifted in the first place.
+        eventPayload: { ...buildEventEnvelope(state, next), swingRoll: roll, chartResult: rawResult },
       })
       setGame(saved)
       setEvents(await loadGameplayLabEvents(game.id))

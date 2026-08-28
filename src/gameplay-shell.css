@@ -602,6 +602,17 @@
   cursor: pointer;
 }
 
+/* Pause sits with the only other game-level control the shell has, so a
+ * playthrough does not have to happen in one sitting. */
+.retro-log-controls {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+}
+
+.retro-log header button:disabled { opacity: 0.4; cursor: not-allowed; }
+.retro-log header button:hover:not(:disabled) { color: var(--gp-accent-bright); }
+
 .retro-log div,
 .retro-log p {
   font-size: 0.7rem;

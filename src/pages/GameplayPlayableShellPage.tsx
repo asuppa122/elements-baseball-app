@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
-import { resolvePitchRoll, resolveSwingRoll , effectiveCurrentHitterOnBase, effectiveCurrentPitcherControl, pitcherAdvantageIsAutomatic, resolveAutomaticPitcherAdvantage } from '../gameplay/engine'
+import { resolvePitchRoll, resolveSwingRoll , effectiveCurrentHitterOnBase, effectiveCurrentPitcherControl, pitcherAdvantageIsAutomatic, resolveAutomaticPitcherAdvantage, pauseGame, resumeGame } from '../gameplay/engine'
+import { buildEventEnvelope } from '../gameplay/eventPayload'
 import {
   hasGameplayLabAccess,
   loadGameplayLabEvents,
@@ -123,10 +124,15 @@ export default function GameplayPlayableShellPage() {
   function d20() { const values = new Uint32Array(1); crypto.getRandomValues(values); return (values[0] % 20) + 1 }
 
   async function persist(next: GameState, eventType: Parameters<typeof saveGameplayLabState>[0]['eventType'], payload: Record<string, unknown>, message: string) {
-    if (!game) return
+    if (!game || !state) return
     setSaving(true); setError(''); setNotice('')
     try {
-      const saved = await saveGameplayLabState({ gameId: game.id, expectedStateVersion: game.state_version, nextState: next, eventType, eventPayload: payload })
+      // Every persist in this shell funnels through here, so the before/after
+      // envelope is attached once and covers decisions as well as swings --
+      // that is what makes a run scored on a manager decision attributable at
+      // all. The caller's own keys win on collision.
+      const eventPayload = { ...buildEventEnvelope(state, next), ...payload }
+      const saved = await saveGameplayLabState({ gameId: game.id, expectedStateVersion: game.state_version, nextState: next, eventType, eventPayload })
       setGame(saved); await refreshEvents(game.id); setNotice(message)
     } catch (e) { setError(e instanceof Error ? e.message : 'Could not save game state.') }
     finally { setSaving(false) }
@@ -177,6 +183,17 @@ export default function GameplayPlayableShellPage() {
     const buntOutcome = state.pendingDecision?.decisionType === 'SAC_BUNT_RTS' ? noWheelSacBuntOutcome(roll) : null
     const message = buntOutcome === 'FAILED_PITCHER_CHART' ? `Bunt roll: ${roll} — FAILED BUNT. Attempt swing on PITCHER chart.` : buntOutcome === 'STRIKEOUT' ? `Bunt roll: ${roll} — K.` : buntOutcome === 'LEAD_RUNNER_OUT' ? `Bunt roll: ${roll} — lead runner OUT.` : buntOutcome === 'SUCCESS' ? `Bunt roll: ${roll} — bunt successful; runners advance.` : state.pendingDecision?.decisionType === 'GB_RUNNER_2B_RTH' ? `RTH roll: ${roll} — ${roll <= 10 ? 'runner advances to 3B' : 'runner stays at 2B'}.` : `Decision roll: ${roll}.`
     await persist(next, 'DECISION_RESOLVED', { decisionType: state.pendingDecision?.decisionType, resolutionKind: 'ROLL', roll, playableShell: true }, message)
+  }
+
+  async function togglePause() {
+    if (!game || !state || !user) return
+    const paused = state.status === 'paused'
+    await persist(
+      paused ? resumeGame(state) : pauseGame(state, user.id),
+      paused ? 'GAME_RESUMED' : 'GAME_PAUSED',
+      { from: state.status, to: paused ? 'resumed' : 'paused', playableShell: true },
+      paused ? 'Resumed at the exact saved state.' : 'Paused. You can close this and come back to it.',
+    )
   }
 
   if (loading) return <main className="retro-game-page"><div className="retro-loading">LOADING GAME…</div></main>
@@ -264,7 +281,7 @@ export default function GameplayPlayableShellPage() {
           )}
         </section>
 
-        <section className="retro-log"><header><span>GAME LOG</span><button onClick={() => navigate('/games')}>EXIT TO GAMES</button></header>{recent.length === 0 ? <p>No saved events yet.</p> : recent.map((event) => <div key={`${event.state_version}-${event.event_type}`}><b>v{event.state_version}</b> {event.event_type.replaceAll('_',' ')}</div>)}</section>
+        <section className="retro-log"><header><span>GAME LOG</span><div className="retro-log-controls">{state.status !== 'complete' && <button disabled={saving} onClick={() => void togglePause()}>{state.status === 'paused' ? 'RESUME' : 'PAUSE'}</button>}<button onClick={() => navigate('/games')}>EXIT TO GAMES</button></div></header>{recent.length === 0 ? <p>No saved events yet.</p> : recent.map((event) => <div key={`${event.state_version}-${event.event_type}`}><b>v{event.state_version}</b> {event.event_type.replaceAll('_',' ')}</div>)}</section>
       </div>
     </main>
   )
