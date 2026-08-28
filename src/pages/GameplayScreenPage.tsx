@@ -6,6 +6,11 @@ import { battingSide } from '../gameplay/gameBoundaryEngine'
 import DefBar from '../gameplay/presentation/DefBar'
 import GameField from '../gameplay/presentation/GameField'
 import LineupRail from '../gameplay/presentation/LineupRail'
+import AvailabilityPanel from '../gameplay/presentation/AvailabilityPanel'
+import GameLogPanel, { type LogEvent } from '../gameplay/presentation/GameLogPanel'
+import DecisionBoard from '../gameplay/presentation/DecisionBoard'
+import { getDecisionView } from '../gameplay/decisionEngine'
+import { loadGameplayLabEvents } from '../gameplay/gameRepository'
 import type { GameSide, GameState } from '../gameplay/types'
 
 /**
@@ -56,6 +61,7 @@ export default function GameplayScreenPage() {
   const { user, isDemo } = useAuth()
   const navigate = useNavigate()
   const [game, setGame] = useState<PersistedGameplayLabGame | null>(null)
+  const [events, setEvents] = useState<LogEvent[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
@@ -66,7 +72,9 @@ export default function GameplayScreenPage() {
       try {
         if (!await hasGameplayLabAccess()) throw new Error('Gameplay access is not enabled for this account.')
         const loaded = await loadGameplayLabGame(gameId)
-        if (!cancelled) setGame(loaded)
+        let loadedEvents: LogEvent[] = []
+        try { loadedEvents = await loadGameplayLabEvents(gameId) } catch { /* log is supplemental */ }
+        if (!cancelled) { setGame(loaded); setEvents(loadedEvents) }
       } catch (e) {
         if (!cancelled) setError(e instanceof Error ? e.message : 'Could not load this game.')
       } finally {
@@ -78,6 +86,7 @@ export default function GameplayScreenPage() {
   }, [gameId, user?.id, isDemo])
 
   const state = game?.game_state as GameState | undefined
+  const decision = state ? getDecisionView(state) : null
 
   if (loading) return <main className="gp-screen"><div className="gp-panel gp-region">Loading…</div></main>
   if (!state || !game) return <main className="gp-screen"><div className="gp-panel gp-region">{error || 'Game not found.'}</div></main>
@@ -107,9 +116,25 @@ export default function GameplayScreenPage() {
         </section>
 
         <section className="gp-panel gp-region gp-region-rail" aria-label="Game rail">
-          <Todo title="Chart readout" detail="Hitter and pitcher chart, RTS, CTRL and the Shutout Bonus state — from the frozen card snapshots and live fatigue." />
-          <Todo title="Manager decisions and log" detail="The decision board is already built and verified; it gets reused here rather than rewritten. Log narration stays raw event names until the log work lands." />
-          <Todo title="Available: bullpen and bench" detail="Roster assignments minus everyone active — a small pure helper over the frozen roster snapshot." />
+          {/* The decision board is the one already built and verified against
+              both saved awaiting_decision games — reused, not rewritten. */}
+          {decision && (
+            <DecisionBoard
+              state={state}
+              view={decision}
+              selection={[]}
+              viewerSide="home"
+              onToggle={() => {}}
+              onConfirm={() => {}}
+              onRoll={() => {}}
+              /* Read-only until the interactive pass: this screen renders the
+                 decision, the working shell at /play still resolves it. */
+              saving
+            />
+          )}
+          <Todo title="Chart readout" detail="Hitter and pitcher chart, RTS, CTRL and the Shutout Bonus state — lands with the matchup, which reads the same card data." />
+          <AvailabilityPanel state={state} />
+          <GameLogPanel events={events} />
         </section>
       </div>
     </main>
