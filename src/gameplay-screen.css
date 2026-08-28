@@ -638,3 +638,10 @@
 
 /* The chart actually being consulted this plate appearance. */
 .gp-chart-table tbody td.is-live { color: var(--s-cream); font-weight: 700; }
+
+/* A narrated line reads as a sentence; an un-narrated one stays visibly raw so
+ * the two are never confused for each other. */
+.gp-log-list li.is-narrated .gp-log-text { color: var(--s-cream); white-space: normal; }
+.gp-log-list li:not(.is-narrated) .gp-log-text { font-size: 10px; opacity: 0.75; }
+.gp-log-text.is-scoring { color: var(--s-good); font-weight: 700; }
+.gp-log-text.is-out { color: var(--s-gray); }
