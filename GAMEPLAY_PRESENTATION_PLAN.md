@@ -211,3 +211,29 @@ self-evident. It will persist real values the first time a real game completes.
 
 **4. The migration header said the opposite of the truth.** It opened "NOT applied yet — review
 before running" for two days after it had been reviewed, run and verified. Fixed 2026-08-28.
+
+## The playable shell writes a thinner event payload than the state page
+
+Found 2026-08-28 while building the half-inning transition. Two pages persist gameplay, and they
+write different payloads for the same event:
+
+- `GameplayGameStatePage.tsx` writes the full picture — `score`/`resultingScore`, `batter`,
+  `pitcher`, `inning`, `half`, `outs`, `bases`. Scoring plays are recoverable from it by diffing the
+  before/after score, which is how the transition card lists them.
+- `GameplayPlayableShellPage.tsx` writes `{roll, chartResult, playableShell: true}` and nothing else.
+
+So of the games that exist, `65efe77d` (complete, 68/68 rich payloads) can produce a real scoring
+list — the bottom-9th walk-off, Harry Kenyon on a `1B+` off Charles Heywood with two out — while
+`42d9a80c`, `572d74b0`, `f718f0b0` and `be71a7ff` cannot, despite one of them being a 10-2 game.
+
+**The consequence is pointed: the transition card lives in the playable shell, so every game played
+on the page that shows the card will say the plays cannot be listed.** Closing it is small — the
+shell already holds the same before/after state the state page writes; it just does not persist it.
+That is the "richer `game_events` payload capture" item from Phase 2, and it is the cheapest of them.
+
+**A second gap sits behind it, and is not small.** No `DECISION_RESOLVED` payload carries a score
+at all (0 of 40 on `65efe77d`), so a run scored by a manager decision is invisible to any
+score-diffing derivation, no matter which page wrote it. The transition card therefore reconciles
+its derived runs against `runsByInning` and presents the list as **partial** when they disagree,
+rather than showing a short list as the summary. Fixing this properly means recording runs at the
+moment `decisionEngine.ts` scores them, alongside the existing `creditRunsToInning` call.

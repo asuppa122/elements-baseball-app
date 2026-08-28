@@ -14,6 +14,8 @@ import { resolveSwingChart } from '../gameplay/coreGame'
 import RatingReadout from '../gameplay/presentation/RatingReadout'
 import DecisionBoard from '../gameplay/presentation/DecisionBoard'
 import PostGameBoard from '../gameplay/presentation/PostGameBoard'
+import HalfInningTransition from '../gameplay/presentation/HalfInningTransition'
+import { buildHalfInningTransition, previousHalf } from '../gameplay/halfInningTransition'
 import { currentHitterOnBaseAdjustment, currentPitcherControlAdjustment } from '../gameplay/presentation/inGameFatigueDisplay'
 import {
   beginPrePitchDecision,
@@ -57,6 +59,12 @@ export default function GameplayPlayableShellPage() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
+  // The engine never sets `inning_transition`, so when to show the transition
+  // is a presentation decision: notice the half changed and offer the card for
+  // the half that just ended. Dismissing it returns to the live game -- the
+  // scoreboard owns the line score, this only shows it on the beat.
+  const [lastHalfSeen, setLastHalfSeen] = useState<string | null>(null)
+  const [transitionDismissed, setTransitionDismissed] = useState<string | null>(null)
 
   async function refreshEvents(id: string) { setEvents(await loadGameplayLabEvents(id)) }
 
@@ -90,6 +98,17 @@ export default function GameplayPlayableShellPage() {
 
   const state = game?.game_state as GameState | undefined
   useEffect(() => setSelection([]), [state?.pendingDecision?.id])
+
+  const currentHalfKey = state ? `${state.inning}-${state.half}` : null
+  // Opening a game mid-inning must not announce a transition for a half the
+  // viewer never watched, so the first key seen is recorded rather than shown.
+  useEffect(() => {
+    if (currentHalfKey !== null) setLastHalfSeen((seen) => (seen === null ? currentHalfKey : seen))
+  }, [currentHalfKey])
+  // Once dismissed, that half is caught up and the next one can announce itself.
+  useEffect(() => {
+    if (currentHalfKey !== null && transitionDismissed === currentHalfKey) setLastHalfSeen(currentHalfKey)
+  }, [transitionDismissed, currentHalfKey])
   const offense: GameSide = state?.half === 'bottom' ? 'home' : 'away'
   const defense: GameSide = offense === 'home' ? 'away' : 'home'
   const batter = useMemo(() => state?.plateAppearance.batterCardKey ? state.pregame[offense].roster?.cards[state.plateAppearance.batterCardKey] ?? null : null, [state, offense])
@@ -171,6 +190,12 @@ export default function GameplayPlayableShellPage() {
   const actingSide = decision?.actingSide ?? state.nextActor ?? defense
   const recent = events.slice(-6).reverse()
 
+  const halfKey = `${state.inning}-${state.half}`
+  const justEnded = lastHalfSeen !== null && lastHalfSeen !== halfKey ? previousHalf(state.inning, state.half) : null
+  const transition = justEnded && transitionDismissed !== halfKey
+    ? buildHalfInningTransition(state, events, justEnded)
+    : null
+
   return (
     <main className="retro-game-page">
       <div className="retro-game-shell">
@@ -192,6 +217,17 @@ export default function GameplayPlayableShellPage() {
           <div className="retro-turn">{sideLabel(actingSide)} MANAGER TURN</div>
           {error && <div className="retro-message error">{error}</div>}
           {notice && <div className="retro-message">{notice}</div>}
+
+          {/* The half that just ended, shown before the next one starts. Scoring
+              plays are derived from event payloads, which this shell does NOT
+              write today -- see the note in halfInningTransition.ts. */}
+          {transition && !decision && (
+            <HalfInningTransition
+              transition={transition}
+              managers={{ away: state.managers.away.managerName, home: state.managers.home.managerName }}
+              onDismiss={() => setTransitionDismissed(halfKey)}
+            />
+          )}
 
           {/* Tier one only. The season game count the rest projection needs lives in
               the `games` table, not the game state, and this page does not query it --

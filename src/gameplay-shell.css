@@ -1133,3 +1133,172 @@
   .gp-postgame { padding: 14px 15px; }
   .gp-postgame-cols { grid-template-columns: minmax(0, 1fr); }
 }
+
+/* Half-inning transition (HalfInningTransition.tsx). The beat between halves:
+ * the announcement, the line-score column that was just filled, and — only
+ * when the half actually scored — the plays behind it. */
+
+.gp-transition {
+  border: 1px solid var(--gp-accent);
+  border-radius: 10px;
+  background: var(--gp-panel);
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  text-align: left;
+}
+
+.gp-transition-head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.gp-transition-half {
+  font-size: 0.62rem;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  color: var(--gp-surface);
+  background: var(--gp-accent);
+  border-radius: 3px;
+  padding: 3px 6px;
+  white-space: nowrap;
+}
+
+.gp-transition-headline {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--gp-text);
+  margin-right: auto;
+}
+
+.gp-transition-dismiss {
+  border: 1px solid var(--gp-border);
+  background: transparent;
+  color: var(--gp-text-muted);
+  border-radius: 5px;
+  padding: 5px 12px;
+  font: inherit;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+}
+
+.gp-transition-dismiss:hover { color: var(--gp-text); border-color: var(--gp-accent); }
+
+.gp-transition-linescore-wrap { overflow-x: auto; }
+
+.gp-transition-linescore {
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+  font-size: 0.78rem;
+  min-width: 100%;
+}
+
+.gp-transition-linescore th,
+.gp-transition-linescore td {
+  padding: 4px 8px;
+  text-align: center;
+  color: var(--gp-text-muted);
+  font-weight: 600;
+  border-bottom: 1px solid var(--gp-border);
+}
+
+.gp-transition-linescore thead th { font-size: 0.62rem; letter-spacing: 0.08em; opacity: 0.75; }
+
+.gp-transition-linescore .gp-transition-team {
+  text-align: left;
+  white-space: nowrap;
+  padding-right: 14px;
+  color: var(--gp-text);
+  font-weight: 700;
+}
+
+.gp-transition-linescore .gp-transition-total {
+  color: var(--gp-text);
+  font-weight: 900;
+  border-left: 1px solid var(--gp-border);
+}
+
+.gp-transition-linescore tr.is-batting .gp-transition-team { color: var(--gp-accent-bright); }
+
+/* The column this transition just filled -- the reason the card is on screen. */
+.gp-transition-linescore thead th.is-filled { color: var(--gp-accent-bright); opacity: 1; }
+
+.gp-transition-linescore td.is-filled {
+  color: var(--gp-surface);
+  background: var(--gp-accent-bright);
+  font-weight: 900;
+  border-radius: 3px;
+}
+
+.gp-transition-plays h4,
+.gp-transition-earlier h4 {
+  margin: 0 0 7px;
+  font-size: 0.64rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gp-text-muted);
+}
+
+.gp-transition-play-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 9px;
+}
+
+.gp-transition-play-list li {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+  font-size: 0.78rem;
+}
+
+.gp-transition-play-runs {
+  font-size: 0.64rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  color: var(--gp-outcome-positive);
+  white-space: nowrap;
+}
+
+.gp-transition-play-detail { color: var(--gp-text); font-weight: 700; margin-right: auto; }
+.gp-transition-play-detail em { font-style: normal; color: var(--gp-accent-bright); }
+.gp-transition-muted { color: var(--gp-text-muted); font-size: 0.7rem; font-weight: 500; white-space: nowrap; }
+
+.gp-transition-note {
+  margin: 0;
+  font-size: 0.7rem;
+  line-height: 1.5;
+  color: var(--gp-text-muted);
+}
+
+.gp-transition-earlier { border-top: 1px solid var(--gp-border); padding-top: 11px; display: grid; gap: 9px; }
+
+.gp-transition-expand {
+  justify-self: start;
+  border: none;
+  background: transparent;
+  color: var(--gp-accent);
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.gp-transition-expand:hover { color: var(--gp-accent-bright); }
+
+@media (max-width: 720px) {
+  .gp-transition { padding: 12px 13px; }
+  .gp-transition-headline { font-size: 0.86rem; }
+}
