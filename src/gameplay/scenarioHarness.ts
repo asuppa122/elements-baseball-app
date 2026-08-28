@@ -2,6 +2,7 @@ import { beginPrePitchDecision, confirmManagerDecision, getDecisionView, getPreP
 import { catcherStealCheckIsOut, extraBaseEffectiveBaserunning, fieldingCheckIsOut, tagUpEffectiveBaserunning, tagUpOutfieldBonus, tagUpRtsThreshold } from './ruleAssertions'
 import type { BaseRunnerState, GameSide, GameState, PendingDecision } from './types'
 import { resolveCoreResult } from './coreGame'
+import { runsInInning } from './inningScore'
 import { effectiveCurrentPitcherControl } from './engine'
 import { pitcherInstanceKey } from './pitcherStateKey'
 
@@ -136,6 +137,13 @@ export function runNonGbScenarioMatrix(initial:GameState):ScenarioReport {
   // Universal state integrity for every scenario is also enforced by result-specific checks;
   // this explicit fixture test protects the runner uniqueness contract.
   test('STATE-01','State integrity','Scenario fixture starts with legal outs/cursors and unique bases',()=>{const s=fixture(initial);assert(s.outs>=0&&s.outs<=3,'Invalid outs.');assert(s.lineupCursor.home>=0&&s.lineupCursor.home<=8,'Invalid home cursor.');assert(s.lineupCursor.away>=0&&s.lineupCursor.away<=8,'Invalid away cursor.')})
+
+  // Line score: runs must be credited to the inning they scored in, because
+  // `score` is a running total and cannot be decomposed after the fact.
+  test('LINE-01','Line score','A run is credited to the inning it scored in',()=>{const s=fixture(initial);s.inning=6;s.runsByInning={away:[],home:[]};const n=resolveCoreResult(s,'HR');assert(runsInInning(n,offense(s),6)===1,'Run not credited to the 6th.');assert(runsInInning(n,offense(s),5)===0,'Run leaked into an earlier inning.')})
+  test('LINE-02','Line score','Per-inning buckets sum to the running score',()=>{let s=fixture(initial);s.inning=3;s.runsByInning={away:[],home:[]};s=resolveCoreResult(s,'HR');s={...s,inning:8,bases:{first:null,second:null,third:null}};s=resolveCoreResult(s,'HR');const off=offense(s);const sum=(s.runsByInning?.[off]??[]).reduce((a,b)=>a+b,0);assert(sum===s.score[off],`Line score ${sum} disagrees with running score ${s.score[off]}.`)})
+  test('LINE-03','Line score','The defending side is not credited with the batting side\'s runs',()=>{const s=fixture(initial);s.inning=4;s.runsByInning={away:[],home:[]};const n=resolveCoreResult(s,'HR');assert(runsInInning(n,defense(s),4)===0,'Run credited to the fielding side.')})
+  test('LINE-04','Line score','Extra innings extend the line score without special-casing',()=>{const s=fixture(initial);s.inning=11;s.runsByInning={away:[],home:[]};const n=resolveCoreResult(s,'HR');assert(runsInInning(n,offense(s),11)===1,'Extra-inning run not recorded.');assert((n.runsByInning?.[offense(s)]?.length??0)===11,'Line score did not extend to the 11th.')})
 
   const categories:ScenarioReport['categories']={}
   for(const r of results){const c=categories[r.category]??{total:0,passed:0};c.total++;if(r.passed)c.passed++;categories[r.category]=c}

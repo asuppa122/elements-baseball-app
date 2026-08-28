@@ -58,6 +58,7 @@ export function createInitialGameState(args: {
     half: 'top',
     outs: 0,
     score: { home: 0, away: 0 },
+    runsByInning: { home: [], away: [] },
     bases: { first: null, second: null, third: null },
     plateAppearance: {
       batterCardKey: null,

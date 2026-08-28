@@ -1,5 +1,6 @@
 import { getFieldingRating } from './defense'
 import { cardIpOuts } from './fatigueEngine'
+import { creditRunsToInning } from './inningScore'
 import { pitcherInstanceKey, readPitcherStateValue } from './pitcherStateKey'
 import type {
   BaseRunnerState,
@@ -214,7 +215,7 @@ function scoreRunner(state: GameState, side: GameSide, count=1): GameState {
     }
   }
   const pitcherRunsAllowed=pitcherKey&&pitcherStateKey?{...(state.pitcherRunsAllowed??{}),[pitcherStateKey]:(readPitcherStateValue(state.pitcherRunsAllowed,defense,pitcherKey)??0)+count}:state.pitcherRunsAllowed
-  return {...state, score:{...state.score,[side]:state.score[side]+count},pitcherRunsAllowed,pitcherShutoutBonusBrokenAtOuts}
+  return {...state, score:{...state.score,[side]:state.score[side]+count},runsByInning:creditRunsToInning(state.runsByInning,side,state.inning,count),pitcherRunsAllowed,pitcherShutoutBonusBrokenAtOuts}
 }
 
 function clearPlateAppearance(state: GameState): GameState {

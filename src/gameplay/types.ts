@@ -150,6 +150,12 @@ export type GameState = {
   half: HalfInning
   outs: 0 | 1 | 2 | 3
   score: Record<GameSide, number>
+  // Runs credited to the inning they scored in (index 0 = 1st inning); extra
+  // innings extend the array. Written at the moment a run scores via
+  // inningScore.ts, never reconstructed from events. Optional because games
+  // persisted before this field existed must still load -- absent means "no
+  // per-inning record", not zero runs.
+  runsByInning?: Record<GameSide, number[]>
   bases: BasesState
   plateAppearance: PlateAppearanceState
   pendingDecision: PendingDecision | null

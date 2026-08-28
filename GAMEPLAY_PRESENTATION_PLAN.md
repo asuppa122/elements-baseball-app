@@ -124,3 +124,28 @@ not because the ambition is wrong, but because building it against today's singl
 mean redoing it once real sync lands, which is exactly what this plan's own "protect the engine"
 principle (and the parallel discipline around presentation-layer investment) argues against paying for
 twice.
+
+## Data that does not exist yet — do not trust the mockup's numbers
+
+Recorded 2026-08-28, from designing the gameplay screen against the real engine. The screen mockup
+(`.design-mockup/`, published as an Artifact) shows per-player stat lines in the lineup rail —
+`2-3`, `1-2`, `0-2` — and a `RESULT` panel citing RBI and runs scored. **Every one of those numbers is
+invented for the mockup. Nothing in the engine produces them today.** A future session picking up this
+work must not assume the screen is backed by real data just because it looks finished.
+
+What is actually tracked, verified against `src/gameplay/types.ts`:
+
+| Wanted | Status | Where it would come from |
+|---|---|---|
+| Who batted / who pitched, per game | **Tracked** | `hitterPlateAppearanceCardKeys`, `pitcherAppearanceCardKeys` — written only in `finishPlateAppearance()` |
+| Pitching line (IP, ER) | **Derivable today** | `defensiveOutsRecorded − pitcherEntryDefenseOuts`; `pitcherRunsAllowed` |
+| Post-game rest consequences | **Available today** | `restTracking.ts` → `applyGameCompletionRest` |
+| Runs per inning (line score) | **Not tracked** | `score` is a running `Record<GameSide, number>` only — no per-inning breakdown |
+| Batting lines (AB / H / result mix) | **Not tracked** | Reconstructable from `SWING_RESOLVED` events' `chartResult`; moderate work |
+| RBI, runs scored per batter | **Not tracked, and not reconstructable as-is** | Needs base-state diffing — this is exactly the Phase 2 "richer `game_events` payload capture" item above |
+
+Consequence for sequencing: a post-game box score should ship in two tiers. Tier one uses what exists
+(final score, line score once tracked, pitching lines, rest consequences, appearances) and is not held
+hostage to tier two (full batting box), which depends on the Phase 2 payload work. The rest-consequences
+line is the genuinely Elements-specific part — no other product's box score tells a manager who is
+unavailable for their next game.
