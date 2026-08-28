@@ -341,3 +341,38 @@ The options are a decision, not a guess: expose a counting RPC that runs server-
 existing rest SQL already does exactly this `count(*)`), or show the projection for your own side
 only and say so, or read back the persisted rows post-completion and accept the same one-sided
 limit. Left for review.
+
+## BEFORE REAL PvP — a standing list, not a someday list
+
+Recorded 2026-08-28 when the cutover decisions were settled. These are explicitly **not** parity
+gaps and do **not** block cutting over to the new screen. They are listed here because the new
+screen will look finished once it is live, and looking finished is exactly how work like this
+slips.
+
+Each one must be closed before real player-versus-player games start counting.
+
+**1. Season game count for the rest projection (F).**
+`postGameSummary.restProjectionFor` returns `MISSING_SEASON_GAME_COUNT` because nothing supplies the
+count. Not the small job it was first listed as: `player_rest_state` has a select policy scoped to
+its owner and `games` is home-scoped, so any client-side count is right for your own side and
+possibly wrong for the opponent's. **Agreed direction: a server-side counting RPC**, mirroring the
+`count(*)` the rest SQL already performs. Not a cutover gap because `/play` has the identical limit.
+
+**2. `confirmationSummary` — empty in all 27 decision types (G).**
+The hook exists in the type and every implementation returns `''`. Not a parity gap (both screens
+lack it equally), but empty rule-explanation text undercuts the thing that makes Elements worth
+playing digitally: that the app teaches the Rulebook while you play. **The rules text needs Anthony's
+eye when this is written** -- it is rules-facing copy, not UI filler. Touching `decisionEngine.ts`,
+so it is an engine change and wants its own careful pass.
+
+**3. Default-attributes rules reading (K).**
+Anthony is settling this in the Rulebook independently. It is on this list because the migration is
+**already persisting real values** under that reading, so it matters before real games count
+regardless of what happens with the screen. See the modelling note in
+`20260826_gameplay_rest_tracking_on_completion.sql`.
+
+### After cutover, agreed as refinements — not on this list
+
+Moment takeover (I), the `sequence.ts` reveal (J), and the designed mobile rail layout (L). All
+three are improvements over a screen that already beats `/play`, and all three are better judged
+once real play is happening on it.
