@@ -139,8 +139,8 @@ What is actually tracked, verified against `src/gameplay/types.ts`:
 |---|---|---|
 | Who batted / who pitched, per game | **Tracked** | `hitterPlateAppearanceCardKeys`, `pitcherAppearanceCardKeys` — written only in `finishPlateAppearance()` |
 | Pitching line (IP, ER) | **Derivable today** | `defensiveOutsRecorded − pitcherEntryDefenseOuts`; `pitcherRunsAllowed` |
-| Post-game rest consequences | **Available today** | `restTracking.ts` → `applyGameCompletionRest` |
-| Runs per inning (line score) | **Not tracked** | `score` is a running `Record<GameSide, number>` only — no per-inning breakdown |
+| Post-game rest consequences | **Projectable, not yet applied** | `restTracking.ts` → `applyGameCompletionRest` is pure and tested but called by nothing outside its harness, and its `gmCompletedGamesThisSeason` input is not in `GameState` — it lives in the `games` table. `postGameSummary.ts` projects the consequence and returns `MISSING_SEASON_GAME_COUNT` rather than guessing when that count is not supplied. **Nothing writes the result back to `player_rest_state` yet.** |
+| Runs per inning (line score) | **Tracked** (added 2026-08-28) | `runsByInning` on `GameState`, written as runs score via `inningScore.ts`. Optional — all 14 games persisted before it read as `recorded: false` and must render dashes, not a row of zeroes. |
 | Batting lines (AB / H / result mix) | **Not tracked** | Reconstructable from `SWING_RESOLVED` events' `chartResult`; moderate work |
 | RBI, runs scored per batter | **Not tracked, and not reconstructable as-is** | Needs base-state diffing — this is exactly the Phase 2 "richer `game_events` payload capture" item above |
 
