@@ -806,3 +806,161 @@
     justify-content: flex-end;
   }
 }
+
+/* Blocking-decision surface (DecisionBoard.tsx). Distinct from the pre-pitch
+ * action list: this is the state where the engine requires a resolution before
+ * anything else can happen, so it reads as an interruption rather than a menu. */
+
+.gp-decision {
+  border: 2px solid var(--gp-accent);
+  border-radius: 10px;
+  background: var(--gp-panel);
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  text-align: left;
+}
+
+.gp-decision-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.gp-decision-title {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.gp-decision-title h2 {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 900;
+}
+
+.gp-decision-rc {
+  border: 1px solid var(--gp-border);
+  border-radius: 3px;
+  padding: 2px 6px;
+  font-size: 0.6rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  color: var(--gp-accent);
+}
+
+.gp-decision-actor {
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  border-radius: 5px;
+  padding: 5px 10px;
+  white-space: nowrap;
+}
+
+.gp-decision-actor.is-yours {
+  background: var(--gp-accent);
+  color: var(--gp-surface);
+}
+
+.gp-decision-actor.is-waiting {
+  border: 1px solid var(--gp-advantage-pitcher);
+  color: var(--gp-advantage-pitcher);
+}
+
+.gp-decision-desc {
+  margin: 0;
+  font-size: 0.86rem;
+  line-height: 1.5;
+  color: var(--gp-text-muted);
+}
+
+.gp-decision-options {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.gp-decision-option {
+  width: 100%;
+  display: grid;
+  gap: 3px;
+  text-align: left;
+  border: 1px solid var(--gp-border);
+  border-radius: 7px;
+  background: transparent;
+  color: var(--gp-text);
+  font: inherit;
+  padding: 10px 12px;
+  cursor: pointer;
+}
+
+.gp-decision-option strong { font-size: 0.9rem; font-weight: 800; }
+.gp-decision-option small { font-size: 0.74rem; color: var(--gp-text-muted); }
+
+.gp-decision-option.is-selected {
+  border: 2px solid var(--gp-accent);
+  background: var(--gold-soft);
+}
+
+/* Blocked options stay visible with their reason -- hiding them hides the rule. */
+.gp-decision-option.is-blocked {
+  border-style: dashed;
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.gp-decision-blocked-why {
+  font-size: 0.7rem;
+  font-style: normal;
+  color: var(--gp-advantage-pitcher);
+}
+
+.gp-decision-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-top: 1px solid var(--gp-border);
+  padding-top: 12px;
+  flex-wrap: wrap;
+}
+
+.gp-decision-lock {
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: var(--gp-advantage-pitcher);
+}
+
+.gp-decision-primary {
+  min-height: 44px;
+  padding: 0 22px;
+  border: none;
+  border-radius: 7px;
+  background: var(--gp-accent);
+  color: var(--gp-surface);
+  font: inherit;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+}
+
+.gp-decision-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.gp-decision-stuck {
+  display: grid;
+  gap: 6px;
+  border: 1px solid var(--gp-outcome-negative);
+  border-radius: 7px;
+  background: rgba(226, 114, 107, 0.07);
+  padding: 12px 14px;
+}
+
+.gp-decision-stuck strong { color: var(--gp-outcome-negative); font-size: 0.9rem; }
+.gp-decision-stuck span { font-size: 0.78rem; line-height: 1.5; color: var(--gp-text-muted); }
+.gp-decision-stuck code { color: var(--gp-text); font-size: 0.76rem; }

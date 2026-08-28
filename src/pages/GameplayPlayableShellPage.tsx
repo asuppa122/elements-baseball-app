@@ -12,6 +12,7 @@ import {
 import type { GameSide, GameState } from '../gameplay/types'
 import { resolveSwingChart } from '../gameplay/coreGame'
 import RatingReadout from '../gameplay/presentation/RatingReadout'
+import DecisionBoard from '../gameplay/presentation/DecisionBoard'
 import { currentHitterOnBaseAdjustment, currentPitcherControlAdjustment } from '../gameplay/presentation/inGameFatigueDisplay'
 import {
   beginPrePitchDecision,
@@ -206,19 +207,20 @@ export default function GameplayPlayableShellPage() {
           )}
 
           {decision && (
-            <div className="retro-decision">
-              <h2>{decision.title}</h2><p>{decision.description}</p>
+            <>
+              <DecisionBoard
+                state={state}
+                view={decision}
+                selection={selection}
+                /* the lab game is RLS-scoped to its home manager, so the viewer is always home */
+                viewerSide="home"
+                saving={saving}
+                onToggle={(id) => setSelection((current) => decision.mode === 'single' ? [id] : current.includes(id) ? current.filter((existing) => existing !== id) : [...current, id])}
+                onConfirm={() => void confirmDecision()}
+                onRoll={() => void rollDecision()}
+              />
               {editablePrePitchDecision && <button className="retro-secondary" disabled={saving} onClick={() => void changeAction()}>CHANGE ACTION</button>}
-              {decision.mode === 'roll' ? <button className="retro-primary" disabled={saving} onClick={() => void rollDecision()}>ROLL d20</button> : (
-                <>
-                  <div className="retro-options">{decision.options.map((option) => {
-                    const selected = selection.includes(option.id)
-                    return <button key={option.id} className={selected ? 'selected' : ''} disabled={saving} onClick={() => setSelection((current) => decision.mode === 'single' ? [option.id] : current.includes(option.id) ? current.filter((id) => id !== option.id) : [...current, option.id])}><strong>{option.label}</strong><small>{option.detail}</small></button>
-                  })}</div>
-                  <button className="retro-primary" disabled={saving || selection.length === 0} onClick={() => void confirmDecision()}>{decision.confirmationLabel || 'CONFIRM'}</button>
-                </>
-              )}
-            </div>
+            </>
           )}
         </section>
 
