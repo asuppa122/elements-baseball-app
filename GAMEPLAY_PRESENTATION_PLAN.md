@@ -173,6 +173,12 @@ cannot submit its own fatigue numbers. The TypeScript is the reference implement
 mirrors and the one `postGameSummary.ts` projects with. Its lack of a production caller is the
 design, not an orphan — an earlier reading of this file got that backwards.
 
+**Unblocks final post-game verification:** playing one game through `/games/lab` to completion is
+the single action that both proves this path for real and gives `PostGameBoard` real content to
+render against — today it shows "not recorded" on all five completed games, because they predate
+`runsByInning` and the PA markers. Until then the board's populated state cannot be checked against
+anything but constructed values.
+
 **Status: ready, awaiting the first real completed game.** No completed game has exercised it
 because all five predate both the PA markers (`d5d8777`) and the RPC (`42cc9d6`) by two days, and
 every current `player_rest_state` row is a hand-seed sharing one `updated_at` with values like 44
@@ -180,12 +186,13 @@ and 47. Nothing needs building for this to work.
 
 ### What is genuinely open
 
-**1. The three-step sequence is implemented twice and nothing compares them.** `restTracking.ts`
-and the SQL body each implement appearance-increment / flat-decrement / milestone-decrement
-independently. The SQL decides what persists; the TypeScript decides what the manager is *shown*
-afterwards by `postGameSummary.ts`. If either moves alone they diverge silently, and the screen is
-the only place anyone would notice. This is the one real risk in this area and it is larger than
-anything else listed here.
+**1. ~~The three-step sequence is implemented twice and nothing compares them.~~ Closed 2026-08-28.**
+`restTrackingSqlParity.test.ts` evaluates the SQL's own expressions, extracted from the migration
+text, against `restTracking.ts` over 1050 cases. Mutation-verified in both directions. It found real
+drift immediately: the SQL folds the default-attributes exemption into its appeared flag, so the
+exemption is a **contract on TypeScript callers** — and `postGameSummary.ts` was not honouring it,
+projecting a fatigue charge for exactly the players a GM used default attributes to protect. Fixed.
+Any new caller of `applyGameCompletionRest` must apply the exemption before calling.
 
 **2. Small wiring job — the client projection cannot reach the season game count.**
 `postGameSummary.ts` returns `MISSING_SEASON_GAME_COUNT` because the milestone step needs the
