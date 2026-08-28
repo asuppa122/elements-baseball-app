@@ -139,7 +139,7 @@ What is actually tracked, verified against `src/gameplay/types.ts`:
 |---|---|---|
 | Who batted / who pitched, per game | **Tracked** | `hitterPlateAppearanceCardKeys`, `pitcherAppearanceCardKeys` — written only in `finishPlateAppearance()` |
 | Pitching line (IP, ER) | **Derivable today** | `defensiveOutsRecorded − pitcherEntryDefenseOuts`; `pitcherRunsAllowed` |
-| Post-game rest consequences | **Projectable, not yet applied** | `restTracking.ts` → `applyGameCompletionRest` is pure and tested but called by nothing outside its harness, and its `gmCompletedGamesThisSeason` input is not in `GameState` — it lives in the `games` table. `postGameSummary.ts` projects the consequence and returns `MISSING_SEASON_GAME_COUNT` rather than guessing when that count is not supplied. **Nothing writes the result back to `player_rest_state` yet.** |
+| Post-game rest consequences | **Persisted server-side; never yet exercised by a real game** | The authoritative write lives in SQL inside `save_gameplay_lab_state` (`20260826_gameplay_rest_tracking_on_completion.sql`, commit `42cc9d6`), not in TypeScript. `restTracking.ts` → `applyGameCompletionRest` is the reference implementation the SQL mirrors and what `postGameSummary.ts` projects with — it has no TS caller *by design*. See "Live-path gaps" below for what is genuinely open. |
 | Runs per inning (line score) | **Tracked** (added 2026-08-28) | `runsByInning` on `GameState`, written as runs score via `inningScore.ts`. Optional — all 14 games persisted before it read as `recorded: false` and must render dashes, not a row of zeroes. |
 | Batting lines (AB / H / result mix) | **Not tracked** | Reconstructable from `SWING_RESOLVED` events' `chartResult`; moderate work |
 | RBI, runs scored per batter | **Not tracked, and not reconstructable as-is** | Needs base-state diffing — this is exactly the Phase 2 "richer `game_events` payload capture" item above |
@@ -149,3 +149,61 @@ Consequence for sequencing: a post-game box score should ship in two tiers. Tier
 hostage to tier two (full batting box), which depends on the Phase 2 payload work. The rest-consequences
 line is the genuinely Elements-specific part — no other product's box score tells a manager who is
 unavailable for their next game.
+
+## Live-path gaps — built and verified, but not yet proven by real play
+
+Recorded 2026-08-28. These are the difference between "the engine can do this" and "this happens
+when someone plays". None of them is a missing implementation; each is a way the implementation
+could be wrong or drift without anyone noticing.
+
+### 1. Rest persistence is verified but has never run on a real game
+
+**Not** an unwired feature — this is the correction to an earlier reading of it. The write-back
+exists, is applied to the live database, and was end-to-end verified (commit `42cc9d6`): the
+deployed function body was confirmed by `pg_proc` query, and all five branches were exercised
+against the live RPC on an isolated synthetic `season_id`.
+
+What is open is that **no real completed game has ever gone through it**. All five completed lab
+games were created 2026-08-23/24 and so predate both the PA markers (`d5d8777`, 2026-08-26 14:06)
+and the RPC itself (`42cc9d6`, 2026-08-26 14:42). Every row now in `player_rest_state` shares a
+single `updated_at` of 2026-08-26T21:26:10Z and carries values like 44 and 47 — a hand-seed, not
+a computed result. So the path is verified in the lab and unexercised in the wild.
+
+Closing this means playing one real game to completion and confirming the rows move. It is a
+verification task, not a build task.
+
+### 2. The three-step rest sequence is implemented twice, and nothing tests that the two agree
+
+`restTracking.ts` (TypeScript, harness-covered) and the SQL body of `save_gameplay_lab_state` each
+implement appearance-increment / flat-decrement / milestone-decrement independently. The SQL is
+authoritative for what persists; the TypeScript is what `postGameSummary.ts` shows the manager
+after the game. **Nothing compares them.** If either changes alone, the projection shown on screen
+and the number actually written diverge silently — and the screen is the only place a manager would
+notice. This is the real risk in this area, and it is larger than either item the divergence would
+sit between.
+
+### 3. The migration file's own header contradicts what happened
+
+`20260826_gameplay_rest_tracking_on_completion.sql` opens with "NOT applied yet -- review before
+running". It was reviewed, run and verified the same day; the header was never updated. Anyone
+reading the file first would conclude the opposite of the truth. (Fixed 2026-08-28.)
+
+### 4. The client-side rest projection cannot reach the season game count
+
+`postGameSummary.ts` returns `MISSING_SEASON_GAME_COUNT` because the milestone step needs the
+manager's completed-game count for the season, which lives in the `games` table rather than
+`GameState`. The SQL already derives this correctly server-side (`count(*)` over that manager's
+completed games, including the one just finished).
+
+Small, and worth doing the right way round: the projection should read the authoritative post-write
+`player_rest_state` values rather than recompute a parallel answer from a count it fetches itself.
+Recomputing would add a third implementation of the same rule to the two in item 2.
+
+### 5. One modeling choice was flagged for a second look and never revisited
+
+The migration reads the Rulebook's default-attributes override ("in order to avoid accruing fatigue
+effects") as exempting **only** the appearance increment — the flat per-game decrement and any
+milestone bonus still apply, on the reasoning that those are rest-day grants rather than accrual and
+the Rulebook offers no carve-out from a benefit. That was deliberately flagged as a judgment call
+rather than treated as self-evident, and is now persisting real values. It deserves a rules
+confirmation.

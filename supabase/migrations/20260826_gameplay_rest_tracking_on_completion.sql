@@ -1,9 +1,18 @@
 -- Elements Baseball — persistent Ftg/Rm rest-tracking update on game completion.
--- Run after 20260826_gameplay_player_rest_state.sql. NOT applied yet -- review
--- before running, same as any schema change, and see the accompanying chat
--- write-up for two open items this migration deliberately does NOT resolve
--- on its own (real-world verification, and one modeling choice worth a
--- second look before this is trusted).
+-- Run after 20260826_gameplay_player_rest_state.sql.
+--
+-- STATUS: reviewed, applied and end-to-end verified on 2026-08-26 (commit
+-- 42cc9d6) -- the deployed function body was confirmed by pg_proc query and
+-- all five branches were exercised against the live RPC on an isolated
+-- synthetic season_id. The header previously read "NOT applied yet"; that was
+-- written before the run and never updated, so it said the opposite of the
+-- truth for two days. Corrected 2026-08-28.
+--
+-- Still open, and tracked in GAMEPLAY_PRESENTATION_PLAN.md under "Live-path
+-- gaps": no REAL completed game has exercised this yet (every game that has
+-- ever completed predates it), nothing tests that this SQL and
+-- restTracking.ts still agree, and the modeling choice noted below was
+-- flagged for a second look and has not had one.
 --
 -- Extends save_gameplay_lab_state in place (same signature -- this is a
 -- `create or replace`, not a new function) so gameRepository.ts needs no
