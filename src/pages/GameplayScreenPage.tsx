@@ -5,6 +5,7 @@ import { hasGameplayLabAccess, loadGameplayLabGame, type PersistedGameplayLabGam
 import { battingSide } from '../gameplay/gameBoundaryEngine'
 import DefBar from '../gameplay/presentation/DefBar'
 import GameField from '../gameplay/presentation/GameField'
+import LineupRail from '../gameplay/presentation/LineupRail'
 import type { GameSide, GameState } from '../gameplay/types'
 
 /**
@@ -92,7 +93,7 @@ export default function GameplayScreenPage() {
 
       <div className="gp-layout">
         <section className="gp-panel gp-region gp-region-lineup" aria-label="Lineup">
-          <Todo title="Lineup rail" detail="Batting order with card art, active and on-deck state, and position — from battingOrderCardKeys, lineupCursor and defensiveAlignment. Per-player stat lines stay unavailable: AB/H are not tracked by the engine." />
+          <LineupRail state={state} />
         </section>
 
         {/* Centre is a transparent stack, not a panel — matching the artboards,
