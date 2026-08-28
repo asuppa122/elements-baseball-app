@@ -13,6 +13,7 @@ import type { GameSide, GameState } from '../gameplay/types'
 import { resolveSwingChart } from '../gameplay/coreGame'
 import RatingReadout from '../gameplay/presentation/RatingReadout'
 import DecisionBoard from '../gameplay/presentation/DecisionBoard'
+import PostGameBoard from '../gameplay/presentation/PostGameBoard'
 import { currentHitterOnBaseAdjustment, currentPitcherControlAdjustment } from '../gameplay/presentation/inGameFatigueDisplay'
 import {
   beginPrePitchDecision,
@@ -192,7 +193,10 @@ export default function GameplayPlayableShellPage() {
           {error && <div className="retro-message error">{error}</div>}
           {notice && <div className="retro-message">{notice}</div>}
 
-          {!decision && state.status === 'complete' && <div className="retro-result"><strong>FINAL</strong><span>{state.managers.away.managerName} {state.score.away} · {state.managers.home.managerName} {state.score.home}</span></div>}
+          {/* Tier one only. The season game count the rest projection needs lives in
+              the `games` table, not the game state, and this page does not query it --
+              so PostGameBoard says the projection is unavailable rather than guessing. */}
+          {!decision && state.status === 'complete' && <PostGameBoard state={state} />}
 
           {!decision && state.status !== 'complete' && state.waitingFor === 'PITCH_ROLL' && (
             <>

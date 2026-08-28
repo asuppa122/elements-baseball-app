@@ -160,3 +160,58 @@ describe('buildPostGameSummary through the real engine', () => {
     expect(summary.appearances.home.pitchers).toEqual(['HOME-8'])
   })
 })
+
+describe('appearancesRecorded', () => {
+  it('separates "nobody pitched" from "this game never recorded who did"', () => {
+    // As of 2026-08-28 every persisted game is the second case: the appearance
+    // fields postdate all of them, so an empty pitching list is not evidence.
+    const legacy = base()
+    delete legacy.pitcherAppearanceCardKeys
+    delete legacy.hitterPlateAppearanceCardKeys
+    expect(buildPostGameSummary(legacy).appearancesRecorded).toBe(false)
+
+    const tracked: GameState = { ...base(), pitcherAppearanceCardKeys: { away: [], home: [] } }
+    expect(buildPostGameSummary(tracked).appearancesRecorded).toBe(true)
+    // both still produce an empty list -- the flag is the only thing telling them apart
+    expect(buildPostGameSummary(legacy).pitching.home).toEqual(buildPostGameSummary(tracked).pitching.home)
+  })
+})
+
+describe('legacy configuration snapshots', () => {
+  it('does not crash when the frozen config predates restMilestones', () => {
+    // Found against real data: every persisted game's configuration snapshot
+    // lacks the field, and passing the undefined into applyGameCompletionRest
+    // threw "restMilestones is not iterable", taking down the whole panel.
+    const s = base()
+    delete (s.configuration as { restMilestones?: unknown }).restMilestones
+    expect(() => buildPostGameSummary(s, { away: 5, home: 5 })).not.toThrow()
+    const r = buildPostGameSummary(s, { away: 5, home: 5 }).rest.home
+    expect(r.available).toBe(false)
+    expect(r).toMatchObject({ reason: 'MISSING_REST_MILESTONES' })
+  })
+
+  it('keeps the two unavailable reasons distinct', () => {
+    // "we don't know your season game count" and "this game never froze the
+    // rule" are different facts and read differently on the surface.
+    const withConfig = restProjectionFor(base(), 'home', null)
+    expect(withConfig).toMatchObject({ reason: 'MISSING_SEASON_GAME_COUNT' })
+  })
+})
+
+describe('rest ordering', () => {
+  it('leads with whoever is still owed rest, since that is what the manager must act on', () => {
+    const s = base()
+    s.hitterPlateAppearanceCardKeys = { away: [], home: [] }
+    s.pitcherAppearanceCardKeys = { away: [], home: [] }
+    s.restState = { away: {}, home: {
+      'HOME-0': { hitterGamesRemaining: 1, pitcherGamesRemaining: 0 },
+      'HOME-1': { hitterGamesRemaining: 4, pitcherGamesRemaining: 0 },
+      'HOME-2': { hitterGamesRemaining: 2, pitcherGamesRemaining: 0 },
+    } }
+    const r = restProjectionFor(s, 'home', 1)
+    if (!r.available) throw new Error('expected a projection')
+    const owed = r.players.map((p) => Math.max(p.hitterGamesRemaining, p.pitcherGamesRemaining))
+    expect(owed).toEqual([...owed].sort((a, b) => b - a))
+    expect(r.players[0].cardKey).toBe('HOME-1') // deepest in rest debt, not first in the roster
+  })
+})

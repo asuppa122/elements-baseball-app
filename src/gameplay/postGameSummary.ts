@@ -61,12 +61,20 @@ export type RestConsequence = {
 export type RestProjection =
   | { available: true; side: GameSide; players: RestConsequence[] }
   /**
-   * The milestone step needs this manager's completed-game count for the
-   * season, which lives in the `games` table and not in GameState. Without it
-   * the projection would be wrong on exactly the games where it matters most,
-   * so it is withheld rather than approximated.
+   * Withheld rather than approximated. Two ways that happens:
+   *
+   * - MISSING_SEASON_GAME_COUNT: the milestone step needs this manager's
+   *   completed-game count for the season, which lives in the `games` table
+   *   and not in GameState.
+   * - MISSING_REST_MILESTONES: the game's frozen `configuration` snapshot
+   *   predates `restMilestones` entirely, so the season's milestone rule is
+   *   not knowable from the game. Every game persisted as of 2026-08-28 is in
+   *   this state, and passing the undefined through crashed the whole panel.
+   *
+   * Either way the number would be wrong on exactly the games where it matters
+   * most, which is the one line in this box score no other product has.
    */
-  | { available: false; side: GameSide; reason: 'MISSING_SEASON_GAME_COUNT' }
+  | { available: false; side: GameSide; reason: 'MISSING_SEASON_GAME_COUNT' | 'MISSING_REST_MILESTONES' }
 
 export type PostGameSummary = {
   complete: boolean
@@ -80,6 +88,17 @@ export type PostGameSummary = {
   }
   lineScore: PostGameLineScore
   pitching: Record<GameSide, PitchingLine[]>
+  /**
+   * False for games persisted before `hitterPlateAppearanceCardKeys` /
+   * `pitcherAppearanceCardKeys` existed -- as of 2026-08-28 that is every game
+   * in the table. Without it an empty pitching list is ambiguous: "nobody
+   * pitched" (impossible in a completed game) reads identically to "this game
+   * never recorded who did". The caller must say which, not show an empty
+   * panel. Note `pitcherRunsAllowed` IS populated on those games, but it is a
+   * map with no appearance order and, on the oldest rows, no side scoping --
+   * enough to know runs were charged, not enough to build a line from.
+   */
+  appearancesRecorded: boolean
   rest: Record<GameSide, RestProjection>
   appearances: Record<GameSide, { hitters: string[]; pitchers: string[] }>
 }
@@ -139,6 +158,10 @@ export function restProjectionFor(
   completedGamesThisSeason: number | null,
 ): RestProjection {
   if (completedGamesThisSeason === null) return { available: false, side, reason: 'MISSING_SEASON_GAME_COUNT' }
+  // Read defensively: this is a frozen snapshot from whenever the game was
+  // created, not today's season config, so the field may simply not be there.
+  const restMilestones = state.configuration.restMilestones
+  if (!Array.isArray(restMilestones)) return { available: false, side, reason: 'MISSING_REST_MILESTONES' }
 
   const hitters = new Set(state.hitterPlateAppearanceCardKeys?.[side] ?? [])
   const pitchers = new Set(state.pitcherAppearanceCardKeys?.[side] ?? [])
@@ -160,7 +183,7 @@ export function restProjectionFor(
       hitterAppeared: hitters.has(cardKey),
       pitcherAppeared: pitchers.has(cardKey),
       gmCompletedGamesThisSeason: completedGamesThisSeason,
-      restMilestones: state.configuration.restMilestones,
+      restMilestones,
     })
     return {
       cardKey,
@@ -175,6 +198,12 @@ export function restProjectionFor(
       pitcherFatigueScore: card?.pitcher.fatigue ?? null,
     }
   })
+
+  // Order by what the manager has to act on: whoever is still owed rest is
+  // unavailable for the next game, and that is the whole point of this panel.
+  // Roster order would bury it among players who came through fine.
+  const owed = (p: RestConsequence) => Math.max(p.hitterGamesRemaining, p.pitcherGamesRemaining)
+  players.sort((a, b) => owed(b) - owed(a) || a.playerName.localeCompare(b.playerName))
 
   return { available: true, side, players }
 }
@@ -196,6 +225,7 @@ export function buildPostGameSummary(
       walkoff,
     },
     lineScore: { ...line, recorded: state.runsByInning !== undefined },
+    appearancesRecorded: state.pitcherAppearanceCardKeys !== undefined || state.hitterPlateAppearanceCardKeys !== undefined,
     pitching: { away: pitchingLinesFor(state, 'away'), home: pitchingLinesFor(state, 'home') },
     rest: {
       away: restProjectionFor(state, 'away', completedGamesThisSeason.away),
