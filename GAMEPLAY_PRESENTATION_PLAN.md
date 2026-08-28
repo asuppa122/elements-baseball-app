@@ -269,3 +269,30 @@ source render stay ignored, both regenerable.
 
 **What the mockup is NOT:** implemented. The real screen is a single-column shell. See the stock-take
 for the piece-by-piece split.
+
+## Next major piece: implement the mockup, responsively
+
+Requested 2026-08-28, after playing the real screen for the first time and hitting the gap between
+it and the design directly. **The screen must be built to the mockup, and must adjust responsively to
+the window** -- not a fixed desktop layout with a separate phone version, but one layout that holds
+its design intent as the window changes (which is what `MOBILE_PARITY_STANDARD.md` already requires).
+
+Scope, from the stock-take's NOT STARTED list:
+
+- the three-column layout (lineup rail / centre field column / game rail)
+- the field itself: nine fielders at true positions with live DEF ratings, replacing today's
+  `Diamond` -- eleven lines rendering three base markers and the word HOME
+- the DEF bar (C / INF / OF) across the top of the field
+- batter and pitcher card imagery in the matchup
+- the hitting rail with per-player rows
+- the bullpen/bench panel (the *actions* already exist and are live; the roster view does not)
+- the game menu behind the hamburger (pause now exists in the shell; save/exit/settings do not)
+
+Sequenced deliberately AFTER the first full playthrough so it is built against a real completed
+game -- real runners, real fielders, real line score, real scoring plays -- rather than against
+constructed values, which is the position every presentation piece so far has been built from.
+
+The mockup source is tracked in `.design-mockup/` (artboards + `canvas.json` + `field.webp`) and
+published as an Artifact. `_shared-notes.md` and `_rail.txt` carry the exact palette, radii, control
+heights and rail row anatomy, so the implementation has real specs rather than screenshots to work
+from.
