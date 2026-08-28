@@ -448,8 +448,11 @@
 .gp-lineup-order { font-size: 10.5px; font-weight: 800; color: #8c8f95; text-align: center; }
 
 .gp-lineup-card {
-  width: 40px;
-  height: 56px;
+  /* 57x80 is the artboard's card size. It was built at 40x56 for no good
+   * reason -- the rail is 300px wide in both -- which made the cards read as
+   * thumbnails rather than as cards. */
+  width: 57px;
+  height: 80px;
   flex-shrink: 0;
   border-radius: 5px;
   border: 1px solid var(--s-line-soft);
@@ -485,8 +488,8 @@
 /* Full-width on a phone: the card can be a little larger and the row taller,
  * since the constraint there is vertical rhythm rather than rail width. */
 @media (max-width: 767px) {
-  .gp-lineup-row { min-height: 48px; gap: 10px; }
-  .gp-lineup-card { width: 46px; height: 64px; }
+  .gp-lineup-row { min-height: 56px; gap: 10px; }
+  .gp-lineup-card { width: 62px; height: 87px; }
   .gp-lineup-who b { font-size: 14px; }
 }
 
@@ -564,8 +567,8 @@
 .gp-matchup-card { display: flex; align-items: center; gap: 9px; min-width: 0; }
 
 .gp-matchup-art {
-  width: 38px;
-  height: 53px;
+  width: 50px;
+  height: 70px;
   flex-shrink: 0;
   border-radius: 5px;
   overflow: hidden;
