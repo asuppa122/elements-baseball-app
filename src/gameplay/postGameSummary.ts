@@ -163,8 +163,21 @@ export function restProjectionFor(
   const restMilestones = state.configuration.restMilestones
   if (!Array.isArray(restMilestones)) return { available: false, side, reason: 'MISSING_REST_MILESTONES' }
 
-  const hitters = new Set(state.hitterPlateAppearanceCardKeys?.[side] ?? [])
-  const pitchers = new Set(state.pitcherAppearanceCardKeys?.[side] ?? [])
+  // The Rulebook's default-attributes override exempts a player from ACCRUING
+  // fatigue for the game. The SQL that actually persists folds that into its
+  // own appeared flag, while applyGameCompletionRest takes `appeared` as given
+  // -- so applying it here is a contract on this caller, not an extra rule.
+  // Skipping it projects a charge the database will never apply, and the
+  // post-game screen is the only place anyone would see the difference.
+  // Pinned by restTrackingSqlParity.test.ts against the migration's own text.
+  const defaultBatters = new Set(state.pregame[side].defaultBatterCardKeys ?? [])
+  const defaultPitchers = new Set(state.pregame[side].defaultPitcherCardKeys ?? [])
+  const hitters = new Set(
+    (state.hitterPlateAppearanceCardKeys?.[side] ?? []).filter((key) => !defaultBatters.has(key)),
+  )
+  const pitchers = new Set(
+    (state.pitcherAppearanceCardKeys?.[side] ?? []).filter((key) => !defaultPitchers.has(key)),
+  )
   const prior = state.restState?.[side] ?? {}
   // Everyone the game touched, plus everyone already carrying a rest debt --
   // a rested-yesterday player who sat today still ticks down, and omitting

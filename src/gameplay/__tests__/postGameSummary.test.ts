@@ -215,3 +215,53 @@ describe('rest ordering', () => {
     expect(r.players[0].cardKey).toBe('HOME-1') // deepest in rest debt, not first in the roster
   })
 })
+
+describe('default-attributes exemption (the caller contract the SQL assumes)', () => {
+  /**
+   * The SQL folds the exemption into its own appeared flag:
+   *   v_hitter_appeared := appeared_keys ? card and not (default_batter_keys ? card)
+   * applyGameCompletionRest takes `appeared` as given, so a TypeScript caller
+   * that passes a raw "did they bat" boolean projects a fatigue charge the
+   * database will not actually apply. See restTrackingSqlParity.test.ts.
+   */
+  it('does not charge fatigue to a player the GM ran on default attributes', () => {
+    const s = base()
+    s.hitterPlateAppearanceCardKeys = { away: [], home: ['HOME-0'] }
+    s.pitcherAppearanceCardKeys = { away: [], home: [] }
+    s.pregame.home.defaultBatterCardKeys = ['HOME-0']
+    s.restState = { away: {}, home: { 'HOME-0': { hitterGamesRemaining: 0, pitcherGamesRemaining: 0 } } }
+
+    const r = restProjectionFor(s, 'home', 1)
+    if (!r.available) throw new Error('expected a projection')
+    const p = r.players.find((x) => x.cardKey === 'HOME-0')!
+    expect(p.hitterAppeared).toBe(false)   // batted, but exempt from accrual
+    expect(p.hitterGamesRemaining).toBe(0) // no increment; flat decrement floors at 0
+  })
+
+  it('still charges a player who batted normally', () => {
+    const s = base()
+    s.hitterPlateAppearanceCardKeys = { away: [], home: ['HOME-0'] }
+    s.pitcherAppearanceCardKeys = { away: [], home: [] }
+    s.pregame.home.defaultBatterCardKeys = []
+    s.restState = { away: {}, home: { 'HOME-0': { hitterGamesRemaining: 0, pitcherGamesRemaining: 0 } } }
+
+    const r = restProjectionFor(s, 'home', 1)
+    if (!r.available) throw new Error('expected a projection')
+    const p = r.players.find((x) => x.cardKey === 'HOME-0')!
+    const ftg = s.pregame.home.roster!.cards['HOME-0'].hitter.fatigue ?? 0
+    expect(p.hitterAppeared).toBe(true)
+    expect(p.hitterGamesRemaining).toBe(Math.max(0, ftg - 1))
+  })
+
+  it('applies the same exemption on the pitcher track', () => {
+    const s = base()
+    s.hitterPlateAppearanceCardKeys = { away: [], home: [] }
+    s.pitcherAppearanceCardKeys = { away: [], home: ['HOME-8'] }
+    s.pregame.home.defaultPitcherCardKeys = ['HOME-8']
+    s.restState = { away: {}, home: { 'HOME-8': { hitterGamesRemaining: 0, pitcherGamesRemaining: 0 } } }
+
+    const r = restProjectionFor(s, 'home', 1)
+    if (!r.available) throw new Error('expected a projection')
+    expect(r.players.find((x) => x.cardKey === 'HOME-8')!.pitcherAppeared).toBe(false)
+  })
+})
