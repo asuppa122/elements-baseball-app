@@ -15,15 +15,21 @@ resting, the reveal, decision pending (tag-up), bases loaded. Tabs are live
   base label; a hitter out this inning takes the same outline in red with `OUT`.
   Outline, not glow: the glow read as too soft and the two warm colours bled
   into each other. The order-number badge stays neutral in both states.
-- **Shutout bonus** — an indicator light, green lit / red lit, under the label
-  `SHUTOUT BONUS`, sitting above the pitcher card alongside `IP LEFT`.
-  Replaces the earlier Intact/Broken and Live/Lost wordings.
+- **Pitcher status** — `IP LEFT` and `CONTROL` above the pitcher card. Control
+  is the *current* effective value from `effectivePitcherControl`, not the
+  printed one, so every fatigue effect lands in the same number.
+
+  No shutout-bonus badge. It went through Intact/Broken, then Live/Lost, then a
+  green/red indicator light, and all three were wrong for the same reason: no
+  other fatigue effect gets called out, they just move Control. Singling this
+  one out told the manager it was a different kind of thing than it is.
 
 ## Known open questions carried past this version
 
-- The light is colour-only. Green and red at 13px is legible for most people but
-  carries no redundant cue — a shape difference (filled vs hollow) or a micro
-  label would make it read without colour.
+- When Control has moved off printed, the tile can carry a quiet `from 5`. Not
+  wired into the four states, because at this moment in the game nothing has
+  moved it — all three penalties are zero (rested, under 4 earned runs, 2 outs
+  into a 22-out card), so the honest value is the printed 5.
 - Gold marks both the at-bat hero and every runner. Distinguished today by size
   and position in the rail, not by hue.
 - The 2B runner slot is shared by a runner standing on the bag and a runner in
