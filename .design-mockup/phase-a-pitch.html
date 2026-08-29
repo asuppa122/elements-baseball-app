@@ -1,0 +1,223 @@
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap">
+<style>
+:root{--ink:#070809;--soft:#0b0c0e;--panel:#111214;--gold:#d8ad2d;--bright:#f1ca45;--cream:#f5f1e6;
+--gray:#aeafb2;--mut:#777a80;--line:rgba(216,173,45,.34);--soft-line:rgba(216,173,45,.2);
+--good:#7fce8c;--pitch:#e08a5c;--bad:#e2726b}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--ink);color:var(--cream);font-family:Inter,system-ui,sans-serif;overflow:hidden}
+.screen{width:100vw;height:100dvh;padding:8px;display:flex;flex-direction:column;gap:8px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:11px;min-width:0;min-height:0}
+.lbl{font-size:9px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:var(--bright)}
+.num{font-variant-numeric:tabular-nums}
+
+/* ---------- top bar ---------- */
+.topbar{flex-shrink:0;display:flex;align-items:center;gap:12px;padding:6px 10px}
+.bug{flex-shrink:0;display:grid;gap:1px;padding-right:12px;border-right:1px solid var(--soft-line);min-width:118px}
+.team{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.team span{font-size:10.5px;font-weight:800;color:var(--gray)}
+.team b{font-size:16px;font-weight:900;line-height:1}
+.team.up span,.team.up b{color:var(--bright)}
+.state{display:flex;align-items:center;gap:8px;margin-top:2px}
+.state .inn{font-size:10px;font-weight:900}
+.dia{position:relative;width:18px;height:18px}
+.dia i{position:absolute;width:6px;height:6px;border:1px solid #6f5b1e;transform:rotate(45deg)}
+.dia .b2{top:0;left:6px}.dia .b3{top:6px;left:0}.dia .b1{top:6px;right:0}
+.dia i.on{background:var(--bright);border-color:var(--bright)}
+.outs{display:flex;gap:3px}
+.outs i{width:5.5px;height:5.5px;border-radius:50%;border:1px solid #6f5b1e}
+.outs i.on{background:var(--bright);border-color:var(--bright)}
+.order{flex:1;min-width:0;display:flex;align-items:flex-end;justify-content:space-between;gap:5px;overflow:hidden}
+.oc{position:relative;display:flex;flex-direction:column;align-items:center;gap:2px}
+.oc img{width:46px;height:64px;object-fit:cover;border-radius:3px;border:1px solid var(--soft-line);display:block}
+.oc.hero img{width:60px;height:84px;border-color:var(--bright)}
+.oc b{position:absolute;top:2px;left:2px;width:13px;height:13px;border-radius:3px;background:rgba(7,8,9,.9);
+border:1px solid var(--soft-line);color:var(--gray);font-size:8px;font-weight:900;line-height:11px;text-align:center}
+.oc em{font-style:normal;min-height:8px;font-size:6.5px;font-weight:900;letter-spacing:.07em;text-transform:uppercase;color:var(--mut);white-space:nowrap}
+.oc.hero em{color:var(--bright)}
+.oc.onbase img{outline:2px solid var(--bright);outline-offset:2px}
+.oc.onbase em{color:var(--bright)}
+.oc.out img{outline:2px solid var(--bad);outline-offset:2px}
+.oc.out em{color:var(--bad)}
+
+/* ---------- body ---------- */
+.body{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:8px}
+.stage{display:flex;gap:8px;min-width:0;min-height:0}
+.fieldcol{flex:1 1 auto;min-width:0;min-height:0;container-type:size;display:flex;align-items:center;justify-content:center}
+.field{position:relative;width:min(100%,calc(100cqh * 1.4458));aspect-ratio:1508/1043;border-radius:11px;overflow:hidden;border:1px solid var(--line);background:#070809}
+.fieldinner{position:absolute;top:0;height:100%;aspect-ratio:1508/1043;left:50%;transform:translateX(-50%);container-type:size}
+.fieldinner>img.bg{position:absolute;inset:0;width:100%;height:100%;object-fit:fill}
+.fc{position:absolute;transform:translate(-50%,-50%);z-index:3;transition:none}
+.fc img{border-radius:3px;border:1px solid rgba(216,173,45,.5);box-shadow:0 3px 12px rgba(7,8,9,.8);display:block;object-fit:cover}
+.fc em{display:none}
+.runner{position:absolute;transform:translate(-50%,-50%);background:rgba(7,8,9,.92);border:1px solid var(--bright);
+border-radius:5px;padding:2px 6px;text-align:center;z-index:5}
+.runner b{display:block;font-size:max(8px,1.15cqw);font-weight:800;color:var(--bright)}
+.runner span{font-size:max(6px,0.85cqw);color:var(--gray);white-space:nowrap}
+.defstrip{position:absolute;left:0;right:0;bottom:0;z-index:7;display:flex;gap:6px;align-items:center;justify-content:center;
+padding:5px 8px;font-size:9px;background:linear-gradient(180deg,rgba(7,8,9,0),rgba(7,8,9,.4))}
+.defstrip small{font-size:7.5px;color:#cfd0d2;font-weight:700;text-shadow:0 1px 3px #000,0 0 6px #000}
+.defstrip strong{font-size:9.5px;font-weight:800;text-shadow:0 1px 3px #000,0 0 6px #000}
+.defstrip .lbl{text-shadow:0 1px 3px #000,0 0 6px #000}
+.defstrip .divider{width:1px;height:11px;background:rgba(255,255,255,.3)}
+
+/* ---------- duel column (pitch phase) ---------- */
+.duel{flex:0 0 250px;min-width:0;display:flex;flex-direction:column;gap:6px}
+.man{flex:0 1 auto;min-height:0;display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px;
+border:1px solid var(--line);border-radius:11px;background:linear-gradient(180deg,#16171a,#111214)}
+.man img{width:auto;height:100%;max-height:100%;aspect-ratio:820/1150;object-fit:cover;border-radius:5px;
+box-shadow:0 4px 18px rgba(7,8,9,.9);display:block;min-height:0}
+.man .id{text-align:center;flex-shrink:0}
+.man .id em{font-style:normal;display:block;font-size:8px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:var(--mut)}
+.pmeta{display:flex;width:100%;gap:5px;flex-shrink:0}
+.pmeta div{flex:1;display:flex;flex-direction:column;align-items:center;gap:1px;padding:3px 2px;
+border:1px solid var(--soft-line);border-radius:6px;background:#08090a}
+.pmeta i{font-style:normal;font-size:7px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;color:var(--mut)}
+.pmeta u{text-decoration:none;font-size:13px;font-weight:900;line-height:1;color:var(--cream);font-variant-numeric:tabular-nums}
+.mid{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;padding:4px}
+.roll{width:100%;height:52px;border:none;border-radius:9px;background:var(--gold);color:var(--ink);
+font:inherit;font-size:14px;font-weight:900;letter-spacing:.1em;cursor:pointer}
+.hint{font-size:8.5px;color:var(--mut);font-style:italic}
+
+/* ---------- chips row (ball in play) ---------- */
+.chips{flex-shrink:0;display:flex;align-items:center;gap:8px;padding:5px 10px}
+.chip{display:flex;align-items:center;gap:6px;padding:4px 8px;border:1px solid var(--soft-line);border-radius:8px;background:var(--soft)}
+.chip img{width:26px;height:36px;object-fit:cover;border-radius:3px;display:block}
+.chip .n{font-size:10px;font-weight:800;white-space:nowrap}
+.chip .r{font-size:8px;color:var(--mut);white-space:nowrap}
+.rollchips{display:flex;align-items:center;gap:6px;margin-left:auto}
+.rc{font-size:9px;font-weight:800;padding:3px 8px;border-radius:5px;background:#08090a;border:1px solid var(--soft-line);color:var(--gray)}
+.rc b{color:var(--cream)}
+.adv{font-size:9px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;padding:3px 10px;border-radius:99px;background:var(--good);color:#07210c}
+
+/* ball in play: the fielder who matters */
+.fc.live img{outline:3px solid var(--bright);outline-offset:3px;box-shadow:0 0 26px 6px rgba(241,202,69,.55),0 6px 20px rgba(7,8,9,.9)}
+.fc.live em{display:block;position:absolute;left:50%;top:-16px;transform:translateX(-50%);
+font-style:normal;font-size:8px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:var(--bright);white-space:nowrap}
+.balltrack{position:absolute;z-index:4;border-top:2px dashed rgba(241,202,69,.5);transform-origin:left center}
+/* the runner decision, on the grass */
+.ask{position:absolute;z-index:8;background:rgba(7,8,9,.94);border:1px solid var(--gold);border-radius:9px;
+padding:7px 9px;width:186px;box-shadow:0 8px 26px rgba(0,0,0,.7)}
+.ask p{margin:0 0 6px;font-size:10px;line-height:1.35;color:var(--cream)}
+.ask p b{color:var(--bright)}
+.ask .btns{display:flex;gap:5px}
+.ask button{flex:1;border-radius:6px;font:inherit;font-size:10px;font-weight:800;padding:6px 4px;cursor:pointer;border:1px solid var(--soft-line);background:transparent;color:var(--gray)}
+.ask button.go{background:var(--gold);border-color:var(--gold);color:var(--ink)}
+
+/* ---------- right rail ---------- */
+.rail{padding:8px;display:flex;flex-direction:column;gap:8px;overflow:hidden}
+.head{display:flex;justify-content:space-between;align-items:center}
+.mbtn{border:1px solid var(--soft-line);background:transparent;color:var(--gray);border-radius:6px;font:inherit;font-size:9.5px;font-weight:700;padding:3px 8px}
+.box{border:1px solid var(--soft-line);border-radius:9px;padding:8px;display:grid;gap:5px;background:var(--soft)}
+.box.live{border-color:var(--gold);background:rgba(216,173,45,.07)}
+.act{border:1px solid var(--soft-line);background:transparent;color:var(--gray);border-radius:6px;font:inherit;
+font-size:10.5px;font-weight:700;padding:7px 9px;text-align:left;display:flex;justify-content:space-between;gap:8px}
+.act span{font-size:8.5px;color:var(--mut);font-weight:600}
+.recap h4{margin:0;font-size:13px;font-weight:900;color:var(--good)}
+.recap.pend h4{color:var(--bright)}
+.recap p{margin:0;font-size:10.5px;color:var(--gray);line-height:1.45}
+.phase{position:fixed;left:8px;bottom:8px;z-index:99;font-size:8.5px;font-weight:900;letter-spacing:.14em;
+text-transform:uppercase;color:#07210c;background:var(--bright);padding:4px 9px;border-radius:5px}
+
+/* ---------- PHONE ---------- */
+@media (max-width:700px){
+  .screen{padding:6px;gap:6px}
+  .topbar{gap:8px;padding:5px 8px}
+  .bug{min-width:96px;padding-right:8px}
+  .order{gap:3px}
+  .oc img{width:28px;height:39px}
+  .oc.hero img{width:36px;height:50px}
+  .oc em{display:none}
+  .oc b{width:11px;height:11px;font-size:7px;line-height:9px}
+  .body{display:flex;flex-direction:column;gap:6px}
+  .stage{flex-direction:column;gap:6px;flex:0 0 auto}
+  .fieldcol{width:100%;height:auto;flex:0 0 auto;order:2;container-type:normal;aspect-ratio:1508/1043}
+  .field{width:100%;height:100%;aspect-ratio:auto}
+  .duel{flex:0 0 auto;flex-direction:row;order:1;gap:6px;align-items:stretch;height:190px}
+  .man{flex:1 1 0;padding:5px}
+  .mid{flex:0 0 96px;padding:0}
+  .roll{height:44px;font-size:12px}
+  .pmeta u{font-size:11px}
+  .rail{flex:1 1 auto;overflow:auto}
+  .chips{flex-wrap:wrap;gap:6px}
+  .rollchips{margin-left:0;width:100%}
+  .ask{width:168px}
+}
+</style>
+<title>Phase A — the pitch</title>
+<div class="screen">
+  <div class="panel topbar">
+    <div class="bug">
+      <div class="team up"><span>Jeremiah</span><b class="num">2</b></div>
+      <div class="team"><span>Anthony</span><b class="num">0</b></div>
+      <div class="state"><span class="inn num">&#9650; 1</span>
+        <span class="dia"><i class="b2 on"></i><i class="b3"></i><i class="b1"></i></span><span class="outs"><i class="on"></i><i class=""></i><i class=""></i></span></div>
+    </div>
+    <div class="order">
+      <div class="oc"><b>1</b><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/SLS-John-Barnes.png"><em>&nbsp;</em></div>
+      <div class="oc"><b>2</b><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/WMP-Toussaint-Allen.png"><em>&nbsp;</em></div>
+      <div class="oc out"><b>3</b><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/CSW-Felipe-Sierra.png"><em>Out</em></div>
+      <div class="oc onbase"><b>4</b><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/HBG-John-Shackelford.png"><em>On 2nd</em></div>
+      <div class="oc hero"><b>5</b><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/2006/CIN-Rich-Aurilia.png"><em>At bat</em></div>
+      <div class="oc"><b>6</b><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1975/SFG-Gary-Thomasson.png"><em>On deck</em></div>
+      <div class="oc"><b>7</b><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1993/SEA-Ken-Griffey-Jr.png"><em>In the hole</em></div>
+      <div class="oc"><b>8</b><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/DS-Harry-Kenyon.png"><em>&nbsp;</em></div>
+      <div class="oc"><b>9</b><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/HIL-Phil-Cockrell.png"><em>&nbsp;</em></div>
+    </div>
+  </div>
+  <div class="body">
+    <div class="stage">
+      <div class="fieldcol"><div class="field"><div class="fieldinner">
+          <img class="bg" src="/gameplay-field-v3.webp">
+          <div class="fc" data-pos="LF" style="left:25.0%;top:19.0%"><em>Earl Gurley</em><img loading="eager" style="width:6.6cqw;height:9.26cqw" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/TOT-Earl-Gurley.png"></div>
+          <div class="fc" data-pos="CF" style="left:50.0%;top:13.0%"><em>Valentin Dreke</em><img loading="eager" style="width:6.6cqw;height:9.26cqw" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/CSW-Valentin-Dreke.png"></div>
+          <div class="fc" data-pos="RF" style="left:75.0%;top:19.0%"><em>Otto Briggs</em><img loading="eager" style="width:6.6cqw;height:9.26cqw" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/HIL-Otto-Briggs.png"></div>
+          <div class="fc" data-pos="SS" style="left:39.5%;top:27.6%"><em>Bobby Williams</em><img loading="eager" style="width:6.6cqw;height:9.26cqw" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/CAG-Bobby-Williams.png"></div>
+          <div class="fc" data-pos="2B" style="left:60.1%;top:27.2%"><em>Harry Kenyon</em><img loading="eager" style="width:6.6cqw;height:9.26cqw" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/DS-Harry-Kenyon.png"></div>
+          <div class="fc" data-pos="3B" style="left:27.7%;top:39.4%"><em>Tristan Gray</em><img loading="eager" style="width:6.6cqw;height:9.26cqw" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/2025/TBR-Tristan-Gray.png"></div>
+          <div class="fc" data-pos="1B" style="left:72.2%;top:38.9%"><em>Ben Taylor</em><img loading="eager" style="width:6.6cqw;height:9.26cqw" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/HBG-Ben-Taylor.png"></div>
+          <div class="fc" data-pos="C" style="left:49.8%;top:83.5%"><em>John Hines</em><img loading="eager" style="width:6.6cqw;height:9.26cqw" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/CAG-John-Hines.png"></div>
+          <div class="runner" style="left:49.8%;top:41.1%"><b>J. Shackelford</b><span class="num">BsR 14 &middot; SB &mdash;</span></div>
+
+          </div>
+        <div class="defstrip">
+          <span><b class="lbl">C</b> <strong>+3</strong></span><i class="divider"></i>
+          <span><b class="lbl">Inf</b> <small>1B</small><strong>+1</strong> <small>2B</small><strong>+0</strong> <small>3B</small><strong>+0</strong> <small>SS</small><strong>+8</strong></span>
+          <i class="divider"></i>
+          <span><b class="lbl">Of</b> <small>LF</small><strong>+0</strong> <small>CF</small><strong>+2</strong> <small>RF</small><strong>+2</strong></span>
+        </div></div></div>
+      <div class="duel">
+        <div class="man">
+          <img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/2006/CIN-Rich-Aurilia.png">
+          <div class="id"><em>At bat</em></div>
+        </div>
+        <div class="mid">
+          <button class="roll">ROLL PITCH</button>
+          <span class="hint">Settles the advantage</span>
+        </div>
+        <div class="man">
+          <div class="pmeta"><div><i>IP left</i><u class="num">7.0</u></div><div><i>Control</i><u class="num">5</u></div></div>
+          <img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/KCM-Nelson-Dean.png">
+          <div class="id"><em>Pitching</em></div>
+        </div>
+      </div>
+    </div>
+    <div class="panel rail">
+      <div class="head"><b class="lbl">Anthony &middot; Fielding</b><div><button class="mbtn">Pause</button> <button class="mbtn">Exit</button></div></div>
+      <div class="box">
+        <b class="lbl">Manager decisions</b>
+        <button class="act">Intentional Walk <span>awards 1B</span></button>
+        <button class="act">Pitching Change <span>8 available</span></button>
+        <button class="act">Natural Steal <span>1 per game</span></button>
+        <button class="act">Infield In <span>runner on 3B</span></button>
+      </div>
+      <div class="box recap">
+        <b class="lbl">Play recap</b>
+        <h4>Shackelford doubles</h4>
+        <p>Shackelford lines one into the right-field corner and pulls up at second. One away, Aurilia up.</p>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="phase">Phase A &mdash; the pitch</div>

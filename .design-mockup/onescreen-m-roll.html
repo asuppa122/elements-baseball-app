@@ -1,0 +1,396 @@
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap">
+<style>
+:root{--ink:#070809;--soft:#0b0c0e;--panel:#111214;--gold:#d8ad2d;--bright:#f1ca45;--cream:#f5f1e6;
+--gray:#aeafb2;--mut:#777a80;--line:rgba(216,173,45,.34);--soft-line:rgba(216,173,45,.2);
+--good:#7fce8c;--pitch:#e08a5c;--bad:#e2726b}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--ink);color:var(--cream);font-family:Inter,system-ui,sans-serif;overflow:hidden}
+.screen{width:100vw;height:100dvh;padding:8px;display:flex;flex-direction:column;gap:8px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:11px;min-width:0;min-height:0}
+.lbl{font-size:9px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:var(--bright)}
+.num{font-variant-numeric:tabular-nums}
+
+.topbar{flex-shrink:0;display:flex;align-items:center;gap:12px;padding:6px 10px}
+.bug{flex-shrink:0;display:grid;gap:1px;padding-right:12px;border-right:1px solid var(--soft-line);min-width:118px}
+.team{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.team span{font-size:10.5px;font-weight:800;color:var(--gray)}
+.team b{font-size:16px;font-weight:900;line-height:1}
+.team.up span,.team.up b{color:var(--bright)}
+.state{display:flex;align-items:center;gap:8px;margin-top:2px}
+.state .inn{font-size:10px;font-weight:900}
+.dia{position:relative;width:18px;height:18px}
+.dia i{position:absolute;width:6px;height:6px;border:1px solid #6f5b1e;transform:rotate(45deg)}
+.dia .b2{top:0;left:6px}.dia .b3{top:6px;left:0}.dia .b1{top:6px;right:0}
+.dia i.on{background:var(--bright);border-color:var(--bright)}
+.outs{display:flex;gap:3px}
+.outs i{width:5.5px;height:5.5px;border-radius:50%;border:1px solid #6f5b1e}
+.outs i.on{background:var(--bright);border-color:var(--bright)}
+.order{flex:1;min-width:0;display:flex;align-items:flex-end;justify-content:space-between;gap:5px;overflow:hidden}
+.oc{position:relative;display:flex;flex-direction:column;align-items:center;gap:2px}
+.oc img{width:46px;height:64px;object-fit:cover;border-radius:3px;border:1px solid var(--soft-line);display:block}
+.oc.hero img{width:60px;height:84px;border-color:var(--bright)}
+.oc b{position:absolute;top:2px;left:2px;width:13px;height:13px;border-radius:3px;background:rgba(7,8,9,.9);
+border:1px solid var(--soft-line);color:var(--gray);font-size:8px;font-weight:900;line-height:11px;text-align:center}
+.oc em{font-style:normal;min-height:8px;font-size:6.5px;font-weight:900;letter-spacing:.07em;text-transform:uppercase;color:var(--mut);white-space:nowrap}
+.oc.hero em{color:var(--bright)}
+.oc.onbase img{outline:2px solid var(--bright);outline-offset:2px}
+.oc.onbase em{color:var(--bright)}
+.oc.out img{outline:2px solid var(--bad);outline-offset:2px}
+.oc.out em{color:var(--bad)}
+
+.body{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:8px}
+.stage{display:flex;gap:8px;min-width:0;min-height:0}
+.fieldcol{flex:1 1 auto;min-width:0;min-height:0;container-type:size;display:flex;align-items:center;justify-content:center}
+.field{position:relative;width:min(100%,calc(100cqh * 1.4458));aspect-ratio:1508/1043;border-radius:11px;overflow:hidden;border:1px solid var(--line);background:#070809}
+.fieldinner{position:absolute;top:0;height:100%;aspect-ratio:1508/1043;left:50%;transform:translateX(-50%);container-type:size}
+.fieldinner>img.bg{position:absolute;inset:0;width:100%;height:100%;object-fit:fill}
+.fc{position:absolute;transform:translate(-50%,-50%);z-index:3}
+.fc img{border-radius:3px;border:1px solid rgba(216,173,45,.5);box-shadow:0 3px 12px rgba(7,8,9,.8);display:block;object-fit:cover}
+.runner{position:absolute;transform:translate(-50%,-50%);background:rgba(7,8,9,.92);border:1px solid var(--bright);
+border-radius:5px;padding:2px 6px;text-align:center;z-index:5}
+.runner b{display:block;font-size:max(8px,1.15cqw);font-weight:800;color:var(--bright)}
+.runner span{font-size:max(6px,.85cqw);color:var(--gray);white-space:nowrap}
+.defstrip{position:absolute;left:0;right:0;bottom:0;z-index:7;display:flex;gap:6px;align-items:center;justify-content:center;
+padding:5px 8px;font-size:9px;background:linear-gradient(180deg,rgba(7,8,9,0),rgba(7,8,9,.4))}
+.defstrip small{font-size:7.5px;color:#cfd0d2;font-weight:700;text-shadow:0 1px 3px #000,0 0 6px #000}
+.defstrip strong{font-size:9.5px;font-weight:800;text-shadow:0 1px 3px #000,0 0 6px #000}
+.defstrip .lbl{text-shadow:0 1px 3px #000,0 0 6px #000}
+.defstrip .divider{width:1px;height:11px;background:rgba(255,255,255,.3)}
+.dstrip{position:static;background:var(--panel);padding:8px 12px;font-size:11px;flex-shrink:0}
+.dstrip small{font-size:9px;text-shadow:none;color:var(--mut)}
+.dstrip strong{font-size:11.5px;text-shadow:none}
+.dstrip .lbl{text-shadow:none}
+.fcol .field .defstrip:not(.dstrip){display:none}
+.screen{position:relative;display:flex;flex-direction:column}
+.dtop{order:1}
+.play{order:2}
+.topbar{order:3;flex-shrink:0}
+.dbar{order:4}
+.mcol .man{flex:0 0 auto;padding:7px;gap:3px}
+.mcol .man img{width:128px;height:179px;max-height:none;aspect-ratio:auto}
+.mcol .mid{flex:0 0 auto}
+.mcol .roll{height:50px;font-size:14px}
+.mcol .readout{display:flex;gap:10px;margin-top:6px;width:100%;justify-content:space-around;
+  border:1px solid var(--soft-line);border-radius:9px;background:#08090a;padding:6px 8px}
+.mcol .readout div{text-align:center}
+.mcol .readout i{font-style:normal;display:block;font-size:7px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:var(--mut)}
+.mcol .readout u{text-decoration:none;font-size:16px;font-weight:900;color:var(--mut);font-variant-numeric:tabular-nums}
+.mcol .readout .sep{width:1px;align-self:stretch;background:var(--soft-line)}
+.mcol .hint{display:none}
+.mcol .mid{flex-direction:row;align-items:stretch;gap:8px}
+.mcol .roll{flex:0 0 92px;height:48px;font-size:11px;letter-spacing:.06em}
+.mcol .readout{margin-top:0;flex:1 1 auto}
+.mcol .readout u{font-size:14px}
+
+.duel{flex:0 0 250px;min-width:0;display:flex;flex-direction:column;gap:6px}
+.man{flex:0 1 auto;min-height:0;display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px;
+border:1px solid var(--line);border-radius:11px;background:linear-gradient(180deg,#16171a,#111214)}
+.man img{width:auto;height:100%;max-height:100%;aspect-ratio:820/1150;object-fit:cover;border-radius:5px;
+box-shadow:0 4px 18px rgba(7,8,9,.9);display:block;min-height:0}
+.man .id{text-align:center;flex-shrink:0}
+.man .id em{font-style:normal;display:block;font-size:8px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:var(--mut)}
+.pmeta{display:flex;width:100%;gap:5px;flex-shrink:0}
+.pmeta div{flex:1;display:flex;flex-direction:column;align-items:center;gap:1px;padding:3px 2px;border:1px solid var(--soft-line);border-radius:6px;background:#08090a}
+.pmeta i{font-style:normal;font-size:7px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;color:var(--mut)}
+.pmeta u{text-decoration:none;font-size:13px;font-weight:900;line-height:1;color:var(--cream);font-variant-numeric:tabular-nums}
+.pmeta s{text-decoration:none;font-size:7px;font-weight:700;color:var(--mut);text-align:center;line-height:1.25;margin-top:2px}
+.mid{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;padding:4px}
+.roll{width:100%;height:52px;border:none;border-radius:9px;background:var(--gold);color:var(--ink);font:inherit;font-size:14px;font-weight:900;letter-spacing:.1em;cursor:pointer}
+.hint{font-size:8.5px;color:var(--mut);font-style:italic}
+
+.rail{padding:8px;display:flex;flex-direction:column;gap:8px;overflow:hidden}
+.head{display:flex;justify-content:space-between;align-items:center;flex-shrink:0}
+.mbtn{border:1px solid var(--soft-line);background:transparent;color:var(--gray);border-radius:6px;font:inherit;font-size:9.5px;font-weight:700;padding:3px 8px}
+.box{border:1px solid var(--soft-line);border-radius:9px;padding:8px;display:grid;gap:5px;background:var(--soft);flex-shrink:0}
+.act{border:1px solid var(--soft-line);background:transparent;color:var(--gray);border-radius:6px;font:inherit;
+font-size:10.5px;font-weight:700;padding:8px 9px;text-align:left;display:flex;justify-content:space-between;gap:8px;min-height:36px;align-items:center}
+.act span{font-size:8.5px;color:var(--mut);font-weight:600}
+.acts{display:flex;flex-wrap:wrap;gap:5px}
+.acts .act{flex:0 0 auto;min-height:0;padding:6px 11px;font-size:10.5px;font-weight:800;
+  border-radius:99px;color:var(--cream);border-color:var(--line);letter-spacing:.03em}
+#zoom{display:none;position:fixed;inset:0;background:rgba(7,8,9,.9);z-index:200;align-items:center;justify-content:center;cursor:zoom-out}
+#zoom.on{display:flex}
+#zoom img{max-width:78vw;max-height:80vh;border-radius:9px;box-shadow:0 20px 70px rgba(0,0,0,.9)}
+.oc{cursor:zoom-in}
+.recap h4{margin:0;font-size:13px;font-weight:900;color:var(--good)}
+.recap p{margin:0;font-size:10.5px;color:var(--gray);line-height:1.45}
+
+/* accordion drawers */
+.drawers{display:flex;flex-direction:column;gap:6px;min-height:0;flex:1 1 auto}
+.dr{border:1px solid var(--soft-line);border-radius:9px;background:var(--soft);display:flex;flex-direction:column;min-height:0;flex-shrink:0}
+.dr.open{flex:1 1 auto;border-color:var(--line)}
+.drh{display:flex;align-items:center;gap:8px;padding:9px 10px;cursor:pointer;min-height:40px}
+.drh .car{font-size:9px;color:var(--mut);width:9px}
+.dr.open .drh .car{color:var(--bright)}
+.drh b{font-size:10px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:var(--gray)}
+.dr.open .drh b{color:var(--bright)}
+.drh span{margin-left:auto;font-size:9px;color:var(--mut);font-weight:700}
+.drb{display:none;padding:0 8px 8px;overflow:auto;min-height:0}
+.dr.open .drb{display:block}
+.arm{display:flex;align-items:center;gap:8px;padding:4px 5px;border:1px solid var(--soft-line);border-radius:8px;background:#08090a;margin-bottom:5px}
+.arm img{width:32px;height:45px;object-fit:cover;border-radius:4px;border:1px solid var(--soft-line);display:block;flex-shrink:0}
+.arm .who{min-width:0;flex:1}
+.arm .who b{display:block;font-size:10.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.arm .who span{font-size:8.5px;color:var(--mut)}
+.arm .rest{font-size:8px;font-weight:800;color:var(--good);flex-shrink:0}
+.arm .rest.wait{color:var(--pitch)}
+.arm button{border:1px solid var(--soft-line);background:transparent;color:var(--gray);border-radius:6px;font:inherit;font-size:9px;font-weight:800;padding:6px 9px;flex-shrink:0;min-height:32px}
+.logline{display:flex;gap:8px;font-size:10.5px;padding:4px 0;border-bottom:1px solid rgba(174,175,178,.07)}
+.logline i{font-style:normal;color:var(--mut);font-size:8.5px;width:18px;flex-shrink:0}
+
+/* mobile tab bar */
+.tabbar{display:none}
+.readout{display:none}
+.man.adv{border-color:var(--bright);box-shadow:0 0 0 1px var(--bright),0 0 22px rgba(241,202,69,.28)}
+.menubtn{display:flex;align-items:center;justify-content:center;flex:0 0 40px;min-height:40px;
+  border:1px solid var(--soft-line);border-radius:8px;background:transparent;color:var(--gray);font-size:16px;cursor:pointer}
+.dtop{display:flex;align-items:center;gap:14px;padding:8px 12px;flex-shrink:0}
+.dtop .bug{flex:0 0 150px;border-right:1px solid var(--soft-line);padding-right:14px}
+.drecap{flex:1 1 auto;min-width:0}
+.drecap h4{margin:0;font-size:14px;font-weight:900;color:var(--good)}
+.drecap p{margin:1px 0 0;font-size:11px;color:var(--gray)}
+.play{flex:1;min-height:0;display:flex;gap:10px;justify-content:center}
+.mcol{flex:0 0 186px;display:flex;flex-direction:column;gap:8px;min-height:0}
+.fcol{flex:1 1 auto;min-width:0;min-height:0;display:flex;flex-direction:column;gap:6px}
+.dbar{flex-shrink:0;display:flex;align-items:center;gap:10px;padding:7px 10px}
+.dbar .lbl{flex-shrink:0}
+.tabstrip{display:flex;gap:6px;margin-left:auto}
+.tabstrip button{display:flex;align-items:center;gap:7px;border:1px solid var(--soft-line);background:var(--soft);
+  color:var(--gray);border-radius:8px;font:inherit;font-size:10px;font-weight:900;letter-spacing:.1em;
+  text-transform:uppercase;padding:8px 12px;min-height:38px;cursor:pointer}
+.tabstrip button em{font-style:normal;font-size:9px;color:var(--mut);font-weight:700;letter-spacing:.02em;text-transform:none}
+.tabstrip button.on{background:rgba(216,173,45,.14);border-color:var(--gold);color:var(--bright)}
+.overlay{position:absolute;left:8px;right:8px;bottom:8px;top:88px;z-index:60;background:rgba(9,10,12,.97);
+  border:1px solid var(--gold);border-radius:12px;display:flex;flex-direction:column;padding:12px;gap:9px;
+  box-shadow:0 18px 60px rgba(0,0,0,.8)}
+.overlay .ohead{display:flex;align-items:center;gap:10px}
+.overlay .ohead b{font-size:12px;font-weight:900;letter-spacing:.13em;text-transform:uppercase;color:var(--bright)}
+.overlay .ohead span{font-size:10px;color:var(--mut);font-weight:700}
+.overlay .ohead button{margin-left:auto;border:1px solid var(--soft-line);background:transparent;color:var(--gray);
+  border-radius:7px;font:inherit;font-size:10px;font-weight:800;padding:7px 12px;min-height:34px;cursor:pointer}
+.olist{display:grid;grid-template-columns:1fr 1fr;gap:8px;overflow:auto;min-height:0;align-content:start}
+/* the blocking-decision surface: nothing else is actionable while it is up */
+.scrim{position:fixed;inset:0;background:rgba(7,8,9,.72);z-index:150}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:151;background:var(--panel);border-top:1px solid var(--gold);
+  border-radius:14px 14px 0 0;padding:12px 12px calc(12px + env(safe-area-inset-bottom));
+  box-shadow:0 -14px 44px rgba(0,0,0,.75);display:flex;flex-direction:column;gap:9px;max-height:76dvh}
+.sheet .grip{width:38px;height:4px;border-radius:2px;background:#33363c;margin:0 auto 2px}
+.sheet h3{margin:0;font-size:12px;font-weight:900;letter-spacing:.13em;text-transform:uppercase;color:var(--bright)}
+.sheet .desc{margin:0;font-size:11px;color:var(--gray);line-height:1.4}
+.opts{display:flex;flex-direction:column;gap:6px;overflow:auto;min-height:0}
+.opt{display:flex;gap:9px;align-items:flex-start;padding:9px 10px;border:1px solid var(--soft-line);
+  border-radius:9px;background:#08090a;text-align:left;color:var(--cream);font:inherit;min-height:52px}
+.opt .dot{width:15px;height:15px;border-radius:50%;border:2px solid var(--mut);flex-shrink:0;margin-top:1px}
+.opt.on{border-color:var(--gold);background:rgba(216,173,45,.09)}
+.opt.on .dot{border-color:var(--gold);background:var(--gold);box-shadow:inset 0 0 0 3px #08090a}
+.opt b{display:block;font-size:12px;font-weight:800}
+.opt span{display:block;font-size:10px;color:var(--mut);line-height:1.35;margin-top:2px}
+.sheet .go{width:100%;min-height:50px;border:none;border-radius:10px;background:var(--gold);color:var(--ink);
+  font:inherit;font-size:14px;font-weight:900;letter-spacing:.1em}
+.sheet .go[disabled]{background:#22242a;color:var(--mut)}
+.rollbig{display:flex;align-items:center;justify-content:center;gap:14px;padding:14px;border:1px solid var(--soft-line);
+  border-radius:10px;background:#08090a}
+.rollbig .d20{width:52px;height:52px;border:2px solid var(--gold);border-radius:9px;display:flex;align-items:center;
+  justify-content:center;font-size:19px;font-weight:900;color:var(--bright)}
+.rollbig p{margin:0;font-size:10.5px;color:var(--gray);line-height:1.4}
+.mtop{display:none}
+.mrecap{min-width:0}
+.pwho{display:none}
+.bmeta{display:none}
+.defstack{display:none}
+.tag{position:fixed;left:8px;bottom:8px;z-index:99;font-size:8.5px;font-weight:900;letter-spacing:.14em;
+text-transform:uppercase;color:#07210c;background:var(--bright);padding:4px 9px;border-radius:5px}
+
+@media (max-width:700px){
+  /* one column: scorebug+recap on top, then the matchup, then the order, then the calls */
+  .body{display:contents}
+  .rail{display:contents}
+  .mtop{display:flex;order:1;gap:10px;align-items:center;padding:7px 9px}
+  .mtop .bug{flex:0 0 104px;border-right:1px solid var(--soft-line);padding-right:10px;min-width:0}
+  .mtop .bug .team{gap:8px}
+  .mrecap h4{margin:0;font-size:12px;font-weight:900;color:var(--good);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .mrecap p{margin:1px 0 0;font-size:9.5px;color:var(--gray);line-height:1.3}
+  .box.recap{display:none}
+  .stage{order:3}
+  .topbar{padding:5px 6px}
+  .defstack{order:4}
+  .topbar{order:5}
+  .actsbox{order:6}
+  .drawers{display:none}
+  .tabbar{order:7;margin-top:auto}
+  .topbar .bug{display:none}
+  .bmeta{display:flex}
+  .runner{display:none}
+  .menubtn{display:flex;align-items:center;justify-content:center;flex:0 0 40px;min-height:40px;
+    border:1px solid var(--soft-line);border-radius:8px;background:transparent;color:var(--gray);font-size:16px;line-height:1}
+  /* the order strip belongs to the matchup tab only */
+  .screen:not(.tab-matchup) .topbar{display:none}
+  /* the recap belongs to the matchup; elsewhere the scorebug takes the whole bar */
+  .screen:not(.tab-matchup) .mrecap{display:none}
+  .screen:not(.tab-matchup) .mtop .bug{flex:1 1 auto;border-right:0;padding-right:0}
+  .screen:not(.tab-matchup) .mtop .bug .team{gap:0;justify-content:flex-start}
+  .screen:not(.tab-matchup) .mtop .bug .team span{flex:1}
+  .screen:not(.tab-matchup) .mtop{gap:12px}
+  /* a small roll button with the readout alongside it */
+  .mid{flex-direction:row;gap:8px;align-items:stretch}
+  .roll{width:124px;height:46px;font-size:12px;flex:0 0 124px}
+  .hint{display:none}
+  .readout{display:flex;flex:1 1 auto;align-items:center;justify-content:space-around;gap:6px;
+    border:1px solid var(--soft-line);border-radius:9px;background:#08090a;padding:4px 10px}
+  .readout div{text-align:center}
+  .readout i{font-style:normal;display:block;font-size:7px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:var(--mut)}
+  .readout u{text-decoration:none;font-size:16px;font-weight:900;color:var(--mut);font-variant-numeric:tabular-nums}
+  .readout .sep{width:1px;align-self:stretch;background:var(--soft-line)}
+  .panel.penlist{display:flex!important;order:3;flex:1 1 0!important;flex-direction:column;gap:6px;padding:0;min-height:0}
+  .penlist .box{order:0}
+  .mbug{display:grid;gap:1px;width:100%;flex-shrink:0;padding:4px 6px;border:1px solid var(--soft-line);
+    border-radius:6px;background:#08090a;height:54px;align-content:center}
+  .mbug .team{gap:6px}
+  .mbug .team span{font-size:9px}
+  .mbug .team b{font-size:13px}
+  .mbug .state{gap:6px;margin-top:2px}
+  .mbug .state .inn{font-size:9px}
+  .mbug .dia{width:15px;height:15px}
+  .mbug .dia i{width:5px;height:5px}
+  .mbug .dia .b2{top:0;left:5px}.mbug .dia .b3{top:5px;left:0}.mbug .dia .b1{top:5px;right:0}
+  .mbug .outs i{width:5px;height:5px}
+  .pmeta div{justify-content:center}
+  .oc img{width:36px;height:50px}
+  .oc.hero img{width:44px;height:62px}
+  /* field tab: crop the sides, use the height */
+  .fieldcol.tall{aspect-ratio:.95}
+  .fieldcol.tall .fieldinner{height:104%}
+  .defstack{display:grid;gap:4px;flex-shrink:0;padding:7px 9px}
+  .defstack .r{display:flex;align-items:baseline;gap:8px}
+  .defstack .r>b{font-size:9px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:var(--bright);width:26px;flex-shrink:0}
+  .defstack .r>span{display:flex;gap:9px;align-items:baseline;flex-wrap:wrap}
+  .defstack small{font-size:8.5px;color:var(--mut);font-weight:700}
+  .defstack strong{font-size:11px;font-weight:800;margin-left:2px}
+  .field.nostrip .defstrip{display:none}
+  .screen{padding:6px;gap:6px;padding-bottom:0}
+  .topbar{gap:8px;padding:5px 8px}
+  .bug{min-width:96px;padding-right:8px}
+  .order{gap:3px}
+  .oc img{width:28px;height:39px}
+  .oc.hero img{width:36px;height:50px}
+  .oc em{display:block;font-size:6.5px;letter-spacing:.05em}
+  .oc:not(.onbase):not(.out):not(.hero) em{visibility:hidden}
+  .oc b{width:11px;height:11px;font-size:7px;line-height:9px}
+  .stage{flex-direction:column;gap:6px;flex:1 1 auto;min-height:0}
+  .fieldcol{width:100%;height:auto;flex:0 0 auto;container-type:normal;aspect-ratio:1508/1043}
+  .field{width:100%;height:100%;aspect-ratio:auto}
+  .duel{flex:1 1 auto;flex-direction:column;gap:6px;align-items:stretch;min-height:0}
+  .man{flex:1 1 0;flex-direction:row;align-items:center;justify-content:center;gap:9px;padding:6px;min-height:0;min-width:0}
+  .man img{width:152px;height:213px;max-width:none;max-height:none;flex:0 0 auto;aspect-ratio:auto}
+  .man .id{display:none}
+  .pwho{display:block;font-size:8px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--mut);text-align:center;margin-bottom:3px}
+  .man .bmeta{order:1;width:118px!important;height:auto!important;flex-direction:column;flex:0 0 118px;gap:5px}
+  .man .bmeta div{width:100%;min-height:52px}
+  .man.p img{order:1}
+  .man.p .pmeta{order:2;width:118px!important;height:auto!important;flex-direction:column;flex:0 0 118px;gap:5px}
+  .man.p .pmeta div{width:100%;min-height:52px}
+  .man.p .pwho{order:0;display:none}
+  .mid{flex:0 0 auto;padding:0}
+  .roll{height:52px;font-size:13px}
+  .rail{flex:0 1 auto;overflow:auto;padding:0;border:0;background:transparent}
+  .panel.rail{border:0}
+  .drawers{flex:0 0 auto}
+  .tabbar{display:flex;flex-shrink:0;gap:4px;padding:6px 4px calc(6px + env(safe-area-inset-bottom));
+    background:var(--panel);border-top:1px solid var(--line);margin:0 -6px}
+  .tabbar button{flex:1;min-height:46px;border:1px solid transparent;background:transparent;color:var(--mut);
+    font:inherit;font-size:8.5px;font-weight:900;letter-spacing:.06em;text-transform:uppercase;border-radius:8px;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer}
+  .tabbar button .ic{font-size:14px;line-height:1}
+  .tabbar button.on{background:rgba(216,173,45,.14);border-color:var(--line);color:var(--bright)}
+  .act{min-height:44px}
+  .acts .act{min-height:40px;padding:8px 14px;font-size:11px}
+  .arm button{min-height:44px;padding:6px 12px}
+}
+</style>
+<title>Decision roll</title>
+<div class="screen tab-matchup">
+<div class="panel topbar">
+    <div class="bug">
+      <div class="team up"><span>Jeremiah</span><b class="num">2</b></div>
+      <div class="team"><span>Anthony</span><b class="num">0</b></div>
+      <div class="state"><span class="inn num">&#9650; 1</span>
+        <span class="dia"><i class="b2 on"></i><i class="b3"></i><i class="b1"></i></span><span class="outs"><i class="on"></i><i class=""></i><i class=""></i></span></div>
+    </div>
+    <div class="order">
+      <div class="oc"><b>1</b><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/SLS-John-Barnes.png"><em>&nbsp;</em></div>
+      <div class="oc"><b>2</b><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/WMP-Toussaint-Allen.png"><em>&nbsp;</em></div>
+      <div class="oc out"><b>3</b><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/CSW-Felipe-Sierra.png"><em>Out</em></div>
+      <div class="oc onbase"><b>4</b><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/HBG-John-Shackelford.png"><em>On 2nd</em></div>
+      <div class="oc hero"><b>5</b><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/2006/CIN-Rich-Aurilia.png"><em>At bat</em></div>
+      <div class="oc"><b>6</b><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1975/SFG-Gary-Thomasson.png"><em>On deck</em></div>
+      <div class="oc"><b>7</b><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1993/SEA-Ken-Griffey-Jr.png"><em>In the hole</em></div>
+      <div class="oc"><b>8</b><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/DS-Harry-Kenyon.png"><em>&nbsp;</em></div>
+      <div class="oc"><b>9</b><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/HIL-Phil-Cockrell.png"><em>&nbsp;</em></div>
+    </div>
+  </div>
+  <div class="panel mtop">
+    <div class="bug">
+      <div class="team up"><span>Jeremiah</span><b class="num">2</b></div>
+      <div class="team"><span>Anthony</span><b class="num">0</b></div>
+      <div class="state"><span class="inn num">&#9650; 1</span>
+        <span class="dia"><i class="b2 on"></i><i class="b3"></i><i class="b1"></i></span><span class="outs"><i class="on"></i><i class=""></i><i class=""></i></span></div>
+    </div>
+    <div class="mrecap"><b class="lbl">Play recap</b><h4>Shackelford doubles</h4><p>Lined into the right-field corner, up at second. One away.</p></div>
+    <button class="menubtn">&#9776;</button>
+  </div>
+  <div class="body">
+    <div class="stage">
+      <div class="duel">
+        <div class="man adv"><div class="pmeta bmeta">
+            <div><i>Season</i><u class="num">.291</u><s>8 HR &middot; 31 RBI</s></div>
+            <div><i>This game</i><u class="num">0&ndash;1</u><s>walk, 1 LOB</s></div>
+          </div><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/2006/CIN-Rich-Aurilia.png"><div class="id"><em>At bat</em></div></div>
+        <div class="mid"><button class="roll">ROLL PITCH</button><span class="hint">Settles the advantage</span>
+          <div class="readout"><div><i>Pitch</i><u style="color:var(--cream)">7</u></div><span class="sep"></span><div><i>Swing</i><u style="color:var(--cream)">12</u></div><span class="sep"></span><div><i>Result</i><u style="color:var(--bright)">GB</u></div></div>
+        </div>
+        <div class="man p">
+          <div class="pmeta"><div><i>IP left</i><u class="num">7.0</u></div><div><i>Control</i><u class="num">5</u></div></div>
+          <img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/KCM-Nelson-Dean.png"><div class="id"><em>Pitching</em></div><b class="pwho">Pitching</b></div>
+      </div>
+    </div>
+    <div class="panel rail">
+      <div class="box recap">
+        <b class="lbl">Play recap</b>
+        <h4>Shackelford doubles</h4>
+        <p>Shackelford lines one into the right-field corner and pulls up at second. One away, Aurilia up.</p>
+      </div>
+      <div class="box actsbox">
+        <b class="lbl">Manager decisions</b>
+        <div class="acts">
+          <button class="act">IBB</button>
+        </div>
+      </div>
+    </div>
+  </div>
+<div class="scrim"></div>
+<div class="sheet">
+  <div class="grip"></div>
+  <h3>DBP Fielding Check &middot; Lead Force</h3>
+  <p class="desc">Roll the authoritative d20 and apply the exact Rulebook natural-1 / natural-20 and comparison result.</p>
+  <div class="rollbig">
+    <div class="d20">d20</div>
+    <p><b style="color:var(--cream)">1B + 2B + SS</b><br>combined INF Def +9 vs Shackelford BsR 14</p>
+  </div>
+  <button class="go">ROLL d20</button>
+</div>
+  <div class="tabbar"><button class="on"><span class="ic">&#9678;</span>Matchup</button><button class=""><span class="ic">&#9670;</span>Field</button><button class=""><span class="ic">&#9776;</span>Log</button><button class=""><span class="ic">&#9679;</span>Bullpen</button><button class=""><span class="ic">&#9634;</span>Bench</button></div>
+</div>
+<div class="tag">Mobile &mdash; decision board, roll</div>
+
+<div id="zoom"><img alt=""></div>
+<script>
+document.addEventListener('click',function(e){
+  var z=document.getElementById('zoom');
+  var c=e.target.closest('.oc');
+  if(c){ z.querySelector('img').src=c.querySelector('img').src; z.classList.add('on'); return; }
+  if(e.target.closest('#zoom')) z.classList.remove('on');
+});
+</script>

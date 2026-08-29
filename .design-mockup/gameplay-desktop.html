@@ -1,0 +1,390 @@
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap">
+<style>
+:root{--ink:#070809;--soft:#0b0c0e;--panel:#111214;--gold:#d8ad2d;--bright:#f1ca45;--cream:#f5f1e6;
+--gray:#aeafb2;--mut:#777a80;--line:rgba(216,173,45,.34);--soft-line:rgba(216,173,45,.2);
+--good:#7fce8c;--pitch:#e08a5c;--bad:#e2726b}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--ink);color:var(--cream);font-family:Inter,system-ui,sans-serif;overflow:hidden}
+.screen{position:relative;width:100vw;height:100dvh;padding:8px;display:flex;flex-direction:column;gap:8px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:11px;min-width:0;min-height:0}
+  .top .recap .lbl{flex-shrink:0;font-size:10px}
+.lbl{font-size:9px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:var(--bright)}
+.num{font-variant-numeric:tabular-nums}
+
+.top{flex-shrink:0;height:90px;display:flex;align-items:center;justify-content:space-between;
+gap:26px;padding:0 26px;min-height:0}
+.seg{display:flex;align-items:center;min-width:0}
+.vr{flex:0 0 1px;align-self:stretch;margin:16px 0;background:var(--soft-line)}
+.score{flex:0 0 auto;gap:30px}
+.situ{flex:0 0 auto;gap:18px}
+.recap{flex:1 1 auto;gap:16px}
+
+.team{display:flex;align-items:baseline;gap:11px}
+.team span{font-size:15px;font-weight:800;color:var(--gray);letter-spacing:.01em}
+.team b{font-size:31px;font-weight:900;line-height:1}
+.team.up span,.team.up b{color:var(--bright)}
+.top .inn{font-size:16px;font-weight:900}
+.dia{position:relative;width:27px;height:27px}
+.dia i{position:absolute;width:9.5px;height:9.5px;border:1px solid #6f5b1e;transform:rotate(45deg)}
+.dia .b2{top:0;left:8.75px}.dia .b3{top:8.75px;left:0}.dia .b1{top:8.75px;right:0}
+.dia i.on{background:var(--bright);border-color:var(--bright)}
+.outs{display:flex;gap:5px}
+.outs i{width:9px;height:9px;border-radius:50%;border:1px solid #6f5b1e}
+.outs i.on{background:var(--bright);border-color:var(--bright)}
+.recap{flex:1 1 auto;min-width:0;display:flex;align-items:baseline;gap:12px}
+.recap h4{margin:0;font-size:19px;font-weight:900;color:var(--good);white-space:nowrap;flex-shrink:0}
+.recap p{margin:0;font-size:13px;color:var(--gray);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;flex:1 1 auto}
+.menu{flex:0 0 48px;height:44px;font-size:19px;border:1px solid var(--soft-line);border-radius:8px;background:transparent;
+color:var(--gray);font-size:16px;cursor:pointer}
+
+.main{flex:1;min-height:0;display:flex;gap:8px}
+
+/* ---- LEFT RAIL: the matchup, the order, the calls ---- */
+.lrail{flex:0 0 580px;display:flex;flex-direction:column;gap:7px;min-height:0}
+.man{flex:0 1 auto;display:flex;align-items:center;justify-content:center;gap:9px;padding:7px;
+border:1px solid var(--line);border-radius:11px;background:linear-gradient(180deg,#16171a,#111214)}
+.man.adv{border-color:var(--bright);box-shadow:0 0 0 1px var(--bright),0 0 22px rgba(241,202,69,.26)}
+.man img{width:210px;height:295px;object-fit:cover;border-radius:6px;box-shadow:0 4px 18px rgba(7,8,9,.9);display:block;flex:0 0 auto}
+.meta{flex:0 0 160px;display:flex;flex-direction:column;gap:6px}
+.meta div{display:flex;flex-direction:column;align-items:center;gap:1px;padding:6px 4px;
+border:1px solid var(--soft-line);border-radius:7px;background:#08090a;min-height:56px;justify-content:center}
+.meta i{font-style:normal;font-size:7.5px;font-weight:900;letter-spacing:.11em;text-transform:uppercase;color:var(--mut)}
+.meta u{text-decoration:none;font-size:16px;font-weight:900;line-height:1;color:var(--cream);font-variant-numeric:tabular-nums}
+.meta s{text-decoration:none;font-size:7px;font-weight:700;color:var(--mut);margin-top:3px;text-align:center}
+.rollrow{flex:0 0 auto;display:flex;gap:8px;align-items:stretch}
+.roll{flex:0 0 132px;height:60px;border:none;border-radius:9px;background:var(--gold);color:var(--ink);
+font:inherit;font-size:13px;font-weight:900;letter-spacing:.09em;cursor:pointer}
+.readout{flex:1 1 auto;display:flex;align-items:center;justify-content:space-around;gap:6px;
+border:1px solid var(--soft-line);border-radius:9px;background:#08090a;padding:4px 8px}
+.readout div{text-align:center}
+.readout i{font-style:normal;display:block;font-size:7px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:var(--mut)}
+.readout u{text-decoration:none;font-size:16px;font-weight:900;color:var(--mut);font-variant-numeric:tabular-nums}
+.readout .sep{width:1px;align-self:stretch;background:var(--soft-line)}
+.order{flex:0 0 auto;display:flex;align-items:flex-end;justify-content:space-between;gap:4px;padding:8px 8px}
+.oc{position:relative;display:flex;flex-direction:column;align-items:center;gap:2px}
+.oc img{width:50px;height:70px;object-fit:cover;border-radius:3px;border:1px solid var(--soft-line);display:block}
+.oc.hero img{width:61px;height:85px;border-color:var(--bright)}
+.oc b{position:absolute;top:2px;left:2px;width:11px;height:11px;border-radius:3px;background:rgba(7,8,9,.9);
+border:1px solid var(--soft-line);color:var(--gray);font-size:7px;font-weight:900;line-height:9px;text-align:center}
+.oc em{font-style:normal;min-height:8px;font-size:6px;font-weight:900;letter-spacing:.05em;text-transform:uppercase;color:var(--mut);white-space:nowrap}
+.oc.hero em{color:var(--bright)}
+.oc.onbase img{outline:2px solid var(--bright);outline-offset:2px}
+.oc.onbase em{color:var(--bright)}
+.oc.out img{outline:2px solid var(--bad);outline-offset:2px}
+.oc.out em{color:var(--bad)}
+.oc:not(.onbase):not(.out):not(.hero) em{visibility:hidden}
+.calls{flex:1 1 auto;display:flex;flex-direction:column;gap:8px;padding:10px 11px;min-height:46px}
+.acts{display:flex;flex-wrap:wrap;gap:6px}
+.acts button{border:1px solid var(--line);background:transparent;color:var(--cream);border-radius:99px;
+font:inherit;font-size:11px;font-weight:800;padding:8px 14px;min-height:38px;cursor:pointer}
+
+/* ---- CENTRE: field ---- */
+.fcol{flex:1 1 auto;min-width:0;min-height:0;display:flex;flex-direction:column;gap:6px;justify-content:center}
+.fwrap{flex:1 1 auto;min-height:0;container-type:size;display:flex;align-items:center;justify-content:center}
+.field{position:relative;width:100%;height:100%;border-radius:11px;overflow:hidden;border:1px solid var(--line);background:#070809}
+.finner{position:absolute;top:0;height:100%;aspect-ratio:1508/1043;left:50%;transform:translateX(-50%);container-type:size}
+.finner>img.bg{position:absolute;inset:0;width:100%;height:100%;object-fit:fill}
+.fc{position:absolute;transform:translate(-50%,-50%);z-index:3}
+.fc img{width:10.0cqw;height:14.02cqw;border-radius:3px;border:1px solid rgba(216,173,45,.5);
+box-shadow:0 3px 12px rgba(7,8,9,.8);display:block;object-fit:cover}
+.dstrip{flex:0 0 auto;display:flex;gap:22px;align-items:center;justify-content:center;padding:8px 12px;font-size:11px}
+.dstrip .g{display:flex;gap:7px;align-items:baseline}
+.dstrip small{font-size:9px;color:var(--mut);font-weight:700}
+.dstrip strong{font-size:11.5px;font-weight:800}
+
+/* ---- RIGHT RAIL: accordion ---- */
+.rrail{flex:0 0 290px;display:flex;flex-direction:column;gap:7px;min-height:0}
+.dr{border:1px solid var(--soft-line);border-radius:10px;background:var(--soft);display:flex;flex-direction:column;
+min-height:0;flex:0 0 auto;overflow:hidden}
+.dr.open{flex:1 1 auto;border-color:var(--gold)}
+.drh{display:flex;align-items:center;gap:8px;padding:11px 10px;cursor:pointer;min-height:44px;flex-shrink:0}
+.drh .car{font-size:9px;color:var(--mut);width:9px}
+.dr.open .drh .car{color:var(--bright)}
+.drh b{font-size:10px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:var(--gray)}
+.dr.open .drh b{color:var(--bright)}
+.drh span{margin-left:auto;font-size:9px;color:var(--mut);font-weight:700}
+.drb{display:none;padding:0 7px 7px;overflow:auto;min-height:0}
+.dr.open .drb{display:block}
+.arm{display:flex;align-items:center;gap:7px;padding:5px;border:1px solid var(--soft-line);border-radius:8px;
+background:#08090a;margin-bottom:5px}
+.arm img{width:30px;height:42px;object-fit:cover;border-radius:4px;display:block;flex-shrink:0}
+.arm .who{min-width:0;flex:1}
+.arm .who b{display:block;font-size:10px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.arm .who span{font-size:8px;color:var(--mut)}
+.arm .rest{font-size:7.5px;font-weight:800;color:var(--good)}
+.arm .rest.wait{color:var(--pitch)}
+.arm button{border:1px solid var(--soft-line);background:transparent;color:var(--gray);border-radius:6px;
+font:inherit;font-size:8.5px;font-weight:800;padding:6px 8px;flex-shrink:0}
+.logline{display:flex;gap:8px;font-size:10px;padding:4px 2px;border-bottom:1px solid rgba(174,175,178,.07)}
+.logline i{font-style:normal;color:var(--mut);font-size:8px;width:16px;flex-shrink:0}
+.tag{position:fixed;left:8px;bottom:8px;z-index:99;font-size:8.5px;font-weight:900;letter-spacing:.14em;
+text-transform:uppercase;color:#07210c;background:var(--bright);padding:4px 9px;border-radius:5px}
+</style>
+<title>Elements — gameplay</title>
+<div class="screen">
+  <div class="panel top">
+    <div class="seg score">
+      <span class="team up"><span>Jeremiah</span><b class="num">2</b></span>
+      <span class="team"><span>Anthony</span><b class="num">0</b></span>
+    </div>
+    <i class="vr"></i>
+    <div class="seg situ">
+      <span class="inn num">&#9650; 1</span>
+      <span class="dia"><i class="b2 on"></i><i class="b3"></i><i class="b1"></i></span>
+      <span class="outs"><i class="on"></i><i></i><i></i></span>
+    </div>
+    <i class="vr"></i>
+    <div class="seg recap"><b class="lbl">Play recap</b>
+      <h4>Shackelford doubles</h4>
+      <p>Lined into the right-field corner and up at second. One away, Aurilia to the plate.</p></div>
+    <button class="menu">&#9776;</button>
+  </div>
+  <div class="main">
+    <div class="lrail">
+      <div class="man">
+        <img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/2006/CIN-Rich-Aurilia.png">
+        <div class="meta">
+          <div><i>Season</i><u class="num">.291</u><s>8 HR &middot; 31 RBI</s></div>
+          <div><i>This game</i><u class="num">0&ndash;1</u><s>walk, 1 LOB</s></div>
+        </div>
+      </div>
+      <div class="rollrow">
+        <button class="roll">ROLL PITCH</button>
+        <div class="readout"><div><i>Pitch</i><u>&ndash;</u></div><span class="sep"></span>
+          <div><i>Swing</i><u>&ndash;</u></div><span class="sep"></span><div><i>Result</i><u>&ndash;</u></div></div>
+      </div>
+      <div class="man">
+        <img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/KCM-Nelson-Dean.png">
+        <div class="meta">
+          <div><i>IP left</i><u class="num">7.0</u></div>
+          <div><i>Control</i><u class="num">5</u></div>
+        </div>
+      </div>
+    <div class="panel order">
+      <div class="oc"><b>1</b><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/SLS-John-Barnes.png"><em>x</em></div>
+      <div class="oc"><b>2</b><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/WMP-Toussaint-Allen.png"><em>x</em></div>
+      <div class="oc out"><b>3</b><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/CSW-Felipe-Sierra.png"><em>Out</em></div>
+      <div class="oc onbase"><b>4</b><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/HBG-John-Shackelford.png"><em>On 2nd</em></div>
+      <div class="oc hero"><b>5</b><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/2006/CIN-Rich-Aurilia.png"><em>At bat</em></div>
+      <div class="oc"><b>6</b><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1975/SFG-Gary-Thomasson.png"><em>On deck</em></div>
+      <div class="oc"><b>7</b><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1993/SEA-Ken-Griffey-Jr.png"><em>In the hole</em></div>
+      <div class="oc"><b>8</b><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/DS-Harry-Kenyon.png"><em>x</em></div>
+      <div class="oc"><b>9</b><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/HIL-Phil-Cockrell.png"><em>x</em></div>
+    </div>
+      <div class="panel calls">
+        <b class="lbl">Manager decisions</b>
+        <div class="acts"><button>IBB</button></div>
+      </div>
+    </div>
+    <div class="fcol">
+      <div class="fwrap"><div class="field"><div class="finner">
+        <img class="bg" src="/gameplay-field-v3.webp">
+        <div class="fc" data-pos="LF" style="left:26.5%;top:14.5%"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/TOT-Earl-Gurley.png"></div>
+        <div class="fc" data-pos="CF" style="left:50.5%;top:11.0%"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/CSW-Valentin-Dreke.png"></div>
+        <div class="fc" data-pos="RF" style="left:73.5%;top:15.0%"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/HIL-Otto-Briggs.png"></div>
+        <div class="fc" data-pos="SS" style="left:38.5%;top:33.0%"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/CAG-Bobby-Williams.png"></div>
+        <div class="fc" data-pos="2B" style="left:61.5%;top:33.0%"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/DS-Harry-Kenyon.png"></div>
+        <div class="fc" data-pos="3B" style="left:25.5%;top:40.5%"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/2025/TBR-Tristan-Gray.png"></div>
+        <div class="fc" data-pos="1B" style="left:74.5%;top:40.5%"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/HBG-Ben-Taylor.png"></div>
+        <div class="fc" data-pos="C" style="left:50.5%;top:87.8%"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/CAG-John-Hines.png"></div>
+        </div></div></div>
+      <div class="panel dstrip">
+        <span class="g"><b class="lbl">C</b><small>C</small><strong>+3</strong></span>
+        <span class="g"><b class="lbl">Inf</b><small>1B</small><strong>+1</strong><small>2B</small><strong>+0</strong><small>3B</small><strong>+0</strong><small>SS</small><strong>+8</strong></span>
+        <span class="g"><b class="lbl">Of</b><small>LF</small><strong>+0</strong><small>CF</small><strong>+2</strong><small>RF</small><strong>+2</strong></span>
+      </div>
+    </div>
+    <div class="rrail">
+      <div class="dr"><div class="drh"><span class="car">&#9656;</span><b>Game log</b><span>17 events</span></div>
+        <div class="drb">            <div class="logline"><i>17</i>Shackelford doubles to right.</div>            <div class="logline"><i>16</i>Sierra flies out, Allen scores.</div>            <div class="logline"><i>15</i>Allen triples, Barnes scores.</div>            <div class="logline"><i>14</i>Barnes singles.</div>            <div class="logline"><i>0</i><b style="color:var(--bright)">Play ball!</b></div></div></div>
+      <div class="dr"><div class="drh"><span class="car">&#9656;</span><b>Bullpen</b><span>8 available</span></div>
+        <div class="drb">            <div class="arm"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/2023/CHC-Drew-Smyly.png">
+              <div class="who"><b>Drew Smyly</b><span>Ctrl 2 &middot; IP 3.1</span></div>
+              <span class="rest">Rested</span><button>Bring in</button></div>            <div class="arm"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/TOT-Roy-Roberts.png">
+              <div class="who"><b>Roy Roberts</b><span>Ctrl 2 &middot; IP 5.0</span></div>
+              <span class="rest">Rested</span><button>Bring in</button></div>            <div class="arm"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/NLG-Charles-Heywood.png">
+              <div class="who"><b>Charles Heywood</b><span>Ctrl 0 &middot; IP 4.1</span></div>
+              <span class="rest">Rested</span><button>Bring in</button></div>            <div class="arm"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/TOT-Rube-Chambers.png">
+              <div class="who"><b>Rube Chambers</b><span>Ctrl 3 &middot; IP 5.2</span></div>
+              <span class="rest">Rested</span><button>Bring in</button></div>            <div class="arm"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/TOT-Omer-Newsome.png">
+              <div class="who"><b>Omer Newsome</b><span>Ctrl 3 &middot; IP 4.0</span></div>
+              <span class="rest">Rested</span><button>Bring in</button></div>            <div class="arm"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/DS-Lawrence-Terrell.png">
+              <div class="who"><b>Lawrence Terrell</b><span>Ctrl 3 &middot; IP 3.2</span></div>
+              <span class="rest wait">1 game</span><button>Bring in</button></div>            <div class="arm"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/DS-Slim-Branham.png">
+              <div class="who"><b>Slim Branham</b><span>Ctrl 2 &middot; IP 3.2</span></div>
+              <span class="rest">Rested</span><button>Bring in</button></div>            <div class="arm"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/2024/LAD-Dinelson-Lamet.png">
+              <div class="who"><b>Dinelson Lamet</b><span>Ctrl 5 &middot; IP 1.1</span></div>
+              <span class="rest">Rested</span><button>Bring in</button></div></div></div>
+      <div class="dr"><div class="drh"><span class="car">&#9656;</span><b>Bench</b><span>2 available</span></div>
+        <div class="drb"></div></div>
+    </div>
+  </div>
+</div>
+<div class="tag">Desktop &mdash; drawers collapsed</div>
+
+<style>
+#ed{position:fixed;right:10px;bottom:10px;width:262px;z-index:300;background:#111214;border:1px solid var(--line);
+border-radius:11px;padding:11px;font:11px/1.4 Inter,system-ui,sans-serif;color:var(--cream);box-shadow:0 12px 44px rgba(0,0,0,.8)}
+#ed h5{margin:0 0 3px;font-size:9.5px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:var(--bright)}
+#ed .tip{color:var(--mut);font-size:9.5px;line-height:1.45;margin-bottom:8px}
+#ed .r{display:flex;align-items:center;gap:8px;margin-bottom:5px}
+#ed .r label{flex:0 0 92px;font-size:9px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--mut)}
+#ed .r input{flex:1;accent-color:var(--gold);min-width:0}
+#ed .r b{flex:0 0 34px;text-align:right;font-size:10px;font-variant-numeric:tabular-nums}
+#ed .fit{margin:7px 0;padding:6px 8px;border-radius:6px;font-size:10px;font-weight:800;text-align:center}
+#ed .fit.ok{background:rgba(127,206,140,.14);color:var(--good);border:1px solid rgba(127,206,140,.4)}
+#ed .fit.bad{background:rgba(226,114,107,.16);color:var(--bad);border:1px solid rgba(226,114,107,.5)}
+#ed pre{margin:0 0 8px;max-height:150px;overflow:auto;background:#08090a;border:1px solid var(--soft-line);
+border-radius:7px;padding:7px;font:10px/1.5 ui-monospace,Menlo,monospace;color:var(--gray);white-space:pre}
+#ed .btns{display:flex;gap:6px}
+#ed button{flex:1;border:1px solid var(--soft-line);background:transparent;color:var(--gray);border-radius:6px;
+font:inherit;font-size:10px;font-weight:800;padding:7px 4px;cursor:pointer}
+#ed button.go{background:var(--gold);color:var(--ink);border-color:var(--gold)}
+.fc{cursor:grab;touch-action:none}
+.fc.drag{cursor:grabbing;z-index:40}
+.fc.sel img{outline:2px solid var(--bright);outline-offset:3px}
+.grab{position:fixed;top:0;width:11px;z-index:290;cursor:col-resize;background:transparent}
+.grab::after{content:"";position:absolute;left:4px;top:0;bottom:0;width:3px;border-radius:2px;background:rgba(216,173,45,.34)}
+.grab:hover::after,.grab.on::after{background:var(--bright);box-shadow:0 0 10px rgba(241,202,69,.7)}
+body.dragging{user-select:none;cursor:col-resize}
+</style>
+<div class="grab" id="g1"></div>
+<div class="grab" id="g2"></div>
+<div id="ed">
+  <h5>Layout editor</h5>
+  <div class="tip">Drag the gold bars for column widths, sliders for contents, and drag any fielder on the grass. Click a fielder then arrow-key to nudge (Shift = 5&times;).</div>
+  <div class="r"><label>Left rail</label><input id="s_lrail" type="range" min="240" max="620" step="2"><b id="v_lrail"></b></div>
+  <div class="r"><label>Right rail</label><input id="s_rrail" type="range" min="140" max="460" step="2"><b id="v_rrail"></b></div>
+  <div class="r"><label>Header</label><input id="s_header" type="range" min="36" max="130" step="2"><b id="v_header"></b></div>
+  <div class="r"><label>Matchup</label><input id="s_card" type="range" min="90" max="300" step="2"><b id="v_card"></b></div>
+  <div class="r"><label>Meta tiles</label><input id="s_meta" type="range" min="0" max="220" step="2"><b id="v_meta"></b></div>
+  <div class="r"><label>Roll row</label><input id="s_roll" type="range" min="34" max="110" step="2"><b id="v_roll"></b></div>
+  <div class="r"><label>Lineup</label><input id="s_line" type="range" min="18" max="90" step="1"><b id="v_line"></b></div>
+  <div class="r"><label>Decisions</label><input id="s_calls" type="range" min="44" max="220" step="2"><b id="v_calls"></b></div>
+  <div class="r"><label>Fielders</label><input id="s_field" type="range" min="3" max="16" step="0.2"><b id="v_field"></b></div>
+  <div class="fit" id="fit"></div>
+  <pre id="out"></pre>
+  <pre id="pos"></pre>
+  <div class="btns"><button class="go" id="copy">Copy</button><button id="reset">Reset</button></div>
+</div>
+<script>
+(function(){
+  var KEY='elements-desktop-layout-v1';
+  var D={lrail:580,rrail:290,header:90,card:210,meta:160,roll:60,line:50,calls:46,field:10.0};
+  var S=Object.assign({},D);
+  try{var raw=localStorage.getItem(KEY); if(raw) S=Object.assign(S,JSON.parse(raw));}catch(e){}
+  var q=function(s){return document.querySelector(s)};
+  var qa=function(s){return [].slice.call(document.querySelectorAll(s))};
+  var AR=1150/820; // card height / width
+
+  function apply(){
+    q('.lrail').style.flex='0 0 '+S.lrail+'px';
+    q('.rrail').style.flex='0 0 '+S.rrail+'px';
+    q('.top').style.height=S.header+'px';
+    qa('.man img').forEach(function(im){im.style.width=S.card+'px';im.style.height=Math.round(S.card*AR)+'px';});
+    qa('.meta').forEach(function(m){m.style.flex='0 0 '+S.meta+'px';m.style.display=S.meta<20?'none':'flex';});
+    q('.roll').style.height=S.roll+'px';
+    q('.readout').style.minHeight=S.roll+'px';
+    qa('.oc img').forEach(function(im){
+      var w=im.parentNode.classList.contains('hero')?Math.round(S.line*1.22):S.line;
+      im.style.width=w+'px';im.style.height=Math.round(w*AR)+'px';});
+    q('.calls').style.minHeight=S.calls+'px';
+    qa('.fc img').forEach(function(im){im.style.width=S.field+'cqw';im.style.height=(S.field*AR).toFixed(2)+'cqw';});
+    ['lrail','rrail','header','card','meta','roll','line','calls','field'].forEach(function(k){
+      var el=q('#s_'+k); if(el&&el.value!=S[k]) el.value=S[k];
+      var b=q('#v_'+k); if(b) b.textContent=(k==='field'?S[k].toFixed(1):S[k]);
+    });
+    try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}
+    requestAnimationFrame(report);
+  }
+  function report(){
+    var lr=q('.lrail'), f=q('.field');
+    var over=lr.scrollHeight-lr.clientHeight;
+    var fit=q('#fit');
+    fit.className='fit '+(over<=1?'ok':'bad');
+    fit.textContent=over<=1?('Left rail fits · '+lr.scrollHeight+'/'+lr.clientHeight):('Left rail overflows by '+over+'px');
+    var fr=f.getBoundingClientRect();
+    var pl=[];
+    qa('.fc').forEach(function(el){
+      var b=el.closest('.finner').getBoundingClientRect(), r=el.getBoundingClientRect();
+      pl.push((el.dataset.pos+'   ').slice(0,3)+' '+
+        (((r.left+r.width/2)-b.left)/b.width*100).toFixed(1).padStart(5)+'  '+
+        (((r.top+r.height/2)-b.top)/b.height*100).toFixed(1).padStart(5));
+    });
+    q('#pos').textContent='fielders (left / top %)\n'+pl.join('\n');
+    q('#out').textContent=
+      'left rail   '+S.lrail+'\n'+
+      'right rail  '+S.rrail+'\n'+
+      'header      '+S.header+'\n'+
+      'matchup     '+S.card+' x '+Math.round(S.card*AR)+'\n'+
+      'meta tiles  '+S.meta+'\n'+
+      'roll row    '+S.roll+'\n'+
+      'lineup      '+S.line+' x '+Math.round(S.line*AR)+'\n'+
+      'decisions   '+S.calls+'\n'+
+      'fielders    '+S.field.toFixed(1)+'cqw\n'+
+      '\nfield       '+Math.round(fr.width)+' x '+Math.round(fr.height)+
+      '\nviewport    '+window.innerWidth+' x '+window.innerHeight;
+    place();
+  }
+  function place(){
+    var lr=q('.lrail').getBoundingClientRect(), rr=q('.rrail').getBoundingClientRect();
+    var g1=q('#g1'), g2=q('#g2');
+    g1.style.left=(lr.right-1)+'px'; g1.style.height=lr.height+'px'; g1.style.top=lr.top+'px';
+    g2.style.left=(rr.left-9)+'px';  g2.style.height=rr.height+'px'; g2.style.top=rr.top+'px';
+  }
+  ['lrail','rrail','header','card','meta','roll','line','calls','field'].forEach(function(k){
+    var el=q('#s_'+k); if(!el) return;
+    el.addEventListener('input',function(){S[k]=k==='field'?parseFloat(el.value):parseInt(el.value,10);apply();});
+  });
+  function drag(id,key,sign){
+    var g=q(id);
+    g.addEventListener('pointerdown',function(e){
+      e.preventDefault(); g.classList.add('on'); document.body.classList.add('dragging');
+      g.setPointerCapture(e.pointerId);
+      var x0=e.clientX, v0=S[key];
+      function mv(ev){ S[key]=Math.max(140,Math.min(640, v0+sign*(ev.clientX-x0))); apply(); }
+      function up(){ g.classList.remove('on'); document.body.classList.remove('dragging');
+        g.removeEventListener('pointermove',mv); g.removeEventListener('pointerup',up); }
+      g.addEventListener('pointermove',mv); g.addEventListener('pointerup',up);
+    });
+  }
+  drag('#g1','lrail',1); drag('#g2','rrail',-1);
+  // drag a fielder anywhere on the grass; arrows nudge the selected one
+  var sel=null;
+  function pctOf(el){var b=el.closest('.finner').getBoundingClientRect(),r=el.getBoundingClientRect();
+    return [((r.left+r.width/2)-b.left)/b.width*100,((r.top+r.height/2)-b.top)/b.height*100];}
+  function put(el,l,t){el.style.left=Math.max(0,Math.min(100,l))+'%';el.style.top=Math.max(0,Math.min(100,t))+'%';
+    savePos();requestAnimationFrame(report);}
+  function savePos(){var m={};qa('.fc').forEach(function(el){m[el.dataset.pos]=[el.style.left,el.style.top];});
+    try{localStorage.setItem('elements-desktop-fielders-v1',JSON.stringify(m));}catch(e){}}
+  try{var fp=localStorage.getItem('elements-desktop-fielders-v1');
+    if(fp){var m=JSON.parse(fp);qa('.fc').forEach(function(el){if(m[el.dataset.pos]){el.style.left=m[el.dataset.pos][0];el.style.top=m[el.dataset.pos][1];}});}}catch(e){}
+  var dg=null;
+  document.addEventListener('pointerdown',function(e){
+    var el=e.target.closest('.fc'); if(!el) return;
+    e.preventDefault(); qa('.fc').forEach(function(n){n.classList.remove('sel')}); el.classList.add('sel'); sel=el;
+    el.classList.add('drag'); el.setPointerCapture(e.pointerId);
+    var b=el.closest('.finner').getBoundingClientRect(), r=el.getBoundingClientRect();
+    dg={el:el,box:b,dx:e.clientX-(r.left+r.width/2),dy:e.clientY-(r.top+r.height/2)};
+  });
+  document.addEventListener('pointermove',function(e){ if(!dg) return;
+    put(dg.el,(e.clientX-dg.dx-dg.box.left)/dg.box.width*100,(e.clientY-dg.dy-dg.box.top)/dg.box.height*100); });
+  document.addEventListener('pointerup',function(){ if(dg){dg.el.classList.remove('drag');dg=null;} });
+  document.addEventListener('keydown',function(e){
+    if(!sel||e.key.indexOf('Arrow')!==0||document.activeElement.tagName==='INPUT') return;
+    e.preventDefault(); var st=e.shiftKey?2.5:0.5, p=pctOf(sel);
+    put(sel,p[0]+(e.key=='ArrowRight'?st:e.key=='ArrowLeft'?-st:0),p[1]+(e.key=='ArrowDown'?st:e.key=='ArrowUp'?-st:0)); });
+
+  q('#copy').onclick=function(){var b=q('#copy');
+    try{navigator.clipboard.writeText(q('#out').textContent+'\n\n'+q('#pos').textContent);b.textContent='Copied';}
+    catch(e){b.textContent='Select + ⌘C';}
+    setTimeout(function(){b.textContent='Copy';},1200);};
+  q('#reset').onclick=function(){S=Object.assign({},D);
+    try{localStorage.removeItem('elements-desktop-fielders-v1');}catch(e){}
+    location.reload();};
+  window.addEventListener('resize',function(){requestAnimationFrame(report);});
+  apply();
+})();
+</script>
