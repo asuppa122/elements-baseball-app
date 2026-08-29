@@ -1,5 +1,5 @@
-import { getFieldingRating } from '../defense'
-import { BATTER_BOX, FIELDER_PAINT_ORDER, FIELDER_POINTS, RUNNER_POINTS, formatDef } from './fieldGeometry'
+import { effectiveCurrentHitterOnBase, effectiveCurrentPitcherControl } from '../engine'
+import { BATTER_BOX, FIELDER_PAINT_ORDER, FIELDER_POINTS, RUNNER_POINTS } from './fieldGeometry'
 import type { BaseRunnerState, DefensivePosition, GameSide, GameState } from '../types'
 
 /**
@@ -21,49 +21,71 @@ function shortName(full: string): string {
   return `${parts[0][0]}. ${parts.slice(1).join(' ')}`
 }
 
-function CardChip({ imageUrl, label, name, rating, className, style }: {
-  imageUrl: string | null
-  label: string
-  name: string
-  rating: string | null
-  className: string
-  style: React.CSSProperties
-}) {
-  return (
-    <div className={className} style={style}>
-      <span className="gp-fc-art">
-        {imageUrl ? <img src={imageUrl} alt="" loading="lazy" /> : <i aria-hidden="true" />}
-      </span>
-      <span className="gp-fc-meta">
-        <b>{label}</b>
-        <span className="gp-fc-name">{name}</span>
-        {rating && <span className="gp-fc-rating s-num">{rating}</span>}
-      </span>
-    </div>
-  )
-}
-
+/**
+ * A positional fielder: card art for identity, crisp text for the facts.
+ *
+ * The text is not redundant with the art. The card images are 820x1150 and
+ * render here around 58px wide -- a 7% scale, at which the printed name and
+ * ratings are well under a pixel and unreadable at any size that fits nine on
+ * the field. The artboard solved this by having no art at all: every player was
+ * a placeholder div with real HTML text. This is that text, with real art
+ * behind it, which is why it can be both legible and small.
+ *
+ * DEF is deliberately absent -- the strip below the field owns it, and printing
+ * it here as well would be the duplication we removed.
+ */
 function Fielder({ state, side, position }: { state: GameState; side: GameSide; position: DefensivePosition }) {
   const cardKey = state.pregame[side].defensiveAlignment[position]
   const card = cardKey ? state.pregame[side].roster?.cards[cardKey] : null
   const point = FIELDER_POINTS[position as Exclude<DefensivePosition, 'DH'>]
   if (!point) return null
 
-  // Pitchers carry no fielding rating in Elements, so the pitcher shows his
-  // Control instead of a fabricated "+0".
-  const rating = position === 'P'
-    ? (card?.pitcher.control !== null && card?.pitcher.control !== undefined ? `CTRL ${card.pitcher.control}` : null)
-    : (card ? formatDef(getFieldingRating(card, position)) : null)
+  return (
+    <div
+      className={`gp-fc gp-fc-fielder${position === 'C' ? ' is-catcher' : ''}${card ? '' : ' is-empty'}`}
+      style={{ left: `${point.left}%`, top: `${point.top}%` }}
+      title={card ? `${position} · ${card.playerName}` : position}
+    >
+      <span className="gp-fc-art">
+        {card?.imageUrl
+          ? <img src={card.imageUrl} alt="" loading="lazy" />
+          : <i aria-hidden="true" />}
+      </span>
+      <span className="gp-fc-meta">
+        <b className="gp-fc-pos">{position}</b>
+        {/* Dropped by container query on a narrow field -- two characters of
+            position always survive, the name is what gives way. */}
+        <span className="gp-fc-name">{card ? shortName(card.playerName) : '—'}</span>
+      </span>
+    </div>
+  )
+}
+
+/**
+ * The pitcher keeps a label, because CTRL is LIVE state -- fatigue-adjusted and
+ * changing as he tires -- which printed card art can never show.
+ */
+function Pitcher({ state, side }: { state: GameState; side: GameSide }) {
+  const cardKey = state.pregame[side].defensiveAlignment.P
+  const card = cardKey ? state.pregame[side].roster?.cards[cardKey] : null
+  const point = FIELDER_POINTS.P
+  if (!card) return null
+
+  const printed = card.pitcher.control
+  const effective = effectiveCurrentPitcherControl(state)
+  const adjusted = printed !== null && effective !== printed
 
   return (
-    <CardChip
-      className={`gp-fc gp-fc-fielder${position === 'P' ? ' is-pitcher' : ''}`}
-      style={{ left: `${point.left}%`, top: `${point.top}%` }}
-      imageUrl={card?.imageUrl ?? null}
-      label={position}
-      name={card ? shortName(card.playerName) : '—'}
-      rating={rating}
-    />
+    <div className="gp-fc gp-fc-pitcher" style={{ left: `${point.left}%`, top: `${point.top}%` }}>
+      <span className="gp-fc-art">
+        {card.imageUrl ? <img src={card.imageUrl} alt="" loading="lazy" /> : <i aria-hidden="true" />}
+      </span>
+      <span className="gp-fc-meta">
+        <span className="gp-fc-live s-num">
+          CTRL {printed ?? '—'}{adjusted && <em> → {effective}</em>}
+        </span>
+      </span>
+    </div>
   )
 }
 
@@ -78,15 +100,29 @@ function Batter({ state }: { state: GameState }) {
   const bats = card.hitter.bats === 'L' ? 'L' : 'R'
   const point = BATTER_BOX[bats]
 
+  // The batter keeps his label too: handedness and the fatigue-adjusted On
+  // Base are live state, not printed facts.
+  const printed = card.hitter.onBase
+  const effective = effectiveCurrentHitterOnBase(state)
+  const adjusted = printed !== null && effective !== printed
+
   return (
-    <CardChip
-      className="gp-fc gp-fc-batter"
-      style={{ left: `${point.left}%`, top: `${point.top}%` }}
-      imageUrl={card.imageUrl}
-      label={`AT BAT · ${card.hitter.bats ?? '?'}`}
-      name={shortName(card.playerName)}
-      rating={card.hitter.onBase !== null ? `OB ${card.hitter.onBase}` : null}
-    />
+    <div className="gp-fc gp-fc-batter" style={{ left: `${point.left}%`, top: `${point.top}%` }}>
+      <span className="gp-fc-art">
+        {card.imageUrl ? <img src={card.imageUrl} alt="" loading="lazy" /> : <i aria-hidden="true" />}
+      </span>
+      <span className="gp-fc-meta">
+        <b>
+          {/* "At bat" is dropped on a narrow field -- the gold border already
+              says it, and three wrapped lines pushed the label past the field's
+              bottom edge, where overflow:hidden clipped the OB value. */}
+          <span className="gp-fc-atbat">At bat · </span>Bats {card.hitter.bats ?? '?'}
+        </b>
+        <span className="gp-fc-live s-num">
+          OB {printed ?? '—'}{adjusted && <> <em>→ {effective}</em></>}
+        </span>
+      </span>
+    </div>
   )
 }
 
@@ -114,9 +150,10 @@ export default function GameField({ state }: { state: GameState }) {
   return (
     <div className="gp-field" aria-label="Field">
       <img className="gp-field-img" src="/gameplay-field.webp" alt="" />
-      {FIELDER_PAINT_ORDER.map((position) => (
+      {FIELDER_PAINT_ORDER.filter((p) => p !== 'P').map((position) => (
         <Fielder key={position} state={state} side={fielding} position={position} />
       ))}
+      <Pitcher state={state} side={fielding} />
       <Batter state={state} />
       {bases.map(([base, runner]) => (runner ? <Runner key={base} base={base} runner={runner} /> : null))}
     </div>

@@ -777,9 +777,16 @@
 
 /* --- cards on the field -------------------------------------------------- */
 
-/* Each fielder and the batter are the actual card, not a text chip. Sized in
- * container-query units against the field itself so nine of them stay legible
- * whatever width the centre column ends up with. */
+/* Card art carries identity; crisp HTML text carries the facts.
+ *
+ * The two are not redundant. Card images are 820x1150 and render around 58px
+ * wide -- a 7% scale, at which their printed text is sub-pixel and unreadable
+ * at ANY size that fits nine on the field. The artboard sidestepped this by
+ * having no art at all: every player was a placeholder div with real text.
+ * Adding real art behind that text is a superset of the design, and the text
+ * is what stays legible.
+ *
+ * DEF appears only in the strip below the field. */
 .gp-fc {
   position: absolute;
   transform: translate(-50%, -50%);
@@ -791,29 +798,29 @@
   width: max-content;
 }
 
-/* The seven positional fielders are context, so they are small. The batter and
- * the pitcher are the matchup, so they are large enough to read the card --
- * which is also what un-crowds the infield, since the seven that were
- * competing for space shrank. */
 .gp-fc-art {
-  width: 30px;
-  height: 42px;
+  width: 54px;
+  height: 76px;
   border-radius: 4px;
   overflow: hidden;
-  border: 1px solid rgba(216, 173, 45, 0.55);
-  background: linear-gradient(158deg, #262830 0%, #191b21 50%, #101116 100%);
-  box-shadow: 0 3px 10px rgba(7, 8, 9, 0.75);
+  border: 1px solid rgba(216, 173, 45, 0.5);
+  background: linear-gradient(166deg, #23252b 0%, #16171c 60%, #0e0f13 100%);
+  box-shadow: 0 3px 12px rgba(7, 8, 9, 0.8);
   flex-shrink: 0;
 }
 
 .gp-fc-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
+.gp-fc-fielder.is-catcher .gp-fc-art { width: 46px; height: 64px; }
+
 .gp-fc-meta { display: flex; flex-direction: column; align-items: center; gap: 0; line-height: 1.15; }
 
-.gp-fc-meta b {
+/* Two characters, and they never leave -- on any viewport this is the last
+ * thing standing. */
+.gp-fc-pos {
   font-size: 8.5px;
   font-weight: 900;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
   color: var(--s-gold-bright);
   text-shadow: 0 1px 3px rgba(7, 8, 9, 0.95);
 }
@@ -823,51 +830,83 @@
   font-weight: 700;
   color: var(--s-cream);
   white-space: nowrap;
-  text-shadow: 0 1px 3px rgba(7, 8, 9, 0.95), 0 0 8px rgba(7, 8, 9, 0.8);
+  text-shadow: 0 1px 3px rgba(7, 8, 9, 0.95), 0 0 8px rgba(7, 8, 9, 0.85);
 }
 
-.gp-fc-rating {
+.gp-fc-meta b {
   font-size: 8.5px;
-  font-weight: 800;
-  color: var(--s-gray);
+  font-weight: 900;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--s-gold-bright);
   text-shadow: 0 1px 3px rgba(7, 8, 9, 0.95);
+  white-space: nowrap;
 }
 
-/* The batter is the other half of the matchup, so he reads louder. */
-.gp-fc-batter { z-index: 4; }
+/* Fatigue-adjusted values -- the one thing neither the art nor a static label
+ * can carry, so batter and pitcher keep theirs at every viewport. */
+.gp-fc-live {
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--s-cream);
+  white-space: nowrap;
+  text-shadow: 0 1px 3px rgba(7, 8, 9, 0.95), 0 0 8px rgba(7, 8, 9, 0.85);
+}
+
+.gp-fc-live em { font-style: normal; color: var(--s-adv-pitcher); }
+
+.gp-fc-batter, .gp-fc-pitcher { z-index: 5; }
+
 .gp-fc-batter .gp-fc-art,
-.gp-fc-fielder.is-pitcher .gp-fc-art {
-  width: 96px;
-  height: 135px;
+.gp-fc-pitcher .gp-fc-art {
+  width: 70px;
+  height: 98px;
   border-width: 2px;
-  box-shadow: 0 6px 20px rgba(7, 8, 9, 0.85);
+  box-shadow: 0 5px 18px rgba(7, 8, 9, 0.88);
 }
 
-.gp-fc-batter { z-index: 5; }
 .gp-fc-batter .gp-fc-art { border-color: var(--s-gold-bright); }
-.gp-fc-batter .gp-fc-name { color: var(--s-gold-bright); font-size: 12px; }
-.gp-fc-batter .gp-fc-meta b { font-size: 9.5px; }
+.gp-fc-pitcher .gp-fc-art { border-color: var(--s-adv-pitcher); }
 
-.gp-fc-fielder.is-pitcher { z-index: 5; }
-.gp-fc-fielder.is-pitcher .gp-fc-art { border-color: var(--s-adv-pitcher); }
-.gp-fc-fielder.is-pitcher .gp-fc-name { font-size: 12px; }
-.gp-fc-fielder.is-pitcher .gp-fc-meta b { font-size: 9.5px; }
-
-/* Nine cards on a narrow field would collide; they shrink with it. */
-@container field (max-width: 560px) {
-  .gp-fc-art { width: 25px; height: 35px; }
-  .gp-fc-batter .gp-fc-art, .gp-fc-fielder.is-pitcher .gp-fc-art { width: 74px; height: 104px; }
-  .gp-fc-meta b { font-size: 7.5px; }
-  .gp-fc-name { font-size: 8.5px; }
-  .gp-fc-rating { font-size: 7.5px; }
+/* Narrower field: art shrinks freely, because it has no legibility floor.
+ * Text does have one, so it holds its size until the name has to go. */
+@container field (max-width: 520px) {
+  .gp-fc-art { width: 44px; height: 62px; }
+  .gp-fc-fielder.is-catcher .gp-fc-art { width: 38px; height: 53px; }
+  .gp-fc-batter .gp-fc-art, .gp-fc-pitcher .gp-fc-art { width: 58px; height: 81px; }
 }
 
-@container field (max-width: 420px) {
-  .gp-fc-art { width: 20px; height: 28px; }
-  .gp-fc-batter .gp-fc-art, .gp-fc-fielder.is-pitcher .gp-fc-art { width: 56px; height: 79px; }
-  .gp-fc-name { font-size: 7.5px; }
-  .gp-fc-meta b { font-size: 7px; }
-  .gp-fc-rating { display: none; }
+/* Below ~450px of field, nine names cannot sit side by side legibly, so the
+ * name gives way and the position stays. Art keeps shrinking; batter and
+ * pitcher keep their live lines, because there are only two of them. */
+@container field (max-width: 450px) {
+  .gp-fc-fielder .gp-fc-name { display: none; }
+
+  /* The batter's label is wider than his card, and `width: max-content` let it
+   * push the marker out until it touched the catcher. Wrapping it inside the
+   * card's width keeps the collision from being caused by text. */
+  .gp-fc-batter .gp-fc-meta,
+  .gp-fc-pitcher .gp-fc-meta { max-width: 58px; }
+  .gp-fc-batter .gp-fc-meta b { white-space: normal; text-align: center; line-height: 1.05; font-size: 7px; }
+  .gp-fc-atbat { display: none; }
+
+  /* The batter's box is at 89% of the field, so his label lands flush against
+   * the bottom edge, where overflow:hidden would clip it on any font-metric
+   * change. Lifted slightly rather than left touching the boundary. */
+  .gp-fc-batter { transform: translate(-50%, -60%); }
+  .gp-fc-art { width: 34px; height: 48px; }
+  .gp-fc-fielder.is-catcher .gp-fc-art { width: 30px; height: 42px; }
+  .gp-fc-batter .gp-fc-art, .gp-fc-pitcher .gp-fc-art { width: 46px; height: 64px; }
+  .gp-fc-live { font-size: 9px; }
+  .gp-fc-meta b { font-size: 7.5px; }
+}
+
+@container field (max-width: 340px) {
+  .gp-fc-art { width: 26px; height: 36px; }
+  .gp-fc-fielder.is-catcher .gp-fc-art { width: 23px; height: 32px; }
+  .gp-fc-batter .gp-fc-art, .gp-fc-pitcher .gp-fc-art { width: 36px; height: 50px; }
+  .gp-fc-pos { font-size: 8px; }
+  .gp-fc-live { font-size: 8.5px; }
 }
 
 /* --- rail: menu, roll box, manager actions ------------------------------- */
