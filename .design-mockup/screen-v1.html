@@ -1,0 +1,737 @@
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap">
+<style>
+:root{--ink:#070809;--soft:#0b0c0e;--panel:#111214;--lift:#18191c;--gold:#d8ad2d;--bright:#f1ca45;
+--cream:#f5f1e6;--gray:#aeafb2;--mut:#777a80;--line:rgba(216,173,45,.34);--soft-line:rgba(216,173,45,.2);
+--good:#7fce8c;--pitch:#e08a5c;--bad:#e2726b;--turf:#152a03}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ink);color:var(--cream);font-family:Inter,system-ui,sans-serif}
+.wrap{padding:16px;display:grid;gap:26px}
+h2.cap{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--bright);font-weight:900;margin:0 0 8px}
+h2.cap small{display:block;color:var(--mut);text-transform:none;letter-spacing:.02em;font-size:11px;font-weight:400;margin-top:3px}
+.screen{width:1400px;height:800px;background:var(--ink);padding:12px;display:flex;flex-direction:column;gap:10px;border:1px solid var(--soft-line);border-radius:14px}
+.layout{display:grid;grid-template-columns:170px minmax(0,1fr) 300px;gap:10px;flex:1;min-height:0}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;min-width:0;min-height:0}
+.lbl{font-size:9.5px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:var(--bright)}
+.num{font-variant-numeric:tabular-nums}
+
+/* LEFT RAIL */
+.rail{padding:8px;display:flex;flex-direction:column;gap:6px;overflow:hidden}
+.rbug{flex-shrink:0;display:grid;gap:1px;padding-bottom:5px;border-bottom:1px solid var(--soft-line)}
+.rteam{display:flex;justify-content:space-between;align-items:baseline;gap:6px}
+.rteam span{font-size:11px;font-weight:800;color:var(--gray);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rteam b{font-size:17px;font-weight:900;line-height:1;font-variant-numeric:tabular-nums}
+.rteam.up span,.rteam.up b{color:var(--bright)}
+.rstate{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-top:2px}
+.inn{font-size:11px;font-weight:900}
+.dia{position:relative;width:20px;height:20px}
+.dia i{position:absolute;width:6.5px;height:6.5px;border:1px solid #6f5b1e;transform:rotate(45deg)}
+.dia .b2{top:0;left:6.75px}.dia .b3{top:6.75px;left:0}.dia .b1{top:6.75px;right:0}
+.dia i.on{background:var(--bright);border-color:var(--bright)}
+.outs{display:flex;gap:3px}
+.outs i{width:6px;height:6px;border-radius:50%;border:1px solid #6f5b1e}
+.outs i.on{background:var(--bright);border-color:var(--bright)}
+.hero{flex-shrink:0;display:flex;align-items:center;justify-content:center;gap:8px;padding:6px;
+border:1px solid var(--bright);background:rgba(216,173,45,.1);border-radius:9px}
+.hero img{width:86px;height:120px;object-fit:cover;border-radius:5px;border:1px solid var(--bright);display:block}
+.hero .tag{display:flex;flex-direction:column;align-items:center;gap:2px}
+.hero .tag i{font-style:normal;font-size:14px;font-weight:900;color:var(--bright);font-variant-numeric:tabular-nums}
+.hero .tag em{font-style:normal;font-size:7.5px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:var(--bright);text-align:center;line-height:1.2}
+.grid{flex:1;min-height:0;display:grid;grid-template-columns:1fr 1fr;gap:10px 8px;align-content:center}
+.cell{position:relative;display:flex;flex-direction:column;align-items:center;gap:2px}
+.cell img{width:74px;height:104px;object-fit:cover;border-radius:4px;border:1px solid var(--soft-line);display:block}
+.cell b{position:absolute;top:3px;left:3px;width:15px;height:15px;border-radius:4px;background:rgba(7,8,9,.88);
+border:1px solid var(--soft-line);color:var(--gray);font-size:9px;font-weight:900;line-height:13px;text-align:center;font-variant-numeric:tabular-nums}
+.cell em{font-style:normal;min-height:9px;font-size:7px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:var(--mut)}
+.cell.onbase img{outline:2px solid var(--bright);outline-offset:2px}
+.cell.onbase em{color:var(--bright)}
+.cell.out img{outline:2px solid var(--bad);outline-offset:2px}
+.cell.out em{color:var(--bad)}
+
+/* ARENA */
+.centre{display:flex;flex-direction:column;gap:10px;min-width:0;min-height:0}
+.arena{display:grid;grid-template-columns:minmax(0,1fr) 220px;gap:10px;flex:1;min-height:0}
+.fieldcol{display:flex;min-width:0;min-height:0}
+/* the box keeps going in turf below the art, so there is real grass behind the plate */
+.field{position:relative;flex:1;min-width:0;border-radius:12px;overflow:hidden;border:1px solid var(--line);background:#070809}
+.fieldinner{position:absolute;top:0;height:100%;aspect-ratio:1153/1364;left:50%;transform:translateX(-50%)}
+.fieldinner>img.bg{position:absolute;inset:0;width:100%;height:100%;object-fit:fill}
+.fc{position:absolute;transform:translate(-50%,-50%);z-index:3}
+.fc img{width:90px;height:126px;border-radius:4px;border:1px solid rgba(216,173,45,.5);box-shadow:0 3px 12px rgba(7,8,9,.8);display:block;object-fit:cover}
+.runner{position:absolute;transform:translate(-50%,-50%);background:rgba(7,8,9,.92);border:1px solid var(--bright);border-radius:6px;padding:3px 7px;text-align:center;z-index:5}
+.runner b{display:block;font-size:10px;font-weight:800;color:var(--bright)}
+.runner span{font-size:8px;color:var(--gray);white-space:nowrap}
+.rollfield{position:absolute;left:50%;top:59.5%;transform:translate(-50%,-50%);z-index:6;
+width:158px;height:42px;border:2px solid #a4801a;border-radius:9px;background:var(--gold);color:var(--ink);
+font:inherit;font-size:12.5px;font-weight:900;letter-spacing:.09em;cursor:pointer;box-shadow:0 5px 18px rgba(7,8,9,.85)}
+.rollfield.busy{background:rgba(7,8,9,.72);border-color:var(--soft-line);color:var(--mut);letter-spacing:.12em;font-size:10.5px}
+.defstrip{position:absolute;left:0;right:0;bottom:0;z-index:7;display:flex;gap:9px;align-items:center;justify-content:center;
+padding:7px 12px;font-size:11px;background:linear-gradient(180deg,rgba(7,8,9,0),rgba(7,8,9,.34))}
+.defstrip .g{display:flex;gap:6px;align-items:baseline}
+.defstrip small{font-size:8.5px;color:#cfd0d2;font-weight:700;text-shadow:0 1px 3px #000,0 0 6px #000}
+.defstrip strong{font-size:11px;font-weight:800;text-shadow:0 1px 3px #000,0 0 6px #000}
+.defstrip .lbl{text-shadow:0 1px 3px #000,0 0 6px #000}
+.defstrip .divider{width:1px;height:13px;background:rgba(255,255,255,.28)}
+
+/* DUEL COLUMN */
+.duelcol{display:flex;flex-direction:column;gap:6px;min-height:0}
+.man{flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px;border:1px solid var(--line);border-radius:11px;background:linear-gradient(180deg,#16171a,#111214)}
+.man img{width:100%;max-width:192px;aspect-ratio:820/1150;object-fit:cover;border-radius:6px;border:2px solid var(--bright);box-shadow:0 4px 18px rgba(7,8,9,.9);display:block}
+.man.p img{border-color:var(--pitch)}
+.man .id{text-align:center;width:100%}
+.man .id em{font-style:normal;display:block;font-size:8px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:var(--mut)}
+.pmeta{display:flex;width:100%;gap:6px;margin-bottom:1px}
+.pmeta div{flex:1;display:flex;flex-direction:column;align-items:center;gap:1px;padding:4px 2px;border:1px solid var(--soft-line);border-radius:7px;background:#08090a}
+.pmeta i{font-style:normal;font-size:7.5px;font-weight:900;letter-spacing:.09em;text-transform:uppercase;color:var(--mut);text-align:center;line-height:1.25}
+.led{width:13px;height:13px;border-radius:50%;display:block;margin-top:1px}
+.led.lit{background:radial-gradient(circle at 35% 30%,#9bf0b4,#3ec867 55%,#1f8a41);box-shadow:0 0 7px 1px rgba(62,200,103,.85),inset 0 -1px 2px rgba(0,0,0,.35)}
+.led.dark{background:radial-gradient(circle at 35% 30%,#f4a9a3,#d9433a 55%,#8e211b);box-shadow:0 0 7px 1px rgba(217,67,58,.75),inset 0 -1px 2px rgba(0,0,0,.35)}
+.pmeta u{text-decoration:none;font-size:14px;font-weight:900;line-height:1;font-variant-numeric:tabular-nums;color:var(--pitch)}
+.midslot{flex:1;min-height:0;display:grid;grid-template-rows:1fr auto 1fr;justify-items:center;align-items:center;gap:5px;border-radius:11px;padding:6px;border:1px solid transparent}
+.midslot.hot{border-color:var(--good);background:rgba(127,206,140,.07)}
+.midslot.wait{border-color:var(--gold);background:rgba(216,173,45,.07)}
+.idle{font-size:9.5px;color:var(--mut);font-style:italic;text-align:center;grid-row:2}
+.rollnum{display:flex;align-items:flex-end;justify-content:center;gap:10px}
+.rollnum .stat{text-align:center}
+.rollnum .k{font-size:7.5px;font-weight:900;letter-spacing:.13em;color:var(--mut);text-transform:uppercase}
+.rollnum .v{font-size:28px;font-weight:900;line-height:1;font-variant-numeric:tabular-nums;color:var(--good)}
+.rollnum .v.d{color:var(--mut);font-size:21px}
+.rollnum .x{font-size:12px;font-weight:900;color:var(--mut);padding-bottom:4px}
+.advflare{font-size:8.5px;font-weight:900;letter-spacing:.13em;text-transform:uppercase;padding:3px 10px;border-radius:99px;background:var(--good);color:#07210c}
+.outcome{text-align:center}
+.outcome b{display:block;font-size:20px;font-weight:900;letter-spacing:.03em;color:var(--good);line-height:1}
+.outcome small{display:block;font-size:9.5px;font-weight:600;color:var(--cream);margin-top:3px;line-height:1.35}
+.outcome.pend b{color:var(--bright)}
+
+/* RIGHT RAIL */
+.rrail{padding:9px;display:flex;flex-direction:column;gap:8px;overflow:hidden}
+.tabs{display:flex;gap:3px;border-bottom:1px solid var(--soft-line);padding-bottom:7px}
+.tabs button{flex:1;border:1px solid transparent;background:transparent;color:var(--mut);font:inherit;font-size:9.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:5px 2px;border-radius:6px;cursor:pointer}
+.tabs button.on{background:rgba(216,173,45,.12);border-color:var(--line);color:var(--bright)}
+.active{flex:1;min-height:0;display:flex;flex-direction:column;gap:9px;overflow:auto}
+.pane{display:none;flex-direction:column;gap:9px}
+.pane.on{display:flex}
+.box{border:1px solid var(--soft-line);border-radius:10px;padding:9px;display:grid;gap:6px;background:var(--soft)}
+.box.live{border-color:var(--gold);background:rgba(216,173,45,.07)}
+.act{border:1px solid var(--soft-line);background:transparent;color:var(--gray);border-radius:7px;font:inherit;font-size:11px;font-weight:700;padding:8px 10px;text-align:left;cursor:pointer;display:flex;justify-content:space-between;gap:8px}
+.act span{font-size:9px;color:var(--mut);font-weight:600}
+.act.go{background:var(--gold);border-color:var(--gold);color:var(--ink)}
+.act.go span{color:rgba(7,8,9,.7)}
+.act.alt{border-color:var(--line);color:var(--cream)}
+.ask{font-size:11.5px;font-weight:700;color:var(--cream);line-height:1.4}
+.ask b{color:var(--bright)}
+.recap h4{margin:0;font-size:14px;font-weight:900;color:var(--good)}
+.recap.pend h4{color:var(--bright)}
+.recap p{margin:0;font-size:11px;color:var(--gray);line-height:1.45}
+.chips{display:flex;gap:5px;flex-wrap:wrap}
+.chip{font-size:9px;font-weight:800;padding:3px 7px;border-radius:5px;background:#08090a;border:1px solid var(--soft-line);color:var(--gray)}
+.chip b{color:var(--cream)}
+.menu{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.menu .mbtn{border:1px solid var(--soft-line);background:transparent;color:var(--gray);border-radius:6px;font:inherit;font-size:10px;font-weight:700;padding:4px 9px;cursor:pointer}
+.logline{display:flex;gap:8px;font-size:10.5px;padding:3px 0;border-bottom:1px solid rgba(174,175,178,.07)}
+.logline i{font-style:normal;color:var(--mut);font-size:8.5px;width:18px;flex-shrink:0}
+.arm{display:flex;align-items:center;gap:8px;padding:5px;border:1px solid var(--soft-line);border-radius:8px;background:#08090a}
+.arm img{width:38px;height:53px;object-fit:cover;border-radius:4px;border:1px solid var(--soft-line);display:block;flex-shrink:0}
+.arm .who{min-width:0;flex:1}
+.arm .who b{display:block;font-size:11px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.arm .who span{font-size:8.5px;color:var(--mut)}
+.arm .go{border:1px solid var(--soft-line);background:transparent;color:var(--gray);border-radius:6px;font:inherit;font-size:9px;font-weight:800;padding:4px 7px;cursor:pointer;flex-shrink:0}
+</style>
+
+
+<div class="wrap">
+
+<div>
+<h2 class="cap">v8 &mdash; resting<small>Two out, Shackelford on first. Gold ring and base label on the runner; red ring on Allen and Sierra, who made this inning&rsquo;s outs.</small></h2>
+<div class="screen">
+  <div class="layout">
+    <div class="panel rail">
+      <div class="rbug">
+        <div class="rteam up"><span>Jeremiah</span><b class="num">1</b></div>
+        <div class="rteam"><span>Anthony</span><b class="num">0</b></div>
+        <div class="rstate">
+          <span class="inn num">&#9650; 1</span>
+          <span class="dia"><i class="b2"></i><i class="b3"></i><i class="b1 on"></i></span>
+          <span class="outs"><i class="on"></i><i class="on"></i><i class=""></i></span>
+        </div>
+      </div>
+      <div class="hero">
+        <div class="tag"><i>5</i><em>At<br>bat</em></div>
+        <img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/2006/CIN-Rich-Aurilia.png">
+      </div>
+      <div class="grid">
+        <div class="cell"><b>6</b><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1975/SFG-Gary-Thomasson.png"><em>On deck</em></div>
+        <div class="cell"><b>7</b><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1993/SEA-Ken-Griffey-Jr.png"><em>In the hole</em></div>
+        <div class="cell"><b>8</b><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/DS-Harry-Kenyon.png"><em>&nbsp;</em></div>
+        <div class="cell"><b>9</b><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/HIL-Phil-Cockrell.png"><em>&nbsp;</em></div>
+        <div class="cell"><b>1</b><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/SLS-John-Barnes.png"><em>&nbsp;</em></div>
+        <div class="cell out"><b>2</b><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/WMP-Toussaint-Allen.png"><em>Out</em></div>
+        <div class="cell out"><b>3</b><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/CSW-Felipe-Sierra.png"><em>Out</em></div>
+        <div class="cell onbase"><b>4</b><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/HBG-John-Shackelford.png"><em>On 1st</em></div>
+      </div>
+    </div>
+    <div class="centre">
+      <div class="arena">
+        <div class="fieldcol"><div class="field"><div class="fieldinner">
+          <img class="bg" src="/gameplay-field-v2.webp">
+          <div class="fc" data-pos="LF" style="left:15.5%;top:17.0%"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/TOT-Earl-Gurley.png"></div>
+          <div class="fc" data-pos="CF" style="left:50.0%;top:10.8%"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/CSW-Valentin-Dreke.png"></div>
+          <div class="fc" data-pos="RF" style="left:84.0%;top:17.0%"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/HIL-Otto-Briggs.png"></div>
+          <div class="fc" data-pos="SS" style="left:36.0%;top:28.8%"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/CAG-Bobby-Williams.png"></div>
+          <div class="fc" data-pos="2B" style="left:64.0%;top:28.8%"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/DS-Harry-Kenyon.png"></div>
+          <div class="fc" data-pos="3B" style="left:17.7%;top:37.9%"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/2025/TBR-Tristan-Gray.png"></div>
+          <div class="fc" data-pos="1B" style="left:81.8%;top:37.9%"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/HBG-Ben-Taylor.png"></div>
+          <div class="fc" data-pos="C" style="left:50.0%;top:85.3%"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/CAG-John-Hines.png"></div>
+          <div class="runner" data-base="1B" style="left:80.0%;top:56.0%"><b>J. Shackelford</b><span class="num">BsR 14 &middot; SB &mdash;</span></div>
+          <button class="rollfield">ROLL PITCH</button>
+          </div>
+        <div class="defstrip">
+          <span class="g"><b class="lbl">C&nbsp;Def</b><small>C</small><strong>+3</strong></span>
+          <i class="divider"></i>
+          <span class="g"><b class="lbl">Inf&nbsp;Def</b><small>1B</small><strong>+1</strong><small>2B</small><strong>+0</strong><small>3B</small><strong>+0</strong><small>SS</small><strong>+8</strong></span>
+          <i class="divider"></i>
+          <span class="g"><b class="lbl">Of&nbsp;Def</b><small>LF</small><strong>+0</strong><small>CF</small><strong>+2</strong><small>RF</small><strong>+2</strong></span>
+        </div></div></div>
+        <div class="duelcol">
+        <div class="man">
+          <img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/2006/CIN-Rich-Aurilia.png">
+          <div class="id"><em>At bat</em></div>
+        </div>
+        <div class="midslot">
+          <span class="idle">Awaiting the pitch</span>
+        </div>
+        <div class="man p">
+          <div class="pmeta">
+            <div><i>IP<br>left</i><u class="num">7.0</u></div>
+            <div><i>Shutout<br>bonus</i><span class="led dark"></span></div>
+          </div>
+          <img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/KCM-Nelson-Dean.png">
+          <div class="id"><em>Pitching</em></div>
+        </div>
+        </div>
+      </div>
+    </div>
+    <div class="panel rrail">
+      <div class="menu"><b class="lbl">Anthony &middot; Fielding</b><div><button class="mbtn">Pause</button> <button class="mbtn">Exit</button></div></div>
+      <div class="tabs"><button data-tab="now" class="on">Now</button><button data-tab="log">Log</button><button data-tab="bullpen">Bullpen</button><button data-tab="bench">Bench</button></div>
+      <div class="active">
+        <div class="pane on" data-pane="now">
+          <div class="box">
+            <b class="lbl">Manager decisions</b>
+            <button class="act">Intentional Walk <span>awards 1B</span></button>
+            <button class="act">Pitching Change <span>8 available</span></button>
+            <button class="act">Natural Steal <span>1 per game</span></button>
+            <button class="act">Infield In <span>runner on 3B</span></button>
+          </div>
+          <div class="box recap ">
+            <b class="lbl">Play recap</b>
+            <h4>Shackelford singles</h4>
+            <p>Shackelford lines one to centre and Barnes scores from second. Two away for Aurilia.</p>
+            <div class="chips"><span class="chip">Pitch <b>6</b></span><span class="chip">Adv <b>Hitter</b></span><span class="chip">Swing <b>15</b></span><span class="chip">Chart <b>1B</b></span></div>
+          </div>
+        </div>
+        <div class="pane" data-pane="log">
+          <div class="box">
+            <b class="lbl">Log</b>
+            <div class="logline"><i>17</i>Shackelford singles, Barnes scores.</div>
+            <div class="logline"><i>16</i>Sierra flies out to right.</div>
+            <div class="logline"><i>15</i>Allen strikes out swinging.</div>
+            <div class="logline"><i>14</i>Barnes doubles to left-centre.</div>
+            <div class="logline"><i>13</i>Top of the 1st &mdash; Jeremiah batting.</div>
+          </div>
+        </div>
+        <div class="pane" data-pane="bullpen">
+          <div class="box">
+            <b class="lbl">Bullpen &middot; 6 available</b>
+            <div class="arm"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/NLG-Charles-Heywood.png"><div class="who"><b>Charles Heywood</b><span>Ctrl 0 &middot; IP 4.1</span></div><button class="go">Warm</button></div>
+            <div class="arm"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/TOT-Rube-Chambers.png"><div class="who"><b>Rube Chambers</b><span>Ctrl 3 &middot; IP 5.2</span></div><button class="go">Warm</button></div>
+            <div class="arm"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/TOT-Omer-Newsome.png"><div class="who"><b>Omer Newsome</b><span>Ctrl 3 &middot; IP 4.0</span></div><button class="go">Warm</button></div>
+            <div class="arm"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/DS-Lawrence-Terrell.png"><div class="who"><b>Lawrence Terrell</b><span>Ctrl 3 &middot; IP 3.2</span></div><button class="go">Warm</button></div>
+            <div class="arm"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/DS-Slim-Branham.png"><div class="who"><b>Slim Branham</b><span>Ctrl 2 &middot; IP 3.2</span></div><button class="go">Warm</button></div>
+            <div class="arm"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/2024/LAD-Dinelson-Lamet.png"><div class="who"><b>Dinelson Lamet</b><span>Ctrl 5 &middot; IP 1.1</span></div><button class="go">Warm</button></div>
+          </div>
+        </div>
+        <div class="pane" data-pane="bench">
+          <div class="box">
+            <b class="lbl">Bench &middot; 2 available</b>
+            <div class="arm"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/NLG-Ed-Pryor.png"><div class="who"><b>Ed Pryor</b><span>OB 7 &middot; position player</span></div><button class="go">Sub</button></div>
+            <div class="arm"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/AC-Luther-Farrell.png"><div class="who"><b>Luther Farrell</b><span>Ctrl 5 &middot; IP 7.0</span></div><button class="go">Sub</button></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<div>
+<h2 class="cap">v8 &mdash; the reveal<small>Same rail state; the pitch resolves in the midslot.</small></h2>
+<div class="screen">
+  <div class="layout">
+    <div class="panel rail">
+      <div class="rbug">
+        <div class="rteam up"><span>Jeremiah</span><b class="num">1</b></div>
+        <div class="rteam"><span>Anthony</span><b class="num">0</b></div>
+        <div class="rstate">
+          <span class="inn num">&#9650; 1</span>
+          <span class="dia"><i class="b2"></i><i class="b3"></i><i class="b1 on"></i></span>
+          <span class="outs"><i class="on"></i><i class="on"></i><i class=""></i></span>
+        </div>
+      </div>
+      <div class="hero">
+        <div class="tag"><i>5</i><em>At<br>bat</em></div>
+        <img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/2006/CIN-Rich-Aurilia.png">
+      </div>
+      <div class="grid">
+        <div class="cell"><b>6</b><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1975/SFG-Gary-Thomasson.png"><em>On deck</em></div>
+        <div class="cell"><b>7</b><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1993/SEA-Ken-Griffey-Jr.png"><em>In the hole</em></div>
+        <div class="cell"><b>8</b><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/DS-Harry-Kenyon.png"><em>&nbsp;</em></div>
+        <div class="cell"><b>9</b><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/HIL-Phil-Cockrell.png"><em>&nbsp;</em></div>
+        <div class="cell"><b>1</b><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/SLS-John-Barnes.png"><em>&nbsp;</em></div>
+        <div class="cell out"><b>2</b><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/WMP-Toussaint-Allen.png"><em>Out</em></div>
+        <div class="cell out"><b>3</b><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/CSW-Felipe-Sierra.png"><em>Out</em></div>
+        <div class="cell onbase"><b>4</b><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/HBG-John-Shackelford.png"><em>On 1st</em></div>
+      </div>
+    </div>
+    <div class="centre">
+      <div class="arena">
+        <div class="fieldcol"><div class="field"><div class="fieldinner">
+          <img class="bg" src="/gameplay-field-v2.webp">
+          <div class="fc" data-pos="LF" style="left:15.5%;top:17.0%"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/TOT-Earl-Gurley.png"></div>
+          <div class="fc" data-pos="CF" style="left:50.0%;top:10.8%"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/CSW-Valentin-Dreke.png"></div>
+          <div class="fc" data-pos="RF" style="left:84.0%;top:17.0%"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/HIL-Otto-Briggs.png"></div>
+          <div class="fc" data-pos="SS" style="left:36.0%;top:28.8%"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/CAG-Bobby-Williams.png"></div>
+          <div class="fc" data-pos="2B" style="left:64.0%;top:28.8%"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/DS-Harry-Kenyon.png"></div>
+          <div class="fc" data-pos="3B" style="left:17.7%;top:37.9%"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/2025/TBR-Tristan-Gray.png"></div>
+          <div class="fc" data-pos="1B" style="left:81.8%;top:37.9%"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/HBG-Ben-Taylor.png"></div>
+          <div class="fc" data-pos="C" style="left:50.0%;top:85.3%"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/CAG-John-Hines.png"></div>
+          <div class="runner" data-base="1B" style="left:80.0%;top:56.0%"><b>J. Shackelford</b><span class="num">BsR 14 &middot; SB &mdash;</span></div>
+          <button class="rollfield busy">RESOLVING&hellip;</button>
+          </div>
+        <div class="defstrip">
+          <span class="g"><b class="lbl">C&nbsp;Def</b><small>C</small><strong>+3</strong></span>
+          <i class="divider"></i>
+          <span class="g"><b class="lbl">Inf&nbsp;Def</b><small>1B</small><strong>+1</strong><small>2B</small><strong>+0</strong><small>3B</small><strong>+0</strong><small>SS</small><strong>+8</strong></span>
+          <i class="divider"></i>
+          <span class="g"><b class="lbl">Of&nbsp;Def</b><small>LF</small><strong>+0</strong><small>CF</small><strong>+2</strong><small>RF</small><strong>+2</strong></span>
+        </div></div></div>
+        <div class="duelcol">
+        <div class="man">
+          <img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/2006/CIN-Rich-Aurilia.png">
+          <div class="id"><em>At bat</em></div>
+        </div>
+        <div class="midslot hot">
+          <div class="rollnum">
+            <div class="stat"><div class="k">Pitch</div><div class="v d num">7</div></div>
+            <span class="x">&rarr;</span>
+            <div class="stat"><div class="k">Swing</div><div class="v num">17</div></div>
+          </div>
+          <span class="advflare">Hitter advantage</span>
+          <div class="outcome "><b>DOUBLE</b><small>Aurilia to 2nd &middot; Shackelford scores</small></div>
+        </div>
+        <div class="man p">
+          <div class="pmeta">
+            <div><i>IP<br>left</i><u class="num">7.0</u></div>
+            <div><i>Shutout<br>bonus</i><span class="led dark"></span></div>
+          </div>
+          <img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/KCM-Nelson-Dean.png">
+          <div class="id"><em>Pitching</em></div>
+        </div>
+        </div>
+      </div>
+    </div>
+    <div class="panel rrail">
+      <div class="menu"><b class="lbl">Anthony &middot; Fielding</b><div><button class="mbtn">Pause</button> <button class="mbtn">Exit</button></div></div>
+      <div class="tabs"><button data-tab="now" class="on">Now</button><button data-tab="log">Log</button><button data-tab="bullpen">Bullpen</button><button data-tab="bench">Bench</button></div>
+      <div class="active">
+        <div class="pane on" data-pane="now">
+          <div class="box">
+            <b class="lbl">Manager decisions</b>
+            <button class="act">Intentional Walk <span>awards 1B</span></button>
+            <button class="act">Pitching Change <span>8 available</span></button>
+            <button class="act">Natural Steal <span>1 per game</span></button>
+            <button class="act">Infield In <span>runner on 3B</span></button>
+          </div>
+          <div class="box recap ">
+            <b class="lbl">Play recap</b>
+            <h4>Double &mdash; run scores</h4>
+            <p>Aurilia doubles to left. Shackelford scores from first; Aurilia holds at second.</p>
+            <div class="chips"><span class="chip">Pitch <b>7</b></span><span class="chip">Adv <b>Hitter</b></span><span class="chip">Swing <b>17</b></span><span class="chip">Chart <b>2B</b></span></div>
+          </div>
+        </div>
+        <div class="pane" data-pane="log">
+          <div class="box">
+            <b class="lbl">Log</b>
+            <div class="logline"><i>17</i>Shackelford singles, Barnes scores.</div>
+            <div class="logline"><i>16</i>Sierra flies out to right.</div>
+            <div class="logline"><i>15</i>Allen strikes out swinging.</div>
+            <div class="logline"><i>14</i>Barnes doubles to left-centre.</div>
+            <div class="logline"><i>13</i>Top of the 1st &mdash; Jeremiah batting.</div>
+          </div>
+        </div>
+        <div class="pane" data-pane="bullpen">
+          <div class="box">
+            <b class="lbl">Bullpen &middot; 6 available</b>
+            <div class="arm"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/NLG-Charles-Heywood.png"><div class="who"><b>Charles Heywood</b><span>Ctrl 0 &middot; IP 4.1</span></div><button class="go">Warm</button></div>
+            <div class="arm"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/TOT-Rube-Chambers.png"><div class="who"><b>Rube Chambers</b><span>Ctrl 3 &middot; IP 5.2</span></div><button class="go">Warm</button></div>
+            <div class="arm"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/TOT-Omer-Newsome.png"><div class="who"><b>Omer Newsome</b><span>Ctrl 3 &middot; IP 4.0</span></div><button class="go">Warm</button></div>
+            <div class="arm"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/DS-Lawrence-Terrell.png"><div class="who"><b>Lawrence Terrell</b><span>Ctrl 3 &middot; IP 3.2</span></div><button class="go">Warm</button></div>
+            <div class="arm"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/DS-Slim-Branham.png"><div class="who"><b>Slim Branham</b><span>Ctrl 2 &middot; IP 3.2</span></div><button class="go">Warm</button></div>
+            <div class="arm"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/2024/LAD-Dinelson-Lamet.png"><div class="who"><b>Dinelson Lamet</b><span>Ctrl 5 &middot; IP 1.1</span></div><button class="go">Warm</button></div>
+          </div>
+        </div>
+        <div class="pane" data-pane="bench">
+          <div class="box">
+            <b class="lbl">Bench &middot; 2 available</b>
+            <div class="arm"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/NLG-Ed-Pryor.png"><div class="who"><b>Ed Pryor</b><span>OB 7 &middot; position player</span></div><button class="go">Sub</button></div>
+            <div class="arm"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/AC-Luther-Farrell.png"><div class="who"><b>Luther Farrell</b><span>Ctrl 5 &middot; IP 7.0</span></div><button class="go">Sub</button></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<div>
+<h2 class="cap">v8 &mdash; decision pending<small>One out, Shackelford on second mid tag-up &mdash; his rail card reads ON 2ND. Sierra carries the only out.</small></h2>
+<div class="screen">
+  <div class="layout">
+    <div class="panel rail">
+      <div class="rbug">
+        <div class="rteam up"><span>Jeremiah</span><b class="num">2</b></div>
+        <div class="rteam"><span>Anthony</span><b class="num">0</b></div>
+        <div class="rstate">
+          <span class="inn num">&#9650; 1</span>
+          <span class="dia"><i class="b2 on"></i><i class="b3"></i><i class="b1"></i></span>
+          <span class="outs"><i class="on"></i><i class=""></i><i class=""></i></span>
+        </div>
+      </div>
+      <div class="hero">
+        <div class="tag"><i>5</i><em>At<br>bat</em></div>
+        <img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/2006/CIN-Rich-Aurilia.png">
+      </div>
+      <div class="grid">
+        <div class="cell"><b>6</b><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1975/SFG-Gary-Thomasson.png"><em>On deck</em></div>
+        <div class="cell"><b>7</b><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1993/SEA-Ken-Griffey-Jr.png"><em>In the hole</em></div>
+        <div class="cell"><b>8</b><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/DS-Harry-Kenyon.png"><em>&nbsp;</em></div>
+        <div class="cell"><b>9</b><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/HIL-Phil-Cockrell.png"><em>&nbsp;</em></div>
+        <div class="cell"><b>1</b><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/SLS-John-Barnes.png"><em>&nbsp;</em></div>
+        <div class="cell"><b>2</b><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/WMP-Toussaint-Allen.png"><em>&nbsp;</em></div>
+        <div class="cell out"><b>3</b><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/CSW-Felipe-Sierra.png"><em>Out</em></div>
+        <div class="cell onbase"><b>4</b><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/HBG-John-Shackelford.png"><em>On 2nd</em></div>
+      </div>
+    </div>
+    <div class="centre">
+      <div class="arena">
+        <div class="fieldcol"><div class="field"><div class="fieldinner">
+          <img class="bg" src="/gameplay-field-v2.webp">
+          <div class="fc" data-pos="LF" style="left:15.5%;top:17.0%"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/TOT-Earl-Gurley.png"></div>
+          <div class="fc" data-pos="CF" style="left:50.0%;top:10.8%"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/CSW-Valentin-Dreke.png"></div>
+          <div class="fc" data-pos="RF" style="left:84.0%;top:17.0%"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/HIL-Otto-Briggs.png"></div>
+          <div class="fc" data-pos="SS" style="left:36.0%;top:28.8%"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/CAG-Bobby-Williams.png"></div>
+          <div class="fc" data-pos="2B" style="left:64.0%;top:28.8%"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/DS-Harry-Kenyon.png"></div>
+          <div class="fc" data-pos="3B" style="left:17.7%;top:37.9%"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/2025/TBR-Tristan-Gray.png"></div>
+          <div class="fc" data-pos="1B" style="left:81.8%;top:37.9%"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/HBG-Ben-Taylor.png"></div>
+          <div class="fc" data-pos="C" style="left:50.0%;top:85.3%"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/CAG-John-Hines.png"></div>
+          <div class="runner" data-base="2B" style="left:50.0%;top:39.5%"><b>J. Shackelford</b><span class="num">BsR 14 &middot; SB &mdash;</span></div>
+          <button class="rollfield busy">AWAITING YOUR CALL</button>
+          </div>
+        <div class="defstrip">
+          <span class="g"><b class="lbl">C&nbsp;Def</b><small>C</small><strong>+3</strong></span>
+          <i class="divider"></i>
+          <span class="g"><b class="lbl">Inf&nbsp;Def</b><small>1B</small><strong>+1</strong><small>2B</small><strong>+0</strong><small>3B</small><strong>+0</strong><small>SS</small><strong>+8</strong></span>
+          <i class="divider"></i>
+          <span class="g"><b class="lbl">Of&nbsp;Def</b><small>LF</small><strong>+0</strong><small>CF</small><strong>+2</strong><small>RF</small><strong>+2</strong></span>
+        </div></div></div>
+        <div class="duelcol">
+        <div class="man">
+          <img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/2006/CIN-Rich-Aurilia.png">
+          <div class="id"><em>At bat</em></div>
+        </div>
+        <div class="midslot wait">
+          <div class="rollnum">
+            <div class="stat"><div class="k">Pitch</div><div class="v d num">7</div></div>
+            <span class="x">&rarr;</span>
+            <div class="stat"><div class="k">Swing</div><div class="v num">12</div></div>
+          </div>
+          <span class="advflare">Hitter advantage</span>
+          <div class="outcome pend"><b>FLY BALL</b><small>Deep to left &middot; tag-up available</small></div>
+        </div>
+        <div class="man p">
+          <div class="pmeta">
+            <div><i>IP<br>left</i><u class="num">7.0</u></div>
+            <div><i>Shutout<br>bonus</i><span class="led dark"></span></div>
+          </div>
+          <img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/KCM-Nelson-Dean.png">
+          <div class="id"><em>Pitching</em></div>
+        </div>
+        </div>
+      </div>
+    </div>
+    <div class="panel rrail">
+      <div class="menu"><b class="lbl">Anthony &middot; Fielding</b><div><button class="mbtn">Pause</button> <button class="mbtn">Exit</button></div></div>
+      <div class="tabs"><button data-tab="now" class="on">Now</button><button data-tab="log">Log</button><button data-tab="bullpen">Bullpen</button><button data-tab="bench">Bench</button></div>
+      <div class="active">
+        <div class="pane on" data-pane="now">
+          <div class="box live">
+            <b class="lbl">Manager decision</b>
+            <div class="ask">Fly ball to left. <b>Shackelford</b> may tag from second.</div>
+            <button class="act go">Send him <span>OF Arm +0</span></button>
+            <button class="act alt">Hold at second <span>no risk</span></button>
+          </div>
+          <div class="box recap pend">
+            <b class="lbl">Play recap</b>
+            <h4>Awaiting your call</h4>
+            <p>The pitch and swing stay on screen until the tag-up is resolved.</p>
+            <div class="chips"><span class="chip">Pitch <b>7</b></span><span class="chip">Adv <b>Hitter</b></span><span class="chip">Swing <b>12</b></span><span class="chip">Chart <b>FB</b></span></div>
+          </div>
+        </div>
+        <div class="pane" data-pane="log">
+          <div class="box">
+            <b class="lbl">Log</b>
+            <div class="logline"><i>17</i>Shackelford doubles to right.</div>
+            <div class="logline"><i>16</i>Sierra flies out, Allen scores.</div>
+            <div class="logline"><i>15</i>Allen triples, Barnes scores.</div>
+            <div class="logline"><i>14</i>Barnes singles through the left side.</div>
+            <div class="logline"><i>13</i>Top of the 1st &mdash; Jeremiah batting.</div>
+          </div>
+        </div>
+        <div class="pane" data-pane="bullpen">
+          <div class="box">
+            <b class="lbl">Bullpen &middot; 6 available</b>
+            <div class="arm"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/NLG-Charles-Heywood.png"><div class="who"><b>Charles Heywood</b><span>Ctrl 0 &middot; IP 4.1</span></div><button class="go">Warm</button></div>
+            <div class="arm"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/TOT-Rube-Chambers.png"><div class="who"><b>Rube Chambers</b><span>Ctrl 3 &middot; IP 5.2</span></div><button class="go">Warm</button></div>
+            <div class="arm"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/TOT-Omer-Newsome.png"><div class="who"><b>Omer Newsome</b><span>Ctrl 3 &middot; IP 4.0</span></div><button class="go">Warm</button></div>
+            <div class="arm"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/DS-Lawrence-Terrell.png"><div class="who"><b>Lawrence Terrell</b><span>Ctrl 3 &middot; IP 3.2</span></div><button class="go">Warm</button></div>
+            <div class="arm"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/DS-Slim-Branham.png"><div class="who"><b>Slim Branham</b><span>Ctrl 2 &middot; IP 3.2</span></div><button class="go">Warm</button></div>
+            <div class="arm"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/2024/LAD-Dinelson-Lamet.png"><div class="who"><b>Dinelson Lamet</b><span>Ctrl 5 &middot; IP 1.1</span></div><button class="go">Warm</button></div>
+          </div>
+        </div>
+        <div class="pane" data-pane="bench">
+          <div class="box">
+            <b class="lbl">Bench &middot; 2 available</b>
+            <div class="arm"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/NLG-Ed-Pryor.png"><div class="who"><b>Ed Pryor</b><span>OB 7 &middot; position player</span></div><button class="go">Sub</button></div>
+            <div class="arm"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/AC-Luther-Farrell.png"><div class="who"><b>Luther Farrell</b><span>Ctrl 5 &middot; IP 7.0</span></div><button class="go">Sub</button></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<div>
+<h2 class="cap">v8 &mdash; bases loaded<small>Three gold runners with their bases, one red out. Every rail state on screen at once.</small></h2>
+<div class="screen">
+  <div class="layout">
+    <div class="panel rail">
+      <div class="rbug">
+        <div class="rteam up"><span>Jeremiah</span><b class="num">0</b></div>
+        <div class="rteam"><span>Anthony</span><b class="num">0</b></div>
+        <div class="rstate">
+          <span class="inn num">&#9650; 1</span>
+          <span class="dia"><i class="b2 on"></i><i class="b3 on"></i><i class="b1 on"></i></span>
+          <span class="outs"><i class="on"></i><i class=""></i><i class=""></i></span>
+        </div>
+      </div>
+      <div class="hero">
+        <div class="tag"><i>5</i><em>At<br>bat</em></div>
+        <img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/2006/CIN-Rich-Aurilia.png">
+      </div>
+      <div class="grid">
+        <div class="cell"><b>6</b><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1975/SFG-Gary-Thomasson.png"><em>On deck</em></div>
+        <div class="cell"><b>7</b><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1993/SEA-Ken-Griffey-Jr.png"><em>In the hole</em></div>
+        <div class="cell"><b>8</b><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/DS-Harry-Kenyon.png"><em>&nbsp;</em></div>
+        <div class="cell"><b>9</b><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/HIL-Phil-Cockrell.png"><em>&nbsp;</em></div>
+        <div class="cell out"><b>1</b><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/SLS-John-Barnes.png"><em>Out</em></div>
+        <div class="cell onbase"><b>2</b><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/WMP-Toussaint-Allen.png"><em>On 3rd</em></div>
+        <div class="cell onbase"><b>3</b><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/CSW-Felipe-Sierra.png"><em>On 2nd</em></div>
+        <div class="cell onbase"><b>4</b><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/HBG-John-Shackelford.png"><em>On 1st</em></div>
+      </div>
+    </div>
+    <div class="centre">
+      <div class="arena">
+        <div class="fieldcol"><div class="field"><div class="fieldinner">
+          <img class="bg" src="/gameplay-field-v2.webp">
+          <div class="fc" data-pos="LF" style="left:15.5%;top:17.0%"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/TOT-Earl-Gurley.png"></div>
+          <div class="fc" data-pos="CF" style="left:50.0%;top:10.8%"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/CSW-Valentin-Dreke.png"></div>
+          <div class="fc" data-pos="RF" style="left:84.0%;top:17.0%"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/HIL-Otto-Briggs.png"></div>
+          <div class="fc" data-pos="SS" style="left:36.0%;top:28.8%"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/CAG-Bobby-Williams.png"></div>
+          <div class="fc" data-pos="2B" style="left:64.0%;top:28.8%"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/DS-Harry-Kenyon.png"></div>
+          <div class="fc" data-pos="3B" style="left:17.7%;top:37.9%"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/2025/TBR-Tristan-Gray.png"></div>
+          <div class="fc" data-pos="1B" style="left:81.8%;top:37.9%"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/HBG-Ben-Taylor.png"></div>
+          <div class="fc" data-pos="C" style="left:50.0%;top:85.3%"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/CAG-John-Hines.png"></div>
+          <div class="runner" data-base="3B" style="left:21.0%;top:56.0%"><b>T. Allen</b><span class="num">BsR 16 &middot; SB &mdash;</span></div>
+          <div class="runner" data-base="2B" style="left:50.0%;top:39.5%"><b>F. Sierra</b><span class="num">BsR 14 &middot; SB &mdash;</span></div>
+          <div class="runner" data-base="1B" style="left:80.0%;top:56.0%"><b>J. Shackelford</b><span class="num">BsR 14 &middot; SB &mdash;</span></div>
+          <button class="rollfield">ROLL PITCH</button>
+          </div>
+        <div class="defstrip">
+          <span class="g"><b class="lbl">C&nbsp;Def</b><small>C</small><strong>+3</strong></span>
+          <i class="divider"></i>
+          <span class="g"><b class="lbl">Inf&nbsp;Def</b><small>1B</small><strong>+1</strong><small>2B</small><strong>+0</strong><small>3B</small><strong>+0</strong><small>SS</small><strong>+8</strong></span>
+          <i class="divider"></i>
+          <span class="g"><b class="lbl">Of&nbsp;Def</b><small>LF</small><strong>+0</strong><small>CF</small><strong>+2</strong><small>RF</small><strong>+2</strong></span>
+        </div></div></div>
+        <div class="duelcol">
+        <div class="man">
+          <img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/2006/CIN-Rich-Aurilia.png">
+          <div class="id"><em>At bat</em></div>
+        </div>
+        <div class="midslot">
+          <span class="idle">Awaiting the pitch</span>
+        </div>
+        <div class="man p">
+          <div class="pmeta">
+            <div><i>IP<br>left</i><u class="num">7.0</u></div>
+            <div><i>Shutout<br>bonus</i><span class="led lit"></span></div>
+          </div>
+          <img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/KCM-Nelson-Dean.png">
+          <div class="id"><em>Pitching</em></div>
+        </div>
+        </div>
+      </div>
+    </div>
+    <div class="panel rrail">
+      <div class="menu"><b class="lbl">Anthony &middot; Fielding</b><div><button class="mbtn">Pause</button> <button class="mbtn">Exit</button></div></div>
+      <div class="tabs"><button data-tab="now" class="on">Now</button><button data-tab="log">Log</button><button data-tab="bullpen">Bullpen</button><button data-tab="bench">Bench</button></div>
+      <div class="active">
+        <div class="pane on" data-pane="now">
+          <div class="box">
+            <b class="lbl">Manager decisions</b>
+            <button class="act">Intentional Walk <span>awards 1B</span></button>
+            <button class="act">Pitching Change <span>8 available</span></button>
+            <button class="act">Natural Steal <span>1 per game</span></button>
+            <button class="act">Infield In <span>runner on 3B</span></button>
+          </div>
+          <div class="box recap ">
+            <b class="lbl">Play recap</b>
+            <h4>Shackelford walks</h4>
+            <p>Dean misses again and the bases fill. Aurilia up with one away.</p>
+            <div class="chips"><span class="chip">Pitch <b>3</b></span><span class="chip">Adv <b>Hitter</b></span><span class="chip">Swing <b>20</b></span><span class="chip">Chart <b>BB</b></span></div>
+          </div>
+        </div>
+        <div class="pane" data-pane="log">
+          <div class="box">
+            <b class="lbl">Log</b>
+            <div class="logline"><i>17</i>Shackelford walks, bases loaded.</div>
+            <div class="logline"><i>16</i>Sierra singles, Allen to second.</div>
+            <div class="logline"><i>15</i>Allen walks.</div>
+            <div class="logline"><i>14</i>Barnes grounds out, 6&ndash;3.</div>
+            <div class="logline"><i>13</i>Top of the 1st &mdash; Jeremiah batting.</div>
+          </div>
+        </div>
+        <div class="pane" data-pane="bullpen">
+          <div class="box">
+            <b class="lbl">Bullpen &middot; 6 available</b>
+            <div class="arm"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/NLG-Charles-Heywood.png"><div class="who"><b>Charles Heywood</b><span>Ctrl 0 &middot; IP 4.1</span></div><button class="go">Warm</button></div>
+            <div class="arm"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/TOT-Rube-Chambers.png"><div class="who"><b>Rube Chambers</b><span>Ctrl 3 &middot; IP 5.2</span></div><button class="go">Warm</button></div>
+            <div class="arm"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/TOT-Omer-Newsome.png"><div class="who"><b>Omer Newsome</b><span>Ctrl 3 &middot; IP 4.0</span></div><button class="go">Warm</button></div>
+            <div class="arm"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/DS-Lawrence-Terrell.png"><div class="who"><b>Lawrence Terrell</b><span>Ctrl 3 &middot; IP 3.2</span></div><button class="go">Warm</button></div>
+            <div class="arm"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/DS-Slim-Branham.png"><div class="who"><b>Slim Branham</b><span>Ctrl 2 &middot; IP 3.2</span></div><button class="go">Warm</button></div>
+            <div class="arm"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/2024/LAD-Dinelson-Lamet.png"><div class="who"><b>Dinelson Lamet</b><span>Ctrl 5 &middot; IP 1.1</span></div><button class="go">Warm</button></div>
+          </div>
+        </div>
+        <div class="pane" data-pane="bench">
+          <div class="box">
+            <b class="lbl">Bench &middot; 2 available</b>
+            <div class="arm"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/NLG-Ed-Pryor.png"><div class="who"><b>Ed Pryor</b><span>OB 7 &middot; position player</span></div><button class="go">Sub</button></div>
+            <div class="arm"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/AC-Luther-Farrell.png"><div class="who"><b>Luther Farrell</b><span>Ctrl 5 &middot; IP 7.0</span></div><button class="go">Sub</button></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+</div>
+
+<script>
+document.addEventListener('click',e=>{
+  const b=e.target.closest('.tabs button'); if(!b) return;
+  const rail=b.closest('.rrail');
+  rail.querySelectorAll('.tabs button').forEach(x=>x.classList.toggle('on',x===b));
+  rail.querySelectorAll('.pane').forEach(p=>p.classList.toggle('on',p.dataset.pane===b.dataset.tab));
+});
+</script>
+<style>
+#tool{position:fixed;right:14px;bottom:14px;width:250px;z-index:99;background:#111214;border:1px solid var(--line);
+border-radius:11px;padding:10px;font:11px/1.4 Inter,system-ui,sans-serif;color:var(--cream);box-shadow:0 10px 40px rgba(0,0,0,.7)}
+#tool h5{margin:0 0 7px;font-size:9.5px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:var(--bright)}
+#tool .tip{color:var(--mut);font-size:9.5px;line-height:1.45;margin-bottom:8px}
+#tool .sz{display:flex;align-items:center;gap:7px;margin-bottom:8px}
+#tool .sz label{font-size:9px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--mut);flex-shrink:0}
+#tool .sz input{flex:1;accent-color:var(--gold)}
+#tool .sz b{font-size:10px;font-variant-numeric:tabular-nums;width:26px;text-align:right}
+#tool pre{margin:0 0 8px;max-height:200px;overflow:auto;background:#08090a;border:1px solid var(--soft-line);
+border-radius:7px;padding:7px;font:10px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--gray);white-space:pre}
+#tool .btns{display:flex;gap:6px}
+#tool button{flex:1;border:1px solid var(--soft-line);background:transparent;color:var(--gray);border-radius:6px;
+font:inherit;font-size:10px;font-weight:800;padding:6px 4px;cursor:pointer}
+#tool button.go{background:var(--gold);color:var(--ink);border-color:var(--gold)}
+.fc,.runner,.rollfield{cursor:grab;touch-action:none}
+.fc.dragging,.runner.dragging,.rollfield.dragging{cursor:grabbing;z-index:20}
+.fc.sel img,.runner.sel,.rollfield.sel{outline:2px solid var(--bright);outline-offset:2px}
+</style>
+
+<div id="tool">
+  <h5>Position the cards</h5>
+  <div class="tip">Drag any card, runner tag or the roll button. Click to select, arrows nudge (Shift = 5&times;). Runners are per-base, so 1st/2nd/3rd move independently. Saved as you go.</div>
+  <div class="sz"><label>Card</label><input id="szr" type="range" min="50" max="170" step="2" value="90"><b id="szv">90</b></div>
+  <pre id="out"></pre>
+  <div class="btns"><button class="go" id="copy">Copy</button><button id="reset">Reset</button></div>
+</div>
+
+<script>
+(function(){
+  const KEY='elements-field-layout-v3', SZK='elements-field-cardw-v3';
+  const out=document.getElementById('out'), szr=document.getElementById('szr'), szv=document.getElementById('szv');
+  const nodes=()=>[...document.querySelectorAll('.fieldinner .fc, .fieldinner .runner, .fieldinner .rollfield')];
+  const idOf=el=>el.classList.contains('rollfield') ? 'ROLL'
+              : el.classList.contains('runner') ? 'RUN@'+el.dataset.base
+              : el.dataset.pos;
+  // percentages measured off geometry, never off style strings - a CSS-positioned
+  // element reports px from getComputedStyle and would be recorded as a bogus percent
+  function pct(el){const b=el.closest('.fieldinner').getBoundingClientRect(),r=el.getBoundingClientRect();
+    return [ +(((r.left+r.width/2)-b.left)/b.width*100).toFixed(2),
+             +(((r.top+r.height/2)-b.top)/b.height*100).toFixed(2) ];}
+  function read(){const m={};for(const el of nodes()){const p=pct(el);if(!(idOf(el) in m))m[idOf(el)]=p;}return m;}
+  function render(){
+    const m=read();
+    out.textContent=`card ${szr.value}×${Math.round(szr.value*1150/820)}px\n\n`+
+      Object.entries(m).map(([k,v])=>`${k.padEnd(9)} left:${v[0].toFixed(1).padStart(5)}%  top:${v[1].toFixed(1).padStart(5)}%`).join('\n');
+    try{localStorage.setItem(KEY,JSON.stringify(m));localStorage.setItem(SZK,szr.value);}catch(e){}
+  }
+  function setSize(w){const h=Math.round(w*1150/820);
+    for(const img of document.querySelectorAll('.fieldinner .fc img')){img.style.width=w+'px';img.style.height=h+'px';}
+    szv.textContent=w;}
+  let sel=null,drag=null;
+  function move(el,l,t){l=Math.max(0,Math.min(100,l));t=Math.max(0,Math.min(100,t));const id=idOf(el);
+    for(const n of nodes())if(idOf(n)===id){n.style.left=l+'%';n.style.top=t+'%';}render();}
+  document.addEventListener('pointerdown',e=>{
+    const el=e.target.closest('.fieldinner .fc, .fieldinner .runner, .field .rollfield'); if(!el) return;
+    e.preventDefault();
+    for(const n of nodes())n.classList.remove('sel');
+    sel=el; for(const n of nodes())if(idOf(n)===idOf(el))n.classList.add('sel');
+    el.classList.add('dragging'); el.setPointerCapture(e.pointerId);
+    const box=el.closest('.fieldinner').getBoundingClientRect(), r=el.getBoundingClientRect();
+    drag={el,box,dx:e.clientX-(r.left+r.width/2),dy:e.clientY-(r.top+r.height/2)};
+  });
+  document.addEventListener('pointermove',e=>{if(!drag)return;const{box,dx,dy}=drag;
+    move(drag.el,(e.clientX-dx-box.left)/box.width*100,(e.clientY-dy-box.top)/box.height*100);});
+  document.addEventListener('pointerup',()=>{if(drag){drag.el.classList.remove('dragging');drag=null;}});
+  document.addEventListener('keydown',e=>{if(!sel||!e.key.startsWith('Arrow'))return;e.preventDefault();
+    const st=e.shiftKey?2.5:0.5,[l,t]=pct(sel);
+    move(sel,l+(e.key=='ArrowRight'?st:e.key=='ArrowLeft'?-st:0),t+(e.key=='ArrowDown'?st:e.key=='ArrowUp'?-st:0));});
+  szr.addEventListener('input',()=>{setSize(+szr.value);render();});
+  document.getElementById('copy').onclick=async()=>{const b=document.getElementById('copy');
+    try{await navigator.clipboard.writeText(out.textContent);b.textContent='Copied';}catch(e){b.textContent='Select + ⌘C';}
+    setTimeout(()=>b.textContent='Copy',1200);};
+  document.getElementById('reset').onclick=()=>{localStorage.removeItem(KEY);localStorage.removeItem(SZK);location.reload();};
+  try{const sv=localStorage.getItem(KEY);
+    if(sv){const m=JSON.parse(sv);for(const el of nodes()){const p=m[idOf(el)];if(p){el.style.left=p[0]+'%';el.style.top=p[1]+'%';}}}
+    const w=localStorage.getItem(SZK); if(w) szr.value=w;}catch(e){}
+  setSize(+szr.value); render();
+})();
+</script>
