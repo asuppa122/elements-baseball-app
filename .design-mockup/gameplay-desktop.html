@@ -88,7 +88,7 @@ font:inherit;font-size:11px;font-weight:800;padding:8px 14px;min-height:38px;cur
 .field{position:relative;width:100%;height:100%;max-width:1100px;border-radius:11px;overflow:hidden;border:1px solid var(--line);background:#070809}
 .finner{position:absolute;top:0;height:100%;aspect-ratio:1508/1043;left:50%;transform:translateX(-50%);container-type:size}
 .finner>img.bg{position:absolute;inset:0;width:100%;height:100%;object-fit:fill}
-.fc{position:absolute;transform:translate(-50%,-50%);z-index:3}
+.fc{position:absolute;left:var(--dx);top:var(--dy);transform:translate(-50%,-50%);z-index:3}
 .fc img{width:10.0cqw;height:14.02cqw;border-radius:3px;border:1px solid rgba(216,173,45,.5);
 box-shadow:0 3px 12px rgba(7,8,9,.8);display:block;object-fit:cover}
 .dstrip{flex:0 0 auto;display:flex;gap:22px;align-items:center;justify-content:center;padding:8px 12px;font-size:11px}
@@ -173,6 +173,8 @@ font:inherit;font-size:8.5px;font-weight:800;padding:6px 8px;flex-shrink:0}
   .m-log .dr-log,.m-pen .dr-pen,.m-bench .dr-bench{flex:1 1 auto;border-color:var(--gold)}
   .m-log .dr-log .drb,.m-pen .dr-pen .drb,.m-bench .dr-bench .drb{display:block}
   .m-log .dr-log .car,.m-pen .dr-pen .car,.m-bench .dr-bench .car{color:var(--bright)}
+  /* the phone crops the field to a different shape, so it keeps its own positions */
+  .fc{left:var(--mx);top:var(--my)}
   .fc img{width:var(--m-fc);height:calc(var(--m-fc) * 1.4024)}
 
   .tabbar{display:flex;order:9;margin-top:auto;gap:4px;flex-shrink:0;
@@ -249,14 +251,14 @@ text-transform:uppercase;color:#07210c;background:var(--bright);padding:4px 9px;
     <div class="fcol">
       <div class="fwrap"><div class="field"><div class="finner">
         <img class="bg" src="/gameplay-field-v3.webp">
-        <div class="fc" data-pos="LF" style="left:26.5%;top:14.5%"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/TOT-Earl-Gurley.png"></div>
-        <div class="fc" data-pos="CF" style="left:50.5%;top:11.0%"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/CSW-Valentin-Dreke.png"></div>
-        <div class="fc" data-pos="RF" style="left:73.5%;top:15.0%"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/HIL-Otto-Briggs.png"></div>
-        <div class="fc" data-pos="SS" style="left:38.5%;top:33.0%"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/CAG-Bobby-Williams.png"></div>
-        <div class="fc" data-pos="2B" style="left:61.5%;top:33.0%"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/DS-Harry-Kenyon.png"></div>
-        <div class="fc" data-pos="3B" style="left:25.5%;top:40.5%"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/2025/TBR-Tristan-Gray.png"></div>
-        <div class="fc" data-pos="1B" style="left:74.5%;top:40.5%"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/HBG-Ben-Taylor.png"></div>
-        <div class="fc" data-pos="C" style="left:50.5%;top:87.8%"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/CAG-John-Hines.png"></div>
+        <div class="fc" data-pos="LF" style="--dx:26.5%;--dy:14.5%;--mx:26.5%;--my:14.5%"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/TOT-Earl-Gurley.png"></div>
+        <div class="fc" data-pos="CF" style="--dx:50.5%;--dy:11.0%;--mx:50.5%;--my:11.0%"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/CSW-Valentin-Dreke.png"></div>
+        <div class="fc" data-pos="RF" style="--dx:73.5%;--dy:15.0%;--mx:73.5%;--my:15.0%"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/HIL-Otto-Briggs.png"></div>
+        <div class="fc" data-pos="SS" style="--dx:38.5%;--dy:33.0%;--mx:38.5%;--my:33.0%"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/CAG-Bobby-Williams.png"></div>
+        <div class="fc" data-pos="2B" style="--dx:61.5%;--dy:33.0%;--mx:61.5%;--my:33.0%"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/DS-Harry-Kenyon.png"></div>
+        <div class="fc" data-pos="3B" style="--dx:25.5%;--dy:40.5%;--mx:25.5%;--my:40.5%"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/2025/TBR-Tristan-Gray.png"></div>
+        <div class="fc" data-pos="1B" style="--dx:74.5%;--dy:40.5%;--mx:74.5%;--my:40.5%"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/HBG-Ben-Taylor.png"></div>
+        <div class="fc" data-pos="C" style="--dx:50.5%;--dy:87.8%;--mx:50.5%;--my:87.8%"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/CAG-John-Hines.png"></div>
         </div></div></div>
       <div class="panel dstrip">
         <span class="g"><b class="lbl">C</b><small>C</small><strong>+3</strong></span>
@@ -402,7 +404,7 @@ body.dragging{user-select:none;cursor:col-resize}
         (((r.left+r.width/2)-b.left)/b.width*100).toFixed(1).padStart(5)+'  '+
         (((r.top+r.height/2)-b.top)/b.height*100).toFixed(1).padStart(5));
     });
-    q('#pos').textContent='fielders (left / top %)\n'+pl.join('\n');
+    q('#pos').textContent='DESKTOP fielders (left / top %)\nmobile keeps its own set\n'+pl.join('\n');
     q('#out').textContent=
       'left rail   '+S.lrail+'\n'+
       'right rail  '+S.rrail+'\n'+
@@ -458,14 +460,19 @@ body.dragging{user-select:none;cursor:col-resize}
   var sel=null;
   function pctOf(el){var b=el.closest('.finner').getBoundingClientRect(),r=el.getBoundingClientRect();
     return [((r.left+r.width/2)-b.left)/b.width*100,((r.top+r.height/2)-b.top)/b.height*100];}
-  function put(el,l,t){el.style.left=Math.max(0,Math.min(100,l))+'%';el.style.top=Math.max(0,Math.min(100,t))+'%';
+  function put(el,l,t){
+    el.style.setProperty('--dx',Math.max(0,Math.min(100,l)).toFixed(2)+'%');
+    el.style.setProperty('--dy',Math.max(0,Math.min(100,t)).toFixed(2)+'%');
     savePos();requestAnimationFrame(report);}
-  function savePos(){var m={};qa('.fc').forEach(function(el){m[el.dataset.pos]=[el.style.left,el.style.top];});
+  function savePos(){var m={};qa('.fc').forEach(function(el){
+      m[el.dataset.pos]=[el.style.getPropertyValue('--dx'),el.style.getPropertyValue('--dy')];});
     try{localStorage.setItem('elements-desktop-fielders-v1',JSON.stringify(m));}catch(e){}}
   try{var fp=localStorage.getItem('elements-desktop-fielders-v1');
-    if(fp){var m=JSON.parse(fp);qa('.fc').forEach(function(el){if(m[el.dataset.pos]){el.style.left=m[el.dataset.pos][0];el.style.top=m[el.dataset.pos][1];}});}}catch(e){}
+    if(fp){var m=JSON.parse(fp);qa('.fc').forEach(function(el){if(m[el.dataset.pos]){
+      el.style.setProperty('--dx',m[el.dataset.pos][0]);el.style.setProperty('--dy',m[el.dataset.pos][1]);}});}}catch(e){}
   var dg=null;
   document.addEventListener('pointerdown',function(e){
+    if(window.innerWidth<=1024) return;   // mobile editor owns --mx/--my
     var el=e.target.closest('.fc'); if(!el) return;
     e.preventDefault(); qa('.fc').forEach(function(n){n.classList.remove('sel')}); el.classList.add('sel'); sel=el;
     el.classList.add('drag'); el.setPointerCapture(e.pointerId);
@@ -476,6 +483,7 @@ body.dragging{user-select:none;cursor:col-resize}
     put(dg.el,(e.clientX-dg.dx-dg.box.left)/dg.box.width*100,(e.clientY-dg.dy-dg.box.top)/dg.box.height*100); });
   document.addEventListener('pointerup',function(){ if(dg){dg.el.classList.remove('drag');dg=null;} });
   document.addEventListener('keydown',function(e){
+    if(window.innerWidth<=1024) return;
     if(!sel||e.key.indexOf('Arrow')!==0||document.activeElement.tagName==='INPUT') return;
     e.preventDefault(); var st=e.shiftKey?2.5:0.5, p=pctOf(sel);
     put(sel,p[0]+(e.key=='ArrowRight'?st:e.key=='ArrowLeft'?-st:0),p[1]+(e.key=='ArrowDown'?st:e.key=='ArrowUp'?-st:0)); });
