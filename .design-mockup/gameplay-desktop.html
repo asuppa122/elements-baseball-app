@@ -372,9 +372,9 @@ text-transform:uppercase;color:#07210c;background:var(--bright);padding:4px 9px;
 </style>
 
 <style>
-#vpbadge{position:fixed;left:50%;transform:translateX(-50%);top:0;z-index:400;
+#vpbadge{position:fixed;left:0;top:0;z-index:400;max-width:96vw;
   font:11px/1 ui-monospace,Menlo,monospace;font-weight:700;padding:5px 12px;
-  border-radius:0 0 8px 8px;pointer-events:none;white-space:nowrap}
+  border-radius:0 0 8px 0;pointer-events:none;white-space:normal}
 #vpbadge.desk{background:#1d4ed8;color:#fff}
 #vpbadge.mob{background:#15803d;color:#fff}
 #vpbadge.warn{background:#b91c1c;color:#fff}
@@ -398,12 +398,15 @@ text-transform:uppercase;color:#07210c;background:var(--bright);padding:4px 9px;
     var avail=(screen.availWidth||screen.width||ow);
     var off=Math.max(0,Math.round((sx+ow)-avail));
     b.className=(over>1||zoomed||off>8)?'warn':(mob?'mob':'desk');
-    b.textContent='css '+w+' x '+h+'  ·  window '+ow+'  ·  '+(mob?'MOBILE':'DESKTOP')
-      +'  ·  dpr '+(window.devicePixelRatio||1)
-      +'  ·  screen '+avail+' @x'+sx
-      +(off>8?('  ·  OFF-SCREEN '+off+'px — move window left'):'')
-      +(zoomed?('  ·  ZOOM ~'+zoom+'% — press Cmd 0'):'')
-      +(over>1?'  ·  OVERFLOW '+over+'px':(zoomed?'':'  ·  fits'));
+    var lead='';
+    if(off>8) lead='⚠ '+off+'px OF THIS PAGE IS OFF-SCREEN — the window is '+ow
+      +'px wide but starts at x'+sx+' on a '+avail+'px screen. Drag it left, or narrow it from the LEFT edge.  ·  ';
+    else if(zoomed) lead='⚠ CSS VIEWPORT '+w+' DOES NOT MATCH WINDOW '+ow
+      +' — DevTools device emulation (Cmd Shift M) or browser zoom (Cmd 0). Resizing the window will not change the layout until this is off.  ·  ';
+    else if(over>1) lead='⚠ CONTENT OVERFLOWS by '+over+'px.  ·  ';
+    b.textContent=lead+'css '+w+' x '+h+'  ·  window '+ow+'  ·  '+(mob?'MOBILE':'DESKTOP')
+      +'  ·  dpr '+(window.devicePixelRatio||1)+'  ·  screen '+avail+' @x'+sx
+      +(lead?'':'  ·  fits');
   }
   // resize alone is unreliable: it does not fire when a window is merely moved,
   // and Chrome throttles it for background tabs. Observe and poll instead.
