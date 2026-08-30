@@ -191,6 +191,7 @@ font:inherit;font-size:8.5px;font-weight:800;padding:6px 8px;flex-shrink:0}
 text-transform:uppercase;color:#07210c;background:var(--bright);padding:4px 9px;border-radius:5px}
 </style>
 <title>Elements — gameplay</title>
+<div class="stagewrap">
 <div class="screen m-matchup">
   <div class="panel top">
     <div class="seg score">
@@ -299,7 +300,76 @@ text-transform:uppercase;color:#07210c;background:var(--bright);padding:4px 9px;
     <button data-t="bench"><span class="ic">&#9634;</span>Bench</button>
   </div>
 </div>
+</div>
 <div class="tag">Desktop &mdash; drawers collapsed</div>
+
+<style>
+/* ---------- TYPE 2: the desktop board scales as one unit ---------- */
+@property --u{syntax:"<length>";inherits:true;initial-value:0px}
+.stagewrap{position:fixed;inset:0;container-type:size}
+@media (min-width:1025px){
+  .stagewrap{overflow:hidden}
+  .screen{--u:1cqh;width:100%;height:100%;padding:calc(var(--u) * 0.708);gap:calc(var(--u) * 0.708)}
+  .main{gap:calc(var(--u) * 0.708)}
+
+  .top{height:calc(var(--u) * 7.965);gap:calc(var(--u) * 2.301);padding:0 calc(var(--u) * 2.301)}
+  .score{gap:calc(var(--u) * 2.655)}.situ{gap:calc(var(--u) * 1.593)}.recap{gap:calc(var(--u) * 1.593)}.who{gap:calc(var(--u) * 1.062)}
+  .team{gap:calc(var(--u) * 0.973)}
+  .team b{font-size:max(18px, calc(var(--u) * 2.743))}
+  .team span{font-size:max(11px, calc(var(--u) * 1.327))}
+  .top .inn{font-size:max(11px, calc(var(--u) * 1.416))}
+  .dia{width:calc(var(--u) * 2.389);height:calc(var(--u) * 2.389)}
+  .dia i{width:calc(var(--u) * 0.841);height:calc(var(--u) * 0.841)}
+  .dia .b2{top:0;left:calc(var(--u) * 0.420)}.dia .b3{top:calc(var(--u) * 0.420);left:0}.dia .b1{top:calc(var(--u) * 0.420);right:0}
+  .outs{gap:calc(var(--u) * 0.442)}
+  .outs i{width:calc(var(--u) * 0.796);height:calc(var(--u) * 0.796)}
+  .recap h4,.who h4{font-size:max(13px, calc(var(--u) * 1.681))}
+  .recap p{font-size:max(11px, calc(var(--u) * 1.150))}
+  .lbl{font-size:max(8px, calc(var(--u) * 0.796))}
+  .menu{flex:0 0 calc(var(--u) * 4.248);height:calc(var(--u) * 3.894);font-size:max(13px, calc(var(--u) * 1.681))}
+  .vr{margin:calc(var(--u) * 1.416) 0}
+
+  .lrail{flex:0 0 calc(var(--u) * 51.327);gap:calc(var(--u) * 0.619);container-type:inline-size}
+  .man{padding:calc(var(--u) * 0.619);gap:calc(var(--u) * 0.796)}
+  .man img{width:calc(var(--u) * 18.584);height:calc(var(--u) * 26.106);aspect-ratio:auto;max-width:none}
+  .meta{flex:0 0 calc(var(--u) * 14.159);gap:calc(var(--u) * 0.531)}
+  .meta div{padding:calc(var(--u) * 0.531) calc(var(--u) * 0.354);min-height:calc(var(--u) * 4.956)}
+  .meta i{font-size:max(7px, calc(var(--u) * 0.664))}
+  .meta u{font-size:max(11px, calc(var(--u) * 1.416))}
+  .meta s{font-size:max(7px, calc(var(--u) * 0.619))}
+  .rollrow{gap:calc(var(--u) * 0.708)}
+  .roll{flex:0 0 calc(var(--u) * 11.681);height:calc(var(--u) * 5.310);font-size:max(10px, calc(var(--u) * 1.150))}
+  .readout{padding:calc(var(--u) * 0.354) calc(var(--u) * 0.708);gap:calc(var(--u) * 0.531)}
+  .readout i{font-size:max(7px, calc(var(--u) * 0.619))}
+  .readout u{font-size:max(11px, calc(var(--u) * 1.416))}
+  .order{padding:calc(var(--u) * 0.708);gap:calc(var(--u) * 0.354)}
+  .oc img{width:calc(var(--u) * 4.425);height:auto}
+  .oc.hero img{width:calc(var(--u) * 5.398);height:auto}
+  .oc b{width:calc(var(--u) * 0.973);height:calc(var(--u) * 0.973);line-height:calc(var(--u) * 0.796);font-size:max(7px, calc(var(--u) * 0.619))}
+  .oc em{font-size:max(6px, calc(var(--u) * 0.531))}
+  .calls{padding:calc(var(--u) * 0.885) calc(var(--u) * 0.973);gap:calc(var(--u) * 0.708);min-height:calc(var(--u) * 4.071)}
+  .acts{gap:calc(var(--u) * 0.531)}
+  .acts button{font-size:max(10px, calc(var(--u) * 0.973));padding:calc(var(--u) * 0.708) calc(var(--u) * 1.239);min-height:calc(var(--u) * 3.363)}
+
+  .fcol{gap:calc(var(--u) * 0.531);min-width:0}
+  .dstrip{padding:calc(var(--u) * 0.708) calc(var(--u) * 1.062);gap:calc(var(--u) * 1.947);font-size:max(10px, calc(var(--u) * 0.973))}
+  .dstrip small{font-size:max(8px, calc(var(--u) * 0.796))}
+  .dstrip strong{font-size:max(10px, calc(var(--u) * 1.018))}
+
+  .rrail{flex:0 0 calc(var(--u) * 25.664);gap:calc(var(--u) * 0.619)}
+  .drh{padding:calc(var(--u) * 0.973) calc(var(--u) * 0.885);min-height:calc(var(--u) * 3.894)}
+  .drh b{font-size:max(9px, calc(var(--u) * 0.885))}
+  .drh span{font-size:max(8px, calc(var(--u) * 0.796))}
+  .arm{gap:calc(var(--u) * 0.619);padding:calc(var(--u) * 0.442)}
+  .arm img{width:calc(var(--u) * 2.655);height:calc(var(--u) * 3.717)}
+  .arm .who b{font-size:max(9px, calc(var(--u) * 0.885))}
+  .arm .who span{font-size:max(8px, calc(var(--u) * 0.708))}
+  .arm .rest{font-size:max(7px, calc(var(--u) * 0.664))}
+  .arm button{font-size:max(8px, calc(var(--u) * 0.752));padding:calc(var(--u) * 0.531) calc(var(--u) * 0.708)}
+  .logline{font-size:max(9px, calc(var(--u) * 0.885));padding:calc(var(--u) * 0.354) calc(var(--u) * 0.177)}
+  .logline i{font-size:max(8px, calc(var(--u) * 0.708));width:calc(var(--u) * 1.416)}
+}
+</style>
 
 <style>
 #vpbadge{position:fixed;left:50%;transform:translateX(-50%);top:0;z-index:400;

@@ -65,6 +65,49 @@ overflows by ~148**. This is the single fact that drives the responsive work:
 the rail contents must scale with viewport height, or the layout only works on
 a large monitor.
 
+## Scaling model — Type 2, proportional
+
+The desktop board **scales as one locked unit**; it does not reflow. Every
+dimension is a fraction of the stage height, so the whole composition grows and
+shrinks together and nothing moves relative to anything else.
+
+Mechanism: `.stagewrap` is a `container-type: size` element wrapping the screen,
+and `.screen` declares `--u: 1cqh` through a registered `@property`. Because a
+registered property computes at its declaration site, `--u` resolves once
+against the stage and is inherited as a fixed length — the field's own nested
+containers cannot capture it. Every value is then `calc(var(--u) * N)` where
+`N = design_px / 1130 * 100`.
+
+The design height is **1130**, the viewport the baseline was locked at. At
+1920 x 1130 the board renders the locked values exactly.
+
+Verified constant across sizes — the ratios do not move:
+
+| viewport | matchup card | card h / stage h | left rail | rail / stage h |
+|---|---|---|---|---|
+| 1280 x 720  | 133.8 x 188   | 0.2611 | 369.5 | 0.5133 |
+| 1600 x 900  | 167.3 x 235   | 0.2611 | 461.9 | 0.5133 |
+| 1920 x 1130 | 210 x 295     | 0.2611 | 580   | 0.5133 |
+| 2560 x 1440 | 267.6 x 375.9 | 0.2611 | 739.1 | 0.5133 |
+
+### Two accepted impurities
+
+**Text has a legibility floor.** Every font size is
+`max(<floor>px, calc(var(--u) * N))`. Pure scaling would make the recap, log
+and bullpen rows unreadable on a short window. ERA avoids this only because its
+board is nearly text-free; ours is not. Legibility wins over purity.
+
+**The field stops growing at 1100px.** The raster is 1508 x 1043, so beyond
+that cap it would upscale past ~1.46x at DPR 2 and the white foul lines soften
+before the grass does. Above roughly 2100px of stage height the field therefore
+holds still while everything else keeps scaling — a visible imperfection,
+accepted for now.
+
+> **The task that fully closes this:** a higher-resolution field export, about
+> 3000 x 2076, or a vector field. That lifts the DPR-2 ceiling to 1500 CSS px
+> and lets the cap rise or disappear, making the scaling uniform at every size.
+> Not a blocker; tracked here as the real fix.
+
 ## Field art
 
 `public/gameplay-field-v3.webp`, 1508 × 1043. At the locked layout the field
