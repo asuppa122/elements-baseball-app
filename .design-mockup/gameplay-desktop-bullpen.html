@@ -301,6 +301,49 @@ text-transform:uppercase;color:#07210c;background:var(--bright);padding:4px 9px;
 </div>
 <div class="tag">Desktop &mdash; bullpen open</div>
 
+<style>
+#vpbadge{position:fixed;left:50%;transform:translateX(-50%);top:0;z-index:400;
+  font:11px/1 ui-monospace,Menlo,monospace;font-weight:700;padding:5px 12px;
+  border-radius:0 0 8px 8px;pointer-events:none;white-space:nowrap}
+#vpbadge.desk{background:#1d4ed8;color:#fff}
+#vpbadge.mob{background:#15803d;color:#fff}
+#vpbadge.warn{background:#b91c1c;color:#fff}
+</style>
+<div id="vpbadge"></div>
+<script>
+(function(){
+  var b=document.getElementById('vpbadge');
+  function upd(){
+    var w=window.innerWidth,h=window.innerHeight;
+    var mob=window.matchMedia('(max-width:1024px)').matches;
+    var sc=document.querySelector('.screen');
+    var over=sc?Math.max(sc.scrollWidth-w,0):0;
+    // innerWidth is CSS pixels. Zooming out inflates it well past the real window,
+    // so the page can report 1440 inside a 720-wide window and pick desktop wrongly.
+    var ow=window.outerWidth||w, zoom=Math.round((ow/w)*100);
+    var zoomed=Math.abs(zoom-100)>12;
+    // a window can be wider than the space left of the screen edge: the browser
+    // reports its full size, but the overhang is simply not visible
+    var sx=(window.screenX!==undefined?window.screenX:0);
+    var avail=(screen.availWidth||screen.width||ow);
+    var off=Math.max(0,Math.round((sx+ow)-avail));
+    b.className=(over>1||zoomed||off>8)?'warn':(mob?'mob':'desk');
+    b.textContent='css '+w+' x '+h+'  ·  window '+ow+'  ·  '+(mob?'MOBILE':'DESKTOP')
+      +'  ·  dpr '+(window.devicePixelRatio||1)
+      +'  ·  screen '+avail+' @x'+sx
+      +(off>8?('  ·  OFF-SCREEN '+off+'px — move window left'):'')
+      +(zoomed?('  ·  ZOOM ~'+zoom+'% — press Cmd 0'):'')
+      +(over>1?'  ·  OVERFLOW '+over+'px':(zoomed?'':'  ·  fits'));
+  }
+  // resize alone is unreliable: it does not fire when a window is merely moved,
+  // and Chrome throttles it for background tabs. Observe and poll instead.
+  addEventListener('resize',upd);
+  addEventListener('focus',upd);
+  if(window.ResizeObserver) new ResizeObserver(upd).observe(document.documentElement);
+  setInterval(upd,400);
+  upd(); setTimeout(upd,300);
+})();
+</script>
 <script>
 document.addEventListener('click',function(e){
   var b=e.target.closest('.tabbar button'); if(!b) return;
