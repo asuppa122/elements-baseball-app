@@ -1,0 +1,28 @@
+<style>html,body{margin:0;background:#050506;color:#f5f1e6;font:12px/1.5 ui-monospace,Menlo,monospace}
+#r{padding:14px;white-space:pre}
+.f{position:absolute;left:-9999px;top:0;border:0}</style>
+<div id="r">measuring…</div>
+<script>
+var W=[560,700,800,860,861,900,960,1024,1200,1400];
+var out=[], done=0;
+W.forEach(function(w,i){
+  var f=document.createElement('iframe');
+  f.className='f'; f.width=w; f.height=900; f.src='/_desktop.html';
+  f.onload=function(){
+    setTimeout(function(){
+      var D=f.contentDocument, win=f.contentWindow;
+      var sc=D.querySelector('.screen');
+      var mq=win.matchMedia('(max-width:1024px)').matches;
+      var tb=D.querySelector('.tabbar').getBoundingClientRect().height>0;
+      var hOver=sc.scrollWidth-win.innerWidth;
+      var vOver=sc.scrollHeight-win.innerHeight;
+      out[i]=String(w).padStart(5)+'  mobile='+(mq?'yes':'no ')+'  tabbar='+(tb?'yes':'no ')+
+             '  hOver='+String(hOver).padStart(5)+'  vOver='+String(vOver).padStart(5)+
+             (hOver>1?'   <-- HORIZONTAL OVERFLOW':'');
+      if(++done===W.length) document.getElementById('r').textContent=
+        'width  breakpoint behaviour of /_desktop.html\n\n'+out.join('\n');
+    },260);
+  };
+  document.body.appendChild(f);
+});
+</script>

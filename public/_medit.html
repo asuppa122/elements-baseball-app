@@ -1,0 +1,202 @@
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap">
+<style>
+:root{--ink:#070809;--panel:#111214;--gold:#d8ad2d;--bright:#f1ca45;--cream:#f5f1e6;
+--gray:#aeafb2;--mut:#777a80;--line:rgba(216,173,45,.34);--soft-line:rgba(216,173,45,.2);
+--good:#7fce8c;--bad:#e2726b}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:#050506;color:var(--cream);font-family:Inter,system-ui,sans-serif;
+display:flex;gap:26px;align-items:flex-start;justify-content:center;padding:16px;overflow:auto}
+.stage{display:flex;flex-direction:column;align-items:center;gap:8px}
+.cap{font-size:10px;font-weight:900;letter-spacing:.13em;text-transform:uppercase;color:var(--bright)}
+.phone{border:5px solid #16171a;border-radius:24px;overflow:hidden;box-shadow:0 12px 46px rgba(0,0,0,.8);flex-shrink:0}
+iframe{border:0;display:block}
+#ed{width:288px;flex-shrink:0;background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:12px;
+font-size:11px;box-shadow:0 12px 44px rgba(0,0,0,.8)}
+#ed h5{margin:0 0 3px;font-size:9.5px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:var(--bright)}
+#ed .tip{color:var(--mut);font-size:9.5px;line-height:1.45;margin-bottom:9px}
+#ed .tabs{display:flex;gap:4px;margin-bottom:9px;flex-wrap:wrap}
+#ed .tabs button{flex:1 0 auto;border:1px solid var(--soft-line);background:transparent;color:var(--mut);
+border-radius:6px;font:inherit;font-size:9px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;padding:6px 7px;cursor:pointer}
+#ed .tabs button.on{background:rgba(216,173,45,.14);border-color:var(--line);color:var(--bright)}
+#ed .r{display:flex;align-items:center;gap:8px;margin-bottom:5px}
+#ed .r label{flex:0 0 86px;font-size:9px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--mut)}
+#ed .r input{flex:1;accent-color:var(--gold);min-width:0}
+#ed .r b{flex:0 0 42px;text-align:right;font-size:10px;font-variant-numeric:tabular-nums}
+#ed .sep{height:1px;background:var(--soft-line);margin:9px 0}
+#ed .fit{margin:8px 0;padding:6px 8px;border-radius:6px;font-size:10px;font-weight:800;text-align:center}
+#ed .fit.ok{background:rgba(127,206,140,.14);color:var(--good);border:1px solid rgba(127,206,140,.4)}
+#ed .fit.bad{background:rgba(226,114,107,.16);color:var(--bad);border:1px solid rgba(226,114,107,.5)}
+#ed pre{margin:0 0 8px;max-height:190px;overflow:auto;background:#08090a;border:1px solid var(--soft-line);
+border-radius:7px;padding:7px;font:10px/1.5 ui-monospace,Menlo,monospace;color:var(--gray);white-space:pre}
+#ed .btns{display:flex;gap:6px}
+#ed .btns button{flex:1;border:1px solid var(--soft-line);background:transparent;color:var(--gray);border-radius:6px;
+font:inherit;font-size:10px;font-weight:800;padding:7px 4px;cursor:pointer}
+#ed .btns button.go{background:var(--gold);color:var(--ink);border-color:var(--gold)}
+</style>
+<div class="stage">
+  <div class="cap" id="dims">390 &times; 844</div>
+  <div class="phone" id="ph"><iframe id="fr" src="/_desktop.html"></iframe></div>
+</div>
+<div id="ed">
+  <h5>Mobile layout editor</h5>
+  <div class="tip">Pick a tab, then tune it. Sliders write live into the phone. On the Field tab you can drag the fielders; click one then arrow-key to nudge (Shift = 5&times;).</div>
+  <div class="tabs" id="tabs">
+    <button data-t="matchup" class="on">Matchup</button><button data-t="field">Field</button>
+    <button data-t="log">Log</button><button data-t="pen">Bullpen</button><button data-t="bench">Bench</button>
+  </div>
+  <div class="r"><label>Phone W</label><input id="s_vw" type="range" min="320" max="500" step="1"><b id="v_vw"></b></div>
+  <div class="r"><label>Phone H</label><input id="s_vh" type="range" min="600" max="1000" step="2"><b id="v_vh"></b></div>
+  <div class="sep"></div>
+  <div class="r"><label>Header</label><input id="s_hdr" type="range" min="40" max="120" step="1"><b id="v_hdr"></b></div>
+  <div class="r"><label>Screen pad</label><input id="s_pad" type="range" min="0" max="16" step="1"><b id="v_pad"></b></div>
+  <div class="r"><label>Matchup</label><input id="s_card" type="range" min="14" max="34" step="0.2"><b id="v_card"></b></div>
+  <div class="r"><label>Meta col</label><input id="s_meta" type="range" min="0" max="190" step="2"><b id="v_meta"></b></div>
+  <div class="r"><label>Roll row</label><input id="s_roll" type="range" min="34" max="90" step="1"><b id="v_roll"></b></div>
+  <div class="r"><label>Lineup</label><input id="s_line" type="range" min="18" max="60" step="1"><b id="v_line"></b></div>
+  <div class="r"><label>Decisions</label><input id="s_calls" type="range" min="40" max="160" step="2"><b id="v_calls"></b></div>
+  <div class="sep"></div>
+  <div class="r"><label>Field crop</label><input id="s_ar" type="range" min="0.6" max="1.55" step="0.01"><b id="v_ar"></b></div>
+  <div class="r"><label>Fielders</label><input id="s_fc" type="range" min="4" max="20" step="0.2"><b id="v_fc"></b></div>
+  <div class="r"><label>Tab bar</label><input id="s_tab" type="range" min="38" max="72" step="1"><b id="v_tab"></b></div>
+  <div class="fit" id="fit"></div>
+  <pre id="out"></pre>
+  <pre id="pos"></pre>
+  <div class="btns"><button class="go" id="copy">Copy</button><button id="reset">Reset</button></div>
+</div>
+<script>
+(function(){
+  var KEY='elements-mobile-layout-v1';
+  var D={vw:390,vh:844,hdr:52,pad:6,card:23.4,meta:118,roll:48,line:34,calls:52,ar:0.95,fc:10,tab:46,tabName:'matchup'};
+  var S=Object.assign({},D);
+  try{var raw=localStorage.getItem(KEY); if(raw) S=Object.assign(S,JSON.parse(raw));}catch(e){}
+  var q=function(s){return document.querySelector(s)};
+  var fr=q('#fr');
+
+  function doc(){ return fr.contentDocument; }
+
+  // ---- fielder positioning, driven from out here into the phone ----
+  var PKEY='elements-mobile-fielders-v1', sel=null, dg=null, injected=false;
+  function inject(){
+    var D2=doc(); if(!D2||injected) return; injected=true;
+    var st=D2.createElement('style');
+    st.textContent='.fc{cursor:grab;touch-action:none}.fc.drag{cursor:grabbing;z-index:40}'+
+      '.fc.sel img{outline:2px solid #f1ca45;outline-offset:3px}';
+    D2.head.appendChild(st);
+    try{var raw=localStorage.getItem(PKEY); if(raw){var m=JSON.parse(raw);
+      D2.querySelectorAll('.fc').forEach(function(el){ if(m[el.dataset.pos]){
+        el.style.setProperty('--mx',m[el.dataset.pos][0]);
+        el.style.setProperty('--my',m[el.dataset.pos][1]); }});}}catch(e){}
+    D2.addEventListener('pointerdown',function(e){
+      var el=e.target.closest('.fc'); if(!el) return;
+      e.preventDefault();
+      D2.querySelectorAll('.fc').forEach(function(n){n.classList.remove('sel')});
+      el.classList.add('sel'); sel=el; el.classList.add('drag'); el.setPointerCapture(e.pointerId);
+      var b=el.closest('.finner').getBoundingClientRect(), r=el.getBoundingClientRect();
+      dg={el:el,box:b,dx:e.clientX-(r.left+r.width/2),dy:e.clientY-(r.top+r.height/2)};
+    });
+    D2.addEventListener('pointermove',function(e){ if(!dg) return;
+      put(dg.el,(e.clientX-dg.dx-dg.box.left)/dg.box.width*100,(e.clientY-dg.dy-dg.box.top)/dg.box.height*100); });
+    D2.addEventListener('pointerup',function(){ if(dg){dg.el.classList.remove('drag');dg=null;} });
+  }
+  function put(el,l,t){
+    el.style.setProperty('--mx',Math.max(0,Math.min(100,l)).toFixed(2)+'%');
+    el.style.setProperty('--my',Math.max(0,Math.min(100,t)).toFixed(2)+'%');
+    savePos(); report();
+  }
+  function savePos(){
+    var D2=doc(); if(!D2) return; var m={};
+    D2.querySelectorAll('.fc').forEach(function(el){
+      m[el.dataset.pos]=[el.style.getPropertyValue('--mx'),el.style.getPropertyValue('--my')];});
+    try{localStorage.setItem(PKEY,JSON.stringify(m));}catch(e){}
+  }
+  function pctOf(el){var b=el.closest('.finner').getBoundingClientRect(),r=el.getBoundingClientRect();
+    return [((r.left+r.width/2)-b.left)/b.width*100,((r.top+r.height/2)-b.top)/b.height*100];}
+  document.addEventListener('keydown',function(e){
+    if(!sel||e.key.indexOf('Arrow')!==0||document.activeElement.tagName==='INPUT') return;
+    e.preventDefault(); var st=e.shiftKey?2.5:0.5, p=pctOf(sel);
+    put(sel,p[0]+(e.key=='ArrowRight'?st:e.key=='ArrowLeft'?-st:0),
+            p[1]+(e.key=='ArrowDown'?st:e.key=='ArrowUp'?-st:0));
+  });
+  function apply(){
+    q('#ph').style.width=(S.vw+10)+'px';
+    fr.style.width=S.vw+'px'; fr.style.height=S.vh+'px';
+    q('#dims').innerHTML=S.vw+' &times; '+S.vh;
+    var D2=doc(); if(!D2||!D2.documentElement) return;
+    var r=D2.documentElement.style;
+    r.setProperty('--m-hdr',S.hdr+'px');
+    r.setProperty('--m-pad',S.pad+'px');
+    r.setProperty('--m-card',S.card+'vh');
+    r.setProperty('--m-meta',S.meta+'px');
+    r.setProperty('--m-roll',S.roll+'px');
+    r.setProperty('--m-line',S.line+'px');
+    r.setProperty('--m-calls',S.calls+'px');
+    r.setProperty('--m-fieldar',S.ar);
+    r.setProperty('--m-fc',S.fc+'cqw');
+    r.setProperty('--m-tab',S.tab+'px');
+    var sc=D2.querySelector('.screen');
+    if(sc){['matchup','field','log','pen','bench'].forEach(function(k){sc.classList.remove('m-'+k)});
+      sc.classList.add('m-'+S.tabName);
+      D2.querySelectorAll('.tabbar button').forEach(function(b){b.classList.toggle('on',b.dataset.t===S.tabName)});}
+    ['vw','vh','hdr','pad','card','meta','roll','line','calls','ar','fc','tab'].forEach(function(k){
+      var el=q('#s_'+k); if(el&&parseFloat(el.value)!==S[k]) el.value=S[k];
+      var b=q('#v_'+k); if(b) b.textContent=(k==='card')?S[k].toFixed(1)+'vh':(k==='ar')?S[k].toFixed(2):(k==='fc')?S[k].toFixed(1):S[k];
+    });
+    q('#tabs').querySelectorAll('button').forEach(function(b){b.classList.toggle('on',b.dataset.t===S.tabName)});
+    try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}
+    inject(); setTimeout(report,60);
+  }
+  function report(){
+    var D2=doc(); if(!D2) return;
+    var sc=D2.querySelector('.screen'); if(!sc) return;
+    var w=fr.contentWindow;
+    var overV=sc.scrollHeight-w.innerHeight, overH=sc.scrollWidth-w.innerWidth;
+    var fit=q('#fit'), ok=(overV<=1&&overH<=1);
+    fit.className='fit '+(ok?'ok':'bad');
+    fit.textContent=ok?('Fits · '+sc.scrollHeight+'/'+w.innerHeight)
+      :((overV>1?'Overflows down by '+overV+'px':'')+(overV>1&&overH>1?' · ':'')+(overH>1?'across by '+overH+'px':''));
+    var f=D2.querySelector('.field'), fr2=f?f.getBoundingClientRect():null;
+    var im=D2.querySelector('.man img'), ir=im?im.getBoundingClientRect():null;
+    q('#out').textContent=
+      'tab         '+S.tabName+'\n'+
+      'viewport    '+S.vw+' x '+S.vh+'\n\n'+
+      'header      '+S.hdr+'\n'+
+      'screen pad  '+S.pad+'\n'+
+      'matchup     '+S.card.toFixed(1)+'vh'+(ir&&ir.height?'  ('+Math.round(ir.width)+' x '+Math.round(ir.height)+')':'')+'\n'+
+      'meta col    '+S.meta+'\n'+
+      'roll row    '+S.roll+'\n'+
+      'lineup      '+S.line+'\n'+
+      'decisions   '+S.calls+'\n'+
+      'field crop  '+S.ar.toFixed(2)+(fr2&&fr2.height?'  ('+Math.round(fr2.width)+' x '+Math.round(fr2.height)+')':'')+'\n'+
+      'fielders    '+S.fc.toFixed(1)+'cqw\n'+
+      'tab bar     '+S.tab;
+    var pl=[];
+    D2.querySelectorAll('.fc').forEach(function(el){
+      var b=el.closest('.finner').getBoundingClientRect(), r=el.getBoundingClientRect();
+      if(!r.width) return;
+      pl.push((el.dataset.pos+'   ').slice(0,3)+' '+
+        (((r.left+r.width/2)-b.left)/b.width*100).toFixed(1).padStart(6)+'  '+
+        (((r.top+r.height/2)-b.top)/b.height*100).toFixed(1).padStart(6));
+    });
+    q('#pos').textContent = pl.length
+      ? 'MOBILE fielders (left / top %)\nseeded from desktop; edits here do not affect desktop\n'+pl.join('\n')
+      : 'fielders — switch to the Field tab to drag them';
+  }
+  ['vw','vh','hdr','pad','card','meta','roll','line','calls','ar','fc','tab'].forEach(function(k){
+    var el=q('#s_'+k); if(!el) return;
+    el.addEventListener('input',function(){
+      S[k]=(k==='card'||k==='ar'||k==='fc')?parseFloat(el.value):parseInt(el.value,10); apply(); });
+  });
+  q('#tabs').addEventListener('click',function(e){
+    var b=e.target.closest('button'); if(!b) return; S.tabName=b.dataset.t; apply(); });
+  q('#copy').onclick=function(){var b=q('#copy');
+    try{navigator.clipboard.writeText(q('#out').textContent+'\n\n'+q('#pos').textContent);b.textContent='Copied';}
+    catch(e){b.textContent='Select + ⌘C';}
+    setTimeout(function(){b.textContent='Copy';},1200);};
+  q('#reset').onclick=function(){S=Object.assign({},D);
+    try{localStorage.removeItem(PKEY);}catch(e){}
+    injected=false; fr.contentWindow.location.reload(); setTimeout(apply,300);};
+  fr.addEventListener('load',function(){injected=false;inject();apply();});
+  apply();
+})();
+</script>

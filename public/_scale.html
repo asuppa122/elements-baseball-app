@@ -1,0 +1,29 @@
+<style>html,body{margin:0;background:#050506;color:#f5f1e6;font:12px/1.5 ui-monospace,Menlo,monospace}
+#r{padding:14px;white-space:pre}.f{position:absolute;left:-9999px;border:0}</style>
+<div id="r">measuring…</div>
+<script>
+var C=[[1280,720],[1600,900],[1920,1130],[2560,1440]], out=[], done=0;
+C.forEach(function(c,i){
+  var f=document.createElement('iframe');f.className='f';f.width=c[0];f.height=c[1];f.src='/_desktop.html';
+  f.onload=function(){setTimeout(function(){
+    var D=f.contentDocument,w=f.contentWindow,R=function(n){return Math.round(n*10)/10};
+    var g=function(s){var e=D.querySelector(s);return e?e.getBoundingClientRect():null};
+    var card=g('.man img'), rail=g('.lrail'), rr=g('.rrail'), fld=g('.field'), top=g('.top'), oc=g('.oc img');
+    var sc=D.querySelector('.screen');
+    // ratios against stage height — identical ratios across sizes proves one-unit scaling
+    var H=w.innerHeight;
+    out[i]=String(c[0]).padStart(5)+'x'+c[1]+
+      '  card '+String(R(card.width)).padStart(6)+'x'+String(R(card.height)).padStart(6)+
+      '  (h/H '+(card.height/H).toFixed(4)+')'+
+      '  rail '+String(R(rail.width)).padStart(6)+' (/H '+(rail.width/H).toFixed(4)+')'+
+      '  rrail '+String(R(rr.width)).padStart(5)+
+      '  hdr '+String(R(top.height)).padStart(5)+
+      '  lineup '+String(R(oc.width)).padStart(5)+
+      '  field '+String(R(fld.width)).padStart(6)+'x'+String(R(fld.height)).padStart(6)+
+      '  over '+(sc.scrollWidth-w.innerWidth)+'/'+(sc.scrollHeight-w.innerHeight);
+    if(++done===C.length) document.getElementById('r').textContent=
+      'TYPE 2 CHECK — ratios in parentheses must stay constant across sizes\n\n'+out.join('\n');
+  },420);};
+  document.body.appendChild(f);
+});
+</script>

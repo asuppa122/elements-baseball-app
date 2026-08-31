@@ -1,0 +1,28 @@
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@700;900&display=swap">
+<style>
+html,body{margin:0;background:#050506;color:#f1ca45;font-family:Inter,system-ui,sans-serif}
+.wrap{padding:12px;display:flex;gap:14px;align-items:flex-end}
+.col{display:flex;flex-direction:column;gap:6px}
+.lab{font-size:10px;font-weight:900;letter-spacing:.11em;text-transform:uppercase;white-space:nowrap}
+.lab small{color:#777a80;font-weight:700;letter-spacing:.02em;text-transform:none;font-size:9.5px;margin-left:6px}
+.box{border:2px solid #16171a;overflow:hidden;flex-shrink:0}
+iframe{border:0;display:block;transform-origin:top left}
+</style>
+<div class="wrap" id="w"></div>
+<script>
+var K=0.185;
+var S=[[1280,720,'Small laptop'],[1600,900,'Normal desktop'],[1920,1130,'Large monitor']];
+var w=document.getElementById('w');
+S.forEach(function(s){
+  var col=document.createElement('div');col.className='col';
+  col.innerHTML='<div class="lab">'+s[2]+'<small>'+s[0]+' × '+s[1]+'</small></div>';
+  var box=document.createElement('div');box.className='box';
+  box.style.width=Math.round(s[0]*K)+'px';box.style.height=Math.round(s[1]*K)+'px';
+  var f=document.createElement('iframe');
+  f.width=s[0];f.height=s[1];f.src='/_desktop.html';f.style.transform='scale('+K+')';
+  f.onload=function(){ var D=f.contentDocument;
+    ['#ed','#g1','#g2','#vpbadge','.tag'].forEach(function(sel){
+      var e=D.querySelector(sel); if(e) e.style.display='none'; }); };
+  box.appendChild(f);col.appendChild(box);w.appendChild(col);
+});
+</script>
