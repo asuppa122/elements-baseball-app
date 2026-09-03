@@ -77,6 +77,18 @@ border:1px solid var(--soft-line);color:var(--gray);font-size:7px;font-weight:90
 .oc.hero em{color:var(--bright)}
 .oc.onbase img{outline:2px solid var(--bright);outline-offset:2px}
 .oc.onbase em{color:var(--bright)}
+.zoom[hidden]{display:none}
+.zoom{position:fixed;inset:0;z-index:300;background:rgba(4,5,6,.86);display:flex;
+align-items:center;justify-content:center;padding:22px}
+.zin{display:flex;flex-direction:column;align-items:center;gap:12px;max-height:100%}
+.zin img{width:auto;height:auto;max-width:min(78vw,340px);max-height:70vh;border-radius:8px;
+border:1px solid var(--line);display:block}
+.zacts:empty{display:none}
+.zsteal{border:0;background:var(--bright);color:var(--ink);border-radius:99px;
+font:inherit;font-size:13px;font-weight:900;letter-spacing:.04em;text-transform:uppercase;
+padding:0 22px;min-height:44px;min-width:44px;cursor:pointer}
+.zclose{border:1px solid var(--line);background:transparent;color:var(--gray);border-radius:99px;
+font:inherit;font-size:11px;font-weight:800;padding:0 18px;min-height:44px;cursor:pointer}
 /* the base tag IS the steal control; the card body stays free for tap-to-enlarge */
 .oc .basetag{font:inherit;font-size:6px;font-weight:900;letter-spacing:.05em;text-transform:uppercase;
 white-space:nowrap;color:var(--ink);background:var(--bright);border:0;border-radius:99px;
@@ -174,6 +186,7 @@ font:inherit;font-size:8.5px;font-weight:800;padding:6px 8px;flex-shrink:0}
   .roll{flex:0 0 var(--m-meta);height:var(--m-roll);font-size:12px}
   .order{padding:7px}
   .oc img{width:var(--m-line)}.oc.hero img{width:calc(var(--m-line) * 1.22)}
+  .oc .basetag{pointer-events:none}
   .calls{min-height:var(--m-calls)}
   .acts button{min-height:44px;padding:9px 16px}
 
@@ -298,29 +311,32 @@ text-transform:uppercase;color:#07210c;background:var(--bright);padding:4px 9px;
     <div class="rrail">
       <div class="dr dr-log"><div class="drh"><span class="car">&#9656;</span><b>Game log</b><span>8 events</span></div>
         <div class="drb">            <div class="logline"><i>16</i>Shackelford walks.</div>            <div class="logline"><i>14</i>Sierra flies out.</div>            <div class="logline"><i>12</i>Allen grounds out.</div>            <div class="logline"><i>10</i>Barnes homers. 1&ndash;0.</div>            <div class="logline"><i>0</i><b style="color:var(--bright)">Play ball!</b></div></div></div>
-      <div class="dr dr-pen"><div class="drh"><span class="car">&#9656;</span><b>Bullpen</b><span>8 available</span></div>
-        <div class="drb">            <div class="arm"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/2023/CHC-Drew-Smyly.png">
-              <div class="who"><b>Drew Smyly</b><span>Ctrl 2 &middot; IP 3.1</span></div>
-              <span class="rest">Rested</span><button>Bring in</button></div>            <div class="arm"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/TOT-Roy-Roberts.png">
-              <div class="who"><b>Roy Roberts</b><span>Ctrl 2 &middot; IP 5.0</span></div>
-              <span class="rest">Rested</span><button>Bring in</button></div>            <div class="arm"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/NLG-Charles-Heywood.png">
-              <div class="who"><b>Charles Heywood</b><span>Ctrl 0 &middot; IP 4.1</span></div>
-              <span class="rest">Rested</span><button>Bring in</button></div>            <div class="arm"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/TOT-Rube-Chambers.png">
-              <div class="who"><b>Rube Chambers</b><span>Ctrl 3 &middot; IP 5.2</span></div>
-              <span class="rest">Rested</span><button>Bring in</button></div>            <div class="arm"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/TOT-Omer-Newsome.png">
+      <div class="dr dr-pen"><div class="drh"><span class="car">&#9656;</span><b>Bullpen</b><span>6 available</span></div>
+        <div class="drb">            <div class="arm"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/NLG-Charles-Heywood.png">
+              <div class="who"><b>Charles Heywood</b><span>Ctrl 0 &middot; IP 4.33</span></div>
+              <button>Bring in</button></div>            <div class="arm"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/TOT-Rube-Chambers.png">
+              <div class="who"><b>Rube Chambers</b><span>Ctrl 3 &middot; IP 5.67</span></div>
+              <button>Bring in</button></div>            <div class="arm"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/TOT-Omer-Newsome.png">
               <div class="who"><b>Omer Newsome</b><span>Ctrl 3 &middot; IP 4.0</span></div>
-              <span class="rest">Rested</span><button>Bring in</button></div>            <div class="arm"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/DS-Lawrence-Terrell.png">
-              <div class="who"><b>Lawrence Terrell</b><span>Ctrl 3 &middot; IP 3.2</span></div>
-              <span class="rest wait">1 game</span><button>Bring in</button></div>            <div class="arm"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/DS-Slim-Branham.png">
-              <div class="who"><b>Slim Branham</b><span>Ctrl 2 &middot; IP 3.2</span></div>
-              <span class="rest">Rested</span><button>Bring in</button></div>            <div class="arm"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/2024/LAD-Dinelson-Lamet.png">
-              <div class="who"><b>Dinelson Lamet</b><span>Ctrl 5 &middot; IP 1.1</span></div>
-              <span class="rest">Rested</span><button>Bring in</button></div>
+              <button>Bring in</button></div>            <div class="arm"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/DS-Lawrence-Terrell.png">
+              <div class="who"><b>Lawrence Terrell</b><span>Ctrl 3 &middot; IP 3.67</span></div>
+              <button>Bring in</button></div>            <div class="arm"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/DS-Slim-Branham.png">
+              <div class="who"><b>Slim Branham</b><span>Ctrl 2 &middot; IP 3.67</span></div>
+              <button>Bring in</button></div>            <div class="arm"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/2024/LAD-Dinelson-Lamet.png">
+              <div class="who"><b>Dinelson Lamet</b><span>Ctrl 5 &middot; IP 1.33</span></div>
+              <button>Bring in</button></div>
             <div class="penfoot"><button>Pitching change</button><button>Double switch</button></div></div></div>
       <div class="dr dr-bench"><div class="drh"><span class="car">&#9656;</span><b>Bench</b><span>2 available</span></div>
-        <div class="drb"></div></div>
+        <div class="drb">            <div class="arm"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/NLG-Ed-Pryor.png">
+              <div class="who"><b>Ed Pryor</b><span>OB 7 &middot; BsR 13 &middot; 2B +1</span></div>
+              <button>Sub in</button></div>            <div class="arm"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/AC-Luther-Farrell.png">
+              <div class="who"><b>Luther Farrell</b><span>OB 10 &middot; BsR 13 &middot; Ctrl 5</span></div>
+              <button>Sub in</button></div>
+            <div class="penfoot"><button>Pinch hit</button><button>Pinch run</button><button>Def sub</button></div></div></div>
     </div>
   </div>
+  <div class="zoom" hidden><div class="zin"><img alt=""><div class="zacts"></div>
+    <button class="zclose">Close</button></div></div>
   <div class="tabbar">
     <button data-t="matchup" class="on"><span class="ic">&#9678;</span>Matchup</button>
     <button data-t="field"><span class="ic">&#9670;</span>Field</button>
@@ -454,6 +470,23 @@ document.addEventListener('click',function(e){
   ['matchup','field','log','pen','bench'].forEach(function(k){sc.classList.remove('m-'+k)});
   sc.classList.add('m-'+b.dataset.t);
   document.querySelectorAll('.tabbar button').forEach(function(x){x.classList.toggle('on',x===b)});
+});
+
+/* A lineup card enlarges on click. On desktop the base tag is its own control and
+   stops there; on mobile the tag is inert (too small to be a touch target) and the
+   steal lives on the enlarged card instead, so the gesture is one already specified. */
+var z=document.querySelector('.zoom');
+document.addEventListener('click',function(e){
+  if(e.target.closest('.zclose')||e.target===z){z.hidden=true;return}
+  var tag=e.target.closest('.basetag');
+  if(tag&&window.innerWidth>1024){e.stopPropagation();return}
+  var oc=e.target.closest('.oc'); if(!oc||!z) return;
+  var img=oc.querySelector('img');
+  z.querySelector('img').src=img.currentSrc||img.src;
+  var acts=z.querySelector('.zacts');
+  acts.innerHTML = oc.classList.contains('onbase')
+    ? '<button class="zsteal">Steal 2nd</button>' : '';
+  z.hidden=false;
 });
 </script>
 <style>
