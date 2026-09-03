@@ -10,6 +10,7 @@ import AvailabilityPanel from '../gameplay/presentation/AvailabilityPanel'
 import RollControls from '../gameplay/presentation/RollControls'
 import GameMenu from '../gameplay/presentation/GameMenu'
 import GameLogPanel, { type LogEvent } from '../gameplay/presentation/GameLogPanel'
+import { narrate } from '../gameplay/presentation/playNarration'
 import HalfInningTransition from '../gameplay/presentation/HalfInningTransition'
 import PostGameBoard from '../gameplay/presentation/PostGameBoard'
 import { buildHalfInningTransition, previousHalf } from '../gameplay/halfInningTransition'
@@ -59,7 +60,7 @@ function Scorebug({ state }: { state: GameState }) {
   )
 
   return (
-    <header className="gp-panel gp-scorebug" aria-label="Score">
+    <div className="gp-scorebug" aria-label="Score">
       {side('away')}
       <div className="gp-scorebug-centre">
         <span className="gp-scorebug-inning">
@@ -78,7 +79,28 @@ function Scorebug({ state }: { state: GameState }) {
         </span>
       </div>
       {side('home')}
-    </header>
+    </div>
+  )
+}
+
+/**
+ * The last thing that actually happened, in words. Only narrated events
+ * qualify: a bare pitch roll is not a play, and older events recorded the
+ * dice rather than the play, so they narrate to nothing and are skipped
+ * rather than rendered as raw event types.
+ */
+function PlayRecap({ events }: { events: LogEvent[] }) {
+  // events arrive OLDEST first -- GameLogPanel reverses them for display -- so
+  // searching forwards finds the first play of the game, not the last one.
+  let latest = null
+  for (let i = events.length - 1; i >= 0 && !latest; i -= 1) latest = narrate(events[i])
+  return (
+    <div className="gp-topbar-recap">
+      <b className="s-lbl">Play recap</b>
+      {latest
+        ? <p className={`gp-topbar-play is-${latest.kind}`}>{latest.text}</p>
+        : <p className="gp-topbar-play is-empty">Play ball!</p>}
+    </div>
   )
 }
 
@@ -157,6 +179,26 @@ export default function GameplayScreenPage() {
         </span>
       </div>
 
+      {/* One full-width header, matching the artboards: the whole game
+          situation reads left to right in a single row, and the centre
+          column below is strictly the field. */}
+      <header className="gp-panel gp-topbar" aria-label="Game situation">
+        <Scorebug state={state} />
+        <i className="gp-topbar-rule" aria-hidden="true" />
+        <PlayRecap events={events} />
+        <i className="gp-topbar-rule" aria-hidden="true" />
+        <div className="gp-topbar-fielding">
+          <b className="s-lbl">Fielding</b>
+          <p>{state.managers[battingSide(state.half) === 'home' ? 'away' : 'home'].managerName}</p>
+        </div>
+        <GameMenu
+          state={state}
+          saving={saving}
+          onTogglePause={() => void togglePause()}
+          onExit={() => navigate('/games')}
+        />
+      </header>
+
       <div className="gp-layout">
         <section className="gp-panel gp-region gp-region-lineup" aria-label="Lineup">
           <LineupRail state={state} />
@@ -169,19 +211,11 @@ export default function GameplayScreenPage() {
             matchup is the batter at the plate against the pitcher on the
             mound, so it needs no panel of its own. */}
         <section className="gp-region-field" aria-label="Field">
-          <Scorebug state={state} />
           <GameField state={state} />
           <DefBar state={state} />
         </section>
 
         <section className="gp-panel gp-region gp-region-rail" aria-label="Game rail">
-          <GameMenu
-            state={state}
-            saving={saving}
-            onTogglePause={() => void togglePause()}
-            onExit={() => navigate('/games')}
-          />
-
           <GameLogPanel events={events} />
 
           {/* The decision board is the one already built and verified against

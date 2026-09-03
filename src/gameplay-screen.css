@@ -1039,3 +1039,75 @@
     min-height: 0;
   }
 }
+
+/* ---- STEP 2: the header row -------------------------------------
+ * One full-width panel carrying the whole game situation, so the centre
+ * column below is strictly the field. Segments are separated by hairline
+ * rules and spread across the full width rather than bunching left --
+ * the recap takes the slack, because it is the only segment whose length
+ * actually varies. */
+.gp-topbar {
+  display: flex;
+  align-items: center;
+  gap: var(--s-gap);
+  padding: 0 var(--s-pad);
+  flex: 0 0 auto;
+  min-height: calc(var(--u) * 7.965); /* 90 / 1130 */
+}
+
+.gp-topbar-rule {
+  align-self: stretch;
+  width: 1px;
+  margin: calc(var(--u) * 1.416) 0;
+  background: var(--s-line-soft);
+  flex: 0 0 auto;
+}
+
+/* the recap absorbs the free space, so the segments spread evenly */
+.gp-topbar-recap { flex: 1 1 auto; min-width: 0; display: flex; align-items: baseline; gap: calc(var(--u) * 1.062); }
+.gp-topbar-play {
+  margin: 0;
+  font-size: max(12px, calc(var(--u) * 1.239));
+  color: var(--s-cream);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.gp-topbar-play.is-scoring { color: var(--s-gold-bright); font-weight: 700; }
+.gp-topbar-play.is-out { color: var(--s-gray); }
+.gp-topbar-play.is-empty { color: var(--s-gold-bright); font-weight: 700; }
+
+.gp-topbar-fielding { flex: 0 0 auto; display: flex; align-items: baseline; gap: calc(var(--u) * 0.708); }
+.gp-topbar-fielding p { margin: 0; font-size: max(12px, calc(var(--u) * 1.24)); font-weight: 700; color: var(--s-cream); }
+
+/* the scorebug is a segment now, not a panel of its own */
+.gp-topbar .gp-scorebug {
+  background: none; border: 0; padding: 0; margin: 0;
+  flex: 0 0 auto;
+  display: flex; align-items: center; gap: var(--s-gap);
+}
+
+@media (min-width: 1025px) {
+  /* the header sits above the three regions and does not scale away */
+  .gp-stage > .gp-topbar { flex: 0 0 auto; }
+}
+
+@media (max-width: 1024px) {
+  /* mobile keeps the header but lets it wrap rather than truncate */
+  .gp-topbar { flex-wrap: wrap; min-height: 0; padding: 10px; row-gap: 6px; }
+  .gp-topbar-rule { display: none; }
+  .gp-topbar-recap { flex: 1 1 100%; }
+  .gp-topbar-play { white-space: normal; }
+}
+
+/* GameMenu was written as a rail section with its own "Game" heading. In the
+ * header row that heading is redundant -- the whole row is the game -- and it
+ * was overlapping the fielding segment. Restyled here rather than edited, so
+ * the component keeps working anywhere else it is used. */
+.gp-topbar .gp-menu {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: calc(var(--u) * 0.708);
+  margin-left: calc(var(--u) * 1.062);
+}
+.gp-topbar .gp-menu > .s-lbl { display: none; }
+.gp-topbar .gp-menu-controls { display: flex; gap: calc(var(--u) * 0.531); }
