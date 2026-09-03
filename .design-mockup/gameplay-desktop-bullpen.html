@@ -77,6 +77,11 @@ border:1px solid var(--soft-line);color:var(--gray);font-size:7px;font-weight:90
 .oc.hero em{color:var(--bright)}
 .oc.onbase img{outline:2px solid var(--bright);outline-offset:2px}
 .oc.onbase em{color:var(--bright)}
+/* the base tag IS the steal control; the card body stays free for tap-to-enlarge */
+.oc .basetag{font:inherit;font-size:6px;font-weight:900;letter-spacing:.05em;text-transform:uppercase;
+white-space:nowrap;color:var(--ink);background:var(--bright);border:0;border-radius:99px;
+padding:2px 5px;cursor:pointer}
+.oc .basetag:hover,.oc .basetag:focus-visible{background:var(--cream);outline:none}
 .oc.out img{outline:2px solid var(--bad);outline-offset:2px}
 .oc.out em{color:var(--bad)}
 .oc:not(.onbase):not(.out):not(.hero) em{visibility:hidden}
@@ -87,8 +92,8 @@ font:inherit;font-size:11px;font-weight:800;padding:8px 14px;min-height:38px;cur
 
 /* only the actions legal for THIS state render at all; the rest are not in the layout */
 .acts button{display:none}
-.calls[data-show~="sb"]    [data-a="sb"],
-.calls[data-show~="bunt"]  [data-a="bunt"],
+.calls[data-show~="bunt"]   [data-a="bunt"],
+.calls[data-show~="squeeze"] [data-a="squeeze"],
 .calls[data-show~="ibb"]   [data-a="ibb"],
 .calls[data-show~="infin"] [data-a="infin"]{display:inline-flex;align-items:center}
 .rest-note{display:none;margin:0;font-size:9.5px;font-style:italic;color:var(--mut)}
@@ -254,7 +259,7 @@ text-transform:uppercase;color:#07210c;background:var(--bright);padding:4px 9px;
       <div class="oc"><b>1</b><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/SLS-John-Barnes.png"><em>x</em></div>
       <div class="oc"><b>2</b><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/WMP-Toussaint-Allen.png"><em>x</em></div>
       <div class="oc out"><b>3</b><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/CSW-Felipe-Sierra.png"><em>Out</em></div>
-      <div class="oc onbase"><b>4</b><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/HBG-John-Shackelford.png"><em>On 1st</em></div>
+      <div class="oc onbase"><b>4</b><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/HBG-John-Shackelford.png"><button class="basetag" data-a="steal">On 1st</button></div>
       <div class="oc hero"><b>5</b><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/2006/CIN-Rich-Aurilia.png"><em>At bat</em></div>
       <div class="oc"><b>6</b><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1975/SFG-Gary-Thomasson.png"><em>On deck</em></div>
       <div class="oc"><b>7</b><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1993/SEA-Ken-Griffey-Jr.png"><em>In the hole</em></div>
@@ -264,8 +269,8 @@ text-transform:uppercase;color:#07210c;background:var(--bright);padding:4px 9px;
       <div class="panel calls" data-show="ibb">
         <b class="lbl">Manager decisions</b>
         <div class="acts">
-          <button data-a="sb">SB</button>
           <button data-a="bunt">Sac bunt</button>
+          <button data-a="squeeze">Squeeze</button>
           <button data-a="ibb">IBB</button>
           <button data-a="infin">INF in</button>
         </div>
@@ -371,6 +376,7 @@ text-transform:uppercase;color:#07210c;background:var(--bright);padding:4px 9px;
   .oc.hero img{width:calc(var(--u) * 5.398);height:auto}
   .oc b{width:calc(var(--u) * 0.973);height:calc(var(--u) * 0.973);line-height:calc(var(--u) * 0.796);font-size:max(7px, calc(var(--u) * 0.619))}
   .oc em{font-size:max(6px, calc(var(--u) * 0.531))}
+  .oc .basetag{font-size:max(6px, calc(var(--u) * 0.531));padding:calc(var(--u) * 0.177) calc(var(--u) * 0.442)}
   .calls{padding:calc(var(--u) * 0.885) calc(var(--u) * 0.973);gap:calc(var(--u) * 0.708);min-height:calc(var(--u) * 4.071)}
   .acts{gap:calc(var(--u) * 0.531)}
   .acts button{font-size:max(10px, calc(var(--u) * 0.973));padding:calc(var(--u) * 0.708) calc(var(--u) * 1.239);min-height:calc(var(--u) * 3.363)}
