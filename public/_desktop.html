@@ -77,6 +77,114 @@ border:1px solid var(--soft-line);color:var(--gray);font-size:7px;font-weight:90
 .oc.hero em{color:var(--bright)}
 .oc.onbase img{outline:2px solid var(--bright);outline-offset:2px}
 .oc.onbase em{color:var(--bright)}
+/* ---- half-inning transition ---- */
+.halfx{position:absolute;inset:0;z-index:200;background:rgba(4,5,6,.9);display:flex;
+align-items:center;justify-content:center;padding:24px}
+.hcard{width:min(520px,92%);background:var(--panel);border:1px solid var(--line);border-radius:14px;
+padding:22px 24px;display:flex;flex-direction:column;gap:14px;align-items:center;text-align:center}
+.hlbl{font-size:10px;font-weight:900;letter-spacing:.18em;text-transform:uppercase;color:var(--gold)}
+.hscore{display:flex;align-items:baseline;gap:14px}
+.hscore span{display:flex;flex-direction:column;gap:2px}
+.hscore i{font-style:normal;font-size:9px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--mut)}
+.hscore u{text-decoration:none;font-size:34px;font-weight:900;line-height:1;color:var(--gray);
+font-variant-numeric:tabular-nums}
+.hscore .lead u{color:var(--bright)}
+.hscore em{font-style:normal;color:var(--mut);font-size:18px}
+.hplay{margin:0;font-size:12px;color:var(--cream)}
+.hswap{display:flex;align-items:center;gap:16px;width:100%;padding:12px 0;
+border-top:1px solid var(--soft-line);border-bottom:1px solid var(--soft-line)}
+.hs{flex:1;display:flex;flex-direction:column;gap:3px}
+.hs i{font-style:normal;font-size:8px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:var(--mut)}
+.hs b{font-size:14px;font-weight:800;color:var(--cream)}
+.hs s{text-decoration:none;font-size:9.5px;color:var(--mut)}
+.harrow{font-size:20px;color:var(--gold);flex-shrink:0}
+.hgo{border:0;background:var(--bright);color:var(--ink);border-radius:99px;font:inherit;font-size:12px;
+font-weight:900;letter-spacing:.06em;text-transform:uppercase;padding:0 30px;min-height:44px;cursor:pointer}
+/* ---- post-game recap ---- */
+.screen.postgame{overflow:auto}
+.rmain{flex:1 1 auto;display:flex;flex-direction:column;gap:8px;padding:8px;min-height:0}
+.rbox{display:flex;flex-direction:column;gap:9px;padding:13px 15px}
+.rsplit{display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:stretch}
+.rsplit>.rbox{min-width:0}
+.rboxes{flex:1 1 auto;min-height:0}
+.tscroll{overflow-x:auto;min-width:0}
+.line,.box{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+.line{min-width:520px}
+.line th,.box th{text-align:left;font-weight:800;color:var(--cream);padding:5px 8px;white-space:nowrap}
+.line th{font-size:13px;width:110px}
+.line td{text-align:center;font-size:17px;color:var(--gray);padding:5px 8px;font-weight:700}
+.line thead td{font-size:9.5px;font-weight:900;letter-spacing:.1em;color:var(--mut);padding-bottom:2px}
+.line .tot{color:var(--cream);font-weight:900}
+.line tr.lead th,.line tr.lead .tot{color:var(--bright)}
+.box{min-width:430px}
+.box th{font-size:10px}
+.box td{text-align:center;font-size:12px;color:var(--gray);padding:4px 7px}
+.box thead td{font-size:8.5px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:var(--mut)}
+.box .nm{text-align:left;font-size:12px;color:var(--cream);white-space:nowrap}
+.box .ord{color:var(--mut);font-size:10px;width:16px}
+.box .seq{text-align:left;font-size:9.5px;color:var(--mut);letter-spacing:.05em;white-space:nowrap}
+.box tbody tr:nth-child(even){background:rgba(255,255,255,.022)}
+.box tfoot td{border-top:1px solid var(--soft-line);color:var(--cream);font-weight:900;padding-top:6px}
+.plays{display:flex;flex-direction:column;gap:7px}
+.pl{display:flex;align-items:center;gap:10px;font-size:12px}
+.pl i{font-style:normal;flex:0 0 30px;font-size:9px;font-weight:900;letter-spacing:.06em;
+color:var(--ink);background:var(--gold);border-radius:4px;text-align:center;padding:3px 0}
+.pl span{flex:1;color:var(--cream);display:flex;flex-direction:column;gap:2px;min-width:0}
+.pl s{text-decoration:none;font-size:9.5px;color:var(--mut)}
+.pl u{text-decoration:none;color:var(--bright);font-weight:800;font-size:11px;
+font-variant-numeric:tabular-nums;white-space:nowrap}
+/* play-by-play: collapsed by default, same drawer interaction as the live board */
+.dr-plays{flex:0 0 auto}
+.dr-plays .drb{display:none}
+.dr-plays.open .drb{display:block}
+.pbwrap{max-height:230px;overflow-y:auto;display:flex;flex-direction:column;gap:2px;padding:2px 2px 0}
+.pbhalf{margin-top:7px;font-size:8.5px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;
+color:var(--gold);border-bottom:1px solid var(--soft-line);padding-bottom:3px}
+.pbhalf:first-child{margin-top:0}
+.pb{font-size:11px;color:var(--gray);padding:2px 0}
+/* ---- recap on a phone: same content, stacked, each wide table scrolls in place ---- */
+@media (max-width:1024px){
+  /* the live board is a fixed stage; a recap is a document and must scroll.
+     body{overflow:hidden} exists for the board and has to be lifted here too. */
+  html:has(.swpost),body:has(.swpost){height:auto;overflow:visible}
+  .stagewrap.swpost{position:static;inset:auto;height:auto;min-height:100%;
+  overflow:visible;container-type:normal}
+  .screen.postgame{height:auto;min-height:100%;overflow:visible}
+  .postgame .top{flex-wrap:wrap;height:auto;gap:6px 10px;padding:9px 11px}
+  .postgame .top .vr{display:none}
+  .postgame .seg.score{flex:1 1 100%;justify-content:space-between}
+  .postgame .seg.situ{flex:0 0 auto}
+  .postgame .seg.recap{flex:1 1 100%}
+  .postgame .seg.recap p{white-space:normal}
+  .postgame .menu{position:absolute;top:9px;right:11px}
+  .rmain{padding:7px;gap:7px}
+  .rsplit{grid-template-columns:1fr}
+  .rbox{padding:11px 12px;gap:8px}
+  .line{min-width:470px}
+  .line th{width:88px;font-size:12px}
+  .line td{font-size:15px;padding:4px 6px}
+  .box{min-width:380px}
+  .pl{font-size:11.5px}
+  .pbwrap{max-height:none}
+  .dr-plays .drh{min-height:44px}
+}
+.zoom[hidden]{display:none}
+.zoom{position:fixed;inset:0;z-index:300;background:rgba(4,5,6,.86);display:flex;
+align-items:center;justify-content:center;padding:22px}
+.zin{display:flex;flex-direction:column;align-items:center;gap:12px;max-height:100%}
+.zin img{width:auto;height:auto;max-width:min(78vw,340px);max-height:70vh;border-radius:8px;
+border:1px solid var(--line);display:block}
+.zacts:empty{display:none}
+.zsteal{border:0;background:var(--bright);color:var(--ink);border-radius:99px;
+font:inherit;font-size:13px;font-weight:900;letter-spacing:.04em;text-transform:uppercase;
+padding:0 22px;min-height:44px;min-width:44px;cursor:pointer}
+.zclose{border:1px solid var(--line);background:transparent;color:var(--gray);border-radius:99px;
+font:inherit;font-size:11px;font-weight:800;padding:0 18px;min-height:44px;cursor:pointer}
+/* the base tag IS the steal control; the card body stays free for tap-to-enlarge */
+.oc .basetag{font:inherit;font-size:6px;font-weight:900;letter-spacing:.05em;text-transform:uppercase;
+white-space:nowrap;color:var(--ink);background:var(--bright);border:0;border-radius:99px;
+padding:2px 5px;cursor:pointer}
+.oc .basetag:hover,.oc .basetag:focus-visible{background:var(--cream);outline:none}
 .oc.out img{outline:2px solid var(--bad);outline-offset:2px}
 .oc.out em{color:var(--bad)}
 .oc:not(.onbase):not(.out):not(.hero) em{visibility:hidden}
@@ -84,6 +192,20 @@ border:1px solid var(--soft-line);color:var(--gray);font-size:7px;font-weight:90
 .acts{display:flex;flex-wrap:wrap;gap:6px}
 .acts button{border:1px solid var(--line);background:transparent;color:var(--cream);border-radius:99px;
 font:inherit;font-size:11px;font-weight:800;padding:8px 14px;min-height:38px;cursor:pointer}
+
+/* only the actions legal for THIS state render at all; the rest are not in the layout */
+.acts button{display:none}
+.calls[data-show~="bunt"]   [data-a="bunt"],
+.calls[data-show~="squeeze"] [data-a="squeeze"],
+.calls[data-show~="ibb"]   [data-a="ibb"],
+.calls[data-show~="infin"] [data-a="infin"]{display:inline-flex;align-items:center}
+.rest-note{display:none;margin:0;font-size:9.5px;font-style:italic;color:var(--mut)}
+.calls[data-show~="none"] .rest-note{display:block}
+/* roster moves belong to the bullpen drawer, not the decisions box */
+.penfoot{display:flex;gap:6px;margin-top:7px;padding-top:7px;border-top:1px solid var(--soft-line)}
+.penfoot button{flex:1 1 0;border:1px solid var(--soft-line);background:transparent;color:var(--gray);
+border-radius:6px;padding:6px 5px;font:inherit;font-size:9px;font-weight:800;cursor:pointer}
+.penfoot button:hover{color:var(--bright);border-color:var(--line)}
 
 /* ---- CENTRE: field ---- */
 .fcol{flex:1 1 auto;min-width:320px;min-height:0;display:flex;flex-direction:column;gap:6px;justify-content:center}
@@ -141,7 +263,7 @@ font:inherit;font-size:8.5px;font-weight:800;padding:6px 8px;flex-shrink:0}
   .team b{font-size:19px}.team span{font-size:11px}
   .recap{gap:9px;flex-wrap:wrap}
   .recap h4{font-size:13px}.recap p{font-size:10px}
-  .screen:not(.m-matchup) .recap{display:none}
+  .screen:not(.m-matchup):not(.postgame) .recap{display:none}
   .menu{flex:0 0 40px;height:38px;font-size:16px}
 
   /* promote the columns so they can be shown one at a time */
@@ -155,6 +277,7 @@ font:inherit;font-size:8.5px;font-weight:800;padding:6px 8px;flex-shrink:0}
   .roll{flex:0 0 var(--m-meta);height:var(--m-roll);font-size:12px}
   .order{padding:7px}
   .oc img{width:var(--m-line)}.oc.hero img{width:calc(var(--m-line) * 1.22)}
+  .oc .basetag{pointer-events:none}
   .calls{min-height:var(--m-calls)}
   .acts button{min-height:44px;padding:9px 16px}
 
@@ -198,19 +321,19 @@ text-transform:uppercase;color:#07210c;background:var(--bright);padding:4px 9px;
 <div class="screen m-matchup">
   <div class="panel top">
     <div class="seg score">
-      <span class="team up"><span>Jeremiah</span><b class="num">2</b></span>
+      <span class="team up"><span>Jeremiah</span><b class="num">1</b></span>
       <span class="team"><span>Anthony</span><b class="num">0</b></span>
     </div>
     <i class="vr"></i>
     <div class="seg situ">
       <span class="inn num">&#9650; 1</span>
-      <span class="dia"><i class="b2 on"></i><i class="b3"></i><i class="b1"></i></span>
-      <span class="outs"><i class="on"></i><i></i><i></i></span>
+      <span class="dia"><i class="b2"></i><i class="b3"></i><i class="b1 on"></i></span>
+      <span class="outs"><i class="on"></i><i class="on"></i><i></i></span>
     </div>
     <i class="vr"></i>
     <div class="seg recap"><b class="lbl">Play recap</b>
-      <h4>Shackelford doubles</h4>
-      <p>Lined into the right-field corner and up at second. One away, Aurilia to the plate.</p></div>
+      <h4>Shackelford walks</h4>
+      <p>Ball four on the pitcher&rsquo;s chart; Shackelford aboard at first. Two away, Aurilia to the plate.</p></div>
     <i class="vr"></i>
     <div class="seg who"><b class="lbl">Fielding</b><h4>Anthony</h4></div>
     <button class="menu">&#9776;</button>
@@ -221,7 +344,7 @@ text-transform:uppercase;color:#07210c;background:var(--bright);padding:4px 9px;
         <img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/2006/CIN-Rich-Aurilia.png">
         <div class="meta">
           <div><i>Season</i><u class="num">.291</u><s>8 HR &middot; 31 RBI</s></div>
-          <div><i>This game</i><u class="num">0&ndash;1</u><s>walk, 1 LOB</s></div>
+          <div><i>This game</i><u class="num">0&ndash;0</u><s>first at-bat</s></div>
         </div>
       </div>
       <div class="rollrow">
@@ -232,7 +355,7 @@ text-transform:uppercase;color:#07210c;background:var(--bright);padding:4px 9px;
       <div class="man">
         <img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/KCM-Nelson-Dean.png">
         <div class="meta">
-          <div><i>IP left</i><u class="num">7.0</u></div>
+          <div><i>IP left</i><u class="num">7.33</u></div>
           <div><i>Control</i><u class="num">5</u></div>
         </div>
       </div>
@@ -240,16 +363,22 @@ text-transform:uppercase;color:#07210c;background:var(--bright);padding:4px 9px;
       <div class="oc"><b>1</b><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/SLS-John-Barnes.png"><em>x</em></div>
       <div class="oc"><b>2</b><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/WMP-Toussaint-Allen.png"><em>x</em></div>
       <div class="oc out"><b>3</b><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/CSW-Felipe-Sierra.png"><em>Out</em></div>
-      <div class="oc onbase"><b>4</b><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/HBG-John-Shackelford.png"><em>On 2nd</em></div>
+      <div class="oc onbase"><b>4</b><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/HBG-John-Shackelford.png"><button class="basetag" data-a="steal">On 1st</button></div>
       <div class="oc hero"><b>5</b><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/2006/CIN-Rich-Aurilia.png"><em>At bat</em></div>
       <div class="oc"><b>6</b><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1975/SFG-Gary-Thomasson.png"><em>On deck</em></div>
       <div class="oc"><b>7</b><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1993/SEA-Ken-Griffey-Jr.png"><em>In the hole</em></div>
       <div class="oc"><b>8</b><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/DS-Harry-Kenyon.png"><em>x</em></div>
       <div class="oc"><b>9</b><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/HIL-Phil-Cockrell.png"><em>x</em></div>
     </div>
-      <div class="panel calls">
+      <div class="panel calls" data-show="ibb">
         <b class="lbl">Manager decisions</b>
-        <div class="acts"><button>IBB</button></div>
+        <div class="acts">
+          <button data-a="bunt">Sac bunt</button>
+          <button data-a="squeeze">Squeeze</button>
+          <button data-a="ibb">IBB</button>
+          <button data-a="infin">INF in</button>
+        </div>
+        <p class="rest-note">No decisions this pitch.</p>
       </div>
     </div>
     <div class="fcol">
@@ -271,30 +400,34 @@ text-transform:uppercase;color:#07210c;background:var(--bright);padding:4px 9px;
       </div>
     </div>
     <div class="rrail">
-      <div class="dr dr-log"><div class="drh"><span class="car">&#9656;</span><b>Game log</b><span>17 events</span></div>
-        <div class="drb">            <div class="logline"><i>17</i>Shackelford doubles to right.</div>            <div class="logline"><i>16</i>Sierra flies out, Allen scores.</div>            <div class="logline"><i>15</i>Allen triples, Barnes scores.</div>            <div class="logline"><i>14</i>Barnes singles.</div>            <div class="logline"><i>0</i><b style="color:var(--bright)">Play ball!</b></div></div></div>
-      <div class="dr dr-pen"><div class="drh"><span class="car">&#9656;</span><b>Bullpen</b><span>8 available</span></div>
-        <div class="drb">            <div class="arm"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/2023/CHC-Drew-Smyly.png">
-              <div class="who"><b>Drew Smyly</b><span>Ctrl 2 &middot; IP 3.1</span></div>
-              <span class="rest">Rested</span><button>Bring in</button></div>            <div class="arm"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/TOT-Roy-Roberts.png">
-              <div class="who"><b>Roy Roberts</b><span>Ctrl 2 &middot; IP 5.0</span></div>
-              <span class="rest">Rested</span><button>Bring in</button></div>            <div class="arm"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/NLG-Charles-Heywood.png">
-              <div class="who"><b>Charles Heywood</b><span>Ctrl 0 &middot; IP 4.1</span></div>
-              <span class="rest">Rested</span><button>Bring in</button></div>            <div class="arm"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/TOT-Rube-Chambers.png">
-              <div class="who"><b>Rube Chambers</b><span>Ctrl 3 &middot; IP 5.2</span></div>
-              <span class="rest">Rested</span><button>Bring in</button></div>            <div class="arm"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/TOT-Omer-Newsome.png">
+      <div class="dr dr-log"><div class="drh"><span class="car">&#9656;</span><b>Game log</b><span>8 events</span></div>
+        <div class="drb">            <div class="logline"><i>16</i>Shackelford walks.</div>            <div class="logline"><i>14</i>Sierra flies out.</div>            <div class="logline"><i>12</i>Allen grounds out.</div>            <div class="logline"><i>10</i>Barnes homers. 1&ndash;0.</div>            <div class="logline"><i>0</i><b style="color:var(--bright)">Play ball!</b></div></div></div>
+      <div class="dr dr-pen"><div class="drh"><span class="car">&#9656;</span><b>Bullpen</b><span>6 available</span></div>
+        <div class="drb">            <div class="arm"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/NLG-Charles-Heywood.png">
+              <div class="who"><b>Charles Heywood</b><span>Ctrl 0 &middot; IP 4.33</span></div>
+              <button>Bring in</button></div>            <div class="arm"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/TOT-Rube-Chambers.png">
+              <div class="who"><b>Rube Chambers</b><span>Ctrl 3 &middot; IP 5.67</span></div>
+              <button>Bring in</button></div>            <div class="arm"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/TOT-Omer-Newsome.png">
               <div class="who"><b>Omer Newsome</b><span>Ctrl 3 &middot; IP 4.0</span></div>
-              <span class="rest">Rested</span><button>Bring in</button></div>            <div class="arm"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/DS-Lawrence-Terrell.png">
-              <div class="who"><b>Lawrence Terrell</b><span>Ctrl 3 &middot; IP 3.2</span></div>
-              <span class="rest wait">1 game</span><button>Bring in</button></div>            <div class="arm"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/DS-Slim-Branham.png">
-              <div class="who"><b>Slim Branham</b><span>Ctrl 2 &middot; IP 3.2</span></div>
-              <span class="rest">Rested</span><button>Bring in</button></div>            <div class="arm"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/2024/LAD-Dinelson-Lamet.png">
-              <div class="who"><b>Dinelson Lamet</b><span>Ctrl 5 &middot; IP 1.1</span></div>
-              <span class="rest">Rested</span><button>Bring in</button></div></div></div>
+              <button>Bring in</button></div>            <div class="arm"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/DS-Lawrence-Terrell.png">
+              <div class="who"><b>Lawrence Terrell</b><span>Ctrl 3 &middot; IP 3.67</span></div>
+              <button>Bring in</button></div>            <div class="arm"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/DS-Slim-Branham.png">
+              <div class="who"><b>Slim Branham</b><span>Ctrl 2 &middot; IP 3.67</span></div>
+              <button>Bring in</button></div>            <div class="arm"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/2024/LAD-Dinelson-Lamet.png">
+              <div class="who"><b>Dinelson Lamet</b><span>Ctrl 5 &middot; IP 1.33</span></div>
+              <button>Bring in</button></div>
+            <div class="penfoot"><button>Pitching change</button><button>Double switch</button></div></div></div>
       <div class="dr dr-bench"><div class="drh"><span class="car">&#9656;</span><b>Bench</b><span>2 available</span></div>
-        <div class="drb"></div></div>
+        <div class="drb">            <div class="arm"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/NLG-Ed-Pryor.png">
+              <div class="who"><b>Ed Pryor</b><span>OB 7 &middot; BsR 13 &middot; 2B +1</span></div>
+              <button>Sub in</button></div>            <div class="arm"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/AC-Luther-Farrell.png">
+              <div class="who"><b>Luther Farrell</b><span>OB 10 &middot; BsR 13 &middot; Ctrl 5</span></div>
+              <button>Sub in</button></div>
+            <div class="penfoot"><button>Pinch hit</button><button>Pinch run</button><button>Def sub</button></div></div></div>
     </div>
   </div>
+  <div class="zoom" hidden><div class="zin"><img alt=""><div class="zacts"></div>
+    <button class="zclose">Close</button></div></div>
   <div class="tabbar">
     <button data-t="matchup" class="on"><span class="ic">&#9678;</span>Matchup</button>
     <button data-t="field"><span class="ic">&#9670;</span>Field</button>
@@ -303,6 +436,7 @@ text-transform:uppercase;color:#07210c;background:var(--bright);padding:4px 9px;
     <button data-t="bench"><span class="ic">&#9634;</span>Bench</button>
   </div>
 </div>
+
 </div>
 <div class="tag">Desktop &mdash; drawers collapsed</div>
 
@@ -350,6 +484,7 @@ text-transform:uppercase;color:#07210c;background:var(--bright);padding:4px 9px;
   .oc.hero img{width:calc(var(--u) * 5.398);height:auto}
   .oc b{width:calc(var(--u) * 0.973);height:calc(var(--u) * 0.973);line-height:calc(var(--u) * 0.796);font-size:max(7px, calc(var(--u) * 0.619))}
   .oc em{font-size:max(6px, calc(var(--u) * 0.531))}
+  .oc .basetag{font-size:max(6px, calc(var(--u) * 0.531));padding:calc(var(--u) * 0.177) calc(var(--u) * 0.442)}
   .calls{padding:calc(var(--u) * 0.885) calc(var(--u) * 0.973);gap:calc(var(--u) * 0.708);min-height:calc(var(--u) * 4.071)}
   .acts{gap:calc(var(--u) * 0.531)}
   .acts button{font-size:max(10px, calc(var(--u) * 0.973));padding:calc(var(--u) * 0.708) calc(var(--u) * 1.239);min-height:calc(var(--u) * 3.363)}
@@ -427,6 +562,23 @@ document.addEventListener('click',function(e){
   ['matchup','field','log','pen','bench'].forEach(function(k){sc.classList.remove('m-'+k)});
   sc.classList.add('m-'+b.dataset.t);
   document.querySelectorAll('.tabbar button').forEach(function(x){x.classList.toggle('on',x===b)});
+});
+
+/* A lineup card enlarges on click. On desktop the base tag is its own control and
+   stops there; on mobile the tag is inert (too small to be a touch target) and the
+   steal lives on the enlarged card instead, so the gesture is one already specified. */
+var z=document.querySelector('.zoom');
+document.addEventListener('click',function(e){
+  if(e.target.closest('.zclose')||e.target===z){z.hidden=true;return}
+  var tag=e.target.closest('.basetag');
+  if(tag&&window.innerWidth>1024){e.stopPropagation();return}
+  var oc=e.target.closest('.oc'); if(!oc||!z) return;
+  var img=oc.querySelector('img');
+  z.querySelector('img').src=img.currentSrc||img.src;
+  var acts=z.querySelector('.zacts');
+  acts.innerHTML = oc.classList.contains('onbase')
+    ? '<button class="zsteal">Steal 2nd</button>' : '';
+  z.hidden=false;
 });
 </script>
 <style>

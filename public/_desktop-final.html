@@ -1,0 +1,473 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap">
+<style>
+:root{--ink:#070809;--soft:#0b0c0e;--panel:#111214;--gold:#d8ad2d;--bright:#f1ca45;--cream:#f5f1e6;
+--gray:#aeafb2;--mut:#777a80;--line:rgba(216,173,45,.34);--soft-line:rgba(216,173,45,.2);
+--good:#7fce8c;--pitch:#e08a5c;--bad:#e2726b}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--ink);color:var(--cream);font-family:Inter,system-ui,sans-serif;overflow:hidden}
+.screen{position:relative;width:100vw;height:100dvh;padding:8px;display:flex;flex-direction:column;gap:8px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:11px;min-width:0;min-height:0}
+  .top .recap .lbl{flex-shrink:0;font-size:10px}
+.lbl{font-size:9px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:var(--bright)}
+.num{font-variant-numeric:tabular-nums}
+
+  .top{flex-shrink:0;height:clamp(56px,8vh,90px);display:flex;align-items:center;justify-content:space-between;
+gap:26px;padding:0 26px;min-height:0}
+.seg{display:flex;align-items:center;min-width:0}
+.vr{flex:0 0 1px;align-self:stretch;margin:16px 0;background:var(--soft-line)}
+.score{flex:0 0 auto;gap:30px}
+.situ{flex:0 0 auto;gap:18px}
+.recap{flex:1 1 auto;gap:18px}
+.who{flex:0 0 auto;gap:12px;align-items:baseline}
+.who h4{margin:0;font-size:clamp(13px,1.7vh,19px);font-weight:900;color:var(--cream);white-space:nowrap}
+
+.team{display:flex;align-items:baseline;gap:11px}
+.team span{font-size:clamp(11px,1.4vh,15px);font-weight:800;color:var(--gray);letter-spacing:.01em}
+.team b{font-size:clamp(20px,2.6vh,31px);font-weight:900;line-height:1}
+.team.up span,.team.up b{color:var(--bright)}
+.top .inn{font-size:16px;font-weight:900}
+.dia{position:relative;width:27px;height:27px}
+.dia i{position:absolute;width:9.5px;height:9.5px;border:1px solid #6f5b1e;transform:rotate(45deg)}
+.dia .b2{top:0;left:8.75px}.dia .b3{top:8.75px;left:0}.dia .b1{top:8.75px;right:0}
+.dia i.on{background:var(--bright);border-color:var(--bright)}
+.outs{display:flex;gap:5px}
+.outs i{width:9px;height:9px;border-radius:50%;border:1px solid #6f5b1e}
+.outs i.on{background:var(--bright);border-color:var(--bright)}
+.recap{flex:1 1 auto;min-width:0;display:flex;align-items:baseline;gap:12px}
+.recap h4{margin:0;font-size:clamp(13px,1.7vh,19px);font-weight:900;color:var(--good);white-space:nowrap;flex-shrink:0}
+.recap p{margin:0;font-size:13px;color:var(--gray);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;flex:1 1 auto}
+.menu{flex:0 0 48px;height:44px;font-size:19px;border:1px solid var(--soft-line);border-radius:8px;background:transparent;
+color:var(--gray);font-size:16px;cursor:pointer}
+
+.main{flex:1;min-height:0;display:flex;gap:8px}
+
+/* ---- LEFT RAIL: the matchup, the order, the calls ---- */
+.lrail{container-type:inline-size;flex:0 1 clamp(300px,30vw,580px);display:flex;flex-direction:column;gap:7px;min-height:0}
+.man{flex:0 1 auto;display:flex;align-items:center;justify-content:center;gap:9px;padding:7px;min-width:0;
+border:1px solid var(--line);border-radius:11px;background:linear-gradient(180deg,#16171a,#111214)}
+.man.adv{border-color:var(--bright);box-shadow:0 0 0 1px var(--bright),0 0 22px rgba(241,202,69,.26)}
+.man img{height:clamp(150px,27vh,295px);width:auto;max-width:min(58cqw,295px);object-position:top;aspect-ratio:820/1150;object-fit:cover;border-radius:6px;box-shadow:0 4px 18px rgba(7,8,9,.9);display:block;flex:0 0 auto}
+.meta{flex:0 1 min(clamp(88px,11vw,160px),36cqw);min-width:0;display:flex;flex-direction:column;gap:6px}
+.meta div{display:flex;flex-direction:column;align-items:center;gap:1px;padding:6px 4px;
+border:1px solid var(--soft-line);border-radius:7px;background:#08090a;min-height:56px;justify-content:center}
+.meta i{font-style:normal;font-size:7.5px;font-weight:900;letter-spacing:.11em;text-transform:uppercase;color:var(--mut)}
+.meta u{text-decoration:none;font-size:16px;font-weight:900;line-height:1;color:var(--cream);font-variant-numeric:tabular-nums}
+.meta s{text-decoration:none;font-size:7px;font-weight:700;color:var(--mut);margin-top:3px;text-align:center}
+.rollrow{flex:0 0 auto;display:flex;gap:8px;align-items:stretch}
+.roll{flex:0 0 clamp(96px,10vw,132px);height:clamp(44px,6vh,60px);border:none;border-radius:9px;background:var(--gold);color:var(--ink);
+font:inherit;font-size:13px;font-weight:900;letter-spacing:.09em;cursor:pointer}
+.readout{flex:1 1 auto;display:flex;align-items:center;justify-content:space-around;gap:6px;
+border:1px solid var(--soft-line);border-radius:9px;background:#08090a;padding:4px 8px}
+.readout div{text-align:center}
+.readout i{font-style:normal;display:block;font-size:7px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:var(--mut)}
+.readout u{text-decoration:none;font-size:16px;font-weight:900;color:var(--mut);font-variant-numeric:tabular-nums}
+.readout .sep{width:1px;align-self:stretch;background:var(--soft-line)}
+.order{flex:0 0 auto;display:flex;align-items:flex-end;justify-content:space-between;gap:4px;padding:8px 8px}
+.oc{position:relative;display:flex;flex-direction:column;align-items:center;gap:2px}
+  .oc img{width:min(clamp(24px,4.4vh,50px),9.1cqw);height:auto;aspect-ratio:820/1150;object-fit:cover;border-radius:3px;border:1px solid var(--soft-line);display:block}
+  .oc.hero img{width:min(clamp(29px,5.4vh,61px),11cqw);height:auto;border-color:var(--bright)}
+.oc b{position:absolute;top:2px;left:2px;width:11px;height:11px;border-radius:3px;background:rgba(7,8,9,.9);
+border:1px solid var(--soft-line);color:var(--gray);font-size:7px;font-weight:900;line-height:9px;text-align:center}
+.oc em{font-style:normal;min-height:8px;font-size:6px;font-weight:900;letter-spacing:.05em;text-transform:uppercase;color:var(--mut);white-space:nowrap}
+.oc.hero em{color:var(--bright)}
+.oc.onbase img{outline:2px solid var(--bright);outline-offset:2px}
+.oc.onbase em{color:var(--bright)}
+/* ---- half-inning transition ---- */
+.halfx{position:absolute;inset:0;z-index:200;background:rgba(4,5,6,.9);display:flex;
+align-items:center;justify-content:center;padding:24px}
+.hcard{width:min(520px,92%);background:var(--panel);border:1px solid var(--line);border-radius:14px;
+padding:22px 24px;display:flex;flex-direction:column;gap:14px;align-items:center;text-align:center}
+.hlbl{font-size:10px;font-weight:900;letter-spacing:.18em;text-transform:uppercase;color:var(--gold)}
+.hscore{display:flex;align-items:baseline;gap:14px}
+.hscore span{display:flex;flex-direction:column;gap:2px}
+.hscore i{font-style:normal;font-size:9px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--mut)}
+.hscore u{text-decoration:none;font-size:34px;font-weight:900;line-height:1;color:var(--gray);
+font-variant-numeric:tabular-nums}
+.hscore .lead u{color:var(--bright)}
+.hscore em{font-style:normal;color:var(--mut);font-size:18px}
+.hplay{margin:0;font-size:12px;color:var(--cream)}
+.hswap{display:flex;align-items:center;gap:16px;width:100%;padding:12px 0;
+border-top:1px solid var(--soft-line);border-bottom:1px solid var(--soft-line)}
+.hs{flex:1;display:flex;flex-direction:column;gap:3px}
+.hs i{font-style:normal;font-size:8px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:var(--mut)}
+.hs b{font-size:14px;font-weight:800;color:var(--cream)}
+.hs s{text-decoration:none;font-size:9.5px;color:var(--mut)}
+.harrow{font-size:20px;color:var(--gold);flex-shrink:0}
+.hgo{border:0;background:var(--bright);color:var(--ink);border-radius:99px;font:inherit;font-size:12px;
+font-weight:900;letter-spacing:.06em;text-transform:uppercase;padding:0 30px;min-height:44px;cursor:pointer}
+/* ---- post-game recap ---- */
+.screen.postgame{overflow:auto}
+.rmain{flex:1 1 auto;display:flex;flex-direction:column;gap:8px;padding:8px;min-height:0}
+.rbox{display:flex;flex-direction:column;gap:9px;padding:13px 15px}
+.rsplit{display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:stretch}
+.rsplit>.rbox{min-width:0}
+.rboxes{flex:1 1 auto;min-height:0}
+.tscroll{overflow-x:auto;min-width:0}
+.line,.box{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+.line{min-width:520px}
+.line th,.box th{text-align:left;font-weight:800;color:var(--cream);padding:5px 8px;white-space:nowrap}
+.line th{font-size:13px;width:110px}
+.line td{text-align:center;font-size:17px;color:var(--gray);padding:5px 8px;font-weight:700}
+.line thead td{font-size:9.5px;font-weight:900;letter-spacing:.1em;color:var(--mut);padding-bottom:2px}
+.line .tot{color:var(--cream);font-weight:900}
+.line tr.lead th,.line tr.lead .tot{color:var(--bright)}
+.box{min-width:430px}
+.box th{font-size:10px}
+.box td{text-align:center;font-size:12px;color:var(--gray);padding:4px 7px}
+.box thead td{font-size:8.5px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:var(--mut)}
+.box .nm{text-align:left;font-size:12px;color:var(--cream);white-space:nowrap}
+.box .ord{color:var(--mut);font-size:10px;width:16px}
+.box .seq{text-align:left;font-size:9.5px;color:var(--mut);letter-spacing:.05em;white-space:nowrap}
+.box tbody tr:nth-child(even){background:rgba(255,255,255,.022)}
+.box tfoot td{border-top:1px solid var(--soft-line);color:var(--cream);font-weight:900;padding-top:6px}
+.plays{display:flex;flex-direction:column;gap:7px}
+.pl{display:flex;align-items:center;gap:10px;font-size:12px}
+.pl i{font-style:normal;flex:0 0 30px;font-size:9px;font-weight:900;letter-spacing:.06em;
+color:var(--ink);background:var(--gold);border-radius:4px;text-align:center;padding:3px 0}
+.pl span{flex:1;color:var(--cream);display:flex;flex-direction:column;gap:2px;min-width:0}
+.pl s{text-decoration:none;font-size:9.5px;color:var(--mut)}
+.pl u{text-decoration:none;color:var(--bright);font-weight:800;font-size:11px;
+font-variant-numeric:tabular-nums;white-space:nowrap}
+/* play-by-play: collapsed by default, same drawer interaction as the live board */
+.dr-plays{flex:0 0 auto}
+.dr-plays .drb{display:none}
+.dr-plays.open .drb{display:block}
+.pbwrap{max-height:230px;overflow-y:auto;display:flex;flex-direction:column;gap:2px;padding:2px 2px 0}
+.pbhalf{margin-top:7px;font-size:8.5px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;
+color:var(--gold);border-bottom:1px solid var(--soft-line);padding-bottom:3px}
+.pbhalf:first-child{margin-top:0}
+.pb{font-size:11px;color:var(--gray);padding:2px 0}
+/* ---- recap on a phone: same content, stacked, each wide table scrolls in place ---- */
+@media (max-width:1024px){
+  /* the live board is a fixed stage; a recap is a document and must scroll.
+     body{overflow:hidden} exists for the board and has to be lifted here too. */
+  html:has(.swpost),body:has(.swpost){height:auto;overflow:visible}
+  .stagewrap.swpost{position:static;inset:auto;height:auto;min-height:100%;
+  overflow:visible;container-type:normal}
+  .screen.postgame{height:auto;min-height:100%;overflow:visible}
+  .postgame .top{flex-wrap:wrap;height:auto;gap:6px 10px;padding:9px 11px}
+  .postgame .top .vr{display:none}
+  .postgame .seg.score{flex:1 1 100%;justify-content:space-between}
+  .postgame .seg.situ{flex:0 0 auto}
+  .postgame .seg.recap{flex:1 1 100%}
+  .postgame .seg.recap p{white-space:normal}
+  .postgame .menu{position:absolute;top:9px;right:11px}
+  .rmain{padding:7px;gap:7px}
+  .rsplit{grid-template-columns:1fr}
+  .rbox{padding:11px 12px;gap:8px}
+  .line{min-width:470px}
+  .line th{width:88px;font-size:12px}
+  .line td{font-size:15px;padding:4px 6px}
+  .box{min-width:380px}
+  .pl{font-size:11.5px}
+  .pbwrap{max-height:none}
+  .dr-plays .drh{min-height:44px}
+}
+.zoom[hidden]{display:none}
+.zoom{position:fixed;inset:0;z-index:300;background:rgba(4,5,6,.86);display:flex;
+align-items:center;justify-content:center;padding:22px}
+.zin{display:flex;flex-direction:column;align-items:center;gap:12px;max-height:100%}
+.zin img{width:auto;height:auto;max-width:min(78vw,340px);max-height:70vh;border-radius:8px;
+border:1px solid var(--line);display:block}
+.zacts:empty{display:none}
+.zsteal{border:0;background:var(--bright);color:var(--ink);border-radius:99px;
+font:inherit;font-size:13px;font-weight:900;letter-spacing:.04em;text-transform:uppercase;
+padding:0 22px;min-height:44px;min-width:44px;cursor:pointer}
+.zclose{border:1px solid var(--line);background:transparent;color:var(--gray);border-radius:99px;
+font:inherit;font-size:11px;font-weight:800;padding:0 18px;min-height:44px;cursor:pointer}
+/* the base tag IS the steal control; the card body stays free for tap-to-enlarge */
+.oc .basetag{font:inherit;font-size:6px;font-weight:900;letter-spacing:.05em;text-transform:uppercase;
+white-space:nowrap;color:var(--ink);background:var(--bright);border:0;border-radius:99px;
+padding:2px 5px;cursor:pointer}
+.oc .basetag:hover,.oc .basetag:focus-visible{background:var(--cream);outline:none}
+.oc.out img{outline:2px solid var(--bad);outline-offset:2px}
+.oc.out em{color:var(--bad)}
+.oc:not(.onbase):not(.out):not(.hero) em{visibility:hidden}
+.calls{flex:1 1 auto;display:flex;flex-direction:column;gap:8px;padding:10px 11px;min-height:clamp(40px,5vh,46px)}
+.acts{display:flex;flex-wrap:wrap;gap:6px}
+.acts button{border:1px solid var(--line);background:transparent;color:var(--cream);border-radius:99px;
+font:inherit;font-size:11px;font-weight:800;padding:8px 14px;min-height:38px;cursor:pointer}
+
+/* only the actions legal for THIS state render at all; the rest are not in the layout */
+.acts button{display:none}
+.calls[data-show~="bunt"]   [data-a="bunt"],
+.calls[data-show~="squeeze"] [data-a="squeeze"],
+.calls[data-show~="ibb"]   [data-a="ibb"],
+.calls[data-show~="infin"] [data-a="infin"]{display:inline-flex;align-items:center}
+.rest-note{display:none;margin:0;font-size:9.5px;font-style:italic;color:var(--mut)}
+.calls[data-show~="none"] .rest-note{display:block}
+/* roster moves belong to the bullpen drawer, not the decisions box */
+.penfoot{display:flex;gap:6px;margin-top:7px;padding-top:7px;border-top:1px solid var(--soft-line)}
+.penfoot button{flex:1 1 0;border:1px solid var(--soft-line);background:transparent;color:var(--gray);
+border-radius:6px;padding:6px 5px;font:inherit;font-size:9px;font-weight:800;cursor:pointer}
+.penfoot button:hover{color:var(--bright);border-color:var(--line)}
+
+/* ---- CENTRE: field ---- */
+.fcol{flex:1 1 auto;min-width:320px;min-height:0;display:flex;flex-direction:column;gap:6px;justify-content:center}
+.fwrap{flex:1 1 auto;min-height:0;container-type:size;display:flex;align-items:center;justify-content:center}
+.field{position:relative;width:100%;height:100%;max-width:1100px;border-radius:11px;overflow:hidden;border:1px solid var(--line);background:#070809}
+.finner{position:absolute;top:0;height:100%;aspect-ratio:1508/1043;left:50%;transform:translateX(-50%);container-type:size}
+.finner>img.bg{position:absolute;inset:0;width:100%;height:100%;object-fit:fill}
+.fc{position:absolute;left:var(--dx);top:var(--dy);transform:translate(-50%,-50%);z-index:3}
+.fc img{width:10.0cqw;height:14.02cqw;border-radius:3px;border:1px solid rgba(216,173,45,.5);
+box-shadow:0 3px 12px rgba(7,8,9,.8);display:block;object-fit:cover}
+.dstrip{flex:0 0 auto;display:flex;gap:22px;align-items:center;justify-content:center;padding:8px 12px;font-size:11px}
+.dstrip .g{display:flex;gap:7px;align-items:baseline}
+.dstrip small{font-size:9px;color:var(--mut);font-weight:700}
+.dstrip strong{font-size:11.5px;font-weight:800}
+
+/* ---- RIGHT RAIL: accordion ---- */
+.rrail{flex:0 1 clamp(190px,15vw,290px);display:flex;flex-direction:column;gap:7px;min-height:0}
+.dr{border:1px solid var(--soft-line);border-radius:10px;background:var(--soft);display:flex;flex-direction:column;
+min-height:0;flex:0 0 auto;overflow:hidden}
+.dr.open{flex:1 1 auto;border-color:var(--gold)}
+.drh{display:flex;align-items:center;gap:8px;padding:11px 10px;cursor:pointer;min-height:44px;flex-shrink:0}
+.drh .car{font-size:9px;color:var(--mut);width:9px}
+.dr.open .drh .car{color:var(--bright)}
+.drh b{font-size:10px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:var(--gray)}
+.dr.open .drh b{color:var(--bright)}
+.drh span{margin-left:auto;font-size:9px;color:var(--mut);font-weight:700}
+.drb{display:none;padding:0 7px 7px;overflow:auto;min-height:0}
+.dr.open .drb{display:block}
+.arm{display:flex;align-items:center;gap:7px;padding:5px;border:1px solid var(--soft-line);border-radius:8px;
+background:#08090a;margin-bottom:5px}
+.arm img{width:30px;height:42px;object-fit:cover;border-radius:4px;display:block;flex-shrink:0}
+.arm .who{min-width:0;flex:1}
+.arm .who b{display:block;font-size:10px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.arm .who span{font-size:8px;color:var(--mut)}
+.arm .rest{font-size:7.5px;font-weight:800;color:var(--good)}
+.arm .rest.wait{color:var(--pitch)}
+.arm button{border:1px solid var(--soft-line);background:transparent;color:var(--gray);border-radius:6px;
+font:inherit;font-size:8.5px;font-weight:800;padding:6px 8px;flex-shrink:0}
+.logline{display:flex;gap:8px;font-size:10px;padding:4px 2px;border-bottom:1px solid rgba(174,175,178,.07)}
+.logline i{font-style:normal;color:var(--mut);font-size:8px;width:16px;flex-shrink:0}
+
+/* ---------- the tab bar is mobile-only ---------- */
+.tabbar{display:none}
+
+/* ---------- PHONE: three columns become five tabs ---------- */
+@media (max-width:1024px){
+  :root{--m-hdr:52px;--m-card:23.4vh;--m-meta:118px;--m-roll:48px;--m-line:34px;
+        --m-calls:52px;--m-fieldar:.95;--m-fc:10cqw;--m-tab:46px;--m-pad:6px}
+  .screen{padding:var(--m-pad);gap:var(--m-pad);padding-bottom:0}
+  .top{height:auto;min-height:var(--m-hdr);padding:6px 10px;gap:9px;justify-content:flex-start;flex-wrap:wrap}
+  .seg{min-width:0}
+  .recap{flex:1 0 100%;order:9}
+  .top .vr,.top .who{display:none}
+  .score{gap:16px}.situ{gap:11px}
+  .team b{font-size:19px}.team span{font-size:11px}
+  .recap{gap:9px;flex-wrap:wrap}
+  .recap h4{font-size:13px}.recap p{font-size:10px}
+  .screen:not(.m-matchup):not(.postgame) .recap{display:none}
+  .menu{flex:0 0 40px;height:38px;font-size:16px}
+
+  /* promote the columns so they can be shown one at a time */
+  .main{display:contents}
+  .lrail,.fcol,.rrail{flex:none;width:100%;min-width:0;order:2}
+  .lrail{gap:6px;min-height:0}
+  .man{padding:6px;gap:8px}
+  .man img{height:clamp(120px,var(--m-card),260px)}
+  .meta{flex:0 0 var(--m-meta);gap:5px}
+  .meta div{min-height:52px}
+  .roll{flex:0 0 var(--m-meta);height:var(--m-roll);font-size:12px}
+  .order{padding:7px}
+  .oc img{width:var(--m-line)}.oc.hero img{width:calc(var(--m-line) * 1.22)}
+  .oc .basetag{pointer-events:none}
+  .calls{min-height:var(--m-calls)}
+  .acts button{min-height:44px;padding:9px 16px}
+
+  .fcol{gap:6px}
+  .fwrap{flex:none;aspect-ratio:var(--m-fieldar);container-type:normal}
+  .field{max-width:none;width:100%;height:100%}
+  .dstrip{display:flex;flex-direction:column;align-items:stretch;gap:5px;padding:9px 11px}
+  .dstrip .g{display:flex;align-items:baseline;gap:9px;flex-wrap:wrap}
+  .dstrip .g>.lbl{flex:0 0 30px}
+  .rrail{gap:6px}
+  .drh{min-height:44px}
+
+  /* which tab shows what */
+  .m-matchup .fcol,.m-matchup .rrail{display:none}
+  .m-field .lrail,.m-field .rrail{display:none}
+  .m-log .lrail,.m-log .fcol,.m-log .dr:not(.dr-log){display:none}
+  .m-pen .lrail,.m-pen .fcol,.m-pen .dr:not(.dr-pen){display:none}
+  .m-bench .lrail,.m-bench .fcol,.m-bench .dr:not(.dr-bench){display:none}
+  .m-log .dr-log,.m-pen .dr-pen,.m-bench .dr-bench{flex:1 1 auto;border-color:var(--gold)}
+  .m-log .dr-log .drb,.m-pen .dr-pen .drb,.m-bench .dr-bench .drb{display:block}
+  .m-log .dr-log .car,.m-pen .dr-pen .car,.m-bench .dr-bench .car{color:var(--bright)}
+  /* the phone crops the field to a different shape, so it keeps its own positions */
+  .fc{left:var(--mx);top:var(--my)}
+  .fc img{width:var(--m-fc);height:calc(var(--m-fc) * 1.4024)}
+
+  .tabbar{display:flex;order:9;margin-top:auto;gap:4px;flex-shrink:0;
+    padding:6px 4px calc(6px + env(safe-area-inset-bottom));background:var(--panel);
+    border-top:1px solid var(--line);margin-left:-6px;margin-right:-6px}
+  .tabbar button{flex:1;min-height:var(--m-tab);border:1px solid transparent;background:transparent;color:var(--mut);
+    font:inherit;font-size:8.5px;font-weight:900;letter-spacing:.06em;text-transform:uppercase;border-radius:8px;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer}
+  .tabbar button .ic{font-size:14px;line-height:1}
+  .tabbar button.on{background:rgba(216,173,45,.14);border-color:var(--line);color:var(--bright)}
+  #ed,.grab,.tag{display:none}
+}
+.tag{position:fixed;left:8px;bottom:8px;z-index:99;font-size:8.5px;font-weight:900;letter-spacing:.14em;
+text-transform:uppercase;color:#07210c;background:var(--bright);padding:4px 9px;border-radius:5px}
+</style>
+<title>Elements &mdash; final</title>
+<div class="stagewrap swpost"><div class="screen postgame">
+  <div class="panel top">
+    <div class="seg score"><span class="team"><span>Jeremiah</span><b class="num">1</b></span>
+      <span class="team up"><span>Anthony</span><b class="num">5</b></span></div>
+    <i class="vr"></i>
+    <div class="seg situ"><span class="inn num">Final</span></div>
+    <i class="vr"></i>
+    <div class="seg recap"><b class="lbl">Result</b><h4>Anthony wins 5&ndash;1</h4>
+      <p>Nelson Dean goes the distance; Bobby Williams&rsquo; three-run homer breaks it open.</p></div>
+    <button class="menu">&#9776;</button>
+  </div>
+  <div class="rmain">
+    <div class="panel rbox rline"><b class="lbl">Line score</b>
+      <div class="tscroll"><table class="line"><thead><tr><th></th><td>1</td><td>2</td><td>3</td><td>4</td><td>5</td><td>6</td><td>7</td><td>8</td><td>9</td><td class="tot">R</td><td class="tot">H</td><td class="tot">E</td></tr></thead>
+      <tbody><tr><th>Jeremiah</th><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>1</td><td class="tot">1</td><td class="tot">5</td><td class="tot">0</td></tr><tr class="lead"><th>Anthony</th><td>0</td><td>0</td><td>0</td><td>2</td><td>0</td><td>3</td><td>0</td><td>0</td><td>X</td><td class="tot">5</td><td class="tot">7</td><td class="tot">0</td></tr></tbody></table></div></div>
+    <div class="rsplit">
+      <div class="panel rbox"><b class="lbl">Scoring plays</b>
+        <div class="plays"><div class="pl"><i>B4</i><span>Ben Taylor walks with the bases loaded.</span><u>0&ndash;1</u></div><div class="pl"><i>B4</i><span>John Hines walks with the bases loaded.</span><u>0&ndash;2</u></div><div class="pl"><i>B6</i><span>Bobby Williams homers, three runs score.</span><u>0&ndash;5</u></div><div class="pl"><i>T9</i><span>Rich Aurilia singles, one run scores.</span><u>1&ndash;5</u></div></div></div>
+      <div class="panel rbox"><b class="lbl">Pitching</b>
+        <div class="plays">
+          <div class="pl"><i>W</i><span>Nelson Dean<s>Complete game &middot; 33 BF &middot; 5 H &middot; 2 BB &middot; 3 K &middot; 1 R</s></span><u>Ctrl 5 &rarr; &minus;4</u></div>
+          <div class="pl"><i>L</i><span>Phil Cockrell<s>Complete game &middot; 33 BF &middot; 7 H &middot; 3 BB &middot; 3 K &middot; 5 R</s></span><u>IP 7.0</u></div>
+        </div></div>
+    </div>
+    <div class="rsplit rboxes"><div class="panel rbox"><b class="lbl">Jeremiah &mdash; batting</b><div class="tscroll"><table class="box"><thead><tr><th></th><th class="nm">Batter</th><td>AB</td><td>H</td><td>RBI</td><td>BB</td><td>K</td><td class="seq">By plate appearance</td></tr></thead><tbody><tr><td class="ord">1</td><td class="nm">John Barnes</td><td>4</td><td>0</td><td>0</td><td>0</td><td>1</td><td class="seq">FB K FB GB</td></tr><tr><td class="ord">2</td><td class="nm">Toussaint Allen</td><td>4</td><td>2</td><td>0</td><td>0</td><td>0</td><td class="seq">1B FB FB 1B</td></tr><tr><td class="ord">3</td><td class="nm">Felipe Sierra</td><td>3</td><td>0</td><td>0</td><td>1</td><td>0</td><td class="seq">GB BB FB GB</td></tr><tr><td class="ord">4</td><td class="nm">John Shackelford</td><td>4</td><td>1</td><td>0</td><td>0</td><td>0</td><td class="seq">FB GB FB 1B</td></tr><tr><td class="ord">5</td><td class="nm">Rich Aurilia</td><td>4</td><td>2</td><td>1</td><td>0</td><td>1</td><td class="seq">1B GB K 1B</td></tr><tr><td class="ord">6</td><td class="nm">Gary Thomasson</td><td>4</td><td>0</td><td>0</td><td>0</td><td>0</td><td class="seq">GB FB FB FB</td></tr><tr><td class="ord">7</td><td class="nm">Ken Griffey Jr.</td><td>2</td><td>0</td><td>0</td><td>1</td><td>0</td><td class="seq">GB BB GB</td></tr><tr><td class="ord">8</td><td class="nm">Harry Kenyon</td><td>3</td><td>0</td><td>0</td><td>0</td><td>1</td><td class="seq">GB FB K</td></tr><tr><td class="ord">9</td><td class="nm">Phil Cockrell</td><td>3</td><td>0</td><td>0</td><td>0</td><td>0</td><td class="seq">FB FB PU</td></tr></tbody><tfoot><tr><td></td><td class="nm">Totals</td><td>31</td><td>5</td><td>1</td><td>2</td><td>3</td><td class="seq"></td></tr></tfoot></table></div></div><div class="panel rbox"><b class="lbl">Anthony &mdash; batting</b><div class="tscroll"><table class="box"><thead><tr><th></th><th class="nm">Batter</th><td>AB</td><td>H</td><td>RBI</td><td>BB</td><td>K</td><td class="seq">By plate appearance</td></tr></thead><tbody><tr><td class="ord">1</td><td class="nm">Otto Briggs</td><td>4</td><td>2</td><td>0</td><td>0</td><td>0</td><td class="seq">GB 1B 1B FB</td></tr><tr><td class="ord">2</td><td class="nm">Earl Gurley</td><td>4</td><td>2</td><td>0</td><td>0</td><td>0</td><td class="seq">GB 1B GB 3B</td></tr><tr><td class="ord">3</td><td class="nm">Valent&iacute;n Dreke</td><td>4</td><td>1</td><td>0</td><td>0</td><td>1</td><td class="seq">FB 1B K GB</td></tr><tr><td class="ord">4</td><td class="nm">Ben Taylor</td><td>3</td><td>1</td><td>1</td><td>1</td><td>0</td><td class="seq">GB BB 2B FB</td></tr><tr><td class="ord">5</td><td class="nm">Harry Kenyon</td><td>4</td><td>0</td><td>0</td><td>0</td><td>0</td><td class="seq">PU FB GB FB</td></tr><tr><td class="ord">6</td><td class="nm">John Hines</td><td>2</td><td>0</td><td>1</td><td>2</td><td>1</td><td class="seq">K BB BB GB</td></tr><tr><td class="ord">7</td><td class="nm">Bobby Williams</td><td>3</td><td>1</td><td>3</td><td>0</td><td>1</td><td class="seq">K GB HR</td></tr><tr><td class="ord">8</td><td class="nm">Tristan Gray</td><td>3</td><td>0</td><td>0</td><td>0</td><td>0</td><td class="seq">GB GB GB</td></tr><tr><td class="ord">9</td><td class="nm">Nelson Dean</td><td>3</td><td>0</td><td>0</td><td>0</td><td>0</td><td class="seq">GB FB GB</td></tr></tbody><tfoot><tr><td></td><td class="nm">Totals</td><td>30</td><td>7</td><td>5</td><td>3</td><td>3</td><td class="seq"></td></tr></tfoot></table></div></div></div>
+    <div class="dr dr-plays"><div class="drh"><span class="car">&#9656;</span><b>Play by play</b><span>66 plays</span></div>
+      <div class="drb"><div class="pbwrap"><div class="pbhalf">Top 1</div><div class="pb">John Barnes flies out.</div><div class="pb">Toussaint Allen singles.</div><div class="pb">Felipe Sierra grounds out.</div><div class="pbhalf">Bottom 1</div><div class="pb">Otto Briggs grounds out.</div><div class="pb">Earl Gurley grounds out.</div><div class="pb">Valent&iacute;n Dreke flies out.</div><div class="pbhalf">Top 2</div><div class="pb">John Shackelford flies out.</div><div class="pb">Rich Aurilia singles.</div><div class="pb">Gary Thomasson grounds out.</div><div class="pb">Ken Griffey Jr. grounds out.</div><div class="pbhalf">Bottom 2</div><div class="pb">Ben Taylor grounds out.</div><div class="pb">Harry Kenyon pops out.</div><div class="pb">John Hines strikes out.</div><div class="pbhalf">Top 3</div><div class="pb">Harry Kenyon grounds out.</div><div class="pb">Phil Cockrell flies out.</div><div class="pb">John Barnes strikes out.</div><div class="pbhalf">Bottom 3</div><div class="pb">Bobby Williams strikes out.</div><div class="pb">Tristan Gray grounds out.</div><div class="pb">Nelson Dean grounds out.</div><div class="pbhalf">Top 4</div><div class="pb">Toussaint Allen flies out.</div><div class="pb">Felipe Sierra walks.</div><div class="pb">John Shackelford grounds out.</div><div class="pb">Rich Aurilia grounds out.</div><div class="pbhalf">Bottom 4</div><div class="pb">Otto Briggs singles.</div><div class="pb">Earl Gurley singles.</div><div class="pb">Valent&iacute;n Dreke singles.</div><div class="pb">Ben Taylor walks, run scores.</div><div class="pb">Harry Kenyon flies out.</div><div class="pb">John Hines walks, run scores.</div><div class="pb">Bobby Williams grounds out.</div><div class="pbhalf">Top 5</div><div class="pb">Gary Thomasson flies out.</div><div class="pb">Ken Griffey Jr. walks.</div><div class="pb">Harry Kenyon flies out.</div><div class="pb">Phil Cockrell flies out.</div><div class="pbhalf">Bottom 5</div><div class="pb">Tristan Gray grounds out.</div><div class="pb">Nelson Dean flies out.</div><div class="pb">Otto Briggs singles.</div><div class="pb">Earl Gurley grounds out.</div><div class="pbhalf">Top 6</div><div class="pb">John Barnes flies out.</div><div class="pb">Toussaint Allen flies out.</div><div class="pb">Felipe Sierra flies out.</div><div class="pbhalf">Bottom 6</div><div class="pb">Valent&iacute;n Dreke strikes out.</div><div class="pb">Ben Taylor doubles.</div><div class="pb">Harry Kenyon grounds out.</div><div class="pb">John Hines walks.</div><div class="pb">Bobby Williams homers, 3 runs score.</div><div class="pb">Tristan Gray grounds out.</div><div class="pbhalf">Top 7</div><div class="pb">John Shackelford flies out.</div><div class="pb">Rich Aurilia strikes out.</div><div class="pb">Gary Thomasson flies out.</div><div class="pbhalf">Bottom 7</div><div class="pb">Nelson Dean grounds out.</div><div class="pb">Otto Briggs flies out.</div><div class="pb">Earl Gurley triples.</div><div class="pb">Valent&iacute;n Dreke grounds out.</div><div class="pbhalf">Top 8</div><div class="pb">Ken Griffey Jr. grounds out.</div><div class="pb">Harry Kenyon strikes out.</div><div class="pb">Phil Cockrell pops out.</div><div class="pbhalf">Bottom 8</div><div class="pb">Ben Taylor flies out.</div><div class="pb">Harry Kenyon flies out.</div><div class="pb">John Hines grounds out.</div><div class="pbhalf">Top 9</div><div class="pb">John Barnes grounds out.</div><div class="pb">Toussaint Allen singles.</div><div class="pb">Felipe Sierra grounds out.</div><div class="pb">John Shackelford singles.</div><div class="pb">Rich Aurilia singles, run scores.</div><div class="pb">Gary Thomasson flies out. Side retired.</div></div></div></div>
+  </div>
+</div>
+<div class="tag">Desktop &mdash; post-game recap</div>
+</div>
+<style>
+/* ---------- TYPE 2: the desktop board scales as one unit ---------- */
+@property --u{syntax:"<length>";inherits:true;initial-value:0px}
+.stagewrap{position:fixed;inset:0;container-type:size}
+@media (min-width:1025px){
+  .stagewrap{overflow:hidden}
+  .screen{--u:1cqh;width:100%;height:100%;padding:calc(var(--u) * 0.708);gap:calc(var(--u) * 0.708)}
+  .main{gap:calc(var(--u) * 0.708)}
+
+  .top{height:calc(var(--u) * 7.965);gap:calc(var(--u) * 2.301);padding:0 calc(var(--u) * 2.301)}
+  .score{gap:calc(var(--u) * 2.655)}.situ{gap:calc(var(--u) * 1.593)}.recap{gap:calc(var(--u) * 1.593)}.who{gap:calc(var(--u) * 1.062)}
+  .team{gap:calc(var(--u) * 0.973)}
+  .team b{font-size:max(18px, calc(var(--u) * 2.743))}
+  .team span{font-size:max(11px, calc(var(--u) * 1.327))}
+  .top .inn{font-size:max(11px, calc(var(--u) * 1.416))}
+  .dia{width:calc(var(--u) * 2.389);height:calc(var(--u) * 2.389)}
+  .dia i{width:calc(var(--u) * 0.841);height:calc(var(--u) * 0.841)}
+  .dia .b2{top:0;left:calc(var(--u) * 0.420)}.dia .b3{top:calc(var(--u) * 0.420);left:0}.dia .b1{top:calc(var(--u) * 0.420);right:0}
+  .outs{gap:calc(var(--u) * 0.442)}
+  .outs i{width:calc(var(--u) * 0.796);height:calc(var(--u) * 0.796)}
+  .recap h4,.who h4{font-size:max(13px, calc(var(--u) * 1.681))}
+  .recap p{font-size:max(11px, calc(var(--u) * 1.150))}
+  .lbl{font-size:max(8px, calc(var(--u) * 0.796))}
+  .menu{flex:0 0 calc(var(--u) * 4.248);height:calc(var(--u) * 3.894);font-size:max(13px, calc(var(--u) * 1.681))}
+  .vr{margin:calc(var(--u) * 1.416) 0}
+
+  .lrail{flex:0 0 calc(var(--u) * 51.327);gap:calc(var(--u) * 0.619);container-type:inline-size}
+  .man{padding:calc(var(--u) * 0.619);gap:calc(var(--u) * 0.796)}
+  .man img{width:calc(var(--u) * 18.584);height:calc(var(--u) * 26.106);aspect-ratio:auto;max-width:none}
+  .meta{flex:0 0 calc(var(--u) * 14.159);gap:calc(var(--u) * 0.531)}
+  .meta div{padding:calc(var(--u) * 0.531) calc(var(--u) * 0.354);min-height:calc(var(--u) * 4.956)}
+  .meta i{font-size:max(7px, calc(var(--u) * 0.664))}
+  .meta u{font-size:max(11px, calc(var(--u) * 1.416))}
+  .meta s{font-size:max(7px, calc(var(--u) * 0.619))}
+  .rollrow{gap:calc(var(--u) * 0.708)}
+  .roll{flex:0 0 calc(var(--u) * 11.681);height:calc(var(--u) * 5.310);font-size:max(10px, calc(var(--u) * 1.150))}
+  .readout{padding:calc(var(--u) * 0.354) calc(var(--u) * 0.708);gap:calc(var(--u) * 0.531)}
+  .readout i{font-size:max(7px, calc(var(--u) * 0.619))}
+  .readout u{font-size:max(11px, calc(var(--u) * 1.416))}
+  .order{padding:calc(var(--u) * 0.708);gap:calc(var(--u) * 0.354)}
+  .oc img{width:calc(var(--u) * 4.425);height:auto}
+  .oc.hero img{width:calc(var(--u) * 5.398);height:auto}
+  .oc b{width:calc(var(--u) * 0.973);height:calc(var(--u) * 0.973);line-height:calc(var(--u) * 0.796);font-size:max(7px, calc(var(--u) * 0.619))}
+  .oc em{font-size:max(6px, calc(var(--u) * 0.531))}
+  .oc .basetag{font-size:max(6px, calc(var(--u) * 0.531));padding:calc(var(--u) * 0.177) calc(var(--u) * 0.442)}
+  .calls{padding:calc(var(--u) * 0.885) calc(var(--u) * 0.973);gap:calc(var(--u) * 0.708);min-height:calc(var(--u) * 4.071)}
+  .acts{gap:calc(var(--u) * 0.531)}
+  .acts button{font-size:max(10px, calc(var(--u) * 0.973));padding:calc(var(--u) * 0.708) calc(var(--u) * 1.239);min-height:calc(var(--u) * 3.363)}
+
+  .fcol{gap:calc(var(--u) * 0.531);min-width:0}
+  .dstrip{padding:calc(var(--u) * 0.708) calc(var(--u) * 1.062);gap:calc(var(--u) * 1.947);font-size:max(10px, calc(var(--u) * 0.973))}
+  .dstrip small{font-size:max(8px, calc(var(--u) * 0.796))}
+  .dstrip strong{font-size:max(10px, calc(var(--u) * 1.018))}
+
+  .rrail{flex:0 0 calc(var(--u) * 25.664);gap:calc(var(--u) * 0.619)}
+  .drh{padding:calc(var(--u) * 0.973) calc(var(--u) * 0.885);min-height:calc(var(--u) * 3.894)}
+  .drh b{font-size:max(9px, calc(var(--u) * 0.885))}
+  .drh span{font-size:max(8px, calc(var(--u) * 0.796))}
+  .arm{gap:calc(var(--u) * 0.619);padding:calc(var(--u) * 0.442)}
+  .arm img{width:calc(var(--u) * 2.655);height:calc(var(--u) * 3.717)}
+  .arm .who b{font-size:max(9px, calc(var(--u) * 0.885))}
+  .arm .who span{font-size:max(8px, calc(var(--u) * 0.708))}
+  .arm .rest{font-size:max(7px, calc(var(--u) * 0.664))}
+  .arm button{font-size:max(8px, calc(var(--u) * 0.752));padding:calc(var(--u) * 0.531) calc(var(--u) * 0.708)}
+  .logline{font-size:max(9px, calc(var(--u) * 0.885));padding:calc(var(--u) * 0.354) calc(var(--u) * 0.177)}
+  .logline i{font-size:max(8px, calc(var(--u) * 0.708));width:calc(var(--u) * 1.416)}
+}
+</style>
+
+<style>
+#vpbadge{position:fixed;left:0;top:0;z-index:400;max-width:96vw;
+  font:11px/1 ui-monospace,Menlo,monospace;font-weight:700;padding:5px 12px;
+  border-radius:0 0 8px 0;pointer-events:none;white-space:normal}
+#vpbadge.desk{background:#1d4ed8;color:#fff}
+#vpbadge.mob{background:#15803d;color:#fff}
+#vpbadge.warn{background:#b91c1c;color:#fff}
+</style>
+<div id="vpbadge"></div>
+<script>
+(function(){
+  var b=document.getElementById('vpbadge');
+  function upd(){
+    var w=window.innerWidth,h=window.innerHeight;
+    var mob=window.matchMedia('(max-width:1024px)').matches;
+    var sc=document.querySelector('.screen');
+    var over=sc?Math.max(sc.scrollWidth-w,0):0;
+    // innerWidth is CSS pixels. Zooming out inflates it well past the real window,
+    // so the page can report 1440 inside a 720-wide window and pick desktop wrongly.
+    var ow=window.outerWidth||w, zoom=Math.round((ow/w)*100);
+    var zoomed=Math.abs(zoom-100)>12;
+    // a window can be wider than the space left of the screen edge: the browser
+    // reports its full size, but the overhang is simply not visible
+    var sx=(window.screenX!==undefined?window.screenX:0);
+    var avail=(screen.availWidth||screen.width||ow);
+    var off=Math.max(0,Math.round((sx+ow)-avail));
+    b.className=(over>1||zoomed||off>8)?'warn':(mob?'mob':'desk');
+    var lead='';
+    if(off>8) lead='⚠ '+off+'px OF THIS PAGE IS OFF-SCREEN — the window is '+ow
+      +'px wide but starts at x'+sx+' on a '+avail+'px screen. Drag it left, or narrow it from the LEFT edge.  ·  ';
+    else if(zoomed) lead='⚠ CSS VIEWPORT '+w+' DOES NOT MATCH WINDOW '+ow
+      +' — DevTools device emulation (Cmd Shift M) or browser zoom (Cmd 0). Resizing the window will not change the layout until this is off.  ·  ';
+    else if(over>1) lead='⚠ CONTENT OVERFLOWS by '+over+'px.  ·  ';
+    b.textContent=lead+'css '+w+' x '+h+'  ·  window '+ow+'  ·  '+(mob?'MOBILE':'DESKTOP')
+      +'  ·  dpr '+(window.devicePixelRatio||1)+'  ·  screen '+avail+' @x'+sx
+      +(lead?'':'  ·  fits');
+  }
+  // resize alone is unreliable: it does not fire when a window is merely moved,
+  // and Chrome throttles it for background tabs. Observe and poll instead.
+  addEventListener('resize',upd);
+  addEventListener('focus',upd);
+  if(window.ResizeObserver) new ResizeObserver(upd).observe(document.documentElement);
+  setInterval(upd,400);
+  upd(); setTimeout(upd,300);
+})();
+</script>
+<script>
+/* the recap log uses the same collapsed-drawer interaction as the live board */
+document.addEventListener('click',function(e){
+  var h=e.target.closest('.dr-plays .drh'); if(!h) return;
+  var d=h.parentElement, open=d.classList.toggle('open');
+  h.querySelector('.car').innerHTML = open ? '&#9662;' : '&#9656;';
+});
+</script>
