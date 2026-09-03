@@ -77,6 +77,55 @@ border:1px solid var(--soft-line);color:var(--gray);font-size:7px;font-weight:90
 .oc.hero em{color:var(--bright)}
 .oc.onbase img{outline:2px solid var(--bright);outline-offset:2px}
 .oc.onbase em{color:var(--bright)}
+/* ---- half-inning transition ---- */
+.halfx{position:absolute;inset:0;z-index:200;background:rgba(4,5,6,.9);display:flex;
+align-items:center;justify-content:center;padding:24px}
+.hcard{width:min(520px,92%);background:var(--panel);border:1px solid var(--line);border-radius:14px;
+padding:22px 24px;display:flex;flex-direction:column;gap:14px;align-items:center;text-align:center}
+.hlbl{font-size:10px;font-weight:900;letter-spacing:.18em;text-transform:uppercase;color:var(--gold)}
+.hscore{display:flex;align-items:baseline;gap:14px}
+.hscore span{display:flex;flex-direction:column;gap:2px}
+.hscore i{font-style:normal;font-size:9px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--mut)}
+.hscore u{text-decoration:none;font-size:34px;font-weight:900;line-height:1;color:var(--gray);
+font-variant-numeric:tabular-nums}
+.hscore .lead u{color:var(--bright)}
+.hscore em{font-style:normal;color:var(--mut);font-size:18px}
+.hplay{margin:0;font-size:12px;color:var(--cream)}
+.hswap{display:flex;align-items:center;gap:16px;width:100%;padding:12px 0;
+border-top:1px solid var(--soft-line);border-bottom:1px solid var(--soft-line)}
+.hs{flex:1;display:flex;flex-direction:column;gap:3px}
+.hs i{font-style:normal;font-size:8px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:var(--mut)}
+.hs b{font-size:14px;font-weight:800;color:var(--cream)}
+.hs s{text-decoration:none;font-size:9.5px;color:var(--mut)}
+.harrow{font-size:20px;color:var(--gold);flex-shrink:0}
+.hgo{border:0;background:var(--bright);color:var(--ink);border-radius:99px;font:inherit;font-size:12px;
+font-weight:900;letter-spacing:.06em;text-transform:uppercase;padding:0 30px;min-height:44px;cursor:pointer}
+/* ---- post-game recap ---- */
+.screen.postgame{overflow:auto}
+.rmain{flex:1 1 auto;display:grid;gap:8px;padding:8px;grid-template-columns:1fr;
+grid-template-rows:auto auto auto 1fr}
+.rbox{display:flex;flex-direction:column;gap:8px;padding:12px 14px}
+.boxes{display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:start}
+.line,.box{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+.line{max-width:780px}
+.line th{width:120px}
+.line th,.box th{text-align:left;font-size:10px;font-weight:800;color:var(--cream);padding:3px 6px}
+.line td,.box td{text-align:center;font-size:11px;color:var(--gray);padding:3px 6px}
+.line thead td,.box thead td{font-size:8.5px;font-weight:900;letter-spacing:.08em;
+text-transform:uppercase;color:var(--mut)}
+.line .tot{color:var(--cream);font-weight:800}
+.line tr.lead th,.line tr.lead .tot{color:var(--bright)}
+.box .nm{text-align:left;font-size:10.5px;color:var(--cream);white-space:nowrap;
+overflow:hidden;text-overflow:ellipsis;max-width:120px}
+.box .ord{color:var(--mut);font-size:9px;width:14px}
+.box tfoot td{border-top:1px solid var(--soft-line);color:var(--cream);font-weight:800;padding-top:5px}
+.plays{display:flex;flex-direction:column;gap:5px}
+.pl{display:flex;align-items:center;gap:9px;font-size:11px}
+.pl i{font-style:normal;flex:0 0 26px;font-size:8.5px;font-weight:900;letter-spacing:.06em;
+color:var(--ink);background:var(--gold);border-radius:4px;text-align:center;padding:2px 0}
+.pl span{flex:1;color:var(--cream)}
+.pl u{text-decoration:none;color:var(--bright);font-weight:800;font-variant-numeric:tabular-nums}
+@media (max-width:1024px){.boxes{grid-template-columns:1fr}}
 .zoom[hidden]{display:none}
 .zoom{position:fixed;inset:0;z-index:300;background:rgba(4,5,6,.86);display:flex;
 align-items:center;justify-content:center;padding:22px}
@@ -345,6 +394,7 @@ text-transform:uppercase;color:#07210c;background:var(--bright);padding:4px 9px;
     <button data-t="bench"><span class="ic">&#9634;</span>Bench</button>
   </div>
 </div>
+
 </div>
 <div class="tag">Desktop &mdash; bullpen open</div>
 
