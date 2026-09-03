@@ -957,3 +957,85 @@
 .gp-avail-group > summary::after { content: '+'; color: var(--s-gold); font-weight: 900; font-size: 12px; }
 .gp-avail-group[open] > summary::after { content: '−'; }
 .gp-avail-group[open] > summary { margin-bottom: 5px; }
+
+/* ===================================================================
+ * TYPE 2 -- PROPORTIONAL SCALE-TO-FIT (step 1 of the mockup port)
+ *
+ * Type 1 reflow recalculates a NEW layout at each width: proportions
+ * change character as the window moves, and content that no longer fits
+ * scrolls. Type 2 keeps one composition and scales it, the way ERA does.
+ *
+ * Every desktop dimension below is a fraction of the stage HEIGHT, so the
+ * whole screen grows and shrinks as a single unit. The reference stage is
+ * 1130px tall: a value of `calc(var(--u) * 26.549)` is 300px at that
+ * height (300 / 1130 * 100), and stays proportionally 300px everywhere.
+ *
+ * --u is a REGISTERED property so it computes to a fixed length at its
+ * declaration site and inherits as that length. Declared unregistered, a
+ * nested element that established its own container would re-resolve 1cqh
+ * against ITSELF and silently rescale half the screen.
+ *
+ * THIS STEP CHANGES NO PROPORTIONS. The rails are the same 300/320 they
+ * were; they are simply expressed against the stage now instead of in
+ * fixed pixels. Mockup proportions arrive with the content that fills
+ * them, in the steps that follow.
+ *
+ * Mobile is untouched: it keeps its own composition below 1025px, per
+ * MOBILE_PARITY_STANDARD.
+ * =================================================================== */
+
+@property --u {
+  syntax: "<length>";
+  inherits: true;
+  initial-value: 0px;
+}
+
+@media (min-width: 1025px) {
+  /* The stage: a fixed viewport-sized box that is the container everything
+   * else measures itself against. overflow:hidden is the Type 2 contract --
+   * if something does not fit, that is a bug to fix, not a scrollbar. */
+  .gp-screen {
+    /* NOT position:fixed. The app shell already sizes its content area (the
+     * viewport minus the 50px app header), so a fixed inset:0 stage would be
+     * a header-height too tall and would slide its own top row underneath the
+     * app header. Filling the flex slot gets the same stage with no magic
+     * number and no overlap. container-type:size needs a definite height,
+     * which the flex slot provides. */
+    flex: 1 1 auto;
+    min-height: 0;
+    container-type: size;
+    overflow: hidden;
+    padding: 0;
+  }
+
+  .gp-stage {
+    --u: 1cqh;
+
+    /* 300 / 1130, 320 / 1130, 12 / 1130, 16 / 1130, 44 / 1130 */
+    --s-rail-left: calc(var(--u) * 26.549);
+    --s-rail-right: calc(var(--u) * 28.319);
+    --s-gap: calc(var(--u) * 1.062);
+    --s-pad: calc(var(--u) * 1.416);
+    /* controls scale but never below the 44px touch target */
+    --s-control-h: max(44px, calc(var(--u) * 3.894));
+
+    /* text scales with the stage but never below readable */
+    font-size: max(13px, calc(var(--u) * 1.239));
+
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-gap);
+    padding: var(--s-pad);
+    box-sizing: border-box;
+    min-height: 0;
+  }
+
+  /* the layout fills the stage rather than centring in a fixed max-width */
+  .gp-stage .gp-layout {
+    max-width: none;
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+}

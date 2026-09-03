@@ -31,8 +31,16 @@ import type { GameSide, GameState } from '../gameplay/types'
  * lines, play-by-play narration -- is stated on the surface by the component
  * that owns it, so a gap is never mistakable for a bug.
  *
- * Still read-only: this screen renders the game, the working shell at /play
- * resolves it. Interactivity is the last step, after parity is confirmed.
+ * This screen is INTERACTIVE. It shares one action layer with the shell --
+ * useGameplayActions below -- so rolls, manager decisions, pause/resume and
+ * persistence behave identically on both surfaces and cannot drift apart.
+ * (An earlier version of this comment said the screen was read-only. It was
+ * true when written and has not been since the action hook landed.)
+ *
+ * LAYOUT: Type 2 proportional scaling. `.gp-screen` is a fixed, size-queried
+ * stage and `.gp-stage` is the scaled composition inside it -- see the Type 2
+ * block at the end of gameplay-screen.css for why the geometry is expressed
+ * in --u rather than pixels.
  */
 
 function basesLabel(state: GameState): string {
@@ -141,6 +149,7 @@ export default function GameplayScreenPage() {
 
   return (
     <main className={`gp-screen${decision ? ' has-decision' : ''}`}>
+      <div className="gp-stage">
       <div className="gp-wip">
         <b>Building</b>
         <span>New gameplay screen, assembled region by region. The working shell is untouched at{' '}
@@ -236,6 +245,7 @@ export default function GameplayScreenPage() {
           {!decision && state.status === 'complete' && <PostGameBoard state={state} />}
         </section>
 
+      </div>
       </div>
     </main>
   )
