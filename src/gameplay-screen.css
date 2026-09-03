@@ -1020,7 +1020,7 @@
     --s-control-h: max(44px, calc(var(--u) * 3.894));
 
     /* text scales with the stage but never below readable */
-    font-size: max(13px, calc(var(--u) * 1.239));
+    font-size: max(11px, calc(var(--u) * 1.239));
 
     width: 100%;
     height: 100%;
@@ -1111,3 +1111,145 @@
 }
 .gp-topbar .gp-menu > .s-lbl { display: none; }
 .gp-topbar .gp-menu-controls { display: flex; gap: calc(var(--u) * 0.531); }
+
+/* ---- STEP 3: the left rail ---------------------------------------
+ * The manager's column: who is up, the roll, who is pitching, the batting
+ * order, and the calls legal right now.
+ *
+ * SCOPING: every --u value lives inside the desktop query. --u is 0px below
+ * 1025px (the registered property's initial value, since the stage is only
+ * declared for desktop), so a bare calc(var(--u) * n) outside the query
+ * silently computes to ZERO on a phone. That is exactly how the matchup art
+ * came out 0x0 at 390 the first time. Mobile gets plain pixels until its own
+ * composition lands. */
+
+/* ---------- structure, breakpoint-independent ---------- */
+.gp-region-lineup {
+  display: flex;
+  flex-direction: column;
+  background: none;
+  border: 0;
+  padding: 0;
+}
+.gp-lineup-strip .gp-lineup-head,
+.gp-lineup-strip .gp-lineup-note,
+.gp-lineup-strip .gp-lineup-who,
+.gp-lineup-strip .gp-lineup-line,
+.gp-lineup-strip .gp-lineup-bar { display: none; }
+.gp-lineup-strip .gp-lineup-list {
+  display: flex;
+  flex-direction: row;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.gp-lineup-strip .gp-lineup-row {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+}
+.gp-lineup-strip .gp-lineup-card img,
+.gp-lineup-strip .gp-lineup-card-empty {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 820 / 1150;
+  object-fit: cover;
+  border-radius: var(--s-r-control);
+  display: block;
+}
+.gp-lineup-strip .gp-lineup-row.is-active .gp-lineup-card img { outline: 2px solid var(--s-gold-bright); outline-offset: 2px; }
+.gp-lineup-strip .gp-lineup-row.is-ondeck .gp-lineup-card img { outline: 1px solid var(--s-gold-muted); outline-offset: 2px; }
+.gp-calls { display: flex; flex-direction: column; }
+.gp-calls-list { display: flex; flex-wrap: wrap; align-content: flex-start; }
+.gp-calls-rest { margin: 0; font-style: italic; color: var(--s-gray-muted); }
+
+/* ---------- desktop: scaled against the stage ---------- */
+@media (min-width: 1025px) {
+  .gp-stage {
+    --s-rail-left: calc(var(--u) * 51.327);  /* 580 / 1130 */
+    --s-rail-right: calc(var(--u) * 25.664); /* 290 / 1130 */
+  }
+
+  /* the rail FITS the stage; it does not scroll. If something does not fit,
+   * that is a sizing bug to fix, not a scrollbar to add. */
+  .gp-region-lineup { gap: var(--s-gap); min-height: 0; overflow: hidden; }
+  .gp-region-lineup .gp-rollbox { flex: 0 0 auto; }
+
+  /* The matchup is the rail's ELASTIC element; everything else is fixed.
+   * Type 2 alone does not guarantee a fit -- text carries a legibility floor,
+   * so on a short stage the type stops shrinking while the stage keeps going
+   * and the fixed rows grow relative to the space. Measured at a 700px stage
+   * the rail wanted 567px in a 500px slot. Something has to give, and it is
+   * the card art: it degrades gracefully, the roll row, batting order and
+   * decisions box do not.
+   *
+   * The base component draws the art as a 50x70 thumbnail cropped to the top
+   * of the card, inside a ROW. Here it is the whole card, so the row becomes
+   * a column and the art becomes the element that grows. aspect-ratio derives
+   * the width, so no height:100% chain can collapse. */
+  .gp-region-lineup .gp-matchup { flex: 1 1 auto; min-height: 0; }
+  .gp-region-lineup .gp-matchup-sides { display: flex; align-items: stretch; min-height: 0; height: 100%; }
+  .gp-region-lineup .gp-matchup-side {
+    display: flex; flex-direction: column; align-items: center;
+    flex: 1 1 0; min-height: 0; min-width: 0;
+  }
+  .gp-region-lineup .gp-matchup-card {
+    flex-direction: column; align-items: center;
+    flex: 1 1 auto; min-height: 0; width: 100%;
+  }
+  .gp-region-lineup .gp-matchup-art {
+    width: auto;
+    height: auto;
+    flex: 1 1 auto;
+    /* a floor, not zero: the art gives, but a card shrunk to nothing has
+     * stopped being a card. */
+    min-height: calc(var(--u) * 11);
+    aspect-ratio: 820 / 1150;
+    max-height: calc(var(--u) * 26.106);   /* 295 / 1130 */
+    border: 0;
+    border-radius: var(--s-r-sub);
+  }
+  .gp-region-lineup .gp-matchup-art img { width: 100%; height: 100%; object-fit: contain; }
+  /* MatchupPanel carries its own Pitch/Advantage/Swing/Result row, and
+   * RollControls carries the same four cells beside the roll button. Two
+   * identical readouts stacked is noise; keep the one next to the control
+   * that produces the numbers. */
+  .gp-region-lineup .gp-matchup > .gp-roll { display: none; }
+  .gp-region-lineup .gp-matchup-who { text-align: center; }
+  .gp-region-lineup .gp-matchup-vs { align-self: center; }
+
+  /* the batting order is a horizontal strip of card art, not a vertical list.
+   * Identity comes from the card, the same argument as the fielders: the name
+   * text duplicated what the art already says and cost the height that made
+   * the rail scroll in the first place. */
+  .gp-lineup-strip { flex: 0 0 auto; padding: calc(var(--u) * 0.885); }
+  .gp-lineup-strip .gp-lineup-list { gap: calc(var(--u) * 0.531); }
+  .gp-lineup-strip .gp-lineup-row { flex: 1 1 0; gap: calc(var(--u) * 0.265); }
+  .gp-lineup-strip .gp-lineup-order { font-size: max(9px, calc(var(--u) * 0.796)); color: var(--s-gray-muted); }
+
+  /* decisions keep a fixed height so the board does not shift between pitches
+   * as calls come and go */
+  .gp-calls {
+    flex: 0 0 auto;
+    min-height: calc(var(--u) * 12.655);   /* 143 / 1130 */
+    gap: calc(var(--u) * 0.708);
+  }
+  .gp-calls-list { gap: calc(var(--u) * 0.531); }
+  .gp-calls-rest { font-size: max(10px, calc(var(--u) * 0.885)); }
+}
+
+/* ---------- mobile: plain pixels, its own composition ---------- */
+@media (max-width: 1024px) {
+  .gp-region-lineup { gap: 10px; overflow: visible; }
+  .gp-lineup-strip { padding: 8px; }
+  .gp-lineup-strip .gp-lineup-list { gap: 4px; overflow-x: auto; }
+  .gp-lineup-strip .gp-lineup-row { flex: 0 0 auto; width: 44px; gap: 2px; }
+  .gp-lineup-strip .gp-lineup-order { font-size: 9px; color: var(--s-gray-muted); }
+  .gp-calls { gap: 6px; }
+  .gp-calls-list { gap: 6px; }
+  .gp-calls-rest { font-size: 11px; }
+}

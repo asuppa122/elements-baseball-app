@@ -6,6 +6,7 @@ import { battingSide } from '../gameplay/gameBoundaryEngine'
 import DefBar from '../gameplay/presentation/DefBar'
 import GameField from '../gameplay/presentation/GameField'
 import LineupRail from '../gameplay/presentation/LineupRail'
+import MatchupPanel from '../gameplay/presentation/MatchupPanel'
 import AvailabilityPanel from '../gameplay/presentation/AvailabilityPanel'
 import RollControls from '../gameplay/presentation/RollControls'
 import GameMenu from '../gameplay/presentation/GameMenu'
@@ -43,6 +44,19 @@ import type { GameSide, GameState } from '../gameplay/types'
  * block at the end of gameplay-screen.css for why the geometry is expressed
  * in --u rather than pixels.
  */
+
+/**
+ * The engine reports every legal pre-pitch action in ONE flat array with no
+ * side tag (getPrePitchActions). They are not one list of buttons: steal and
+ * the bunts belong to the offence, IBB and infield-in to the defence, and the
+ * five roster moves belong wherever the roster lives -- the bench and bullpen
+ * -- not in a decisions box. Sorting them is presentation's job.
+ *
+ * Anything unrecognised is treated as a roster move rather than silently
+ * dropped, so a new engine action can never vanish from the screen.
+ */
+const OFFENCE_ACTIONS = new Set(['NATURAL_STEAL', 'SAC_BUNT', 'SQUEEZE_BUNT'])
+const DEFENCE_ACTIONS = new Set(['INTENTIONAL_WALK', 'INFIELD_IN'])
 
 function basesLabel(state: GameState): string {
   const on = [state.bases.first && '1st', state.bases.second && '2nd', state.bases.third && '3rd'].filter(Boolean)
@@ -159,6 +173,10 @@ export default function GameplayScreenPage() {
     onAfterSave: async (id) => { try { setEvents(await loadGameplayLabEvents(id)) } catch { /* log is supplemental */ } },
   })
   const prePitchActions = state ? getPrePitchActions(state) : []
+  // offence + defence calls belong in the left rail's decisions box; the five
+  // roster moves stay in the rail until the bench/bullpen drawers land.
+  const sideActions = prePitchActions.filter((a) => OFFENCE_ACTIONS.has(a.id) || DEFENCE_ACTIONS.has(a.id))
+  const rosterActions = prePitchActions.filter((a) => !OFFENCE_ACTIONS.has(a.id) && !DEFENCE_ACTIONS.has(a.id))
 
   if (loading) return <main className={`gp-screen${decision ? ' has-decision' : ''}`}><div className="gp-panel gp-region">Loading…</div></main>
   if (!state || !game) return <main className={`gp-screen${decision ? ' has-decision' : ''}`}><div className="gp-panel gp-region">{loadError || 'Game not found.'}</div></main>
@@ -200,8 +218,39 @@ export default function GameplayScreenPage() {
       </header>
 
       <div className="gp-layout">
-        <section className="gp-panel gp-region gp-region-lineup" aria-label="Lineup">
-          <LineupRail state={state} />
+        {/* The left rail is the manager's column: who is up, the roll, who is
+            pitching, the batting order, and the calls available right now. */}
+        <section className="gp-region gp-region-lineup" aria-label="Matchup and lineup">
+          <MatchupPanel state={state} />
+
+          <RollControls
+            state={state}
+            saving={saving}
+            hasDecision={Boolean(decision)}
+            onRollPitch={() => void rollPitch()}
+            onRollSwing={() => void rollSwing()}
+            onNoPitch={() => void noPitch()}
+          />
+
+          <div className="gp-panel gp-lineup-strip">
+            <LineupRail state={state} />
+          </div>
+
+          {/* Only the calls legal for this state render at all. An action
+              belonging to the other manager is not shown disabled -- that is
+              permanent noise on a screen you look at every pitch. The box
+              keeps a fixed height so the Type 2 board does not shift between
+              pitches as calls come and go. */}
+          <section className="gp-panel gp-calls" aria-label="Manager decisions">
+            <b className="s-lbl">Manager decisions</b>
+            <div className="gp-calls-list">
+              {sideActions.map((a) => (
+                <button key={a.id} className="gp-action gp-action-secondary" disabled={saving}
+                  title={a.detail} onClick={() => void startAction(a.id)}>{a.label}</button>
+              ))}
+            </div>
+            {sideActions.length === 0 && <p className="gp-calls-rest">No decisions this pitch.</p>}
+          </section>
         </section>
 
         {/* Centre is a transparent stack, not a panel — matching the artboards,
@@ -242,20 +291,14 @@ export default function GameplayScreenPage() {
             )}
           </div>
 
-          <RollControls
-            state={state}
-            saving={saving}
-            hasDecision={Boolean(decision)}
-            onRollPitch={() => void rollPitch()}
-            onRollSwing={() => void rollSwing()}
-            onNoPitch={() => void noPitch()}
-          />
-
-          {!decision && state.status !== 'complete' && prePitchActions.length > 0 && (
-            <section className="gp-manager-actions" aria-label="Manager actions">
-              <b className="s-lbl">Manager actions</b>
+          {/* Roster moves only. These belong in the bench and bullpen drawers,
+              which land with the right rail; until then they stay reachable
+              here rather than disappearing. */}
+          {!decision && state.status !== 'complete' && rosterActions.length > 0 && (
+            <section className="gp-manager-actions" aria-label="Roster moves">
+              <b className="s-lbl">Roster moves</b>
               <div className="gp-action-list">
-                {prePitchActions.map((a) => (
+                {rosterActions.map((a) => (
                   <button key={a.id} className="gp-action gp-action-secondary" disabled={saving}
                     title={a.detail} onClick={() => void startAction(a.id)}>{a.label}</button>
                 ))}
