@@ -85,6 +85,20 @@ border:1px solid var(--soft-line);color:var(--gray);font-size:7px;font-weight:90
 .acts button{border:1px solid var(--line);background:transparent;color:var(--cream);border-radius:99px;
 font:inherit;font-size:11px;font-weight:800;padding:8px 14px;min-height:38px;cursor:pointer}
 
+/* only the actions legal for THIS state render at all; the rest are not in the layout */
+.acts button{display:none}
+.calls[data-show~="sb"]    [data-a="sb"],
+.calls[data-show~="bunt"]  [data-a="bunt"],
+.calls[data-show~="ibb"]   [data-a="ibb"],
+.calls[data-show~="infin"] [data-a="infin"]{display:inline-flex;align-items:center}
+.rest-note{display:none;margin:0;font-size:9.5px;font-style:italic;color:var(--mut)}
+.calls[data-show~="none"] .rest-note{display:block}
+/* roster moves belong to the bullpen drawer, not the decisions box */
+.penfoot{display:flex;gap:6px;margin-top:7px;padding-top:7px;border-top:1px solid var(--soft-line)}
+.penfoot button{flex:1 1 0;border:1px solid var(--soft-line);background:transparent;color:var(--gray);
+border-radius:6px;padding:6px 5px;font:inherit;font-size:9px;font-weight:800;cursor:pointer}
+.penfoot button:hover{color:var(--bright);border-color:var(--line)}
+
 /* ---- CENTRE: field ---- */
 .fcol{flex:1 1 auto;min-width:320px;min-height:0;display:flex;flex-direction:column;gap:6px;justify-content:center}
 .fwrap{flex:1 1 auto;min-height:0;container-type:size;display:flex;align-items:center;justify-content:center}
@@ -198,19 +212,19 @@ text-transform:uppercase;color:#07210c;background:var(--bright);padding:4px 9px;
 <div class="screen m-matchup">
   <div class="panel top">
     <div class="seg score">
-      <span class="team up"><span>Jeremiah</span><b class="num">2</b></span>
+      <span class="team up"><span>Jeremiah</span><b class="num">1</b></span>
       <span class="team"><span>Anthony</span><b class="num">0</b></span>
     </div>
     <i class="vr"></i>
     <div class="seg situ">
       <span class="inn num">&#9650; 1</span>
-      <span class="dia"><i class="b2 on"></i><i class="b3"></i><i class="b1"></i></span>
-      <span class="outs"><i class="on"></i><i></i><i></i></span>
+      <span class="dia"><i class="b2"></i><i class="b3"></i><i class="b1 on"></i></span>
+      <span class="outs"><i class="on"></i><i class="on"></i><i></i></span>
     </div>
     <i class="vr"></i>
     <div class="seg recap"><b class="lbl">Play recap</b>
-      <h4>Shackelford doubles</h4>
-      <p>Lined into the right-field corner and up at second. One away, Aurilia to the plate.</p></div>
+      <h4>Shackelford walks</h4>
+      <p>Ball four on the pitcher&rsquo;s chart; Shackelford aboard at first. Two away, Aurilia to the plate.</p></div>
     <i class="vr"></i>
     <div class="seg who"><b class="lbl">Fielding</b><h4>Anthony</h4></div>
     <button class="menu">&#9776;</button>
@@ -221,7 +235,7 @@ text-transform:uppercase;color:#07210c;background:var(--bright);padding:4px 9px;
         <img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/2006/CIN-Rich-Aurilia.png">
         <div class="meta">
           <div><i>Season</i><u class="num">.291</u><s>8 HR &middot; 31 RBI</s></div>
-          <div><i>This game</i><u class="num">0&ndash;1</u><s>walk, 1 LOB</s></div>
+          <div><i>This game</i><u class="num">0&ndash;0</u><s>first at-bat</s></div>
         </div>
       </div>
       <div class="rollrow">
@@ -232,7 +246,7 @@ text-transform:uppercase;color:#07210c;background:var(--bright);padding:4px 9px;
       <div class="man">
         <img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/KCM-Nelson-Dean.png">
         <div class="meta">
-          <div><i>IP left</i><u class="num">7.0</u></div>
+          <div><i>IP left</i><u class="num">7.33</u></div>
           <div><i>Control</i><u class="num">5</u></div>
         </div>
       </div>
@@ -240,16 +254,22 @@ text-transform:uppercase;color:#07210c;background:var(--bright);padding:4px 9px;
       <div class="oc"><b>1</b><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/SLS-John-Barnes.png"><em>x</em></div>
       <div class="oc"><b>2</b><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/WMP-Toussaint-Allen.png"><em>x</em></div>
       <div class="oc out"><b>3</b><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/CSW-Felipe-Sierra.png"><em>Out</em></div>
-      <div class="oc onbase"><b>4</b><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/HBG-John-Shackelford.png"><em>On 2nd</em></div>
+      <div class="oc onbase"><b>4</b><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/HBG-John-Shackelford.png"><em>On 1st</em></div>
       <div class="oc hero"><b>5</b><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/2006/CIN-Rich-Aurilia.png"><em>At bat</em></div>
       <div class="oc"><b>6</b><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1975/SFG-Gary-Thomasson.png"><em>On deck</em></div>
       <div class="oc"><b>7</b><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1993/SEA-Ken-Griffey-Jr.png"><em>In the hole</em></div>
       <div class="oc"><b>8</b><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/DS-Harry-Kenyon.png"><em>x</em></div>
       <div class="oc"><b>9</b><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/1925/HIL-Phil-Cockrell.png"><em>x</em></div>
     </div>
-      <div class="panel calls">
+      <div class="panel calls" data-show="ibb">
         <b class="lbl">Manager decisions</b>
-        <div class="acts"><button>IBB</button></div>
+        <div class="acts">
+          <button data-a="sb">SB</button>
+          <button data-a="bunt">Sac bunt</button>
+          <button data-a="ibb">IBB</button>
+          <button data-a="infin">INF in</button>
+        </div>
+        <p class="rest-note">No decisions this pitch.</p>
       </div>
     </div>
     <div class="fcol">
@@ -271,8 +291,8 @@ text-transform:uppercase;color:#07210c;background:var(--bright);padding:4px 9px;
       </div>
     </div>
     <div class="rrail">
-      <div class="dr dr-log"><div class="drh"><span class="car">&#9656;</span><b>Game log</b><span>17 events</span></div>
-        <div class="drb">            <div class="logline"><i>17</i>Shackelford doubles to right.</div>            <div class="logline"><i>16</i>Sierra flies out, Allen scores.</div>            <div class="logline"><i>15</i>Allen triples, Barnes scores.</div>            <div class="logline"><i>14</i>Barnes singles.</div>            <div class="logline"><i>0</i><b style="color:var(--bright)">Play ball!</b></div></div></div>
+      <div class="dr dr-log"><div class="drh"><span class="car">&#9656;</span><b>Game log</b><span>8 events</span></div>
+        <div class="drb">            <div class="logline"><i>16</i>Shackelford walks.</div>            <div class="logline"><i>14</i>Sierra flies out.</div>            <div class="logline"><i>12</i>Allen grounds out.</div>            <div class="logline"><i>10</i>Barnes homers. 1&ndash;0.</div>            <div class="logline"><i>0</i><b style="color:var(--bright)">Play ball!</b></div></div></div>
       <div class="dr dr-pen"><div class="drh"><span class="car">&#9656;</span><b>Bullpen</b><span>8 available</span></div>
         <div class="drb">            <div class="arm"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/2023/CHC-Drew-Smyly.png">
               <div class="who"><b>Drew Smyly</b><span>Ctrl 2 &middot; IP 3.1</span></div>
@@ -290,7 +310,8 @@ text-transform:uppercase;color:#07210c;background:var(--bright);padding:4px 9px;
               <div class="who"><b>Slim Branham</b><span>Ctrl 2 &middot; IP 3.2</span></div>
               <span class="rest">Rested</span><button>Bring in</button></div>            <div class="arm"><img loading="eager" src="https://pub-67aab109454d41809ce03ab0c1c9567d.r2.dev/card-images/2024/LAD-Dinelson-Lamet.png">
               <div class="who"><b>Dinelson Lamet</b><span>Ctrl 5 &middot; IP 1.1</span></div>
-              <span class="rest">Rested</span><button>Bring in</button></div></div></div>
+              <span class="rest">Rested</span><button>Bring in</button></div>
+            <div class="penfoot"><button>Pitching change</button><button>Double switch</button></div></div></div>
       <div class="dr dr-bench"><div class="drh"><span class="car">&#9656;</span><b>Bench</b><span>2 available</span></div>
         <div class="drb"></div></div>
     </div>
