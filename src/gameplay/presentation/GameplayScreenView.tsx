@@ -101,7 +101,7 @@ function PlayRecap({ events }: { events: LogEvent[] }) {
 }
 
 export default function GameplayScreenView({
-  state, events, actions, transition, onDismissTransition, onExit, banner,
+  state, events, actions, transition, onDismissTransition, onExit, banner, viewerSide = 'home',
 }: {
   state: GameState
   events: LogEvent[]
@@ -110,6 +110,13 @@ export default function GameplayScreenView({
   onDismissTransition: () => void
   onExit: () => void
   banner?: ReactNode
+  /**
+   * Which manager the viewer is acting as. The lab game is RLS-scoped to its
+   * home manager, so that is the default. The sandbox has no opponent and
+   * passes the acting side instead, otherwise a defensive call like an
+   * intentional walk opens a board the reviewer cannot touch.
+   */
+  viewerSide?: GameSide
 }) {
   const {
     saving, error, notice, selection, toggleSelection, decision, editablePrePitchDecision,
@@ -205,8 +212,7 @@ export default function GameplayScreenView({
                 state={state}
                 view={decision}
                 selection={selection}
-                /* The lab game is RLS-scoped to its home manager. */
-                viewerSide="home"
+                viewerSide={viewerSide}
                 onToggle={(id) => toggleSelection(id, decision.mode === 'single')}
                 onConfirm={() => void confirmDecision()}
                 onRoll={() => void rollDecision()}

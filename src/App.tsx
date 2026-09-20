@@ -42,6 +42,7 @@ const GameplayPregamePage = lazy(() => import('./pages/GameplayPregamePage'))
 const GameplayGameStatePage = lazy(() => import('./pages/GameplayGameStatePage'))
 const GameplayPlayableShellPage = lazy(() => import('./pages/GameplayPlayableShellPage'))
 const GameplayScreenPage = lazy(() => import('./pages/GameplayScreenPage'))
+const GameplaySandboxPage = lazy(() => import('./pages/GameplaySandboxPage'))
 const GameplayVerificationPage = lazy(() => import('./pages/GameplayVerificationPage'))
 const GamesPage = lazy(() => import('./pages/GamesPage'))
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'))
@@ -109,7 +110,17 @@ function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <ProtectedApp />
+        <Routes>
+          {/* Outside AuthGate on purpose: the sandbox is a signed-out,
+              database-free copy of the gameplay screen for outside review. It
+              renders the same view component as the live screen and runs the
+              same resolvers, but its persistence is in-memory, so nothing it
+              does can reach Supabase. */}
+          <Route path="/sandbox" element={
+            <Suspense fallback={<RouteFallback />}><GameplaySandboxPage /></Suspense>
+          } />
+          <Route path="*" element={<ProtectedApp />} />
+        </Routes>
       </AuthProvider>
     </BrowserRouter>
   )
