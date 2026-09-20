@@ -493,6 +493,16 @@ export default function GameplayGameStatePage() {
 
   return (
     <main className="gameplay-lab-page gameplay-state-page">
+      {/* Developer affordance on a developer-only route: the exact persisted
+          GameState, so it can be copied out for fixtures, sandboxes and bug
+          reports without going near credentials or the database directly. */}
+      <details className="gameplay-lab-panel" data-state-export>
+        <summary>Raw persisted GameState (JSON)</summary>
+        <pre id="raw-game-state" style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-all', fontSize: '10px', maxHeight: '320px', overflow: 'auto' }}>
+          {JSON.stringify(state)}
+        </pre>
+      </details>
+
       <section className="gameplay-lab-hero">
         <div>
           <span>Private Development · Build 1</span>

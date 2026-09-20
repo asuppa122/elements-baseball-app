@@ -41,13 +41,24 @@ function d20(): number {
   return (values[0] % 20) + 1
 }
 
-export function useGameplayActions({ game, userId, surface, onSaved, onAfterSave }: {
+/**
+ * How a state change is written. Defaults to Supabase; the sandbox passes a
+ * local implementation so an outside reviewer can play a real game with no
+ * account and no database. Injecting it here rather than forking the hook is
+ * deliberate -- the drift this file exists to prevent would come straight back
+ * if a second surface owned its own copy of the action layer.
+ */
+export type SaveGameState = typeof saveGameplayLabState
+
+export function useGameplayActions({ game, userId, surface, onSaved, onAfterSave, saveState }: {
   game: PersistedGameplayLabGame | null
   userId: string | undefined
   surface: GameplaySurface
   onSaved: (saved: PersistedGameplayLabGame) => void
   onAfterSave?: (gameId: string) => void | Promise<void>
+  saveState?: SaveGameState
 }) {
+  const save = saveState ?? saveGameplayLabState
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
@@ -75,7 +86,7 @@ export function useGameplayActions({ game, userId, surface, onSaved, onAfterSave
       // decisions as well as swings -- that is what makes a run scored on a
       // manager decision attributable at all. Caller keys win on collision.
       const eventPayload = { ...buildEventEnvelope(state, next), surface, ...payload }
-      const saved = await saveGameplayLabState({
+      const saved = await save({
         gameId: game.id, expectedStateVersion: game.state_version, nextState: next, eventType, eventPayload,
       })
       onSaved(saved)
@@ -86,7 +97,7 @@ export function useGameplayActions({ game, userId, surface, onSaved, onAfterSave
     } finally {
       setSaving(false)
     }
-  }, [game, state, surface, onSaved, onAfterSave])
+  }, [game, state, surface, onSaved, onAfterSave, save])
 
   const bump = (next: GameState): GameState => {
     next.stateVersion = (state?.stateVersion ?? next.stateVersion) + 1
