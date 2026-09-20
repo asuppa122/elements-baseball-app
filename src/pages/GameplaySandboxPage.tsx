@@ -7,6 +7,7 @@ import type { PersistedGameplayLabGame } from '../gameplay/gameRepository'
 import type { GameState } from '../gameplay/types'
 
 import midgame from '../gameplay/sandbox/states/midgame.json'
+import decision from '../gameplay/sandbox/states/decision.json'
 import final from '../gameplay/sandbox/states/final.json'
 
 /**
@@ -28,10 +29,10 @@ import final from '../gameplay/sandbox/states/final.json'
  *
  * The states are real games, exported and stripped of identity by
  * scripts/build-sandbox-states.mjs -- see that file for exactly what was
- * removed. A third fixture, a game sitting on a pending decision, was dropped:
- * it holds GB_RUNNER_2B_RFO, which this engine has no resolver for because the
- * saved state predates a rename of that decision type. Decisions are reachable
- * from the mid-game state anyway, through the manager-action buttons. This route is deliberately outside AuthGate: it must work signed
+ * removed. The pending-decision fixture is a genuinely stranded game: it holds
+ * GB_RUNNER_2B_RFO, renamed to _RTH in 56e0cde, so it was unresolvable until
+ * the read-time alias in decisionEngine landed. It stays here on purpose -- it
+ * is the real-data proof that the alias works, not just a harness fixture. This route is deliberately outside AuthGate: it must work signed
  * out, which is the whole point.
  */
 
@@ -43,6 +44,12 @@ const SCENARIOS: Scenario[] = [
     label: 'Mid-game',
     blurb: 'Bottom of the 1st, one out, runner on. Roll pitches to play it forward, or use a manager decision to open the decision board.',
     state: midgame as unknown as GameState,
+  },
+  {
+    key: 'decision',
+    label: 'Pending decision',
+    blurb: 'A ground ball with a runner on 2nd, waiting on the Roll-To-Hold. Roll it to see a decision resolve.',
+    state: decision as unknown as GameState,
   },
   {
     key: 'final',

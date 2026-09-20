@@ -40,7 +40,26 @@ function replaceDecision(state:GameState,pending:PendingDecision):GameState{retu
 function nextDecision(state:GameState,args:{type:string;actingSide:GameSide;legalActions:string[];context:Record<string,unknown>}):GameState{return replaceDecision(state,{id:crypto.randomUUID(),ruleCondition:'RC5_CONDITIONAL_GAME_STATE',decisionType:args.type,actingSide:args.actingSide,legalActions:args.legalActions,context:args.context,createdAt:new Date().toISOString()})}
 function attemptId(a:RunnerAttempt){return `${a.runner.cardKey}::${a.from}->${a.to}`}
 function formatAttempt(a:RunnerAttempt){return `${a.runner.playerName}: ${a.from} → ${a.to==='HOME'?'Home':a.to}`}
-function assertPending(state:GameState){if(!state.pendingDecision)throw new Error('No manager decision is pending.');return state.pendingDecision}
+/**
+ * Decision types renamed after games were already persisted holding the old
+ * name. A saved game is immutable history: it keeps whatever it was written
+ * with, so the reader has to accept both spellings or that game is stranded --
+ * getDecisionView falls through to its 'resolver pending' branch and the
+ * manager can never finish the plate appearance.
+ *
+ * GB_RUNNER_2B_RFO -> GB_RUNNER_2B_RTH was renamed in 56e0cde. The rename was
+ * cosmetic: same creation site, same context ({result, outs, preBases,
+ * infieldIn}), and the resolver reads only context.preBases, so an aliased old
+ * state resolves identically to a new one. legalActions still reads ROLL_RFO
+ * on those games and is not enforced for this decision type.
+ *
+ * This is a READ-TIME alias by design. Nothing rewrites the saved game.
+ */
+const LEGACY_DECISION_TYPES:Record<string,string>={GB_RUNNER_2B_RFO:'GB_RUNNER_2B_RTH'}
+
+function normalisePending(d:GameState['pendingDecision']){if(!d)return d;const alias=LEGACY_DECISION_TYPES[d.decisionType];return alias?{...d,decisionType:alias}:d}
+
+function assertPending(state:GameState){const d=normalisePending(state.pendingDecision);if(!d)throw new Error('No manager decision is pending.');return d}
 function cardFor(state:GameState,side:GameSide,key:string|null|undefined){return key?state.pregame[side].roster?.cards[key]??null:null}
 function defenseCard(state:GameState,side:GameSide,pos:DefensivePosition){return cardFor(state,side,state.pregame[side].defensiveAlignment[pos])}
 function fielding(state:GameState,side:GameSide,pos:DefensivePosition){const card=defenseCard(state,side,pos);return card?(getFieldingRating(card,pos)??0):0}
@@ -93,7 +112,7 @@ export function beginPrePitchDecision(state:GameState,action:string):GameState {
  if(action==='DOUBLE_SWITCH')return nextDecision(state,{type:'DOUBLE_SWITCH_PITCHER',actingSide:def,legalActions:['SELECT_REPLACEMENT'],context:{outgoingPitcher:state.pregame[def].defensiveAlignment.P}})
  throw new Error('Unknown manager action.')}
 
-export function getDecisionView(state:GameState):DecisionView|null{const d=state.pendingDecision;if(!d)return null
+export function getDecisionView(state:GameState):DecisionView|null{const d=normalisePending(state.pendingDecision);if(!d)return null
  if(d.decisionType==='EXTRA_BASE_DECISION')return{title:'Extra Base Decision',description:'Choose whether to attempt optional extra bases.',actingSide:d.actingSide,mode:'single',options:[{id:'DECLINE_EXTRA_BASES',label:'Hold Runners',detail:'End the play with automatic advancement.'},{id:'ATTEMPT_EXTRA_BASES',label:'Attempt Extra Base(s)',detail:'Select the runner(s) attempting to advance.'}],confirmationLabel:'Confirm',confirmationSummary:()=>''}
  if(d.decisionType==='TAG_UP_DECISION')return{title:'Tag-Up Decision',description:'Choose whether to attempt to tag after the fly ball.',actingSide:d.actingSide,mode:'single',options:[{id:'HOLD_RUNNERS',label:'Hold Runners',detail:'Decline all tag-up attempts.'},{id:'ATTEMPT_TAG_UP',label:'Attempt Tag-Up',detail:'Select every runner attempting to advance.'}],confirmationLabel:'Confirm',confirmationSummary:()=>''}
  if(['EXTRA_BASE_RUNNER_SELECTION','TAG_UP_RUNNER_SELECTION','NATURAL_STEAL_RUNNER_SELECTION'].includes(d.decisionType)){const aa=attemptsFor(state),natural=d.decisionType.startsWith('NATURAL'),tag=d.decisionType.startsWith('TAG');return{title:natural?'Select Steal Runners':tag?'Select Tag-Up Runners':'Select Extra-Base Runners',description:'Select the legal runner(s), then confirm.',actingSide:d.actingSide,mode:'multi_runner',options:aa.map(a=>({id:attemptId(a),requiresOptionId:a.requiresAttemptId,label:formatAttempt(a),detail:`${natural?'SB':'BSR'} ${natural?(a.runner.stolenBase??10):extraBaseEffectiveBaserunning(a.runner.baserunning??10,a.from,a.to,state.outs)}${!natural ? ` (${a.runner.baserunning??10}${extraBaseEffectiveBaserunning(a.runner.baserunning??10,a.from,a.to,state.outs)!==(a.runner.baserunning??10)?` → ${extraBaseEffectiveBaserunning(a.runner.baserunning??10,a.from,a.to,state.outs)}`:''})` : ''}${a.requiresAttemptId?' · runner ahead must also advance':''}`})),confirmationLabel:'Confirm',confirmationSummary:()=>''}}

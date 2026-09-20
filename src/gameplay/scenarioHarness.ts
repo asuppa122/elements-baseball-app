@@ -151,6 +151,47 @@ export function runNonGbScenarioMatrix(initial:GameState):ScenarioReport {
   test('LINE-03','Line score','The defending side is not credited with the batting side\'s runs',()=>{const s=fixture(initial);s.inning=4;s.runsByInning={away:[],home:[]};const n=resolveCoreResult(s,'HR');assert(runsInInning(n,defense(s),4)===0,'Run credited to the fielding side.')})
   test('LINE-04','Line score','Extra innings extend the line score without special-casing',()=>{const s=fixture(initial);s.inning=11;s.runsByInning={away:[],home:[]};const n=resolveCoreResult(s,'HR');assert(runsInInning(n,offense(s),11)===1,'Extra-inning run not recorded.');assert((n.runsByInning?.[offense(s)]?.length??0)===11,'Line score did not extend to the 11th.')})
 
+  // ---- legacy decision-type compatibility -------------------------------
+  // GB_RUNNER_2B_RFO was renamed to _RTH in 56e0cde. Games persisted before
+  // that keep the old name forever, so the reader must accept it or those
+  // games strand on an unresolvable decision. The context below is the exact
+  // shape a real stranded game carries (lab game 1ed608fb): runner on 2B,
+  // legacyActions still ROLL_RFO.
+  test('LEGACY-RFO-01','Legacy decision types','Old GB_RUNNER_2B_RFO renders as the RTH roll prompt, not a dead resolver-pending card',()=>{
+    const s=fixture(initial)
+    const pre={first:null,second:runner('R2','Legacy Runner',13),third:null}
+    const p=pending(s,'GB_RUNNER_2B_RFO',defense(s),{result:'GB',outs:1,preBases:pre,infieldIn:false})
+    const v=getDecisionView(p)
+    assert(v,'Legacy decision must produce a view.')
+    assert(v.mode==='roll',`Expected a roll prompt, got ${v.mode} -- the alias is not being applied.`)
+    assert(v.title==='Runner-on-2B RTH',`Expected the RTH title, got ${v.title}.`)
+  })
+
+  test('LEGACY-RFO-02','Legacy decision types','Old GB_RUNNER_2B_RFO resolves identically to the current type: roll 1-10 advances the runner to 3B',()=>{
+    const pre={first:null,second:runner('R2','Legacy Runner',13),third:null}
+    const legacy=resolveDecisionRoll(pending(fixture(initial),'GB_RUNNER_2B_RFO',defense(fixture(initial)),{result:'GB',outs:1,preBases:pre,infieldIn:false}),10)
+    const current=resolveDecisionRoll(pending(fixture(initial),'GB_RUNNER_2B_RTH',defense(fixture(initial)),{result:'GB',outs:1,preBases:pre,infieldIn:false}),10)
+    assert(legacy.bases.third?.cardKey==='R2','Legacy roll 10 must advance the runner from 2B to 3B.')
+    assert(!legacy.bases.second,'Legacy roll 10 must vacate 2B.')
+    assert(JSON.stringify(legacy.bases)===JSON.stringify(current.bases),'Legacy and current types must produce identical bases.')
+    assert(legacy.outs===current.outs,'Legacy and current types must produce identical outs.')
+  })
+
+  test('LEGACY-RFO-03','Legacy decision types','Old GB_RUNNER_2B_RFO holds the runner on 11-20, matching the current type',()=>{
+    const pre={first:null,second:runner('R2','Legacy Runner',13),third:null}
+    const legacy=resolveDecisionRoll(pending(fixture(initial),'GB_RUNNER_2B_RFO',defense(fixture(initial)),{result:'GB',outs:1,preBases:pre,infieldIn:false}),11)
+    const current=resolveDecisionRoll(pending(fixture(initial),'GB_RUNNER_2B_RTH',defense(fixture(initial)),{result:'GB',outs:1,preBases:pre,infieldIn:false}),11)
+    assert(legacy.bases.second?.cardKey==='R2','Legacy roll 11 must hold the runner at 2B.')
+    assert(JSON.stringify(legacy.bases)===JSON.stringify(current.bases),'Legacy and current types must agree on a hold.')
+  })
+
+  test('LEGACY-RFO-04','Legacy decision types','The alias is narrow: an unknown decision type still reports resolver-pending rather than being silently mapped',()=>{
+    const s=pending(fixture(initial),'GB_RUNNER_2B_NONSENSE',defense(fixture(initial)),{preBases:{first:null,second:null,third:null}})
+    const v=getDecisionView(s)
+    assert(v,'Unknown type should still produce a view.')
+    assert(v.mode==='information',`An unknown type must fall through to information, got ${v.mode}.`)
+  })
+
   const categories:ScenarioReport['categories']={}
   for(const r of results){const c=categories[r.category]??{total:0,passed:0};c.total++;if(r.passed)c.passed++;categories[r.category]=c}
   return {total:results.length,passed:results.filter(r=>r.passed).length,failed:results.filter(r=>!r.passed).length,categories,results}
