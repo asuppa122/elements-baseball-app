@@ -7,7 +7,7 @@ import GameplayScreenView from '../gameplay/presentation/GameplayScreenView'
 import { buildHalfInningTransition, previousHalf } from '../gameplay/halfInningTransition'
 import { useGameplayActions } from '../gameplay/presentation/useGameplayActions'
 import { loadGameplayLabEvents } from '../gameplay/gameRepository'
-import type { GameState } from '../gameplay/types'
+import type { GameSide, GameState } from '../gameplay/types'
 
 /**
  * The gameplay screen, loaded from and saved to Supabase.
@@ -83,6 +83,19 @@ export default function GameplayScreenPage() {
   if (loading) return <main className="gp-screen"><div className="gp-panel gp-region">Loading…</div></main>
   if (!state || !game) return <main className="gp-screen"><div className="gp-panel gp-region">{loadError || 'Game not found.'}</div></main>
 
+  /**
+   * Which side the signed-in manager is acting as.
+   *
+   * This used to be hardcoded 'home' one level down, which is correct for
+   * every lab game today -- GameplayLabPage always creates with
+   * homeManager: { userId: user.id }, so the creator IS home, and opponent
+   * access is still disabled. It stops being correct the moment an opponent
+   * can open a game they did not create: they are away, and a board addressed
+   * to 'home' renders every control dead for them. Deriving it from the state
+   * is correct now and stays correct then.
+   */
+  const viewerSide: GameSide = user && state.managers.away.userId === user.id ? 'away' : 'home'
+
   const halfKey = `${state.inning}-${state.half}`
   const justEnded = lastHalfSeen !== null && lastHalfSeen !== halfKey ? previousHalf(state.inning, state.half) : null
   const transition = justEnded && transitionDismissed !== halfKey
@@ -97,6 +110,7 @@ export default function GameplayScreenPage() {
       transition={transition}
       onDismissTransition={() => setTransitionDismissed(halfKey)}
       onExit={() => navigate('/games')}
+      viewerSide={viewerSide}
       banner={(
         <div className="gp-wip">
           <b>Building</b>
