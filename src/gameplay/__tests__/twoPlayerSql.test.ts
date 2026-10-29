@@ -1,7 +1,17 @@
 // @vitest-environment node
-import { readFileSync } from 'node:fs'
-import { resolve } from 'node:path'
 import { PGlite } from '@electric-sql/pglite'
+// Loaded through Vite's ?raw, like restTrackingSqlParity.test.ts, so this stays
+// inside the app's tsconfig rather than needing node:fs.
+import m0 from '../../../supabase/migrations/20260818_gameplay_phase1_foundation.sql?raw'
+import m1 from '../../../supabase/migrations/20260818_gameplay_phase1a_private_lab.sql?raw'
+import m2 from '../../../supabase/migrations/20260818_gameplay_phase1b_pregame_state.sql?raw'
+import m3 from '../../../supabase/migrations/20260818_gameplay_phase1d_start_state.sql?raw'
+import m4 from '../../../supabase/migrations/20260818_gameplay_phase2a_pitch_roll.sql?raw'
+import m5 from '../../../supabase/migrations/20260818_gameplay_build1_core_game.sql?raw'
+import m6 from '../../../supabase/migrations/20260826_gameplay_player_rest_state.sql?raw'
+import m7 from '../../../supabase/migrations/20260826_gameplay_rest_tracking_on_completion.sql?raw'
+import m8 from '../../../supabase/migrations/20260827_gameplay_away_side_access.sql?raw'
+import m9 from '../../../supabase/migrations/20261029_gameplay_two_player.sql?raw'
 import { beforeAll, describe, expect, it } from 'vitest'
 import { buildNonGbCoverageFixture } from '../rulebookCoverage'
 import { declareOffenseReady, pauseGame, resolvePitchRoll, resolveSwingRoll, resumeGame } from '../engine'
@@ -27,18 +37,8 @@ import type { GameSide, GameState } from '../types'
  * TS sideToAct is compared with the SQL gameplay_side_to_act on every state.
  */
 
-const MIGRATIONS = [
-  '20260818_gameplay_phase1_foundation.sql',
-  '20260818_gameplay_phase1a_private_lab.sql',
-  '20260818_gameplay_phase1b_pregame_state.sql',
-  '20260818_gameplay_phase1d_start_state.sql',
-  '20260818_gameplay_phase2a_pitch_roll.sql',
-  '20260818_gameplay_build1_core_game.sql',
-  '20260826_gameplay_player_rest_state.sql',
-  '20260826_gameplay_rest_tracking_on_completion.sql',
-  '20260827_gameplay_away_side_access.sql',
-  '20261029_gameplay_two_player.sql',
-]
+// in the order they were applied to the live project
+const MIGRATIONS = [m0, m1, m2, m3, m4, m5, m6, m7, m8, m9]
 
 const HOME = '00000000-0000-4000-8000-000000000001'
 const AWAY = '00000000-0000-4000-8000-000000000002'
@@ -125,11 +125,9 @@ beforeAll(async () => {
     grant usage on schema public, auth to authenticated;
     grant execute on function auth.uid() to authenticated;
   `)
-  for (const file of MIGRATIONS) {
-    const sql = readFileSync(resolve(__dirname, '../../../supabase/migrations', file), 'utf8')
-      // pgcrypto is not built into PGlite; gen_random_uuid() is core since PG 13
-      .replace(/create extension if not exists pgcrypto;/gi, '')
-    await db.exec(sql)
+  for (const migration of MIGRATIONS) {
+    // pgcrypto is not built into PGlite; gen_random_uuid() is core since PG 13
+    await db.exec(migration.replace(/create extension if not exists pgcrypto;/gi, ''))
   }
   // Supabase grants these to `authenticated` by default; RLS then decides.
   await db.exec(`
