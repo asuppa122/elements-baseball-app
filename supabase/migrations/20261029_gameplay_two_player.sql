@@ -5,8 +5,11 @@
 -- STATUS: written 2026-10-29. Tested against a real Postgres (PGlite, PG 18)
 -- by src/gameplay/__tests__/twoPlayerSql.test.ts, which applies the gameplay
 -- migrations in order plus this one and plays complete games through the real
--- engine, each move submitted by the correct manager. NOT yet applied to the
--- live project -- update this line when it is.
+-- engine, each move submitted by the correct manager. APPLIED to the live
+-- project by Anthony in the Supabase SQL Editor on 2026-10-29; confirmed by
+-- pg_proc listing roll_gameplay_die, list_gameplay_opponents and
+-- gameplay_side_to_act. 20260827_gameplay_away_side_access.sql was confirmed
+-- already applied beforehand (its "...as away" games policy exists).
 --
 -- What changes, and what deliberately does not:
 --
