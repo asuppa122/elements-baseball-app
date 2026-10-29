@@ -3,6 +3,7 @@ import { canAssignDefensivePosition } from './defense'
 import { resolveCoreResult, resolveSwingChart } from './coreGame'
 import { effectiveHitterOnBase, effectivePitcherControl, type PitcherFatigueInput } from './fatigueEngine'
 import { readPitcherStateValue } from './pitcherStateKey'
+import { awaitingOffenseReady } from './turnOrder'
 import type {
   GameManagerSnapshot,
   GameState,
@@ -502,7 +503,14 @@ export function pitcherAdvantageIsAutomatic(state: GameState): boolean {
 export function resolveAutomaticPitcherAdvantage(state: GameState): GameState {
   if(state.status!=='in_progress'||state.waitingFor!=='PITCH_ROLL')throw new Error('Automatic advantage is only available before the pitch roll.')
   if(!pitcherAdvantageIsAutomatic(state))throw new Error('Pitcher advantage is not automatic in this matchup.')
+  if(awaitingOffenseReady(state))throw new Error('The batting manager has not declared ready.')
   return withVersion(state,{...state,firstPitchThrown:true,waitingFor:'SWING_ROLL',nextActor:battingSide(state),plateAppearance:{...state.plateAppearance,pitchRoll:null,pitchTotal:null,advantage:'pitcher',swingRoll:null,chartResult:null}})
+}
+
+/** Two-player games: the batting manager is done with pre-pitch calls. See turnOrder.ts. */
+export function declareOffenseReady(state: GameState): GameState {
+  if (!awaitingOffenseReady(state)) throw new Error('The batting manager is not being waited on.')
+  return withVersion(state, { ...state, plateAppearance: { ...state.plateAppearance, offenseReady: true } })
 }
 
 export function resolvePitchRoll(state: GameState, roll: number): GameState {
@@ -513,6 +521,7 @@ export function resolvePitchRoll(state: GameState, roll: number): GameState {
   const offense = battingSide(state)
   const defense = fieldingSide(state)
   if (state.nextActor !== defense) throw new Error('The defensive side must act for the pitch roll.')
+  if (awaitingOffenseReady(state)) throw new Error('The batting manager has not declared ready.')
 
   const batterKey = state.plateAppearance.batterCardKey
   const pitcherKey = state.plateAppearance.pitcherCardKey

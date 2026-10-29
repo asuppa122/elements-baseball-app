@@ -174,7 +174,7 @@ function numberFromDetail(detail:string,label:string):number|null {
   return match ? Number(match[1]) : null
 }
 
-function botSelection(state:GameState, next:()=>number):string[] {
+export function botSelection(state:GameState, next:()=>number):string[] {
   const d=state.pendingDecision
   const view=getDecisionView(state)
   if(!d || !view || view.mode==='roll' || view.mode==='information') return []
@@ -192,7 +192,7 @@ function botSelection(state:GameState, next:()=>number):string[] {
   return view.options.length ? [view.options[Math.floor(next()*view.options.length)].id] : []
 }
 
-function maybeBotPrePitchAction(state:GameState,next:()=>number):GameState {
+export function maybeBotPrePitchAction(state:GameState,next:()=>number):GameState {
   const actions=getPrePitchActions(state)
   if(!actions.length) return state
   const byId=new Map(actions.map(a=>[a.id,a]))

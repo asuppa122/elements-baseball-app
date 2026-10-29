@@ -137,6 +137,9 @@ export type PlateAppearanceState = {
   swingRoll: number | null
   chartResult: string | null
   infieldIn?: boolean
+  // Two-player games only: the batting manager has made any calls and declared
+  // ready, so the fielding manager may now act and pitch. See turnOrder.ts.
+  offenseReady?: boolean
 }
 
 export type GameState = {
@@ -171,6 +174,10 @@ export type GameState = {
   // before this field existed and is treated as already past the first pitch,
   // so no saved game loses its bench mid-game.
   firstPitchThrown?: boolean
+  // Set when a game is created for two managers at two screens: turns follow
+  // turnOrder.ts (offence readies, then the defence pitches). Absent for the
+  // lab, the sandbox and scenario fixtures, where one person plays both sides.
+  turnHandshake?: boolean
   // Substitution no-re-entry tracking ("which cards can no longer be pulled
   // from the bench") -- seeded with the full starting lineup at game start.
   // NOT a fatigue/appearance signal -- see hitterPlateAppearanceCardKeys /
