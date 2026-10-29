@@ -163,6 +163,14 @@ export type GameState = {
   outfieldThrowUsage?: Record<GameSide, Record<'LF' | 'CF' | 'RF', number>>
   infieldDoublePlayUsage?: Record<GameSide, Partial<Record<'1B+2B+SS' | '1B+2B+3B' | '1B+3B+SS', number>>>
   naturalStolenBaseUsed?: Record<GameSide, boolean>
+  // Roster moves (pinch hitter/runner, defensive sub, pitching change, double
+  // switch) open only once the game's first pitch has been thrown -- a real
+  // pitch roll, the automatic NO PITCH advantage, a failed bunt that goes to
+  // the pitcher's chart -- or once any plate appearance has been completed,
+  // even one with no pitch (leadoff IBB or bunt). Set false at game start. Absent means a game saved
+  // before this field existed and is treated as already past the first pitch,
+  // so no saved game loses its bench mid-game.
+  firstPitchThrown?: boolean
   // Substitution no-re-entry tracking ("which cards can no longer be pulled
   // from the bench") -- seeded with the full starting lineup at game start.
   // NOT a fatigue/appearance signal -- see hitterPlateAppearanceCardKeys /

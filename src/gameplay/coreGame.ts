@@ -296,7 +296,9 @@ export function finishPlateAppearance(state: GameState): GameState {
   const marked = markPlateAppearanceCompleted(state, offense, defense)
   const nextCursor = (marked.lineupCursor[offense] + 1) % 9
   const cursors = {...marked.lineupCursor,[offense]:nextCursor}
-  const next = {...marked,lineupCursor:cursors}
+  // A completed plate appearance opens roster moves even if no pitch was thrown
+  // (a leadoff intentional walk or bunt) -- see GameState.firstPitchThrown.
+  const next = {...marked,lineupCursor:cursors,firstPitchThrown:true}
 
   // Bottom 9+ ends immediately when the home team takes the lead.
   if (walkoffReached(next)) return completeGame(next)

@@ -74,6 +74,7 @@ export function createInitialGameState(args: {
     waitingFor: null,
     nextActor: null,
     naturalStolenBaseUsed: { home:false, away:false },
+    firstPitchThrown: false,
     appearedCardKeys: { home:[], away:[] },
     hitterPlateAppearanceCardKeys: { home:[], away:[] },
     pitcherAppearanceCardKeys: { home:[], away:[] },
@@ -501,7 +502,7 @@ export function pitcherAdvantageIsAutomatic(state: GameState): boolean {
 export function resolveAutomaticPitcherAdvantage(state: GameState): GameState {
   if(state.status!=='in_progress'||state.waitingFor!=='PITCH_ROLL')throw new Error('Automatic advantage is only available before the pitch roll.')
   if(!pitcherAdvantageIsAutomatic(state))throw new Error('Pitcher advantage is not automatic in this matchup.')
-  return withVersion(state,{...state,waitingFor:'SWING_ROLL',nextActor:battingSide(state),plateAppearance:{...state.plateAppearance,pitchRoll:null,pitchTotal:null,advantage:'pitcher',swingRoll:null,chartResult:null}})
+  return withVersion(state,{...state,firstPitchThrown:true,waitingFor:'SWING_ROLL',nextActor:battingSide(state),plateAppearance:{...state.plateAppearance,pitchRoll:null,pitchTotal:null,advantage:'pitcher',swingRoll:null,chartResult:null}})
 }
 
 export function resolvePitchRoll(state: GameState, roll: number): GameState {
@@ -541,6 +542,7 @@ export function resolvePitchRoll(state: GameState, roll: number): GameState {
 
   return withVersion(state, {
     ...state,
+    firstPitchThrown: true,
     waitingFor: 'SWING_ROLL',
     nextActor: offense,
     plateAppearance: {
