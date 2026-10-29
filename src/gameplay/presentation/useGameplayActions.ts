@@ -62,10 +62,19 @@ export function useGameplayActions({ game, userId, surface, onSaved, onAfterSave
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
-  const [selection, setSelection] = useState<string[]>([])
+  const [chosen, setSelection] = useState<string[]>([])
+  // A roster move started from a drawer row already knows its player. The
+  // engine asks for that player at different steps -- first for a pitching
+  // change or pinch hitter, after the runner or position for a pinch runner or
+  // defensive sub -- so the preference waits for whichever step offers it and
+  // pre-selects it there. It is only ever a pre-selection: the manager still
+  // confirms on the decision board, and picking something else overrides it.
+  const [preferred, setPreferred] = useState<string | null>(null)
 
   const state = game?.game_state as GameState | undefined
   const decision = state ? getDecisionView(state) : null
+  const preferredOffered = Boolean(preferred && decision?.options.some((o) => o.id === preferred))
+  const selection = chosen.length === 0 && preferredOffered && preferred ? [preferred] : chosen
   const offense: GameSide = state?.half === 'bottom' ? 'home' : 'away'
   const defense: GameSide = offense === 'home' ? 'away' : 'home'
   const editablePrePitchDecision = Boolean(
@@ -126,8 +135,10 @@ export function useGameplayActions({ game, userId, surface, onSaved, onAfterSave
       { roll, chartResult: result, playableShell: true }, `Swing roll: ${roll} → ${result}.`)
   }, [state, persist])
 
-  const startAction = useCallback(async (actionId: string) => {
+  const startAction = useCallback(async (actionId: string, preferOptionId?: string) => {
     if (!state) return
+    setPreferred(preferOptionId ?? null)
+    setSelection([])
     await persist(bump(beginPrePitchDecision(state, actionId)), 'DECISION_RESOLVED',
       { resolutionKind: 'PRE_PITCH_ACTION_STARTED', action: actionId, playableShell: true },
       `${actionId.replaceAll('_', ' ')} started.`)
@@ -143,6 +154,7 @@ export function useGameplayActions({ game, userId, surface, onSaved, onAfterSave
       { resolutionKind: 'PRE_PITCH_ACTION_CANCELLED', playableShell: true },
       'Action cleared. Choose a different manager action.')
     setSelection([])
+    setPreferred(null)
   }, [state, editablePrePitchDecision, defense, persist])
 
   const confirmDecision = useCallback(async () => {
@@ -153,7 +165,9 @@ export function useGameplayActions({ game, userId, surface, onSaved, onAfterSave
     await persist(bump(confirmManagerDecision(state, selection)), 'DECISION_RESOLVED',
       { decisionType: state.pendingDecision?.decisionType, selected: selection, playableShell: true }, message)
     setSelection([])
-  }, [state, decision, selection, editablePrePitchDecision, finalSubstitutionCommit, persist])
+    // spent once the step that offered it has been confirmed
+    if (preferredOffered) setPreferred(null)
+  }, [state, decision, selection, preferredOffered, editablePrePitchDecision, finalSubstitutionCommit, persist])
 
   const rollDecision = useCallback(async () => {
     if (!state || !decision) return

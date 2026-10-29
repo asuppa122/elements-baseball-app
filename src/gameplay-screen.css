@@ -1268,3 +1268,92 @@
   .gp-sandbox-blurb { flex: 1 1 100%; }
   .gp-sandbox-scenarios .gp-action { min-height: 44px; }
 }
+
+/* ---- right rail: game log / bullpen / bench drawers (port step 5) ----
+ * An accordion, per the artboard: one drawer open at a time, the open one
+ * gold-edged. On desktop the open drawer takes whatever height the rail has
+ * left and scrolls inside itself, so the rail stays a fixed board; on a phone
+ * the drawers stack at their natural height in the page scroll. */
+.gp-drawers { display: flex; flex-direction: column; gap: 7px; min-width: 0; min-height: 0; }
+.gp-drawer {
+  display: flex; flex-direction: column; min-height: 0;
+  border: 1px solid var(--s-line-soft);
+  border-radius: 10px;
+  background: var(--s-ink-soft);
+  overflow: hidden;
+}
+.gp-drawer.is-open { border-color: var(--s-gold); }
+.gp-drawer-head {
+  display: flex; align-items: center; gap: 8px; width: 100%;
+  min-height: 44px; padding: 0 10px;
+  background: transparent; border: 0; color: inherit; font: inherit; text-align: left;
+  cursor: pointer; flex-shrink: 0;
+}
+.gp-drawer-caret { width: 9px; font-size: 9px; color: var(--s-gray-muted); }
+.gp-drawer-head b {
+  font-size: 10px; font-weight: 900; letter-spacing: 0.12em; text-transform: uppercase; color: var(--s-gray);
+}
+.gp-drawer-head > span:last-child { margin-left: auto; font-size: 9.5px; font-weight: 700; color: var(--s-gray-muted); }
+.gp-drawer.is-open .gp-drawer-caret, .gp-drawer.is-open .gp-drawer-head b { color: var(--s-gold-bright); }
+.gp-drawer-head:focus-visible { outline: 2px solid var(--s-gold-bright); outline-offset: -2px; }
+.gp-drawer-body { padding: 0 7px 8px; display: grid; gap: 6px; align-content: start; min-height: 0; overflow: auto; }
+.gp-drawer-body[hidden] { display: none; }
+/* the drawer header already names it and counts it */
+.gp-drawer .gp-log-head { display: none; }
+
+.gp-drawer-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 5px; }
+.gp-drawer-row {
+  display: flex; align-items: center; gap: 7px; padding: 5px;
+  border: 1px solid var(--s-line-soft); border-radius: 8px; background: #08090a; min-width: 0;
+}
+.gp-drawer-art { flex: 0 0 auto; width: 30px; height: 42px; border-radius: 4px; overflow: hidden; background: var(--s-ink-soft); }
+.gp-drawer-art img { width: 100%; height: 100%; object-fit: cover; object-position: top; display: block; }
+.gp-drawer-who { display: grid; gap: 2px; min-width: 0; flex: 1 1 auto; text-align: left; }
+.gp-drawer-who b { font-size: 11.5px; color: var(--s-cream); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gp-drawer-who span { font-size: 9.5px; color: var(--s-gray-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gp-drawer-row-acts { display: flex; flex-direction: column; gap: 4px; flex: 0 0 auto; }
+.gp-drawer-act {
+  border: 1px solid var(--s-line); background: transparent; color: var(--s-cream);
+  border-radius: 99px; font: inherit; font-size: 10px; font-weight: 800;
+  padding: 5px 10px; min-height: 28px; cursor: pointer; white-space: nowrap;
+}
+.gp-drawer-act:hover:not(:disabled) { border-color: var(--s-gold-bright); color: var(--s-gold-bright); }
+.gp-drawer-act:disabled { opacity: 0.45; cursor: not-allowed; }
+.gp-drawer-foot { display: flex; flex-wrap: wrap; gap: 6px; padding-top: 7px; border-top: 1px solid var(--s-line-soft); }
+.gp-drawer-foot .gp-drawer-act { flex: 1 1 0; border-radius: 6px; color: var(--s-gray); }
+.gp-drawer-why, .gp-drawer-team { margin: 0; font-size: 10px; color: var(--s-gray-muted); }
+.gp-drawer-why { font-style: italic; }
+.gp-drawer-team { font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; }
+.gp-drawer-theirs { display: grid; gap: 5px; }
+.gp-drawer-theirs > summary {
+  display: flex; justify-content: space-between; gap: 8px; cursor: pointer; list-style: none;
+  padding: 6px 2px; font-size: 10px; font-weight: 800; color: var(--s-gray-muted);
+  border-top: 1px solid var(--s-line-soft);
+}
+.gp-drawer-theirs > summary::-webkit-details-marker { display: none; }
+.gp-drawer-theirs > summary span:first-child::before { content: '+ '; color: var(--s-gold); }
+.gp-drawer-theirs[open] > summary span:first-child::before { content: '− '; }
+
+@media (min-width: 1025px) {
+  .gp-region-rail { display: flex; flex-direction: column; }
+  .gp-region-rail > * { flex: 0 0 auto; }
+  .gp-region-rail > .gp-drawers { flex: 1 1 auto; }
+  .gp-drawer { flex: 0 0 auto; }
+  /* The rail is ~180px of row: a button beside the name left 64px and cut
+   * every name. The buttons go under the name instead, beside the art. */
+  .gp-drawer-row { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: start; column-gap: 7px; row-gap: 4px; }
+  .gp-drawer-art { grid-row: span 2; }
+  .gp-drawer-row-acts { grid-column: 2; flex-direction: row; flex-wrap: wrap; }
+  /* a bench line carries every position the card can play; let it wrap rather than cut */
+  .gp-drawer-who span { white-space: normal; }
+  /* only the open drawer gives; a closed one keeps its full 44px header */
+  .gp-drawer.is-open { flex: 1 1 auto; }
+}
+
+@media (max-width: 1024px) {
+  .gp-drawer-act { min-height: 44px; padding: 8px 14px; font-size: 11.5px; }
+  .gp-drawer-theirs > summary { min-height: 44px; align-items: center; }
+  .gp-drawer-art { width: 36px; height: 50px; }
+  .gp-drawer-who b { font-size: 13px; }
+  .gp-drawer-who span { font-size: 11px; }
+}

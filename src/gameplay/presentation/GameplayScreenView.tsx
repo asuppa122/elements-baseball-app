@@ -3,10 +3,10 @@ import DefBar from './DefBar'
 import GameField from './GameField'
 import LineupRail from './LineupRail'
 import MatchupPanel from './MatchupPanel'
-import AvailabilityPanel from './AvailabilityPanel'
+import RosterDrawers from './RosterDrawers'
 import RollControls from './RollControls'
 import GameMenu from './GameMenu'
-import GameLogPanel, { type LogEvent } from './GameLogPanel'
+import { type LogEvent } from './GameLogPanel'
 import HalfInningTransition from './HalfInningTransition'
 import PostGameBoard from './PostGameBoard'
 import DecisionBoard from './DecisionBoard'
@@ -101,7 +101,7 @@ function PlayRecap({ events }: { events: LogEvent[] }) {
 }
 
 export default function GameplayScreenView({
-  state, events, actions, transition, onDismissTransition, onExit, banner, viewerSide = 'home',
+  state, events, actions, transition, onDismissTransition, onExit, banner, viewerSide = 'home', actingSides,
 }: {
   state: GameState
   events: LogEvent[]
@@ -117,14 +117,20 @@ export default function GameplayScreenView({
    * intentional walk opens a board the reviewer cannot touch.
    */
   viewerSide?: GameSide
+  /**
+   * Teams the viewer can make roster moves for. A league game is managed one
+   * side per person, so it defaults to the viewer's own; the sandbox is one
+   * reviewer playing both, and passes both.
+   */
+  actingSides?: GameSide[]
 }) {
   const {
     saving, error, notice, selection, toggleSelection, decision, editablePrePitchDecision,
     noPitch, rollPitch, rollSwing, startAction, changeAction, confirmDecision, rollDecision, togglePause,
   } = actions
   const prePitchActions = getPrePitchActions(state)
-  // offence + defence calls belong in the left rail's decisions box; the five
-  // roster moves stay in the rail until the bench/bullpen drawers land.
+  // offence + defence calls belong in the left rail's decisions box; the
+  // roster moves belong to the bench and bullpen drawers.
   const sideActions = prePitchActions.filter((a) => OFFENCE_ACTIONS.has(a.id) || DEFENCE_ACTIONS.has(a.id))
   const rosterActions = prePitchActions.filter((a) => !OFFENCE_ACTIONS.has(a.id) && !DEFENCE_ACTIONS.has(a.id))
 
@@ -201,8 +207,6 @@ export default function GameplayScreenView({
         </section>
 
         <section className="gp-panel gp-region gp-region-rail" aria-label="Game rail">
-          <GameLogPanel events={events} />
-
           {/* The decision board is the one already built and verified against
               both saved awaiting_decision games -- reused, not rewritten. */}
           <div className={`gp-decision-dock${decision ? ' is-open' : ''}`}>
@@ -226,22 +230,18 @@ export default function GameplayScreenView({
             )}
           </div>
 
-          {/* Roster moves only. These belong in the bench and bullpen drawers,
-              which land with the right rail; until then they stay reachable
-              here rather than disappearing. */}
-          {!decision && state.status !== 'complete' && rosterActions.length > 0 && (
-            <section className="gp-manager-actions" aria-label="Roster moves">
-              <b className="s-lbl">Roster moves</b>
-              <div className="gp-action-list">
-                {rosterActions.map((a) => (
-                  <button key={a.id} className="gp-action gp-action-secondary" disabled={saving}
-                    title={a.detail} onClick={() => void startAction(a.id)}>{a.label}</button>
-                ))}
-              </div>
-            </section>
-          )}
-
-          <AvailabilityPanel state={state} />
+          {/* Game log, bullpen and bench as one accordion. Roster moves start
+              from the player they are about to use and finish on the decision
+              board above; nothing is made on a single click. */}
+          <RosterDrawers
+            state={state}
+            events={events}
+            viewerSide={viewerSide}
+            actingSides={actingSides ?? [viewerSide]}
+            rosterActions={rosterActions}
+            disabled={saving || Boolean(decision)}
+            onStart={(id, prefer) => void startAction(id, prefer)}
+          />
 
           {error && <p className="gp-actions-msg is-error">{error}</p>}
           {notice && !error && <p className="gp-actions-msg">{notice}</p>}

@@ -156,6 +156,7 @@ export default function GameplaySandboxPage() {
       /* No opponent here: the reviewer acts for whichever side the engine is
          asking, so every legal decision is actually reachable. */
       viewerSide={actions.decision?.actingSide ?? 'home'}
+      actingSides={['home', 'away']}
     />
   )
 }
