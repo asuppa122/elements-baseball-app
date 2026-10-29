@@ -166,6 +166,141 @@ mobile-parity standard.
 2 console errors were present throughout observation; not investigated (out of scope —
 this is a third-party site, not something to debug).
 
+### Part 1b: a full game played, 2026-10-29
+
+Anthony logged into the built-in browser, opened a CPU game and authorized full play.
+The game was one opponent in a **Challenge** ("Hall of Fame 2020: Ted Simmons": beat six
+teams with an uncapped 2020 roster to unlock a career card) — his 2020 side at home vs
+the CPU "All Stars Cardinals". Played start to finish, **won 7-4**, which marked that
+opponent Defeated on the challenge page. Viewport was a small 800x352 landscape pane.
+Two rules below came from Anthony mid-game rather than from observation; they are marked.
+
+#### Screen model
+
+- **Your side is always on the left.** Cards, MOUND/BENCH/BULLPEN tiles and team DEF line
+  (`CA: +5, IF: +8, OF: +4`) swap sides with the half. Opponent's on the right.
+- **Header:** current pitcher's game line on the left (`15/22 BF, 4 IP, 4 K, 1 ER…` —
+  BF used vs BF capacity), score / inning arrow / outs in the centre, current batter's
+  game line on the right (`1/2, 1 HR, 1 RBI, 2/2 SB`).
+- **Centre:** the two duel cards, a dot-matrix message line, dice-mode toggle, a small
+  diamond with runner badges, `Enforce BF` and `Fast Sim` pills.
+- **Bottom strip:** both full batting orders as small cards. The current slot is marked
+  by a large number; runners' cards lift and get a `1B`/`2B`/`3B` tag; completed PAs
+  become coloured tiles (red out, yellow sacrifice). Clicking a strip card enlarges it.
+- **Five circles, top left and top right — the manager-decision budget** (Anthony): five
+  per team per game, spent by steals, bunts and IBBs; white = used. When they run out
+  BUNT and IBB simply disappear and runner badges stop responding — no message says why.
+
+#### Turn flow
+
+- Defence: `PITCH` (red when live) → `WAITING` while the hitter acts.
+- Offence: `READY` → CPU pitches → `SWING`.
+- Every roll is narrated in the centre: `ROLL: (19) +3, ADVANTAGE: WALKER BUEHLER`,
+  then `ROLL: (2) EDGAR RENTERIA: STRIKE OUT [BUEHLER]`, then a turn label. The card
+  with advantage glows gold.
+- Dice modes: 2D, 3D (a tumbling die crosses the field), and none (a faint `[14]` only;
+  also skips the full-field set-piece views). The choice resets after Fast Sim.
+- No half-inning transition: the board just flips. Walk-off rules respected — bottom 9th
+  skipped with the home team ahead.
+
+#### Manager decisions (cost one of the five)
+
+| Action | How | Confirm? | Notes |
+|---|---|---|---|
+| Steal | click the runner's **speed badge on the small diamond** | **No** | Cuts to a full-field view: runner card at the target base, catcher's card on the lane, "OPPONENT ROLLING FOR THROW". Logged `Roll: (16) + CA:+5, Steal Successful: Ronald Acuña Jr. (21)`. Steal of 3rd is legal with a catcher bonus (Anthony); untested — budget ran out first. No steal of home. |
+| Sacrifice bunt | `BUNT` under the pitcher's card, before the pitch | **No** | Replaces the PA — no pitch roll. `Roll: (5) Dominic Smith: Bunt [Carpenter]`; batter out, runner up. |
+| Intentional walk | `IBB` under the batter's card | **No** | No roll; logged as `Intentional Walk`. |
+
+All three fire on a single click. Exploring the screen spent one by accident.
+
+#### Rolls that are prompts, not decisions
+
+- **Runner's choice (offence):** after a hit, a full-field view states the whole maths
+  before you choose — `RUNNER'S CHOICE: (21+5) SPD VS OF: (3) ATTEMPTING HOME?` with
+  `SEND` / `HOLD`. The bonus was +5 normally and +10 with two outs. Same prompt for
+  tag-ups on fly balls (`(13) SPD VS OF: 3 ATTEMPTING THIRD?`). Only the lead runner is
+  asked; trailing runners move automatically. HOLD resolves instantly.
+- **Runner's choice (defence):** the same prompt shows with no buttons while the CPU
+  decides; if it sends, the defence gets a `THROW` button to roll.
+- **Ground ball, runner on 1st, <2 outs:** defence gets `DOUBLE PLAY TRY`, and with more
+  than one force available also `FORCE OUT LEAD`. DP TRY is not optional — the game
+  waits indefinitely until it is clicked. FORCE OUT LEAD resolves with no roll. Logged
+  `Roll: (5) + IF: +8, Double Play Successful: Scott Rolen (10)`.
+- Ground ball with a runner on 2nd and a hitter out: runner advanced automatically, no
+  prompt, no log line.
+- None of these consumed a decision circle.
+
+#### Roster moves (do not cost a decision)
+
+- **Bullpen tile → full-screen overlay of every reliever as a full-size card**, with the
+  rule printed on top: *SPs must face 15 batters before being replaced; relievers 3, or
+  may be replaced at the start of an inning if they finished the previous one.* Once
+  legal, each card gets a big `Put In Game`. **No confirmation**; a "CALLING BULLPEN"
+  beat plays, then the new pitcher is in. The pen pages (different relievers on later
+  visits).
+- **Bench tile → two-pane overlay.** Left: bench cards. Right: the live lineup table
+  (`#, POS, Player, eligible positions with ratings, SPD`) with `Move` per row
+  (select-then-swap between fielders), and **Base Info** (`AB / 1B / 2B / 3B` with who
+  occupies each) — the pinch-hit / pinch-run surface.
+- Bench rule printed on the overlay: "cannot be used until the 6th inning". In practice
+  `Select`/`Sub` only appeared from the **7th** (disabled throughout the 6th, both on
+  defence and offence).
+- Substitution flow: bench card `Select` → that card pulls forward with `Cancel`; every
+  `Sub` button (lineup rows and Base Info rows) turns live → click the target row →
+  **side-by-side confirm** of incoming vs outgoing card with `Cancel` / `Swap`. The only
+  confirm step in the whole game.
+- Removed players leave the bench for good. The team DEF line recalculates live (IF +8 →
+  +9 for Tatis at SS, → +11 for Wendle).
+- **No position validation:** a COF-only pinch hitter (Conforto) was left at shortstop
+  for the next half with no warning; the IF total silently dropped.
+
+#### Fatigue
+
+Each pitcher card shows a BF capacity (`22 BF | 5 IP` starter, `6 BF | 1⅓ IP` reliever).
+Once a pitcher reaches it, Control drops on the card (6 → 5, 5 → 4 → 3 for one CPU
+reliever kept in). The CPU changed pitchers on its own, sometimes mid-inning, with no
+announcement on the play screen; the log records `X --REPLACES-- Y`.
+
+#### Other surfaces
+
+- **Log:** right-hand slide-over, field visible; grouped by inning (`Current` /
+  `Previous`), `END Top 2: 0 - 3` lines, `Scored` lines per runner. Its controls overlap
+  `MENU`'s position — mis-toggles are easy.
+- **MENU:** box-score overlay — line score with R/H/LOB/`AVRL` (average roll)/`ADV`
+  (advantages won), team toggle, hitter table (AB H BB S DB TR HR RBI RS SB CS K DBP
+  OCHW OCO) and pitcher table (BF IP ER K H BB DBP OCO OCHW), `SAVE & QUIT`.
+- **Fast Sim:** separate text-mode screen (scoreboard, play-by-play, both cards) with
+  `Sim At Bat / Sim Half Inning / Sim Inning / Sim to Pitcher Fatigue / Sim Game` and
+  `Play Ball` to return. Runs about one PA per 3-5 s under "Simulation Running" with
+  `Stop Simulation`. It made no decisions on our behalf that were visible.
+- **Final:** box-score screen titled "Final" with `Exit` (back to the challenge page)
+  and `Log`.
+- `Enforce BF` was never exercised; meaning unconfirmed.
+
+#### How Elements differs — Anthony's answers, 2026-10-29
+
+1. **No decision budget.** The only limited action is the one natural steal per team
+   (`naturalStolenBaseUsed`; the engine also lifts the limit while the catcher's DEF is
+   negative). IBB and bunts are unlimited. Nothing like ERA's five circles is needed.
+2. **Bench, pinch runner and bullpen are available after the first pitch** — no 6th/7th
+   inning lock.
+3. **No catcher bonus on a steal of 3rd.** The steal-of-home catcher bonus is already in
+   the Rulebook (engine: `SECOND_STEAL_HOME_ROLL`, full infield + catcher).
+4. Extra-base / tag-up bonuses, 5. double-play vs force-out handling, 6. fatigue — all
+   already defined by the Rulebook; ERA's versions are not a reference for these.
+7. Fast Sim, challenges and token rewards are out of scope (Elements is strictly PvP).
+
+#### Implications for Elements' bench/bullpen drawers (step 5)
+
+ERA confirms the existing direction — roster moves start from the bench/bullpen tiles,
+open a full-card overlay, and print the governing rule at the top. The bench overlay
+pairing **bench cards + live lineup table + base occupancy** is the strongest single idea
+to borrow: one surface for pinch hitter, pinch runner, defensive swap. Where Elements
+should differ: confirm steals/bunts/IBB (its Select → Confirm → Locked model already
+does), say *why* an action is unavailable instead of hiding it silently, validate
+defensive positions after a pinch hitter, and show whether the team's one natural steal
+is still available rather than letting the option silently vanish.
+
 ---
 
 ## Part 2: Showdown 2000 (showdown2000.fun)
