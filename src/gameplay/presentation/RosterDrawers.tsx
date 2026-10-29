@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from 'react'
 import { battingSide } from '../gameBoundaryEngine'
+import { awaitingOffenseReady } from '../turnOrder'
 import { availableFor } from './availability'
 import GameLogPanel, { type LogEvent } from './GameLogPanel'
 import type { DecisionOption } from '../decisionEngine'
@@ -119,6 +120,10 @@ export default function RosterDrawers({
     if (!actingSides.includes(side) || state.status === 'complete') return null
     if (state.firstPitchThrown === false) return 'Moves open once the first pitch is thrown.'
     if (state.waitingFor !== 'PITCH_ROLL' || state.pendingDecision) return 'Moves are made before a pitch.'
+    if (state.turnHandshake === true) {
+      if (side === batting && !awaitingOffenseReady(state)) return 'You are ready — moves reopen before the next pitch.'
+      if (side !== batting && awaitingOffenseReady(state)) return 'Moves open once the batting manager is ready.'
+    }
     if (kind === 'pen' && side === batting) return 'Pitching changes are made while this team is in the field.'
     return null
   }

@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
-import { hasGameplayLabAccess, loadGameplayLabGame, type PersistedGameplayLabGame } from '../gameplay/gameRepository'
+import { hasGameplayLabAccess, loadGameplayLabGame, loadGameplayLabGameVersion, type PersistedGameplayLabGame } from '../gameplay/gameRepository'
 import { type LogEvent } from '../gameplay/presentation/GameLogPanel'
 import GameplayScreenView from '../gameplay/presentation/GameplayScreenView'
 import { buildHalfInningTransition, previousHalf } from '../gameplay/halfInningTransition'
@@ -62,6 +62,38 @@ export default function GameplayScreenPage() {
     return () => { cancelled = true }
   }, [gameId, user?.id, isDemo])
 
+  // Re-read the whole game (state + log). Used when a poll sees a newer
+  // version and when a save loses the race to the other manager's move.
+  const refresh = useCallback(async () => {
+    if (!gameId) return
+    try {
+      const loaded = await loadGameplayLabGame(gameId)
+      setGame(loaded)
+      try { setEvents(await loadGameplayLabEvents(gameId)) } catch { /* log is supplemental */ }
+    } catch { /* a missed refresh is retried by the next poll */ }
+  }, [gameId])
+
+  // The other manager's moves arrive by polling the version, which costs one
+  // tiny row read every couple of seconds and needs no Realtime setup. Only a
+  // two-player game has another manager to wait for.
+  const versionRef = useRef<number | null>(null)
+  versionRef.current = game?.state_version ?? null
+  const twoPlayer = game?.game_state?.turnHandshake === true
+  const finished = game?.game_state?.status === 'complete'
+  useEffect(() => {
+    if (!gameId || !twoPlayer || finished) return
+    let busy = false
+    const timer = window.setInterval(async () => {
+      if (busy || document.visibilityState === 'hidden') return
+      busy = true
+      try {
+        const latest = await loadGameplayLabGameVersion(gameId)
+        if (versionRef.current !== null && latest > versionRef.current) await refresh()
+      } catch { /* transient; try again next tick */ } finally { busy = false }
+    }, 2000)
+    return () => window.clearInterval(timer)
+  }, [gameId, twoPlayer, finished, refresh])
+
   const state = game?.game_state as GameState | undefined
   const currentHalfKey = state ? `${state.inning}-${state.half}` : null
   // Opening a game mid-inning must not announce a half the viewer never saw.
@@ -78,6 +110,7 @@ export default function GameplayScreenPage() {
     game, userId: user?.id, surface: 'screen',
     onSaved: setGame,
     onAfterSave: async (id) => { try { setEvents(await loadGameplayLabEvents(id)) } catch { /* log is supplemental */ } },
+    onStale: refresh,
   })
 
   if (loading) return <main className="gp-screen"><div className="gp-panel gp-region">Loading…</div></main>
@@ -111,7 +144,7 @@ export default function GameplayScreenPage() {
       onDismissTransition={() => setTransitionDismissed(halfKey)}
       onExit={() => navigate('/games')}
       viewerSide={viewerSide}
-      banner={(
+      banner={twoPlayer ? undefined : (
         <div className="gp-wip">
           <b>Building</b>
           <span>New gameplay screen, assembled region by region. The working shell is untouched at{' '}

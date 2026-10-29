@@ -528,3 +528,11 @@
 }
 
 .gameplay-stress-size-controls{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin:8px 0}.gameplay-stress-size-controls .active{border-color:#e4bb2d;background:rgba(228,187,45,.14)}
+
+/* Two-player toggle on the game creation panel */
+.gameplay-lab-toggle {
+  display: flex; align-items: flex-start; gap: 10px; margin: 14px 0; cursor: pointer;
+}
+.gameplay-lab-toggle input { width: 20px; height: 20px; margin-top: 2px; accent-color: var(--gp-accent, #d8ad2d); flex: 0 0 auto; }
+.gameplay-lab-toggle span { display: grid; gap: 3px; }
+.gameplay-lab-toggle small { opacity: 0.75; }

@@ -12,6 +12,7 @@ import PostGameBoard from './PostGameBoard'
 import DecisionBoard from './DecisionBoard'
 import { narrate } from './playNarration'
 import { getPrePitchActions } from '../decisionEngine'
+import { awaitingOffenseReady, sideToAct } from '../turnOrder'
 import type { useGameplayActions } from './useGameplayActions'
 import type { HalfInningTransition as HalfInningTransitionModel } from '../halfInningTransition'
 import type { GameSide, GameState } from '../types'
@@ -39,6 +40,23 @@ import type { ReactNode } from 'react'
  */
 const OFFENCE_ACTIONS = new Set(['NATURAL_STEAL', 'SAC_BUNT', 'SQUEEZE_BUNT'])
 const DEFENCE_ACTIONS = new Set(['INTENTIONAL_WALK', 'INFIELD_IN'])
+
+/**
+ * Whose move it is, said plainly. Only drawn in a two-player game -- in a
+ * one-screen game the same person makes every move and it would be noise.
+ */
+function TurnStatus({ state, mine, toAct }: { state: GameState; mine: boolean; toAct: GameSide | null }) {
+  if (state.status === 'complete') return <p className="gp-turn is-final">Final</p>
+  if (state.status === 'paused') return <p className="gp-turn">Paused</p>
+  if (!toAct) return null
+  const what = state.pendingDecision ? 'decide'
+    : awaitingOffenseReady(state) ? 'ready up'
+    : state.waitingFor === 'PITCH_ROLL' ? 'pitch'
+    : state.waitingFor === 'SWING_ROLL' ? 'swing' : 'move'
+  return mine
+    ? <p className="gp-turn is-mine" role="status">Your move — {what}</p>
+    : <p className="gp-turn" role="status">Waiting on {state.managers[toAct].managerName} to {what}…</p>
+}
 
 function basesLabel(state: GameState): string {
   const on = [state.bases.first && '1st', state.bases.second && '2nd', state.bases.third && '3rd'].filter(Boolean)
@@ -126,12 +144,22 @@ export default function GameplayScreenView({
 }) {
   const {
     saving, error, notice, selection, toggleSelection, decision, editablePrePitchDecision,
-    noPitch, rollPitch, rollSwing, startAction, changeAction, confirmDecision, rollDecision, togglePause,
+    noPitch, declareReady, rollPitch, rollSwing, startAction, changeAction, confirmDecision, rollDecision, togglePause,
   } = actions
+  const acting = actingSides ?? [viewerSide]
+  // Two managers at two screens: each sees only their own calls and buttons,
+  // and only on their turn (turnOrder.ts). A one-screen game is one person
+  // playing both sides, so nothing is gated there.
+  const twoPlayer = state.turnHandshake === true
+  const toAct = sideToAct(state)
+  const myTurn = !twoPlayer || (toAct !== null && acting.includes(toAct))
+  const batting = battingSide(state.half)
+  const ownerOf = (id: string): GameSide => (OFFENCE_ACTIONS.has(id) ? batting : batting === 'home' ? 'away' : 'home')
   const prePitchActions = getPrePitchActions(state)
   // offence + defence calls belong in the left rail's decisions box; the
   // roster moves belong to the bench and bullpen drawers.
-  const sideActions = prePitchActions.filter((a) => OFFENCE_ACTIONS.has(a.id) || DEFENCE_ACTIONS.has(a.id))
+  const sideActions = prePitchActions.filter((a) => (OFFENCE_ACTIONS.has(a.id) || DEFENCE_ACTIONS.has(a.id))
+    && (!twoPlayer || acting.includes(ownerOf(a.id))))
   const rosterActions = prePitchActions.filter((a) => !OFFENCE_ACTIONS.has(a.id) && !DEFENCE_ACTIONS.has(a.id))
 
   return (
@@ -147,6 +175,7 @@ export default function GameplayScreenView({
         <i className="gp-topbar-rule" aria-hidden="true" />
         <PlayRecap events={events} />
         <i className="gp-topbar-rule" aria-hidden="true" />
+        {twoPlayer && <TurnStatus state={state} mine={myTurn} toAct={toAct} />}
         <div className="gp-topbar-fielding">
           <b className="s-lbl">Fielding</b>
           <p>{state.managers[battingSide(state.half) === 'home' ? 'away' : 'home'].managerName}</p>
@@ -169,6 +198,9 @@ export default function GameplayScreenView({
             state={state}
             saving={saving}
             hasDecision={Boolean(decision)}
+            canAct={myTurn}
+            waitingOn={twoPlayer && !myTurn && toAct ? state.managers[toAct].managerName : null}
+            onReady={() => void declareReady()}
             onRollPitch={() => void rollPitch()}
             onRollSwing={() => void rollSwing()}
             onNoPitch={() => void noPitch()}
@@ -223,7 +255,7 @@ export default function GameplayScreenView({
                 saving={saving}
               />
             )}
-            {decision && editablePrePitchDecision && (
+            {decision && editablePrePitchDecision && (!twoPlayer || acting.includes(decision.actingSide)) && (
               <button className="gp-action gp-action-secondary" disabled={saving} onClick={() => void changeAction()}>
                 Change action
               </button>
@@ -237,7 +269,7 @@ export default function GameplayScreenView({
             state={state}
             events={events}
             viewerSide={viewerSide}
-            actingSides={actingSides ?? [viewerSide]}
+            actingSides={acting}
             rosterActions={rosterActions}
             disabled={saving || Boolean(decision)}
             onStart={(id, prefer) => void startAction(id, prefer)}

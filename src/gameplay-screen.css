@@ -1357,3 +1357,19 @@
   .gp-drawer-who b { font-size: 13px; }
   .gp-drawer-who span { font-size: 11px; }
 }
+
+/* ---- two-player turn status ---- */
+.gp-turn {
+  margin: 0; align-self: center; flex: 0 0 auto;
+  padding: 6px 12px; border-radius: 99px;
+  border: 1px solid var(--s-line-soft);
+  font-size: 11px; font-weight: 800; letter-spacing: 0.04em;
+  color: var(--s-gray); white-space: nowrap;
+}
+.gp-turn.is-mine { color: var(--s-ink); background: var(--s-gold-bright); border-color: var(--s-gold-bright); }
+.gp-turn.is-final { color: var(--s-cream); }
+.gp-roll-hint, .gp-roll-wait { margin: 0; font-size: 11px; color: var(--s-gray-muted); }
+.gp-roll-wait { font-style: italic; text-align: center; padding: 8px 0; }
+@media (max-width: 1024px) {
+  .gp-turn { white-space: normal; text-align: center; }
+}

@@ -109,6 +109,8 @@
 .games-hub-primary:disabled {
   opacity: 0.38;
 }
+/* also used as a link to the game hub */
+a.games-hub-primary { display: inline-flex; align-items: center; text-decoration: none; }
 
 .games-roster-status-grid {
   display: grid;

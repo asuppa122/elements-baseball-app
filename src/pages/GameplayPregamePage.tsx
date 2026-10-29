@@ -1,18 +1,20 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
 import { getCardImageUrl, handleCardImageLoadError } from '../utils/cardHelpers'
-import { attachRestState, lockPregame, setPregameSelections } from '../gameplay/engine'
+import { attachPregameRoster, attachRestState, lockPregame, setPregameSelections, startGame } from '../gameplay/engine'
 import { canAssignDefensivePosition, getFieldingRating } from '../gameplay/defense'
 import { pregameEffectiveControl, pregameEffectiveOnBase } from '../gameplay/pregameFatigueDisplay'
 import {
   hasGameplayLabAccess,
   loadGameplayLabGame,
+  loadGameplayLabGameVersion,
   loadPlayerRestState,
   saveGameplayLabState,
   type PersistedGameplayLabGame,
 } from '../gameplay/gameRepository'
-import type { DefensivePosition, GameCardSnapshot, GameRosterSnapshot, GameState } from '../gameplay/types'
+import { loadLineupChoices, rosterIssueSummary, snapshotFor, type LineupChoice } from '../gameplay/lineupChoice'
+import type { DefensivePosition, GameCardSnapshot, GameRosterSnapshot, GameSide, GameState } from '../gameplay/types'
 
 const SECTION_PREFIXES = {
   fielding: ['defense-'],
@@ -88,6 +90,14 @@ export default function GameplayPregamePage() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
+  // Which side the signed-in manager is setting up. The creator is home; in a
+  // two-player game the opponent opens this same page as away.
+  const [side, setSide] = useState<GameSide>('home')
+  // An away manager arrives with no roster frozen yet: they pick their own.
+  const [choices, setChoices] = useState<LineupChoice[] | null>(null)
+  const [choiceId, setChoiceId] = useState('')
+  // bumped to re-run the page's initialisation after a roster is attached
+  const [loadKey, setLoadKey] = useState(0)
   const [restStateByCardKey, setRestStateByCardKey] = useState<
     Record<string, { hitterGamesRemaining: number; pitcherGamesRemaining: number }>
   >({})
@@ -107,18 +117,26 @@ export default function GameplayPregamePage() {
         if (!allowed) throw new Error('Gameplay lab access is not enabled for this account.')
         const loaded = await loadGameplayLabGame(gameId)
         if (cancelled) return
+        const mySide: GameSide = loaded.game_state.managers.away.userId === user?.id ? 'away' : 'home'
+        setSide(mySide)
         setGame(loaded)
+        if (!loaded.game_state.pregame[mySide].roster) {
+          const loadedChoices = await loadLineupChoices()
+          if (cancelled) return
+          setChoices(loadedChoices)
+          setChoiceId(loadedChoices.find((c) => c.eligibility.eligible)?.lineup.id ?? loadedChoices[0]?.lineup.id ?? '')
+        }
         // For display only, before any decision locks -- so a manager can see
         // whether a player is actually fatigued before choosing them, not just
         // find out mid-game. The real, authoritative fetch that actually gets
         // frozen into the game state still happens in persistSelections below.
-        const rosterCardKeysForDisplay = Object.keys(loaded.game_state.pregame.home.roster?.cards ?? {})
+        const rosterCardKeysForDisplay = Object.keys(loaded.game_state.pregame[mySide].roster?.cards ?? {})
         if (rosterCardKeysForDisplay.length > 0) {
           loadPlayerRestState(loaded.game_state.configuration.seasonId, rosterCardKeysForDisplay)
             .then((result) => { if (!cancelled) setRestStateByCardKey(result) })
             .catch(() => { if (!cancelled) setRestStateByCardKey({}) })
         }
-        const pg = loaded.game_state.pregame.home
+        const pg = loaded.game_state.pregame[mySide]
         setStartingPitcher(pg.startingPitcherCardKey ?? '')
         setDefaultBatters(pg.defaultBatterCardKeys ?? [])
         const roster = pg.roster
@@ -145,9 +163,9 @@ export default function GameplayPregamePage() {
 
     void load()
     return () => { cancelled = true }
-  }, [gameId, user?.id, isDemo])
+  }, [gameId, user?.id, isDemo, loadKey])
 
-  const roster = game?.game_state.pregame.home.roster ?? null
+  const roster = game?.game_state.pregame[side].roster ?? null
   const rotation = useMemo(() => roster ? assignmentCards(roster, SECTION_PREFIXES.rotation) : [], [roster])
   const bullpen = useMemo(() => roster ? assignmentCards(roster, SECTION_PREFIXES.bullpen) : [], [roster])
   const fielding = useMemo(() => roster ? assignmentCards(roster, SECTION_PREFIXES.fielding) : [], [roster])
@@ -173,8 +191,77 @@ export default function GameplayPregamePage() {
     ? ['C','1B','2B','3B','SS','LF','CF','RF','P','DH']
     : ['C','1B','2B','3B','SS','LF','CF','RF','P'], [roster])
 
-  const homePregame = game?.game_state.pregame.home
-  const locked = Boolean(homePregame?.locked)
+  const myPregame = game?.game_state.pregame[side]
+  const locked = Boolean(myPregame?.locked)
+  const opponentSide: GameSide = side === 'home' ? 'away' : 'home'
+  const twoPlayer = game?.game_state.turnHandshake === true
+  const status = game?.game_state.status
+
+  // Two managers setting up at once: poll so each sees the other lock in, and
+  // the game open for both the moment either one starts it.
+  const refreshGame = useCallback(async () => {
+    if (!gameId) return
+    try { setGame(await loadGameplayLabGame(gameId)) } catch { /* retried next tick */ }
+  }, [gameId])
+  useEffect(() => {
+    if (!gameId || !twoPlayer || status === 'in_progress' || status === 'complete') return
+    let busy = false
+    const timer = window.setInterval(async () => {
+      if (busy || document.visibilityState === 'hidden') return
+      busy = true
+      try {
+        const latest = await loadGameplayLabGameVersion(gameId)
+        if (game && latest > game.state_version) await refreshGame()
+      } catch { /* transient */ } finally { busy = false }
+    }, 2500)
+    return () => window.clearInterval(timer)
+  }, [gameId, twoPlayer, status, game, refreshGame])
+  useEffect(() => {
+    if (twoPlayer && game && (status === 'in_progress' || status === 'awaiting_decision')) navigate(`/games/lab/${game.id}/screen`)
+  }, [twoPlayer, status, game, navigate])
+
+  async function chooseTeam() {
+    const choice = choices?.find((c) => c.lineup.id === choiceId)
+    if (!game || !choice?.eligibility.eligible) return
+    setSaving(true); setError(''); setSuccess('')
+    try {
+      const fresh = await loadGameplayLabGame(game.id)
+      const next = attachPregameRoster(fresh.game_state as GameState, side, snapshotFor(choice))
+      await saveGameplayLabState({
+        gameId: game.id, expectedStateVersion: fresh.state_version, nextState: next,
+        eventType: 'PREGAME_SUBMITTED', eventPayload: { side, rosterAttached: choice.lineup.name },
+      })
+      // re-run the page's own initialisation against the newly frozen roster
+      setChoices(null)
+      setLoadKey((k) => k + 1)
+    } catch (e) {
+      setError(errorText(e, 'Could not attach your roster.'))
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  async function beginGame() {
+    if (!game) return
+    setSaving(true); setError('')
+    try {
+      const fresh = await loadGameplayLabGame(game.id)
+      const s = fresh.game_state as GameState
+      if (s.status === 'ready') {
+        await saveGameplayLabState({
+          gameId: game.id, expectedStateVersion: fresh.state_version, nextState: startGame(s),
+          eventType: 'GAME_STARTED', eventPayload: { startedBy: side },
+        })
+      }
+      navigate(`/games/lab/${game.id}/screen`)
+    } catch (e) {
+      // the other manager may have started it a moment earlier -- that is fine
+      if (/stale game state/i.test(errorText(e, ''))) navigate(`/games/lab/${game.id}/screen`)
+      else setError(errorText(e, 'Could not start the game.'))
+    } finally {
+      setSaving(false)
+    }
+  }
 
   function moveBatter(index: number, direction: -1 | 1) {
     if (locked) return
@@ -256,8 +343,11 @@ export default function GameplayPregamePage() {
     setSuccess('')
 
     try {
-      const currentState = game.game_state as GameState
-      const withSelections = setPregameSelections(currentState, 'home', {
+      // Re-read first: in a two-player game the other manager may have saved
+      // their own pregame since this page loaded.
+      const fresh = await loadGameplayLabGame(game.id)
+      const currentState = fresh.game_state as GameState
+      const withSelections = setPregameSelections(currentState, side, {
         startingPitcherCardKey: startingPitcher,
         defaultBatterCardKeys: defaultBatters,
         battingOrderCardKeys: gameBattingOrder,
@@ -268,13 +358,13 @@ export default function GameplayPregamePage() {
       // an opponent's rows are never reachable from here) and freeze them
       // into the game state now, once, the same moment the roster itself is
       // already frozen -- an in-progress game never re-reads this live.
-      const homeRosterCardKeys = Object.keys(currentState.pregame.home.roster?.cards ?? {})
-      const restStateForHome = await loadPlayerRestState(currentState.configuration.seasonId, homeRosterCardKeys)
-      const withRestState = attachRestState(withSelections, 'home', restStateForHome)
+      const myRosterCardKeys = Object.keys(currentState.pregame[side].roster?.cards ?? {})
+      const myRestState = await loadPlayerRestState(currentState.configuration.seasonId, myRosterCardKeys)
+      const withRestState = attachRestState(withSelections, side, myRestState)
 
       let saved = await saveGameplayLabState({
         gameId: game.id,
-        expectedStateVersion: game.state_version,
+        expectedStateVersion: fresh.state_version,
         nextState: withRestState,
         eventType: 'PREGAME_SUBMITTED',
         eventPayload: {
@@ -286,26 +376,26 @@ export default function GameplayPregamePage() {
       })
 
       if (lockAfterSave) {
-        const lockedState = lockPregame(saved.game_state as GameState, 'home')
+        const lockedState = lockPregame(saved.game_state as GameState, side)
         saved = await saveGameplayLabState({
           gameId: game.id,
           expectedStateVersion: saved.state_version,
           nextState: lockedState,
           eventType: 'PREGAME_LOCKED',
-          eventPayload: { side: 'home' },
+          eventPayload: { side },
         })
       }
 
       setGame(saved)
-      setStartingPitcher(saved.game_state.pregame.home.startingPitcherCardKey ?? '')
-      setDefaultBatters(saved.game_state.pregame.home.defaultBatterCardKeys ?? [])
-      setGameBattingOrder(saved.game_state.pregame.home.battingOrderCardKeys ?? [])
-      setDefensiveAlignment(saved.game_state.pregame.home.defensiveAlignment ?? {})
+      setStartingPitcher(saved.game_state.pregame[side].startingPitcherCardKey ?? '')
+      setDefaultBatters(saved.game_state.pregame[side].defaultBatterCardKeys ?? [])
+      setGameBattingOrder(saved.game_state.pregame[side].battingOrderCardKeys ?? [])
+      setDefensiveAlignment(saved.game_state.pregame[side].defensiveAlignment ?? {})
       setSuccess(lockAfterSave
-        ? 'Your pregame selections are locked for this test game. Opponent setup remains intentionally unavailable in the private lab.'
-        : 'Pregame selections saved. Refresh this page to verify they persist before locking them.')
+        ? (twoPlayer ? 'Your pregame is locked.' : 'Your pregame selections are locked for this test game.')
+        : 'Pregame selections saved.')
     } catch (saveError) {
-      setError(saveError instanceof Error ? saveError.message : 'Could not save pregame selections.')
+      setError(errorText(saveError, 'Could not save pregame selections.'))
     } finally {
       setSaving(false)
     }
@@ -313,6 +403,42 @@ export default function GameplayPregamePage() {
 
   if (loading) {
     return <main className="gameplay-lab-page"><section className="gameplay-lab-panel">Loading pregame…</section></main>
+  }
+
+  if (game && !roster && choices) {
+    const choice = choices.find((c) => c.lineup.id === choiceId)
+    const host = game.game_state.managers[opponentSide].managerName
+    return (
+      <main className="gameplay-lab-page gameplay-pregame-page">
+        <section className="gameplay-lab-hero gameplay-pregame-hero">
+          <div>
+            <span>Pregame · You are {side}</span>
+            <h1>{game.game_state.managers.home.managerName} vs. {game.game_state.managers.away.managerName}</h1>
+            <p>{host} challenged you. Choose the saved roster you will play this game with; it is frozen for the whole game.</p>
+          </div>
+        </section>
+        {error && <div className="gameplay-lab-message error">{error}</div>}
+        <section className="gameplay-lab-panel">
+          <header><div><span>Step 1</span><h2>Choose your team</h2></div></header>
+          <div className="gameplay-lab-create-grid">
+            <label>
+              <span>Your Saved Roster</span>
+              <select value={choiceId} onChange={(e) => setChoiceId(e.target.value)}>
+                {choices.length === 0 && <option value="">No saved rosters found</option>}
+                {choices.map((c) => <option key={c.lineup.id} value={c.lineup.id}>{c.lineup.name} — {c.eligibility.eligible ? 'eligible' : 'ineligible'}</option>)}
+              </select>
+              <small>{choice ? rosterIssueSummary(choice.eligibility.issues) : 'Build one in Team Builder first.'}</small>
+            </label>
+          </div>
+          <div className="pregame-actions">
+            <button type="button" className="gameplay-lab-secondary-button" onClick={() => navigate('/games/lab')}>Back</button>
+            <button type="button" className="gameplay-lab-create-button" disabled={saving || !choice?.eligibility.eligible} onClick={() => void chooseTeam()}>
+              {saving ? 'Saving…' : 'Use This Roster'}
+            </button>
+          </div>
+        </section>
+      </main>
+    )
   }
 
   if (!game || !roster) {
@@ -328,14 +454,16 @@ export default function GameplayPregamePage() {
     )
   }
 
-  const opponentName = game.game_state.managers.away.managerName
+  const opponentName = game.game_state.managers[opponentSide].managerName
+  const opponentPregame = game.game_state.pregame[opponentSide]
+  const opponentState = !opponentPregame.roster ? 'CHOOSING TEAM' : opponentPregame.locked ? 'LOCKED' : 'SETTING UP'
 
   return (
     <main className="gameplay-lab-page gameplay-pregame-page">
       <section className="gameplay-lab-hero gameplay-pregame-hero">
         <div>
-          <span>Private Development · Pregame</span>
-          <h1>Anthony vs. {opponentName}</h1>
+          <span>Pregame · You are {side}</span>
+          <h1>{game.game_state.managers.home.managerName} vs. {game.game_state.managers.away.managerName}</h1>
           <p>{game.configuration_snapshot.seasonLabel} · {game.configuration_snapshot.blueprintLabel} · Frozen roster: {roster.sourceLineupName}</p>
         </div>
         <div className={`pregame-lock-state ${locked ? 'locked' : ''}`}>
@@ -458,17 +586,27 @@ export default function GameplayPregamePage() {
         <div>
           <span>Opponent Pregame</span>
           <h2>{opponentName}</h2>
-          <p>Opponent access remains disabled for this private development slice. Their roster and locked decisions will be added when we test the true two-manager pregame flow.</p>
+          <p>{twoPlayer
+            ? (status === 'ready' ? 'Both managers are locked in. Either of you can start the game.'
+              : opponentPregame.locked ? `${opponentName} is locked in.` : `${opponentName} is setting up their team. This updates on its own.`)
+            : 'One-screen test game: the opponent side is filled from your roster on the Game State page.'}</p>
         </div>
-        <strong>PENDING</strong>
+        <strong>{twoPlayer ? opponentState : 'PENDING'}</strong>
       </section>
 
       <div className="pregame-actions">
         <button type="button" className="gameplay-lab-secondary-button" onClick={() => navigate('/games/lab')}>Back to Lab</button>
-        {locked && <button type="button" className="gameplay-lab-create-button" onClick={() => navigate(`/games/lab/${game.id}/state`)}>Open Game State Test</button>}
+        {locked && !twoPlayer && <button type="button" className="gameplay-lab-create-button" onClick={() => navigate(`/games/lab/${game.id}/state`)}>Open Game State Test</button>}
+        {twoPlayer && status === 'ready' && <button type="button" className="gameplay-lab-create-button" disabled={saving} onClick={() => void beginGame()}>{saving ? 'Starting…' : 'Start Game'}</button>}
         {!locked && <button type="button" className="gameplay-lab-secondary-button" disabled={saving || !startingPitcher} onClick={() => void persistSelections(false)}>{saving ? 'Saving…' : 'Save Selections'}</button>}
         {!locked && <button type="button" className="gameplay-lab-create-button" disabled={saving || !startingPitcher} onClick={() => void persistSelections(true)}>{saving ? 'Locking…' : 'Lock My Pregame'}</button>}
       </div>
     </main>
   )
+}
+
+function errorText(e: unknown, fallback: string): string {
+  if (e instanceof Error) return e.message
+  if (e && typeof e === 'object' && 'message' in e && typeof (e as { message: unknown }).message === 'string') return (e as { message: string }).message
+  return fallback
 }

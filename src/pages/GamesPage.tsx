@@ -130,7 +130,7 @@ export default function GamesPage() {
         <p>{eligibleOpponents.length > 0 && ownEligible
           ? `${eligibleOpponents.length} eligible opponent${eligibleOpponents.length === 1 ? '' : 's'} available for the next integration step.`
           : 'A real game will unlock when your active roster and at least one opponent active roster pass the Season 10.1 rules.'}</p>
-        <button type="button" disabled className="games-hub-primary">Start New Game — Next Build</button>
+        <Link to="/games/lab" className="games-hub-primary">Challenge a Manager</Link>
       </section>
 
       <section className="games-hub-panel">
@@ -152,15 +152,17 @@ export default function GamesPage() {
       </section>
 
       <section className="games-hub-panel">
-        <header><div><span>Continue</span><h2>Development Games</h2></div><em>Existing lab games remain isolated from the certified engine baseline.</em></header>
+        <header><div><span>Continue</span><h2>Your Games</h2></div><em>Games you created and games you were challenged to.</em></header>
         <div className="games-continue-list">
           {games.length === 0 && <p>No development games saved yet.</p>}
           {games.map((game) => (
             <article key={game.id}>
               <div><strong>{game.game_state.managers.home.managerName} vs. {game.game_state.managers.away.managerName}</strong><span>{game.status.replaceAll('_', ' ')} · state v{game.state_version}</span></div>
               <div className="games-continue-actions">
-                <Link to={`/games/lab/${game.id}/play`}>Open Playable Shell</Link>
-                <Link to={`/games/lab/${game.id}/state`}>Developer State</Link>
+                {['setup', 'pregame', 'ready'].includes(game.game_state?.status)
+                  ? <Link to={`/games/lab/${game.id}/pregame`}>Open Pregame</Link>
+                  : <Link to={`/games/lab/${game.id}/screen`}>{game.game_state?.status === 'complete' ? 'View Final' : 'Play'}</Link>}
+                {game.game_state?.turnHandshake !== true && <Link to={`/games/lab/${game.id}/state`}>Developer State</Link>}
               </div>
             </article>
           ))}

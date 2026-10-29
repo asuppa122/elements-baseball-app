@@ -38,6 +38,9 @@ const MilestonesPage = lazy(() => import('./pages/MilestonesPage'))
 const RulesPage = lazy(() => import('./pages/RulesPage'))
 const StandingsPage = lazy(() => import('./pages/StandingsPage'))
 const GameplayLabPage = lazy(() => import('./pages/GameplayLabPage'))
+// Dev-only: a two-player game on an in-browser Postgres. The DEV guard folds to
+// `null` in a production build, so neither the page nor PGlite ships.
+const GameplayDuelPage = import.meta.env.DEV ? lazy(() => import('./pages/GameplayDuelPage')) : null
 const GameplayPregamePage = lazy(() => import('./pages/GameplayPregamePage'))
 const GameplayGameStatePage = lazy(() => import('./pages/GameplayGameStatePage'))
 const GameplayPlayableShellPage = lazy(() => import('./pages/GameplayPlayableShellPage'))
@@ -119,6 +122,11 @@ function App() {
           <Route path="/sandbox" element={
             <Suspense fallback={<RouteFallback />}><GameplaySandboxPage /></Suspense>
           } />
+          {GameplayDuelPage && (
+            <Route path="/sandbox/duel" element={
+              <Suspense fallback={<RouteFallback />}><GameplayDuelPage /></Suspense>
+            } />
+          )}
           <Route path="*" element={<ProtectedApp />} />
         </Routes>
       </AuthProvider>

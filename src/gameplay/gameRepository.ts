@@ -54,6 +54,34 @@ export async function loadGameplayLabOpponents(): Promise<GameplayLabOpponent[]>
   return (data ?? []) as GameplayLabOpponent[]
 }
 
+/** Only opponents with gameplay access -- anyone else could not even open the game. */
+export async function loadGameplayOpponents(): Promise<GameplayLabOpponent[]> {
+  const { data, error } = await supabase.rpc('list_gameplay_opponents')
+  if (error) throw error
+  return (data ?? []) as GameplayLabOpponent[]
+}
+
+export type RollKind = 'pitch' | 'swing' | 'decision'
+
+/**
+ * A die rolled by the server for a two-player game. One roll per (game, state
+ * version, kind): asking again returns the same number, so a refresh or a
+ * double-click cannot re-roll, and the save is refused unless it uses it.
+ */
+export async function rollGameplayDie(gameId: string, stateVersion: number, kind: RollKind): Promise<number> {
+  const { data, error } = await supabase.rpc('roll_gameplay_die', {
+    p_game_id: gameId, p_state_version: stateVersion, p_kind: kind,
+  })
+  if (error) throw error
+  return Number(data)
+}
+
+/** Cheap check for "did the other manager move?" -- the version only. */
+export async function loadGameplayLabGameVersion(gameId: string): Promise<number> {
+  const { data, error } = await supabase.from('games').select('state_version').eq('id', gameId).single()
+  if (error) throw error
+  return Number(data.state_version)
+}
 
 export type GameplayActiveRoster = {
   user_id: string
@@ -201,7 +229,7 @@ export async function saveGameplayLabState(args: {
   gameId: string
   expectedStateVersion: number
   nextState: GameState
-  eventType: 'PREGAME_SUBMITTED' | 'PREGAME_LOCKED' | 'GAME_READY' | 'GAME_STARTED' | 'PITCH_ROLLED' | 'SWING_RESOLVED' | 'DECISION_RESOLVED' | 'GAME_PAUSED' | 'GAME_RESUMED'
+  eventType: 'PREGAME_SUBMITTED' | 'PREGAME_LOCKED' | 'GAME_READY' | 'GAME_STARTED' | 'OFFENSE_READY' | 'PITCH_ROLLED' | 'SWING_RESOLVED' | 'DECISION_RESOLVED' | 'GAME_PAUSED' | 'GAME_RESUMED'
   eventPayload?: Record<string, unknown>
 }): Promise<PersistedGameplayLabGame> {
   const { data, error } = await supabase.rpc('save_gameplay_lab_state', {

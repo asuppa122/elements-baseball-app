@@ -25,8 +25,11 @@ function line(event: LogEvent): Line {
   return { text: event.event_type.replaceAll('_', ' ').toLowerCase(), narrated: false, kind: 'neutral' }
 }
 
+// Turn hand-offs, not plays: a two-player game writes one before every pitch.
+const NOT_PLAYS = new Set(['OFFENSE_READY'])
+
 export default function GameLogPanel({ events, limit = 12 }: { events: LogEvent[]; limit?: number }) {
-  const recent = [...events].slice(-limit).reverse()
+  const recent = events.filter((e) => !NOT_PLAYS.has(e.event_type)).slice(-limit).reverse()
   return (
     <section className="gp-log" aria-label="Game log">
       <header className="gp-log-head"><b className="s-lbl">Game Log</b><span className="s-sub s-num">{events.length}</span></header>

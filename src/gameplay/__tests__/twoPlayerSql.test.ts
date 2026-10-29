@@ -1,17 +1,4 @@
 // @vitest-environment node
-import { PGlite } from '@electric-sql/pglite'
-// Loaded through Vite's ?raw, like restTrackingSqlParity.test.ts, so this stays
-// inside the app's tsconfig rather than needing node:fs.
-import m0 from '../../../supabase/migrations/20260818_gameplay_phase1_foundation.sql?raw'
-import m1 from '../../../supabase/migrations/20260818_gameplay_phase1a_private_lab.sql?raw'
-import m2 from '../../../supabase/migrations/20260818_gameplay_phase1b_pregame_state.sql?raw'
-import m3 from '../../../supabase/migrations/20260818_gameplay_phase1d_start_state.sql?raw'
-import m4 from '../../../supabase/migrations/20260818_gameplay_phase2a_pitch_roll.sql?raw'
-import m5 from '../../../supabase/migrations/20260818_gameplay_build1_core_game.sql?raw'
-import m6 from '../../../supabase/migrations/20260826_gameplay_player_rest_state.sql?raw'
-import m7 from '../../../supabase/migrations/20260826_gameplay_rest_tracking_on_completion.sql?raw'
-import m8 from '../../../supabase/migrations/20260827_gameplay_away_side_access.sql?raw'
-import m9 from '../../../supabase/migrations/20261029_gameplay_two_player.sql?raw'
 import { beforeAll, describe, expect, it } from 'vitest'
 import { buildNonGbCoverageFixture } from '../rulebookCoverage'
 import { declareOffenseReady, pauseGame, resolvePitchRoll, resolveSwingRoll, resumeGame } from '../engine'
@@ -19,6 +6,7 @@ import { beginPrePitchDecision, confirmManagerDecision, getDecisionView, resolve
 import { awaitingOffenseReady, sideToAct } from '../turnOrder'
 import { botSelection, maybeBotPrePitchAction } from '../testHarness'
 import type { GameSide, GameState } from '../types'
+import { createGameplayDevDb, DEV_USERS, type DevDb } from '../devDb'
 
 /**
  * The two-player migration, run for real.
@@ -37,41 +25,21 @@ import type { GameSide, GameState } from '../types'
  * TS sideToAct is compared with the SQL gameplay_side_to_act on every state.
  */
 
-// in the order they were applied to the live project
-const MIGRATIONS = [m0, m1, m2, m3, m4, m5, m6, m7, m8, m9]
+const HOME = DEV_USERS.home
+const AWAY = DEV_USERS.away
+const OUTSIDER = DEV_USERS.outsider
 
-const HOME = '00000000-0000-4000-8000-000000000001'
-const AWAY = '00000000-0000-4000-8000-000000000002'
-const OUTSIDER = '00000000-0000-4000-8000-000000000003'
-
-let db: PGlite
-
-async function as<T>(userId: string, fn: () => Promise<T>): Promise<T> {
-  await db.query(`select set_config('test.uid', $1, false)`, [userId])
-  return fn()
-}
+let dev: DevDb
 
 async function save(userId: string, gameId: string, expected: number, next: GameState, eventType: string, payload: Record<string, unknown>) {
-  return as(userId, () => db.query(
-    'select public.save_gameplay_lab_state($1, $2, $3::jsonb, $4, $5::jsonb) as saved',
-    [gameId, expected, JSON.stringify(next), eventType, JSON.stringify(payload)],
-  ))
+  return dev.save(userId, { gameId, expectedStateVersion: expected, nextState: next, eventType, eventPayload: payload })
 }
 
-async function rollDie(userId: string, gameId: string, version: number, kind: 'pitch' | 'swing' | 'decision'): Promise<number> {
-  const r = await as(userId, () => db.query<{ roll: number }>(
-    'select public.roll_gameplay_die($1, $2, $3) as roll', [gameId, version, kind]))
-  return r.rows[0].roll
-}
+const rollDie = (userId: string, gameId: string, version: number, kind: 'pitch' | 'swing' | 'decision') =>
+  dev.roll(userId, gameId, version, kind)
 
 async function loadState(gameId: string): Promise<GameState> {
-  const r = await as(HOME, () => db.query<{ game_state: GameState }>('select game_state from public.games where id = $1', [gameId]))
-  return r.rows[0].game_state
-}
-
-async function sqlSideToAct(state: GameState): Promise<string | null> {
-  const r = await db.query<{ side: string | null }>('select public.gameplay_side_to_act($1::jsonb) as side', [JSON.stringify(state)])
-  return r.rows[0].side
+  return (await dev.load(HOME, gameId)).game_state
 }
 
 async function rejects(p: Promise<unknown>, pattern: RegExp) {
@@ -94,11 +62,8 @@ async function createGame(twoPlayer: boolean): Promise<GameState> {
   s.firstPitchThrown = false
   if (twoPlayer) s.turnHandshake = true
   s.restState = { home: {}, away: {} }
-  await as(HOME, () => db.query(
-    `insert into public.games (id, season_id, season_year, status, home_user_id, away_user_id, configuration_snapshot, game_state, state_version)
-     values ($1, 'test-season', 1925, $2, $3, $4, $5::jsonb, $6::jsonb, 1)`,
-    [id, s.status, HOME, AWAY, JSON.stringify(s.configuration), JSON.stringify(s)],
-  ))
+  s.configuration.seasonId = 'test-season'
+  await dev.createGame(HOME, s)
   return s
 }
 
@@ -107,38 +72,12 @@ const otherUser = (side: GameSide) => (side === 'home' ? AWAY : HOME)
 const bump = (prev: GameState, next: GameState): GameState =>
   next.stateVersion > prev.stateVersion ? next : { ...next, stateVersion: prev.stateVersion + 1 }
 
-beforeAll(async () => {
-  db = new PGlite()
-  await db.exec(`
-    create role authenticated nologin;
-    create schema auth;
-    create table auth.users (id uuid primary key);
-    create function auth.uid() returns uuid language sql stable
-      as $$ select nullif(current_setting('test.uid', true), '')::uuid $$;
-    create table public.profiles (
-      user_id uuid primary key references auth.users(id),
-      manager_name text not null unique,
-      avatar_url text
-    );
-    insert into auth.users values ('${HOME}'), ('${AWAY}'), ('${OUTSIDER}');
-    insert into public.profiles values ('${HOME}', 'Anthony', null), ('${AWAY}', 'Will', null), ('${OUTSIDER}', 'Outsider', null);
-    grant usage on schema public, auth to authenticated;
-    grant execute on function auth.uid() to authenticated;
-  `)
-  for (const migration of MIGRATIONS) {
-    // pgcrypto is not built into PGlite; gen_random_uuid() is core since PG 13
-    await db.exec(migration.replace(/create extension if not exists pgcrypto;/gi, ''))
-  }
-  // Supabase grants these to `authenticated` by default; RLS then decides.
-  await db.exec(`
-    grant select, insert, update, delete on all tables in schema public to authenticated;
-    set role authenticated;
-  `)
-}, 60_000)
+beforeAll(async () => { dev = await createGameplayDevDb() }, 60_000)
 
 describe('two-player migration (real Postgres)', () => {
   it('lists only opponents who can play', async () => {
-    const r = await as(HOME, () => db.query<{ manager_name: string }>('select manager_name from public.list_gameplay_opponents()'))
+    await dev.load(HOME, '00000000-0000-0000-0000-000000000000').catch(() => undefined) // sets the session user
+    const r = await dev.db.query<{ manager_name: string }>('select manager_name from public.list_gameplay_opponents()')
     expect(r.rows.map((x) => x.manager_name)).toEqual(['Will'])
   })
 
@@ -201,7 +140,7 @@ describe('two-player migration (real Postgres)', () => {
     for (let step = 0; step < 4000 && state.status !== 'complete'; step += 1) {
       const side = sideToAct(state)
       expect(side, `${state.status}/${state.waitingFor}`).not.toBeNull()
-      expect(await sqlSideToAct(state)).toBe(side)
+      expect(await dev.sideToAct(state)).toBe(side)
       const me = userFor(side as GameSide)
       const v = state.stateVersion
       let after: GameState
@@ -249,8 +188,9 @@ describe('two-player migration (real Postgres)', () => {
     expect(state.status).toBe('complete')
 
     // rest tracking still fires on completion, for both managers
-    const rest = await as(HOME, () => db.query<{ n: number }>(
-      `select count(*)::int as n from public.player_rest_state where season_id = 'test-season' and user_id = $1`, [HOME]))
+    await dev.load(HOME, id) // sets the session user for RLS
+    const rest = await dev.db.query<{ n: number }>(
+      `select count(*)::int as n from public.player_rest_state where season_id = 'test-season' and user_id = $1`, [HOME])
     expect(rest.rows[0].n).toBeGreaterThan(0)
   }, 120_000)
 

@@ -1,13 +1,13 @@
 import { useCallback, useState } from 'react'
 import {
-  pauseGame, resolveAutomaticPitcherAdvantage, resolvePitchRoll, resolveSwingRoll, resumeGame,
+  declareOffenseReady, pauseGame, resolveAutomaticPitcherAdvantage, resolvePitchRoll, resolveSwingRoll, resumeGame,
 } from '../engine'
 import { resolveSwingChart } from '../coreGame'
 import {
   beginPrePitchDecision, confirmManagerDecision, getDecisionView, noWheelSacBuntOutcome, resolveDecisionRoll,
 } from '../decisionEngine'
 import { buildEventEnvelope } from '../eventPayload'
-import { saveGameplayLabState, type PersistedGameplayLabGame } from '../gameRepository'
+import { rollGameplayDie, saveGameplayLabState, type PersistedGameplayLabGame, type RollKind } from '../gameRepository'
 import type { GameSide, GameState } from '../types'
 
 /**
@@ -35,6 +35,15 @@ const EDITABLE_PRE_PITCH = [
   'DOUBLE_SWITCH_FIELDER', 'DOUBLE_SWITCH_OUTGOING_FIELDER', 'ENTRY_ATTRIBUTE_MODE',
 ]
 
+/** Supabase errors are plain objects, not Error instances; keep the server's reason. */
+function errorMessage(e: unknown): string {
+  if (e instanceof Error) return e.message
+  if (e && typeof e === 'object' && 'message' in e && typeof (e as { message: unknown }).message === 'string') {
+    return (e as { message: string }).message
+  }
+  return 'Could not save game state.'
+}
+
 function d20(): number {
   const values = new Uint32Array(1)
   crypto.getRandomValues(values)
@@ -50,15 +59,29 @@ function d20(): number {
  */
 export type SaveGameState = typeof saveGameplayLabState
 
-export function useGameplayActions({ game, userId, surface, onSaved, onAfterSave, saveState }: {
+/**
+ * Where a die comes from. A two-player game asks the server, which records the
+ * roll so it cannot be re-rolled and the save is refused unless it is used; a
+ * one-screen game (the lab, the sandbox) rolls locally as it always has.
+ */
+export type RollDie = (state: GameState, gameId: string, kind: RollKind) => Promise<number>
+
+const defaultRollDie: RollDie = async (state, gameId, kind) =>
+  state.turnHandshake === true ? rollGameplayDie(gameId, state.stateVersion, kind) : d20()
+
+export function useGameplayActions({ game, userId, surface, onSaved, onAfterSave, onStale, saveState, rollDie }: {
   game: PersistedGameplayLabGame | null
   userId: string | undefined
   surface: GameplaySurface
   onSaved: (saved: PersistedGameplayLabGame) => void
   onAfterSave?: (gameId: string) => void | Promise<void>
+  /** The other manager moved first; the caller should reload the game. */
+  onStale?: () => void | Promise<void>
   saveState?: SaveGameState
+  rollDie?: RollDie
 }) {
   const save = saveState ?? saveGameplayLabState
+  const roll = rollDie ?? defaultRollDie
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
@@ -102,11 +125,37 @@ export function useGameplayActions({ game, userId, surface, onSaved, onAfterSave
       await onAfterSave?.(game.id)
       setNotice(message)
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not save game state.')
+      const message = errorMessage(e)
+      // Someone else's move landed first. That is normal in a two-player game,
+      // not a failure: reload and let the manager act on what actually happened.
+      if (/stale game state/i.test(message) && onStale) {
+        setNotice('The other manager moved first — showing the latest.')
+        await onStale()
+      } else {
+        setError(message)
+      }
     } finally {
       setSaving(false)
     }
-  }, [game, state, surface, onSaved, onAfterSave, save])
+  }, [game, state, surface, onSaved, onAfterSave, onStale, save])
+
+  /** Wraps a move that needs a die: a failed server roll is shown, not thrown. */
+  const withRoll = useCallback(async (kind: RollKind, fn: (value: number) => Promise<void>) => {
+    if (!game || !state) return
+    let value: number
+    try {
+      setSaving(true); setError('')
+      value = await roll(state, game.id, kind)
+    } catch (e) {
+      const message = errorMessage(e)
+      setSaving(false)
+      if (/stale game state/i.test(message) && onStale) { await onStale(); return }
+      setError(message)
+      return
+    }
+    setSaving(false)
+    await fn(value)
+  }, [game, state, roll, onStale])
 
   const bump = (next: GameState): GameState => {
     next.stateVersion = (state?.stateVersion ?? next.stateVersion) + 1
@@ -121,19 +170,28 @@ export function useGameplayActions({ game, userId, surface, onSaved, onAfterSave
       'NO PITCH — PITCHER ADVANTAGE.')
   }, [state, persist])
 
+  const declareReady = useCallback(async () => {
+    if (!state) return
+    await persist(declareOffenseReady(state), 'OFFENSE_READY', { playableShell: true }, 'Ready. Over to the pitcher.')
+  }, [state, persist])
+
   const rollPitch = useCallback(async () => {
     if (!state) return
-    const roll = d20(); const next = resolvePitchRoll(state, roll)
-    await persist(next, 'PITCH_ROLLED', { roll, playableShell: true },
-      `Pitch roll: ${roll}. ${next.plateAppearance.advantage?.toUpperCase()} advantage.`)
-  }, [state, persist])
+    await withRoll('pitch', async (roll) => {
+      const next = resolvePitchRoll(state, roll)
+      await persist(next, 'PITCH_ROLLED', { roll, playableShell: true },
+        `Pitch roll: ${roll}. ${next.plateAppearance.advantage?.toUpperCase()} advantage.`)
+    })
+  }, [state, persist, withRoll])
 
   const rollSwing = useCallback(async () => {
     if (!state) return
-    const roll = d20(); const result = resolveSwingChart(state, roll)
-    await persist(resolveSwingRoll(state, roll), 'SWING_RESOLVED',
-      { roll, chartResult: result, playableShell: true }, `Swing roll: ${roll} → ${result}.`)
-  }, [state, persist])
+    await withRoll('swing', async (roll) => {
+      const result = resolveSwingChart(state, roll)
+      await persist(resolveSwingRoll(state, roll), 'SWING_RESOLVED',
+        { roll, chartResult: result, playableShell: true }, `Swing roll: ${roll} → ${result}.`)
+    })
+  }, [state, persist, withRoll])
 
   const startAction = useCallback(async (actionId: string, preferOptionId?: string) => {
     if (!state) return
@@ -171,19 +229,20 @@ export function useGameplayActions({ game, userId, surface, onSaved, onAfterSave
 
   const rollDecision = useCallback(async () => {
     if (!state || !decision) return
-    const roll = d20()
-    const next = bump(resolveDecisionRoll(state, roll))
-    const bunt = state.pendingDecision?.decisionType === 'SAC_BUNT_RTS' ? noWheelSacBuntOutcome(roll) : null
-    const message = bunt === 'FAILED_PITCHER_CHART' ? `Bunt roll: ${roll} — FAILED BUNT. Attempt swing on PITCHER chart.`
-      : bunt === 'STRIKEOUT' ? `Bunt roll: ${roll} — K.`
-      : bunt === 'LEAD_RUNNER_OUT' ? `Bunt roll: ${roll} — lead runner OUT.`
-      : bunt === 'SUCCESS' ? `Bunt roll: ${roll} — bunt successful; runners advance.`
-      : state.pendingDecision?.decisionType === 'GB_RUNNER_2B_RTH'
-        ? `RTH roll: ${roll} — ${roll <= 10 ? 'runner advances to 3B' : 'runner stays at 2B'}.`
-        : `Decision roll: ${roll}.`
-    await persist(next, 'DECISION_RESOLVED',
-      { decisionType: state.pendingDecision?.decisionType, resolutionKind: 'ROLL', roll, playableShell: true }, message)
-  }, [state, decision, persist])
+    await withRoll('decision', async (roll) => {
+      const next = bump(resolveDecisionRoll(state, roll))
+      const bunt = state.pendingDecision?.decisionType === 'SAC_BUNT_RTS' ? noWheelSacBuntOutcome(roll) : null
+      const message = bunt === 'FAILED_PITCHER_CHART' ? `Bunt roll: ${roll} — FAILED BUNT. Attempt swing on PITCHER chart.`
+        : bunt === 'STRIKEOUT' ? `Bunt roll: ${roll} — K.`
+        : bunt === 'LEAD_RUNNER_OUT' ? `Bunt roll: ${roll} — lead runner OUT.`
+        : bunt === 'SUCCESS' ? `Bunt roll: ${roll} — bunt successful; runners advance.`
+        : state.pendingDecision?.decisionType === 'GB_RUNNER_2B_RTH'
+          ? `RTH roll: ${roll} — ${roll <= 10 ? 'runner advances to 3B' : 'runner stays at 2B'}.`
+          : `Decision roll: ${roll}.`
+      await persist(next, 'DECISION_RESOLVED',
+        { decisionType: state.pendingDecision?.decisionType, resolutionKind: 'ROLL', roll, playableShell: true }, message)
+    })
+  }, [state, decision, persist, withRoll])
 
   const togglePause = useCallback(async () => {
     if (!game || !state || !userId) return
@@ -204,6 +263,6 @@ export function useGameplayActions({ game, userId, surface, onSaved, onAfterSave
     saving, error, notice, setError, setNotice,
     selection, setSelection, toggleSelection,
     decision, editablePrePitchDecision, finalSubstitutionCommit,
-    noPitch, rollPitch, rollSwing, startAction, changeAction, confirmDecision, rollDecision, togglePause,
+    noPitch, declareReady, rollPitch, rollSwing, startAction, changeAction, confirmDecision, rollDecision, togglePause,
   }
 }

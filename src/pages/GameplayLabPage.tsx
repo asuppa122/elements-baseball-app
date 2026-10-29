@@ -1,61 +1,51 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
-import {
-  attachPregameRoster,
-  createInitialGameState,
-} from '../gameplay/engine'
+import { attachPregameRoster, createInitialGameState } from '../gameplay/engine'
 import {
   createGameplayLabGame,
   hasGameplayLabAccess,
-  loadCardsForGameplayRoster,
   loadGameplayLabGames,
-  loadGameplayLabOpponents,
-  loadOwnGameplayLineups,
-  type GameplayLabLineup,
+  loadGameplayOpponents,
   type GameplayLabOpponent,
   type PersistedGameplayLabGame,
 } from '../gameplay/gameRepository'
-import {
-  createGameRosterSnapshot,
-  validateRosterForGame,
-  type RosterEligibilityIssue,
-  type SavedRosterForGame,
-} from '../gameplay/rosterSnapshot'
+import { loadLineupChoices, rosterIssueSummary, snapshotFor, type LineupChoice } from '../gameplay/lineupChoice'
 import { ACTIVE_SEASON_CONFIG } from '../gameplay/seasonConfig'
-import type { CardRecord } from '../types/card'
+import { sideToAct } from '../gameplay/turnOrder'
+import type { GameSide, GameState } from '../gameplay/types'
 
-function asSavedRoster(lineup: GameplayLabLineup): SavedRosterForGame {
-  return {
-    id: lineup.id,
-    name: lineup.name,
-    useDh: lineup.use_dh,
-    playerCount: lineup.player_count,
-    totalPoints: lineup.total_points,
-    rosterState: {
-      assigned: lineup.roster_state?.assigned ?? {},
-      rosterFormat: lineup.roster_state?.rosterFormat,
-      useDh: lineup.roster_state?.useDh ?? lineup.use_dh,
-      seasonEligibleOnly: lineup.roster_state?.seasonEligibleOnly ?? true,
-    },
+/** Where a game should open for this manager right now. */
+function gameLink(game: PersistedGameplayLabGame): { to: string; label: string } {
+  const s = game.game_state
+  const twoPlayer = s?.turnHandshake === true
+  if (s?.status === 'setup' || s?.status === 'pregame' || s?.status === 'ready') {
+    return { to: `/games/lab/${game.id}/pregame`, label: 'Open Pregame' }
   }
+  if (twoPlayer) return { to: `/games/lab/${game.id}/screen`, label: s.status === 'complete' ? 'View Final' : 'Play' }
+  return { to: `/games/lab/${game.id}/screen`, label: 'Open Game' }
 }
 
-function rosterIssueSummary(issues: RosterEligibilityIssue[]): string {
-  if (issues.length === 0) return 'Eligible for Season 10.1 gameplay.'
-  return issues.map((issue) => issue.message).join(' ')
-}
-
-function GameSummary({ game }: { game: PersistedGameplayLabGame }) {
-  const rosterName = game.home_roster_snapshot?.sourceLineupName ?? 'Roster not attached'
-  const opponent = game.game_state?.managers?.away?.managerName ?? 'Opponent'
+function GameSummary({ game, userId }: { game: PersistedGameplayLabGame; userId: string }) {
+  const s = game.game_state as GameState
+  const mySide: GameSide = s?.managers?.away?.userId === userId ? 'away' : 'home'
+  const opponentSide: GameSide = mySide === 'home' ? 'away' : 'home'
+  const opponent = s?.managers?.[opponentSide]?.managerName ?? 'Opponent'
+  const twoPlayer = s?.turnHandshake === true
+  const toAct = s ? sideToAct(s) : null
+  const turn = !twoPlayer ? 'One-screen test'
+    : s.status === 'complete' ? `Final ${s.score.away}–${s.score.home}`
+    : s.status === 'pregame' ? (s.pregame[mySide].locked ? `Waiting on ${opponent}'s pregame` : 'Your pregame')
+    : s.status === 'ready' ? 'Ready to start'
+    : toAct === mySide ? 'Your move' : `Waiting on ${opponent}`
+  const link = gameLink(game)
 
   return (
     <article className="gameplay-lab-saved-game">
       <div>
-        <span>{game.season_id} · {game.season_year}</span>
-        <strong>Anthony vs. {opponent}</strong>
-        <small>{rosterName}</small>
+        <span>{game.season_id} · You are {mySide}</span>
+        <strong>vs. {opponent}</strong>
+        <small>{turn}</small>
       </div>
       <div className="gameplay-lab-saved-actions">
         <dl>
@@ -63,7 +53,7 @@ function GameSummary({ game }: { game: PersistedGameplayLabGame }) {
           <div><dt>State</dt><dd>v{game.state_version}</dd></div>
           <div><dt>Created</dt><dd>{new Date(game.created_at).toLocaleString()}</dd></div>
         </dl>
-        <Link className="gameplay-lab-open-button" to={`/games/lab/${game.id}/pregame`}>Open Pregame</Link>
+        <Link className="gameplay-lab-open-button" to={link.to}>{link.label}</Link>
       </div>
     </article>
   )
@@ -74,11 +64,11 @@ export default function GameplayLabPage() {
   const [accessChecked, setAccessChecked] = useState(false)
   const [hasAccess, setHasAccess] = useState(false)
   const [opponents, setOpponents] = useState<GameplayLabOpponent[]>([])
-  const [lineups, setLineups] = useState<GameplayLabLineup[]>([])
-  const [cardsByLineup, setCardsByLineup] = useState<Record<string, Map<string, CardRecord>>>({})
+  const [choices, setChoices] = useState<LineupChoice[]>([])
   const [savedGames, setSavedGames] = useState<PersistedGameplayLabGame[]>([])
   const [selectedOpponentId, setSelectedOpponentId] = useState('')
   const [selectedLineupId, setSelectedLineupId] = useState('')
+  const [twoPlayer, setTwoPlayer] = useState(true)
   const [loading, setLoading] = useState(true)
   const [creating, setCreating] = useState(false)
   const [error, setError] = useState('')
@@ -104,28 +94,20 @@ export default function GameplayLabPage() {
         setAccessChecked(true)
         if (!allowed) return
 
-        const [nextOpponents, nextLineups, nextGames] = await Promise.all([
-          loadGameplayLabOpponents(),
-          loadOwnGameplayLineups(),
+        const [nextOpponents, nextChoices, nextGames] = await Promise.all([
+          loadGameplayOpponents(),
+          loadLineupChoices(),
           loadGameplayLabGames(),
         ])
         if (cancelled) return
 
         setOpponents(nextOpponents)
-        setLineups(nextLineups)
+        setChoices(nextChoices)
         setSavedGames(nextGames)
         setSelectedOpponentId((current) => current || nextOpponents[0]?.user_id || '')
-        setSelectedLineupId((current) => current || nextLineups[0]?.id || '')
-
-        const cardMaps: Record<string, Map<string, CardRecord>> = {}
-        await Promise.all(nextLineups.map(async (lineup) => {
-          const assigned = Object.values(lineup.roster_state?.assigned ?? {}).filter(Boolean)
-          const cards = await loadCardsForGameplayRoster(assigned)
-          cardMaps[lineup.id] = new Map(cards.map((card) => [card.card_key, card]))
-        }))
-        if (!cancelled) setCardsByLineup(cardMaps)
+        setSelectedLineupId((current) => current || nextChoices.find((c) => c.eligibility.eligible)?.lineup.id || nextChoices[0]?.lineup.id || '')
       } catch (loadError) {
-        if (!cancelled) setError(loadError instanceof Error ? loadError.message : 'Could not load gameplay lab.')
+        if (!cancelled) setError(errorText(loadError, 'Could not load gameplay lab.'))
       } finally {
         if (!cancelled) setLoading(false)
       }
@@ -135,64 +117,42 @@ export default function GameplayLabPage() {
     return () => { cancelled = true }
   }, [user?.id, isDemo])
 
-  const lineupEligibility = useMemo(() => {
-    const results: Record<string, ReturnType<typeof validateRosterForGame> | null> = {}
-    for (const lineup of lineups) {
-      const cardMap = cardsByLineup[lineup.id]
-      results[lineup.id] = cardMap
-        ? validateRosterForGame(asSavedRoster(lineup), cardMap, ACTIVE_SEASON_CONFIG)
-        : null
-    }
-    return results
-  }, [lineups, cardsByLineup])
-
   const selectedOpponent = opponents.find((opponent) => opponent.user_id === selectedOpponentId) ?? null
-  const selectedLineup = lineups.find((lineup) => lineup.id === selectedLineupId) ?? null
-  const selectedEligibility = selectedLineup ? lineupEligibility[selectedLineup.id] : null
+  const selected = choices.find((c) => c.lineup.id === selectedLineupId) ?? null
 
-  async function createTestGame() {
-    if (!user || !profile || !selectedOpponent || !selectedLineup) return
-    const cardMap = cardsByLineup[selectedLineup.id]
-    if (!cardMap || !selectedEligibility?.eligible) return
+  async function createGame() {
+    if (!user || !profile || !selectedOpponent || !selected?.eligibility.eligible) return
 
     setCreating(true)
     setError('')
     setSuccess('')
 
     try {
-      const gameId = crypto.randomUUID()
-      const rosterSnapshot = createGameRosterSnapshot(
-        asSavedRoster(selectedLineup),
-        cardMap,
-        ACTIVE_SEASON_CONFIG,
-      )
-
       const initial = createInitialGameState({
-        gameId,
+        gameId: crypto.randomUUID(),
         configuration: ACTIVE_SEASON_CONFIG,
-        homeManager: {
-          userId: user.id,
-          managerName: profile.manager_name,
-        },
-        awayManager: {
-          userId: selectedOpponent.user_id,
-          managerName: selectedOpponent.manager_name,
-        },
+        homeManager: { userId: user.id, managerName: profile.manager_name },
+        awayManager: { userId: selectedOpponent.user_id, managerName: selectedOpponent.manager_name },
       })
+      // A two-player game is managed from two screens: each manager sets their
+      // own pregame and makes their own moves, in turn (turnOrder.ts). A
+      // one-screen game is the old lab flow, where you play both sides.
+      if (twoPlayer) initial.turnHandshake = true
 
-      const withRoster = attachPregameRoster(initial, 'home', rosterSnapshot)
-      const created = await createGameplayLabGame(withRoster)
+      const created = await createGameplayLabGame(attachPregameRoster(initial, 'home', snapshotFor(selected)))
       setSavedGames((current) => [created, ...current])
-      setSuccess(`Private test game created: ${profile.manager_name} vs. ${selectedOpponent.manager_name}. Refresh this page to verify it persists.`)
+      setSuccess(twoPlayer
+        ? `Game created: ${profile.manager_name} (home) vs. ${selectedOpponent.manager_name} (away). Set your pregame; ${selectedOpponent.manager_name} will see it in their games list.`
+        : `One-screen test game created vs. ${selectedOpponent.manager_name}.`)
     } catch (createError) {
-      setError(createError instanceof Error ? createError.message : 'Could not create test game.')
+      setError(errorText(createError, 'Could not create the game.'))
     } finally {
       setCreating(false)
     }
   }
 
   if (loading || !accessChecked) {
-    return <main className="gameplay-lab-page"><section className="gameplay-lab-panel">Loading private gameplay lab…</section></main>
+    return <main className="gameplay-lab-page"><section className="gameplay-lab-panel">Loading gameplay…</section></main>
   }
 
   if (!hasAccess) {
@@ -200,8 +160,8 @@ export default function GameplayLabPage() {
       <main className="gameplay-lab-page">
         <section className="gameplay-lab-panel gameplay-lab-locked">
           <span>Private Development</span>
-          <h1>Gameplay Lab</h1>
-          <p>This unreleased gameplay prototype is not enabled for this account.</p>
+          <h1>Gameplay</h1>
+          <p>Gameplay testing is not enabled for this account.</p>
         </section>
       </main>
     )
@@ -211,9 +171,9 @@ export default function GameplayLabPage() {
     <main className="gameplay-lab-page">
       <section className="gameplay-lab-hero">
         <div>
-          <span>Private Development · Sandbox</span>
-          <h1>Gameplay Phase 1A</h1>
-          <p>Create a frozen Season 10.1 game record and prove that it survives a browser refresh before we add pregame locking or live gameplay.</p>
+          <span>Private Testing</span>
+          <h1>Play a game</h1>
+          <p>Challenge another manager. You are home; they set their own pregame and manage their own team from their own screen.</p>
         </div>
         <div className="gameplay-lab-season-card">
           <Link className="gameplay-lab-open-button" to="/games/lab/verification">Targeted Verification</Link>
@@ -229,82 +189,77 @@ export default function GameplayLabPage() {
       <section className="gameplay-lab-panel">
         <header>
           <div>
-            <span>Step 1</span>
-            <h2>Create Private Test Game</h2>
+            <span>New game</span>
+            <h2>Challenge a manager</h2>
           </div>
-          <em>Only your account can create/read these lab games.</em>
+          <em>Only managers with gameplay access are listed.</em>
         </header>
 
         <div className="gameplay-lab-create-grid">
           <label>
             <span>Opponent</span>
             <select value={selectedOpponentId} onChange={(event) => setSelectedOpponentId(event.target.value)}>
-              {opponents.length === 0 && <option value="">No other claimed managers found</option>}
+              {opponents.length === 0 && <option value="">No other managers have gameplay access</option>}
               {opponents.map((opponent) => (
                 <option value={opponent.user_id} key={opponent.user_id}>{opponent.manager_name}</option>
               ))}
             </select>
-            <small>Opponent access is disabled during this private slice.</small>
           </label>
 
           <label>
             <span>Your Saved Roster</span>
             <select value={selectedLineupId} onChange={(event) => setSelectedLineupId(event.target.value)}>
-              {lineups.length === 0 && <option value="">No saved rosters found</option>}
-              {lineups.map((lineup) => {
-                const eligibility = lineupEligibility[lineup.id]
-                const state = eligibility === null ? 'checking' : eligibility.eligible ? 'eligible' : 'ineligible'
-                return <option value={lineup.id} key={lineup.id}>{lineup.name} — {state}</option>
-              })}
+              {choices.length === 0 && <option value="">No saved rosters found</option>}
+              {choices.map((c) => (
+                <option value={c.lineup.id} key={c.lineup.id}>{c.lineup.name} — {c.eligibility.eligible ? 'eligible' : 'ineligible'}</option>
+              ))}
             </select>
-            <small>{selectedEligibility ? rosterIssueSummary(selectedEligibility.issues) : 'Checking roster against the active season configuration…'}</small>
+            <small>{selected ? rosterIssueSummary(selected.eligibility.issues) : 'Choose a saved roster.'}</small>
           </label>
         </div>
 
-        <div className="gameplay-lab-roster-list">
-          {lineups.map((lineup) => {
-            const eligibility = lineupEligibility[lineup.id]
-            return (
-              <article className={`gameplay-lab-roster ${eligibility?.eligible ? 'eligible' : 'ineligible'}`} key={lineup.id}>
-                <div>
-                  <strong>{lineup.name}</strong>
-                  <span>{lineup.player_count} players · {lineup.total_points.toLocaleString()} pts · DH {lineup.use_dh ? 'ON' : 'OFF'}</span>
-                </div>
-                <div>
-                  <b>{eligibility === null ? 'Checking…' : eligibility.eligible ? 'Eligible' : 'Ineligible'}</b>
-                  {eligibility && <small>{rosterIssueSummary(eligibility.issues)}</small>}
-                </div>
-              </article>
-            )
-          })}
-        </div>
+        <label className="gameplay-lab-toggle">
+          <input type="checkbox" checked={twoPlayer} onChange={(e) => setTwoPlayer(e.target.checked)} />
+          <span>
+            <b>Two-player game</b>
+            <small>{twoPlayer
+              ? `${selectedOpponent?.manager_name ?? 'Your opponent'} plays their own team from their own screen. Dice are rolled by the server.`
+              : 'One-screen test: you play both sides with a copy of your roster.'}</small>
+          </span>
+        </label>
 
         <button
           className="gameplay-lab-create-button"
           type="button"
-          disabled={creating || !selectedOpponent || !selectedLineup || !selectedEligibility?.eligible}
-          onClick={() => void createTestGame()}
+          disabled={creating || !selectedOpponent || !selected?.eligibility.eligible}
+          onClick={() => void createGame()}
         >
-          {creating ? 'Creating Frozen Game…' : 'Create Private Test Game'}
+          {creating ? 'Creating…' : 'Create Game'}
         </button>
       </section>
 
       <section className="gameplay-lab-panel">
         <header>
           <div>
-            <span>Persistence Check</span>
-            <h2>Saved Test Games</h2>
+            <span>Your games</span>
+            <h2>Games</h2>
           </div>
-          <em>Refresh the browser. These records should still be here.</em>
+          <em>Games you created and games you were challenged to.</em>
         </header>
         <div className="gameplay-lab-saved-list">
           {savedGames.length === 0 ? (
-            <p className="gameplay-lab-empty">No gameplay lab records yet.</p>
+            <p className="gameplay-lab-empty">No games yet.</p>
           ) : (
-            savedGames.map((game) => <GameSummary key={game.id} game={game} />)
+            savedGames.map((game) => <GameSummary key={game.id} game={game} userId={user?.id ?? ''} />)
           )}
         </div>
       </section>
     </main>
   )
+}
+
+function errorText(e: unknown, fallback: string): string {
+  if (e instanceof Error) return e.message
+  if (e && typeof e === 'object' && 'message' in e && typeof (e as { message: unknown }).message === 'string') return (e as { message: string }).message
+  return fallback
 }
