@@ -1,3 +1,31 @@
+# v1.4.0 — Two-Player Games + New Gameplay Screen
+
+**Requires one SQL migration before use:** run `supabase/migrations/20261029_gameplay_two_player.sql` once in the Supabase SQL Editor. Existing one-screen lab games are unaffected by it.
+
+Two managers can now play one game from their own screens (private testing; gameplay access required).
+
+- **Challenge a manager** from the Play page or the lab hub. Only managers with gameplay access are listed. "Two-player game" is on by default.
+- **Pregame for both sides.** The challenged (away) manager picks one of their own saved rosters, sets their starting pitcher, lineup and defense, and locks in. Each manager only edits their own team. Either can start the game once both are locked.
+- **Turn order (Approved Digital Gameplay Behavior, following ERA):** before each pitch the batting manager makes any calls (steal, bunt, pinch hitter/runner) and clicks Ready. Only then does the fielding manager make their calls (IBB, infield in, pitching change, defensive sub) and pitch. A decision that returns play to the pitch re-opens the batting side, so a pitching change can be answered with a pinch hitter.
+- **Server dice.** In two-player games every die is rolled by the database, once per moment; it cannot be re-rolled, and once rolled it must be used.
+- **Enforced turns.** The database accepts a move only from the manager whose turn it is, and never lets either manager change the other's team.
+- **Live updates.** Each screen checks for the other manager's move every two seconds. A header pill reads "Your move" or "Waiting on …".
+- **Roster moves need one pitch.** Pinch hitter, pinch runner, defensive substitution, pitching change and double switch open once the game's first pitch has been thrown or its first plate appearance completed (Rulebook timing, confirmed). Applies to every game.
+
+New gameplay screen (`/games/lab/:gameId/screen`), built to the approved mockup:
+
+- Three-region layout scaled to the window: the manager's rail (matchup, roll, batting order, decisions), the field with all nine fielders and runners, and the game rail.
+- **Bench and bullpen drawers.** "Bring in", "Pinch hit", "Pinch run" and "Def sub" start the move with that player already selected; nothing changes until it is confirmed on the decision board.
+- Narrated game log, half-inning transition, post-game board with line score, and pause/resume.
+- `/sandbox` is a signed-out, database-free copy for outside review.
+
+Behind the scenes:
+
+- The two-player SQL is tested against a real Postgres (PGlite), playing complete games move by move as the correct manager.
+- A dev-only `/sandbox/duel` page plays a two-player game against that local Postgres in the browser. A full game was played through it with no errors.
+- Engine fixes: defensive outs undercounted by 3 for the top-half defense; runs are now tracked per inning; saved games carrying a decision type from before a rename can be finished.
+- A full ERA Baseball game was played and documented in `GAMEPLAY_REFERENCE_NOTES.md`.
+
 # v1.3.81 — Team Builder Autosave + Mobile First-Class Pass
 
 - Team Builder roster mutations now autosave through a serialized Supabase queue with Saving/Saved/error feedback.
