@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { beforeAll, describe, expect, it } from 'vitest'
 import { buildNonGbCoverageFixture } from '../rulebookCoverage'
-import { declareOffenseReady, pauseGame, resolvePitchRoll, resolveSwingRoll, resumeGame } from '../engine'
+import { attachPregameRoster, createInitialGameState, declareOffenseReady, lockPregame, pauseGame, resolvePitchRoll, resolveSwingRoll, resumeGame, setPregameSelections, startGame } from '../engine'
 import { beginPrePitchDecision, confirmManagerDecision, getDecisionView, resolveDecisionRoll } from '../decisionEngine'
 import { awaitingOffenseReady, sideToAct } from '../turnOrder'
 import { botSelection, maybeBotPrePitchAction } from '../testHarness'
@@ -87,6 +87,46 @@ describe('two-player migration (real Postgres)', () => {
     await rejects(save(AWAY, s.gameId, 1, next, 'PITCH_ROLLED', { roll: 12 }), /does not belong/)
     await save(HOME, s.gameId, 1, next, 'PITCH_ROLLED', { roll: 12 })
     await rejects(rollDie(HOME, s.gameId, 2, 'swing'), /only used in two-player/)
+  })
+
+  it('runs the two-sided pregame: away attaches its own roster, both lock, either starts', async () => {
+    const fixture = buildNonGbCoverageFixture()
+    const initial = createInitialGameState({
+      gameId: '20000000-0000-4000-8000-000000000001',
+      configuration: { ...fixture.configuration, seasonId: 'test-season' },
+      homeManager: { userId: HOME, managerName: 'Anthony' },
+      awayManager: { userId: AWAY, managerName: 'Will' },
+    })
+    initial.turnHandshake = true
+    const created = attachPregameRoster(initial, 'home', fixture.pregame.home.roster!)
+    await dev.createGame(HOME, created)
+    const id = created.gameId
+    let state = await loadState(id)
+
+    // nobody may attach or edit the other side's roster
+    await rejects(save(HOME, id, state.stateVersion, attachPregameRoster(state, 'away', fixture.pregame.away.roster!), 'PREGAME_SUBMITTED', {}), /other manager's team/)
+
+    const pick = (side: GameSide) => ({
+      startingPitcherCardKey: fixture.pregame[side].startingPitcherCardKey!,
+      battingOrderCardKeys: fixture.pregame[side].battingOrderCardKeys,
+      defensiveAlignment: fixture.pregame[side].defensiveAlignment,
+      defaultBatterCardKeys: [],
+    })
+    const step = async (user: string, next: GameState, event: string) => {
+      await save(user, id, state.stateVersion, next, event, {})
+      state = await loadState(id)
+    }
+    await step(AWAY, attachPregameRoster(state, 'away', fixture.pregame.away.roster!), 'PREGAME_SUBMITTED')
+    await rejects(save(AWAY, id, state.stateVersion, setPregameSelections(state, 'home', pick('home')), 'PREGAME_SUBMITTED', {}), /other manager's team/)
+    await step(AWAY, setPregameSelections(state, 'away', pick('away')), 'PREGAME_SUBMITTED')
+    await step(AWAY, lockPregame(state, 'away'), 'PREGAME_LOCKED')
+    expect(state.status).toBe('pregame')
+    await step(HOME, setPregameSelections(state, 'home', pick('home')), 'PREGAME_SUBMITTED')
+    await step(HOME, lockPregame(state, 'home'), 'PREGAME_LOCKED')
+    expect(state.status).toBe('ready')
+    await step(AWAY, startGame(state), 'GAME_STARTED')
+    expect(state.status).toBe('in_progress')
+    expect(sideToAct(state)).toBe('away') // top of the 1st: the visitors ready up first
   })
 
   it('rejects a manager changing the other team, the managers, or the turn mode', async () => {
