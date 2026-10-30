@@ -174,19 +174,19 @@ export default function GameplayPregamePage() {
   const bench = useMemo(() => roster ? assignmentCards(roster, SECTION_PREFIXES.bench) : [], [roster])
   const battingOrder = useMemo(() => roster ? assignmentCards(roster, SECTION_PREFIXES.lineup) : [], [roster])
 
-  // Any pitcher on the staff may start, rotation or bullpen (Anthony, after the
-  // first live game). Rotation first so the usual starters lead the list. Field
-  // and bench players are left out: the Rulebook lets a player start at P only
-  // when his pitcher charts are his card's primary side, and the snapshot does
-  // not record which side is primary -- a rotation/bullpen slot is the proxy.
   const staffSlot = useMemo(() => {
     const slot = new Map<string, string>()
     for (const { slotId, card } of [...bullpen, ...rotation]) slot.set(card.cardKey, slotLabel(slotId))
     return slot
   }, [rotation, bullpen])
+  // Anyone with a pitcher card may start: rotation, bullpen, or a two-way
+  // player from the field or bench (Anthony, after the first live game).
+  // Rotation first so the usual starters lead the list, then the bullpen,
+  // then everyone else.
   const startingPitcherOptions = useMemo(
-    () => uniqueCards([...rotation, ...bullpen]).filter((card) => card.pitcher.control !== null),
-    [rotation, bullpen],
+    () => uniqueCards([...rotation, ...bullpen, ...(roster ? Object.values(roster.cards).map((card) => ({ slotId: card.cardKey, card })) : [])])
+      .filter((card) => card.pitcher.control !== null),
+    [rotation, bullpen, roster],
   )
 
   const startingBatters = useMemo(() => {
@@ -505,7 +505,7 @@ export default function GameplayPregamePage() {
       <section className="gameplay-lab-panel">
         <header>
           <div><span>Pregame Decision 1</span><h2>Starting Pitcher</h2></div>
-          <em>Any pitcher on your staff can start — rotation or bullpen. Control shown is what he will pitch with today, after rest. This choice becomes permanent when you lock pregame.</em>
+          <em>Anyone with a pitcher card can start — rotation, bullpen or a two-way player. Control shown is what he will pitch with today, after rest. This choice becomes permanent when you lock pregame.</em>
         </header>
         <div className="pregame-choice-grid pitcher-grid">
           {startingPitcherOptions.map((card) => {

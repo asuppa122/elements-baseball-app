@@ -130,6 +130,20 @@ describe('describePlay', () => {
     expect(describePlay(before, after, 'GB').lines).toEqual(['David Wright grounds out.'])
   })
 
+  it('a swap that ends the DH says so', () => {
+    let s = game()
+    s.hitterPlateAppearanceCardKeys = { away: ['AWAY-0'], home: [] }
+    s.pregame.home.roster!.useDh = true
+    const order = s.pregame.home.battingOrderCardKeys
+    order[order.indexOf('HOME-8')] = 'HOME-9'
+    s.pregame.home.defensiveAlignment.DH = 'HOME-9'
+    s = beginPrePitchDecision(s, 'POSITION_SWAP')
+    s = confirmManagerDecision(s, ['LF::HOME-5'])
+    const mid = s
+    s = confirmManagerDecision(s, ['LF'])
+    expect(describePlay(mid, s).lines).toContain('The DH is over: home fixture 9 leaves the game and home fixture 8 bats in his spot.')
+  })
+
   it('says nothing about runners who did not move', () => {
     const before = game(); before.bases.second = reyes
     const after = structuredClone(before); after.outs = 1

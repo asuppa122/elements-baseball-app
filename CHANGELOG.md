@@ -1,3 +1,9 @@
+# v1.5.1 — DH Ends on a Pitcher Swap, Two-Way Starters
+
+- **Move Fielder to Pitcher** is now offered in DH games. Both managers are told before confirming that it ends the DH (MLB 5.11): the DH leaves the game, the former pitcher bats in his spot, and the double switch becomes available.
+- Two-way players on the field or bench can now be picked as the starting pitcher.
+- Rube Curry's real card (C3, 6.67 IP) is pinned as a regression scenario: C3 through 19 outs, C1 at 20, C-1 at 21; with the Shutout Bonus, C2 and C1.
+
 # v1.5.0 — Fixes From the First Live Game
 
 **Requires one SQL migration before use:** run `supabase/migrations/20261030_gameplay_rest_appearance_fix.sql` once in the Supabase SQL Editor (after 20261029). Until it is applied the database still charges appearing players the extra -1, and the post-game screen will disagree with what is saved.

@@ -89,8 +89,13 @@ function rosterLines(before: GameState, after: GameState): string[] {
   for (const side of ['away', 'home'] as GameSide[]) {
     const b = before.pregame[side], a = after.pregame[side]
     const order = b.battingOrderCardKeys
+    const dhOver = b.defensiveAlignment.DH && !a.defensiveAlignment.DH ? b.defensiveAlignment.DH : null
     order.forEach((key, slot) => {
       const next = a.battingOrderCardKeys[slot]
+      if (dhOver && key === dhOver && next) {
+        lines.push(`The DH is over: ${cardName(before, side, key)} leaves the game and ${cardName(after, side, next)} bats in his spot.`)
+        return
+      }
       if (next && next !== key && !order.includes(next)) {
         const isRunner = BASES.some((base) => before.bases[base]?.cardKey === key)
         const isBatter = before.plateAppearance.batterCardKey === key
