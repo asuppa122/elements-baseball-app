@@ -48,7 +48,7 @@ function uniqueCards(entries: Array<{ slotId: string; card: GameCardSnapshot }>)
 
 function slotLabel(slotId: string): string {
   if (slotId.startsWith('rotation-')) return `SP${slotId.replace('rotation-', '')}`
-  if (slotId.startsWith('bullpen-')) return `P${slotId.replace('bullpen-', '')}`
+  if (slotId.startsWith('bullpen-')) return `RP${slotId.replace('bullpen-', '')}`
   if (slotId.startsWith('bench-')) return `BN${slotId.replace('bench-', '')}`
   if (slotId.startsWith('lineup-')) return `#${slotId.replace('lineup-', '')}`
   if (slotId.startsWith('defense-')) return slotId.replace('defense-', '').toUpperCase()

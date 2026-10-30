@@ -144,6 +144,8 @@ export default function GameplayScreenPage() {
       onDismissTransition={() => setTransitionDismissed(halfKey)}
       onExit={() => navigate('/games')}
       viewerSide={viewerSide}
+      // A one-screen game is one manager playing both teams.
+      actingSides={twoPlayer ? [viewerSide] : ['home', 'away']}
       banner={twoPlayer ? undefined : (
         <div className="gp-wip">
           <b>Building</b>

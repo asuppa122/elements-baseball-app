@@ -267,7 +267,9 @@ export default function GameplayScreenView({
                 state={state}
                 view={decision}
                 selection={selection}
-                viewerSide={viewerSide}
+                // Whoever is playing this side from this screen decides: in a
+                // one-screen game that is both sides.
+                viewerSide={acting.includes(decision.actingSide) ? decision.actingSide : viewerSide}
                 onToggle={(id) => toggleSelection(id, decision.mode === 'single')}
                 onConfirm={() => void confirmDecision()}
                 onRoll={() => void rollDecision()}
