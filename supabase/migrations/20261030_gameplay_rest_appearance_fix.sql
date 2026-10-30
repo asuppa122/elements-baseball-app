@@ -2,7 +2,8 @@
 -- the day's -1.
 -- Run once in the Supabase SQL Editor, after 20261029_gameplay_two_player.sql.
 --
--- STATUS: written 2026-10-30, NOT applied yet. Tested against a real Postgres
+-- STATUS: written 2026-10-30. APPLIED to the live project by Anthony in the
+-- Supabase SQL Editor on 2026-10-30 (reported success). Tested against a real Postgres
 -- (PGlite) by twoPlayerSql.test.ts and against restTracking.ts by
 -- restTrackingSqlParity.test.ts.
 --
