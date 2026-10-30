@@ -50,7 +50,6 @@ const FORCE_AT: Record<Base, string> = { first: 'second', second: 'third', third
 const NUMBER = ['No', 'One', 'Two', 'Three']
 
 const other = (side: GameSide): GameSide => (side === 'home' ? 'away' : 'home')
-const lastName = (name: string) => name.split(' ').slice(-1)[0] || name
 
 export const CHART_VERB: Record<string, string> = {
   PU: 'pops out',
@@ -171,8 +170,8 @@ export function describePlay(before: GameState, after: GameState, chartResult?: 
     const safe = throwTarget.to === 'HOME' ? runs > 0 : Boolean(where(after, throwTarget.runner.cardKey))
     const tag = String(ctx.kind) === 'TAG_UP' ? 'tags and ' : ''
     lines.push(safe
-      ? `${throwTarget.runner.playerName} ${tag}${throwTarget.to === 'HOME' ? 'scores, beating the throw home' : `beats the throw to ${to}`} from ${lastName(of)} in ${pos}.`
-      : `${lastName(of)} throws out ${throwTarget.runner.playerName} at ${to}${tag ? ' on the tag-up' : ''}.`)
+      ? `${throwTarget.runner.playerName} ${tag}${throwTarget.to === 'HOME' ? 'scores, beating the throw home' : `beats the throw to ${to}`} from ${pos} ${of}.`
+      : `${pos} ${of} throws out ${throwTarget.runner.playerName} at ${to}${tag ? ' on the tag-up' : ''}.`)
   } else if ((kind === 'EXTRA_BASE_RTS' || kind === 'TAG_UP_RTS') && !after.pendingDecision && half && after.outs === before.outs) {
     // A failed roll-to-see: no throw, the play stands as it was.
     if (BASES.every((b) => before.bases[b]?.cardKey === after.bases[b]?.cardKey) && runs === 0) lines.push('No chance to take the extra base — runners hold.')

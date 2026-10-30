@@ -53,10 +53,25 @@ function ordered(state: GameState, side: GameSide, cards: GameCardSnapshot[]): G
     || a.playerName.localeCompare(b.playerName))
 }
 
+/**
+ * A position player: anyone without a pitcher card, or a two-way player --
+ * one with fielding ratings, or one the manager slotted as a position player.
+ * A two-way player is listed in BOTH drawers: he can pitch out of the
+ * bullpen and pinch-hit off the bench, and hiding him from either drawer
+ * hid a legal move (found checking two-way pitchers, 2026-10-30).
+ */
+function isPositionPlayer(state: GameState, side: GameSide, card: GameCardSnapshot): boolean {
+  if (card.pitcher.control === null) return true
+  if (card.hitter.onBase === null) return false
+  if (Object.values(card.defense).some((v) => typeof v === 'number')) return true
+  const rank = rosterSlot(state, side, card.cardKey).rank
+  return rank >= 2000 && rank < Number.MAX_SAFE_INTEGER // bench, lineup or defense slot
+}
+
 export function availableFor(state: GameState, side: GameSide): Availability {
   const unused = benchCards(state, side)
   return {
     bullpen: ordered(state, side, unused.filter((c) => c.pitcher.control !== null)),
-    bench: ordered(state, side, unused.filter((c) => c.pitcher.control === null)),
+    bench: ordered(state, side, unused.filter((c) => isPositionPlayer(state, side, c))),
   }
 }

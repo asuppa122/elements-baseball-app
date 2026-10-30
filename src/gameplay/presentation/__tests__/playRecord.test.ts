@@ -107,7 +107,7 @@ describe('describePlay', () => {
     const roll = pending(tagBefore, 'OUTFIELD_FIELDING_ROLL', { attempts: [att], target: att, outfielder: 'CF', kind: 'TAG_UP' })
     const safe = resolveDecisionRoll(roll, 1)
     const lines = describePlay(roll, safe).lines
-    expect(lines[0]).toMatch(/^Jose Reyes tags and scores, beating the throw home from .+ in CF\.$/)
+    expect(lines[0]).toMatch(/^Jose Reyes tags and scores, beating the throw home from CF .+\.$/)
     expect(lines).toContain('Will scores a run — Will 1, Anthony 0.')
   })
 

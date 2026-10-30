@@ -1,3 +1,9 @@
+# v1.5.2 — Clean Game Log, Two-Way Players in Both Drawers
+
+- The game log reads like a published play-by-play: plays only, in order under half-inning headings ("Top 3rd · Will batting"), current half-inning on top. Pitch rolls, ready-ups and board selections are gone (the roll is under the Roll button).
+- Two-way players (a position player with a pitcher card) are listed in both the bullpen and the bench drawers, so every legal move is reachable from his row. Verified he can pitch by every in-game route — pitching change from the bench, moving to the mound from the field, double switch — at his own Control (TWO-01..03).
+- Outfield throws name the fielder in full with his position ("CF Valentín Dreke throws out …").
+
 # v1.5.1 — DH Ends on a Pitcher Swap, Two-Way Starters
 
 - **Move Fielder to Pitcher** is now offered in DH games. Both managers are told before confirming that it ends the DH (MLB 5.11): the DH leaves the game, the former pitcher bats in his spot, and the double switch becomes available.

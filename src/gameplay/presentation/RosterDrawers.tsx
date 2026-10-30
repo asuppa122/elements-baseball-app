@@ -8,6 +8,10 @@ import { batsLabel, throwsLabel } from './handedness'
 import { hitterOnBaseFor, pitcherFatigueInputFor } from '../engine'
 import { effectivePitcherControl } from '../fatigueEngine'
 import GameLogPanel, { type LogEvent } from './GameLogPanel'
+import { narrate } from './playNarration'
+import { playOf } from './playRecord'
+
+const playCount = (events: LogEvent[]) => events.filter((e) => playOf(e) || narrate(e)).length
 import type { DecisionOption } from '../decisionEngine'
 import type { GameCardSnapshot, GameSide, GameState } from '../types'
 
@@ -235,8 +239,8 @@ export default function RosterDrawers({
 
   return (
     <div className="gp-drawers">
-      <Section id="log" label="Game log" count={`${events.length}`} open={open === 'log'} onToggle={toggle}>
-        <GameLogPanel events={events} />
+      <Section id="log" label="Game log" count={`${playCount(events)} plays`} open={open === 'log'} onToggle={toggle}>
+        <GameLogPanel events={events} managers={{ away: state.managers.away.managerName, home: state.managers.home.managerName }} />
       </Section>
       <Section id="pen" label="Bullpen" count={`${mine.bullpen.length} available`} open={open === 'pen'} onToggle={toggle}>
         {drawer('pen')}
