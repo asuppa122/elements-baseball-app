@@ -1,3 +1,5 @@
+import { CardArt } from './CardZoom'
+import { batsLabel } from './handedness'
 import { effectiveCurrentHitterOnBase, effectiveCurrentPitcherControl } from '../engine'
 import { BATTER_BOX, FIELDER_PAINT_ORDER, FIELDER_POINTS, RUNNER_POINTS } from './fieldGeometry'
 import type { BaseRunnerState, DefensivePosition, GameSide, GameState } from '../types'
@@ -46,11 +48,7 @@ function Fielder({ state, side, position }: { state: GameState; side: GameSide; 
       style={{ left: `${point.left}%`, top: `${point.top}%` }}
       title={card ? `${position} · ${card.playerName}` : position}
     >
-      <span className="gp-fc-art">
-        {card?.imageUrl
-          ? <img src={card.imageUrl} alt="" loading="lazy" />
-          : <i aria-hidden="true" />}
-      </span>
+      <CardArt card={card} className="gp-fc-art" />
       <span className="gp-fc-meta">
         <b className="gp-fc-pos">{position}</b>
         {/* Dropped by container query on a narrow field -- two characters of
@@ -77,9 +75,7 @@ function Pitcher({ state, side }: { state: GameState; side: GameSide }) {
 
   return (
     <div className="gp-fc gp-fc-pitcher" style={{ left: `${point.left}%`, top: `${point.top}%` }}>
-      <span className="gp-fc-art">
-        {card.imageUrl ? <img src={card.imageUrl} alt="" loading="lazy" /> : <i aria-hidden="true" />}
-      </span>
+      <CardArt card={card} className="gp-fc-art" />
       <span className="gp-fc-meta">
         <span className="gp-fc-live s-num">
           CTRL {printed ?? '—'}{adjusted && <em> → {effective}</em>}
@@ -108,15 +104,13 @@ function Batter({ state }: { state: GameState }) {
 
   return (
     <div className="gp-fc gp-fc-batter" style={{ left: `${point.left}%`, top: `${point.top}%` }}>
-      <span className="gp-fc-art">
-        {card.imageUrl ? <img src={card.imageUrl} alt="" loading="lazy" /> : <i aria-hidden="true" />}
-      </span>
+      <CardArt card={card} className="gp-fc-art" />
       <span className="gp-fc-meta">
         <b>
           {/* "At bat" is dropped on a narrow field -- the gold border already
               says it, and three wrapped lines pushed the label past the field's
               bottom edge, where overflow:hidden clipped the OB value. */}
-          <span className="gp-fc-atbat">At bat · </span>Bats {card.hitter.bats ?? '?'}
+          <span className="gp-fc-atbat">At bat · </span>{batsLabel(card.hitter.bats) ?? 'Bats ?'}
         </b>
         <span className="gp-fc-live s-num">
           OB {printed ?? '—'}{adjusted && <> <em>→ {effective}</em></>}

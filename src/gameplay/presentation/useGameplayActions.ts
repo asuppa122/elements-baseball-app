@@ -1,10 +1,11 @@
+import { decisionRollView, describePlay, pitchRollView, swingRollView } from './playRecord'
 import { useCallback, useState } from 'react'
 import {
   declareOffenseReady, pauseGame, resolveAutomaticPitcherAdvantage, resolvePitchRoll, resolveSwingRoll, resumeGame,
 } from '../engine'
 import { resolveSwingChart } from '../coreGame'
 import {
-  beginPrePitchDecision, confirmManagerDecision, getDecisionView, noWheelSacBuntOutcome, resolveDecisionRoll,
+  beginPrePitchDecision, confirmManagerDecision, getDecisionView, resolveDecisionRoll,
 } from '../decisionEngine'
 import { buildEventEnvelope } from '../eventPayload'
 import { rollGameplayDie, saveGameplayLabState, type PersistedGameplayLabGame, type RollKind } from '../gameRepository'
@@ -33,6 +34,7 @@ const EDITABLE_PRE_PITCH = [
   'PINCH_HITTER_SELECTION', 'PINCH_RUNNER_TARGET', 'PINCH_RUNNER_REPLACEMENT',
   'DEF_SUB_POSITION', 'DEF_SUB_REPLACEMENT', 'DOUBLE_SWITCH_PITCHER',
   'DOUBLE_SWITCH_FIELDER', 'DOUBLE_SWITCH_OUTGOING_FIELDER', 'ENTRY_ATTRIBUTE_MODE',
+  'POSITION_SWAP_PITCHER', 'POSITION_SWAP_DESTINATION',
 ]
 
 /** Supabase errors are plain objects, not Error instances; keep the server's reason. */
@@ -117,7 +119,12 @@ export function useGameplayActions({ game, userId, surface, onSaved, onAfterSave
       // The before/after envelope is attached once, here, so it covers
       // decisions as well as swings -- that is what makes a run scored on a
       // manager decision attributable at all. Caller keys win on collision.
-      const eventPayload = { ...buildEventEnvelope(state, next), surface, ...payload }
+      // The play-by-play and the roll are written down now, from the full
+      // before and after states, so the other manager reads the same thing
+      // (playRecord.ts). Steps that are not plays -- readying up, starting or
+      // cancelling a call -- carry no play.
+      const play = describePlay(state, next, typeof payload.chartResult === 'string' ? payload.chartResult : null)
+      const eventPayload = { ...buildEventEnvelope(state, next), surface, ...(play.lines.length ? { play } : {}), ...payload }
       const saved = await save({
         gameId: game.id, expectedStateVersion: game.state_version, nextState: next, eventType, eventPayload,
       })
@@ -179,8 +186,8 @@ export function useGameplayActions({ game, userId, surface, onSaved, onAfterSave
     if (!state) return
     await withRoll('pitch', async (roll) => {
       const next = resolvePitchRoll(state, roll)
-      await persist(next, 'PITCH_ROLLED', { roll, playableShell: true },
-        `Pitch roll: ${roll}. ${next.plateAppearance.advantage?.toUpperCase()} advantage.`)
+      await persist(next, 'PITCH_ROLLED', { roll, rollView: pitchRollView(state, roll, next), playableShell: true },
+        '')
     })
   }, [state, persist, withRoll])
 
@@ -189,7 +196,7 @@ export function useGameplayActions({ game, userId, surface, onSaved, onAfterSave
     await withRoll('swing', async (roll) => {
       const result = resolveSwingChart(state, roll)
       await persist(resolveSwingRoll(state, roll), 'SWING_RESOLVED',
-        { roll, chartResult: result, playableShell: true }, `Swing roll: ${roll} → ${result}.`)
+        { roll, chartResult: result, rollView: swingRollView(state, roll, result), playableShell: true }, '')
     })
   }, [state, persist, withRoll])
 
@@ -231,16 +238,10 @@ export function useGameplayActions({ game, userId, surface, onSaved, onAfterSave
     if (!state || !decision) return
     await withRoll('decision', async (roll) => {
       const next = bump(resolveDecisionRoll(state, roll))
-      const bunt = state.pendingDecision?.decisionType === 'SAC_BUNT_RTS' ? noWheelSacBuntOutcome(roll) : null
-      const message = bunt === 'FAILED_PITCHER_CHART' ? `Bunt roll: ${roll} — FAILED BUNT. Attempt swing on PITCHER chart.`
-        : bunt === 'STRIKEOUT' ? `Bunt roll: ${roll} — K.`
-        : bunt === 'LEAD_RUNNER_OUT' ? `Bunt roll: ${roll} — lead runner OUT.`
-        : bunt === 'SUCCESS' ? `Bunt roll: ${roll} — bunt successful; runners advance.`
-        : state.pendingDecision?.decisionType === 'GB_RUNNER_2B_RTH'
-          ? `RTH roll: ${roll} — ${roll <= 10 ? 'runner advances to 3B' : 'runner stays at 2B'}.`
-          : `Decision roll: ${roll}.`
+      // The result is shown to both managers by RollResult, from the saved event.
+      const rollView = decisionRollView(state, roll, describePlay(state, next))
       await persist(next, 'DECISION_RESOLVED',
-        { decisionType: state.pendingDecision?.decisionType, resolutionKind: 'ROLL', roll, playableShell: true }, message)
+        { decisionType: state.pendingDecision?.decisionType, resolutionKind: 'ROLL', roll, rollView, playableShell: true }, '')
     })
   }, [state, decision, persist, withRoll])
 

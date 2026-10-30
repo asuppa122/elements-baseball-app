@@ -433,22 +433,47 @@ export function currentPitcherFatigueContext(state: GameState): CurrentPitcherFa
   const key=state.plateAppearance.pitcherCardKey
   const pitcher=key?state.pregame[defense].roster?.cards[key]:null
   if(!pitcher)return null
-  const useDefault=(state.pregame[defense].defaultPitcherCardKeys?.includes(pitcher.cardKey)??false)||pitcher.pitcher.control===null
-  const entry=readPitcherStateValue(state.pitcherEntryDefenseOuts,defense,pitcher.cardKey)??0
-  const outs=Math.max(0,defensiveOutsRecorded(state,defense)-entry)
-  const runs=readPitcherStateValue(state.pitcherRunsAllowed,defense,pitcher.cardKey)??0
+  return { card: pitcher, input: pitcherFatigueInputFor(state, defense, pitcher.cardKey)! }
+}
+
+/**
+ * The fatigue inputs a pitcher has -- or would have, if he took the mound
+ * right now. For the pitcher on the mound this is exactly what the live roll
+ * uses. For anyone else it is what he would enter with: rest debt from earlier
+ * games, plus, for a pitcher returning to the mound, the outs and runs of his
+ * line so far (MLB 5.10, pitcherMound.ts). This is what the bullpen, the
+ * pregame and every replacement option show, so a manager never picks a
+ * pitcher on a number he will not pitch with. Card attributes are assumed;
+ * the default-attributes choice is made on entry and labelled there.
+ */
+export function pitcherFatigueInputFor(state: GameState, side: GameSide, cardKey: string): PitcherFatigueInput | null {
+  const pitcher=state.pregame[side].roster?.cards[cardKey]
+  if(!pitcher)return null
+  const useDefault=(state.pregame[side].defaultPitcherCardKeys?.includes(cardKey)??false)||pitcher.pitcher.control===null
+  const entry=readPitcherStateValue(state.pitcherEntryDefenseOuts,side,cardKey)??0
+  const onMound=state.plateAppearance.pitcherCardKey===cardKey&&fieldingSide(state)===side
+    || state.pregame[side].defensiveAlignment.P===cardKey
+  const exit=readPitcherStateValue(state.pitcherExitDefenseOuts,side,cardKey)
+  const pitched=onMound||exit!==undefined
+  const outs=!pitched?0:onMound?Math.max(0,defensiveOutsRecorded(state,side)-entry):Math.max(0,(exit??entry)-entry)
   return {
-    card: pitcher,
-    input: {
-      printedControl: pitcher.pitcher.control,
-      useDefaultAttributes: useDefault,
-      gamesFromRested: pitcherGamesFromRested(state,defense,pitcher.cardKey),
-      cardIp: pitcher.pitcher.ip,
-      outsRecorded: outs,
-      earnedRunsAllowed: runs,
-      shutoutBonusBrokenAtOuts: readPitcherStateValue(state.pitcherShutoutBonusBrokenAtOuts,defense,pitcher.cardKey),
-    },
+    printedControl: pitcher.pitcher.control,
+    useDefaultAttributes: useDefault,
+    gamesFromRested: pitcherGamesFromRested(state,side,cardKey),
+    cardIp: pitcher.pitcher.ip,
+    outsRecorded: outs,
+    earnedRunsAllowed: pitched?(readPitcherStateValue(state.pitcherRunsAllowed,side,cardKey)??0):0,
+    shutoutBonusBrokenAtOuts: pitched?readPitcherStateValue(state.pitcherShutoutBonusBrokenAtOuts,side,cardKey):undefined,
   }
+}
+
+/** The On Base a hitter has, or would have if he came up now: card less rest debt. */
+export function hitterOnBaseFor(state: GameState, side: GameSide, cardKey: string): { printed: number | null; effective: number; gamesFromRested: number } | null {
+  const card=state.pregame[side].roster?.cards[cardKey]
+  if(!card)return null
+  const gamesFromRested=hitterGamesFromRested(state,side,cardKey)
+  const useDefault=state.pregame[side].defaultBatterCardKeys.includes(cardKey)||card.hitter.onBase===null
+  return { printed: card.hitter.onBase, effective: effectiveHitterOnBase(card.hitter.onBase,gamesFromRested,useDefault), gamesFromRested }
 }
 
 export function effectiveCurrentPitcherControl(state: GameState): number {

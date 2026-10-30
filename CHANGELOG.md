@@ -1,3 +1,26 @@
+# v1.5.0 — Fixes From the First Live Game
+
+**Requires one SQL migration before use:** run `supabase/migrations/20261030_gameplay_rest_appearance_fix.sql` once in the Supabase SQL Editor (after 20261029). Until it is applied the database still charges appearing players the extra -1, and the post-game screen will disagree with what is saved.
+
+From Anthony and Will's first two-player game. Rulings are logged in `GAMEPLAY_REFERENCE_NOTES.md`.
+
+**Rules and fatigue**
+- Over-IP fatigue now starts on the out that reaches card IP: a 6.67 IP pitcher pays -2 at his 20th out, not his 21st. The Shutout Bonus counts the same way. (Proposed Digital Gameplay Update.)
+- Postgame rest: a player who appeared adds his full card fatigue and no longer also gets the day's -1, matching the Rulebook's own IX-B examples. A player who sat still ticks down 1. (Rube Curry now finishes at 3, Nelson Dean at 2.)
+- Any pitcher on the staff — rotation or bullpen — can start.
+- New **Move Fielder to Pitcher**: a fielder already in the game takes the mound and the pitcher moves to the field (optionally shifting a third fielder), nobody leaving the game. Unlisted positions field at -10, available once the game's first plate appearance is complete. Not offered in DH games.
+- MLB 5.10 adopted: a pitcher moved to the field may return to the mound with one continuous pitching line, may move from P to the field only once per inning, and every pitcher must face three batters (or finish the half-inning) before he can be removed.
+
+**Screen**
+- The last roll is shown under the Roll button for both managers: the die, every modifier, the total against the rating, and the result.
+- The play recap and game log describe the whole play — who scored, who was forced or thrown out, tag-ups, steals, double plays, substitutions and position moves — from what the engine actually resolved.
+- Steal of home: the catcher's +15 is shown to both managers before the roll, in the breakdown after it, and flagged when it decided the play.
+- Bullpen, starting pitcher and every replacement option show the Control (and On Base) the player will actually play with, with the card value and fatigue beside it.
+- Every card on the game screen and the starting-pitcher picks can be tapped to see it full size.
+- Bullpen and bench follow the manager's Team Builder order, with slot (RP2, SP4) and handedness.
+- Batter and pitcher handedness (RHB/LHB/SHB, RHP/LHP) beside their names.
+- Wider right-hand rail with larger text for the log, bullpen and bench.
+
 # v1.4.0 — Two-Player Games + New Gameplay Screen
 
 **Requires one SQL migration before use:** run `supabase/migrations/20261029_gameplay_two_player.sql` once in the Supabase SQL Editor. Existing one-screen lab games are unaffected by it.

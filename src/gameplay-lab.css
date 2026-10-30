@@ -536,3 +536,10 @@
 .gameplay-lab-toggle input { width: 20px; height: 20px; margin-top: 2px; accent-color: var(--gp-accent, #d8ad2d); flex: 0 0 auto; }
 .gameplay-lab-toggle span { display: grid; gap: 3px; }
 .gameplay-lab-toggle small { opacity: 0.75; }
+
+/* Starter choice: the card is the pick; the magnifier beside it only enlarges. */
+.pregame-choice-wrap { position: relative; min-width: 0; display: grid; }
+.pregame-pitcher-tags { font-size: 11px; font-weight: 800; letter-spacing: .06em; color: #efc83d; min-height: 1em; }
+.pregame-pitcher-ctrl { font-size: 12.5px; }
+.pregame-pitcher-ctrl b { color: #f6ecd0; }
+.pregame-pitcher-ctrl.is-tired, .pregame-pitcher-ctrl.is-tired b { color: #ff8a7a; }

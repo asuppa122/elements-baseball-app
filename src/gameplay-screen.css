@@ -1373,3 +1373,145 @@
 @media (max-width: 1024px) {
   .gp-turn { white-space: normal; text-align: center; }
 }
+
+/* =====================================================================
+ * First live game feedback (2026-10-30)
+ * ===================================================================== */
+
+/* ---- card art is a button that enlarges the card ---- */
+.gp-card-art-btn {
+  appearance: none; border: 0; padding: 0; margin: 0; background: none; color: inherit;
+  font: inherit; cursor: zoom-in; display: block;
+}
+.gp-card-art-btn:focus-visible { outline: 2px solid var(--s-gold-bright); outline-offset: 2px; }
+.gp-card-art-btn > i { display: block; width: 100%; height: 100%; }
+span.gp-lineup-card, button.gp-lineup-card { flex: 0 0 auto; }
+button.gp-lineup-card img { width: 100%; height: 100%; object-fit: cover; display: block; border-radius: var(--s-r-control); }
+
+.gp-zoom {
+  position: fixed; inset: 0; z-index: 1000;
+  display: grid; place-items: center;
+  padding: max(16px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom));
+  background: rgba(6, 8, 6, 0.86);
+  cursor: zoom-out;
+}
+.gp-zoom-figure { margin: 0; display: grid; gap: 10px; justify-items: center; cursor: default; max-width: 100%; }
+/* the card's own aspect ratio, as large as the screen allows */
+.gp-zoom-figure img {
+  display: block; width: auto; height: auto;
+  max-width: min(92vw, 520px); max-height: calc(100dvh - 120px);
+  border-radius: 14px; box-shadow: 0 18px 50px rgba(0, 0, 0, 0.55);
+}
+.gp-zoom-figure figcaption { color: var(--gp-text, #f3ead2); font-weight: 700; font-size: 15px; text-align: center; }
+.gp-zoom-missing { width: min(80vw, 300px); aspect-ratio: 5 / 7; display: grid; place-items: center; border-radius: 14px; background: var(--black-soft, #222); color: var(--gp-text-muted, #aaa); }
+.gp-zoom-close {
+  position: fixed; top: max(12px, env(safe-area-inset-top)); right: 12px;
+  width: 44px; height: 44px; border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.35); background: rgba(0, 0, 0, 0.5);
+  color: #fff; font-size: 26px; line-height: 1; cursor: pointer;
+}
+.gp-zoom-close:focus-visible { outline: 2px solid var(--gp-accent-bright, gold); outline-offset: 2px; }
+.gp-zoom-btn {
+  position: absolute; top: 6px; right: 6px; z-index: 2;
+  width: 32px; height: 32px; display: grid; place-items: center;
+  border-radius: 50%; border: 1px solid rgba(255, 255, 255, 0.4);
+  background: rgba(0, 0, 0, 0.6); color: #fff; cursor: zoom-in;
+}
+@media (pointer: coarse) { .gp-zoom-btn { width: 44px; height: 44px; top: 4px; right: 4px; } }
+
+/* ---- handedness, slot tags ---- */
+.gp-hand {
+  display: inline-block; vertical-align: 1px;
+  padding: 0 5px; border-radius: 999px;
+  font-size: 0.72em; font-weight: 800; letter-spacing: 0.05em; line-height: 1.5;
+  color: var(--s-ink); background: var(--s-gold-bright);
+}
+.gp-drawer-tags { display: flex; gap: 4px; flex-wrap: wrap; }
+.gp-screen .gp-tag {
+  font-size: 10px; font-weight: 800; letter-spacing: 0.05em;
+  padding: 0 5px; border-radius: 4px;
+  border: 1px solid var(--s-line); color: var(--s-gray);
+}
+.gp-screen .gp-tag.is-hand { color: var(--s-gold-bright); border-color: var(--s-gold-muted); }
+.gp-drawer-rates { display: flex; flex-wrap: wrap; gap: 2px 8px; }
+.gp-drawer-who .gp-drawer-rates span { white-space: nowrap; }
+.gp-drawer-who .gp-drawer-ctrl { font-weight: 800; color: var(--s-cream); }
+.gp-drawer-who .gp-drawer-ctrl.is-tired { color: var(--s-bad); }
+.gp-drawer-who .gp-drawer-was { color: var(--s-bad); }
+
+/* ---- the last roll, under the roll button ---- */
+.gp-rollresult {
+  border: 1px solid var(--s-line); border-left-width: 4px;
+  border-radius: var(--s-r-sub); background: var(--s-panel-lift);
+  padding: 8px 10px; display: flex; align-items: center; gap: 10px;
+  flex: 0 0 auto; min-width: 0;
+  animation: gp-rollresult-in 220ms ease-out;
+}
+.gp-rollresult.is-offense { border-left-color: var(--s-adv-hitter); }
+.gp-rollresult.is-defense { border-left-color: var(--s-adv-pitcher); }
+.gp-rollresult.is-neutral { border-left-color: var(--s-gold); }
+.gp-rollresult-die {
+  flex: 0 0 auto; width: 54px; height: 54px; border-radius: 10px;
+  display: grid; place-items: center; align-content: center;
+  background: var(--s-ink); border: 2px solid var(--s-gold);
+}
+.gp-rollresult-die small { font-size: 9px; font-weight: 800; color: var(--s-gray-muted); line-height: 1; }
+.gp-rollresult-die strong { font-size: 28px; font-weight: 900; color: var(--s-gold-bright); line-height: 1.05; }
+.gp-rollresult-main { display: grid; gap: 3px; min-width: 0; flex: 1 1 auto; text-align: left; }
+.gp-rollresult-title { font-size: 11.5px; color: var(--s-gray); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gp-rollresult-title .s-lbl { margin-right: 4px; }
+.gp-rollresult-outcome { margin: 0; font-size: 14.5px; font-weight: 800; color: var(--s-cream); line-height: 1.25; }
+.gp-rollresult-math { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 2px 8px; font-size: 11.5px; color: var(--s-gray); }
+.gp-rollresult-math li.is-total { color: var(--s-gold-bright); font-weight: 800; }
+.gp-rollresult-math li.is-decisive { color: var(--s-gold-bright); font-weight: 800; }
+.gp-rollresult-math li em { font-style: normal; font-size: 9.5px; font-weight: 800; text-transform: uppercase; color: var(--s-ink); background: var(--s-gold-bright); padding: 0 4px; border-radius: 4px; }
+.gp-rollresult-natural { margin: 0; font-size: 11.5px; font-weight: 800; color: var(--s-gold-bright); }
+@keyframes gp-rollresult-in { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .gp-rollresult { animation: none; } }
+@media (max-width: 1024px) {
+  .gp-rollresult { padding: 10px 12px; }
+  .gp-rollresult-die { width: 60px; height: 60px; }
+  .gp-rollresult-outcome { font-size: 16px; }
+  .gp-rollresult-math { font-size: 13px; }
+}
+
+/* ---- the recap: two lines rather than one truncated one ---- */
+@media (min-width: 1025px) {
+  .gp-topbar-play {
+    white-space: normal;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+    line-height: 1.3;
+  }
+}
+
+/* ---- a wider right rail (log, bullpen, bench) ----
+ * It was 290/1130 of the stage height: ~220px on a 1440x850 laptop, with
+ * 9.5px text. Now about a quarter of the stage width, never narrower than it
+ * was, and the type inside it is set for reading rather than fitting. */
+@media (min-width: 1025px) {
+  .gp-stage { --s-rail-right: clamp(calc(var(--u) * 28), 26cqw, 480px); }
+}
+@media (min-width: 768px) and (max-width: 1024px) {
+  .gp-screen { --s-rail-right: 280px; }
+}
+.gp-drawer-head b { font-size: 12px; }
+.gp-drawer-head > span:last-child { font-size: 11px; }
+.gp-drawer-row { padding-block: 4px; }
+.gp-drawer-art { width: 40px; height: 56px; }
+.gp-drawer-who b { font-size: 13.5px; }
+.gp-drawer-who span { font-size: 11.5px; }
+.gp-drawer-act { min-height: 32px; font-size: 12px; }
+@media (pointer: coarse) { .gp-drawer-act { min-height: 44px; } }
+.gp-drawer-foot .gp-drawer-act { min-height: 36px; }
+.gp-drawer-why, .gp-drawer-team { font-size: 12px; }
+.gp-region-rail .gp-log-list li { font-size: 12.5px; line-height: 1.4; }
+.gp-region-rail .gp-decision-title h2 { font-size: 1rem; }
+.gp-region-rail .gp-decision { padding: 14px 15px; }
+
+/* On the desktop stage the last-roll card says everything the four-cell
+ * Pitch / Adv / Swing / Result row said, and more -- and the rail has no
+ * height to spare at 700px. The roll card replaces the row there; on a phone
+ * the matchup keeps its own row, as before. */
+@media (min-width: 1025px) {
+  .gp-region-lineup .gp-rollbox > .gp-roll { display: none; }
+}

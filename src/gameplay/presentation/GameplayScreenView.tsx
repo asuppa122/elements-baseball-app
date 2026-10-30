@@ -7,6 +7,9 @@ import RosterDrawers from './RosterDrawers'
 import RollControls from './RollControls'
 import GameMenu from './GameMenu'
 import { type LogEvent } from './GameLogPanel'
+import { playOf } from './playRecord'
+import { CardZoomProvider } from './CardZoom'
+import RollResult from './RollResult'
 import HalfInningTransition from './HalfInningTransition'
 import PostGameBoard from './PostGameBoard'
 import DecisionBoard from './DecisionBoard'
@@ -106,13 +109,26 @@ function Scorebug({ state }: { state: GameState }) {
 function PlayRecap({ events }: { events: LogEvent[] }) {
   // events arrive OLDEST first -- GameLogPanel reverses them for display -- so
   // searching forwards finds the first play of the game, not the last one.
-  let latest = null
-  for (let i = events.length - 1; i >= 0 && !latest; i -= 1) latest = narrate(events[i])
+  // A play can take several steps (the hit, then the throw on the extra
+  // base); every step of the latest plate appearance is read together.
+  let text: string | null = null
+  let kind = 'neutral'
+  for (let i = events.length - 1; i >= 0 && text === null; i -= 1) {
+    const play = playOf(events[i])
+    if (play) {
+      const steps = events.slice(0, i + 1).map(playOf).filter((p) => p && p.paKey === play.paKey)
+      text = steps.flatMap((p) => p!.lines).join(' ')
+      kind = steps.some((p) => p!.kind === 'scoring') ? 'scoring' : play.kind
+    } else {
+      const n = narrate(events[i])
+      if (n) { text = n.text; kind = n.kind }
+    }
+  }
   return (
     <div className="gp-topbar-recap">
       <b className="s-lbl">Play recap</b>
-      {latest
-        ? <p className={`gp-topbar-play is-${latest.kind}`}>{latest.text}</p>
+      {text
+        ? <p className={`gp-topbar-play is-${kind}`}>{text}</p>
         : <p className="gp-topbar-play is-empty">Play ball!</p>}
     </div>
   )
@@ -163,6 +179,7 @@ export default function GameplayScreenView({
   const rosterActions = prePitchActions.filter((a) => !OFFENCE_ACTIONS.has(a.id) && !DEFENCE_ACTIONS.has(a.id))
 
   return (
+    <CardZoomProvider>
     <main className={`gp-screen${decision ? ' has-decision' : ''}`}>
       <div className="gp-stage">
       {banner}
@@ -205,6 +222,8 @@ export default function GameplayScreenView({
             onRollSwing={() => void rollSwing()}
             onNoPitch={() => void noPitch()}
           />
+
+          <RollResult events={events} />
 
           <div className="gp-panel gp-lineup-strip">
             <LineupRail state={state} />
@@ -292,5 +311,6 @@ export default function GameplayScreenView({
       </div>
       </div>
     </main>
+    </CardZoomProvider>
   )
 }

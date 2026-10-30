@@ -1,3 +1,5 @@
+import { CardZoomProvider, ZoomButton } from '../gameplay/presentation/CardZoom'
+import { throwsLabel } from '../gameplay/presentation/handedness'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
@@ -177,6 +179,11 @@ export default function GameplayPregamePage() {
   // and bench players are left out: the Rulebook lets a player start at P only
   // when his pitcher charts are his card's primary side, and the snapshot does
   // not record which side is primary -- a rotation/bullpen slot is the proxy.
+  const staffSlot = useMemo(() => {
+    const slot = new Map<string, string>()
+    for (const { slotId, card } of [...bullpen, ...rotation]) slot.set(card.cardKey, slotLabel(slotId))
+    return slot
+  }, [rotation, bullpen])
   const startingPitcherOptions = useMemo(
     () => uniqueCards([...rotation, ...bullpen]).filter((card) => card.pitcher.control !== null),
     [rotation, bullpen],
@@ -464,6 +471,7 @@ export default function GameplayPregamePage() {
   const opponentState = !opponentPregame.roster ? 'CHOOSING TEAM' : opponentPregame.locked ? 'LOCKED' : 'SETTING UP'
 
   return (
+    <CardZoomProvider>
     <main className="gameplay-lab-page gameplay-pregame-page">
       <section className="gameplay-lab-hero gameplay-pregame-hero">
         <div>
@@ -501,27 +509,33 @@ export default function GameplayPregamePage() {
         </header>
         <div className="pregame-choice-grid pitcher-grid">
           {startingPitcherOptions.map((card) => {
-            const effectiveControl = pregameEffectiveControl(card, restStateByCardKey)
+            const effectiveControl = pregameEffectiveControl(card, restStateByCardKey) ?? card.pitcher.control
+            const rest = restStateByCardKey[card.cardKey]?.pitcherGamesRemaining ?? 0
+            const tired = effectiveControl !== card.pitcher.control
+            const hand = throwsLabel(card.pitcher.arm)
+            const slot = staffSlot.get(card.cardKey)
             return (
-              <button
-                type="button"
-                key={card.cardKey}
-                disabled={locked}
-                className={`pregame-choice-card ${startingPitcher === card.cardKey ? 'selected' : ''}`}
-                onClick={() => selectStartingPitcher(card.cardKey)}
-              >
-                <div className="pregame-choice-image">{card.imageUrl ? <img src={getCardImageUrl(card.imageUrl, 'grid') ?? card.imageUrl} alt={card.playerName} referrerPolicy="no-referrer" onError={(event) => handleCardImageLoadError(event.currentTarget, card.imageUrl)} /> : <span>{card.playerName[0]}</span>}</div>
-                <strong>{card.playerName}</strong>
-                <span>
-                  Control {card.pitcher.control ?? '—'}
-                  {effectiveControl !== null && (
-                    <span className="pregame-fatigue-adjusted" title="Fatigue-adjusted effective Control, carrying rest debt from prior games">
-                      {' '}→ {effectiveControl}
-                    </span>
-                  )}
-                  {' '}· IP {card.pitcher.ip ?? '—'}
-                </span>
-              </button>
+              <div className="pregame-choice-wrap" key={card.cardKey}>
+                <button
+                  type="button"
+                  disabled={locked}
+                  className={`pregame-choice-card ${startingPitcher === card.cardKey ? 'selected' : ''}`}
+                  onClick={() => selectStartingPitcher(card.cardKey)}
+                >
+                  <div className="pregame-choice-image">{card.imageUrl ? <img src={getCardImageUrl(card.imageUrl, 'grid') ?? card.imageUrl} alt={card.playerName} referrerPolicy="no-referrer" onError={(event) => handleCardImageLoadError(event.currentTarget, card.imageUrl)} /> : <span>{card.playerName[0]}</span>}</div>
+                  <strong>{card.playerName}</strong>
+                  <span className="pregame-pitcher-tags">{[slot, hand].filter(Boolean).join(' · ')}</span>
+                  {/* Base, fatigue and effective, so the pick is made on the
+                      number he will actually pitch with. */}
+                  <span className={`pregame-pitcher-ctrl${tired ? ' is-tired' : ''}`}>
+                    {tired
+                      ? <>Base C{card.pitcher.control} · Fatigue {(effectiveControl ?? 0) - (card.pitcher.control ?? 0)} · <b>Effective C{effectiveControl}</b></>
+                      : <><b>C{card.pitcher.control ?? '—'}</b> · Rested</>}
+                  </span>
+                  <span>IP {card.pitcher.ip ?? '—'}{rest > 0 ? ` · ${rest} game${rest === 1 ? '' : 's'} from rested` : ''}</span>
+                </button>
+                <ZoomButton card={card} />
+              </div>
             )
           })}
         </div>
@@ -607,6 +621,7 @@ export default function GameplayPregamePage() {
         {!locked && <button type="button" className="gameplay-lab-create-button" disabled={saving || !startingPitcher} onClick={() => void persistSelections(true)}>{saving ? 'Locking…' : 'Lock My Pregame'}</button>}
       </div>
     </main>
+    </CardZoomProvider>
   )
 }
 

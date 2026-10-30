@@ -1,5 +1,6 @@
 import type { ScoringEventInput } from '../halfInningTransition'
 import { narrate } from './playNarration'
+import { playOf } from './playRecord'
 
 /**
  * The game log, narrated where the events support it.
@@ -15,12 +16,21 @@ export type LogEvent = ScoringEventInput & { event_type: string }
 type Line = { text: string; narrated: boolean; kind: string }
 
 function line(event: LogEvent): Line {
+  const play = playOf(event)
+  if (play) return { text: play.lines.join(' '), narrated: true, kind: play.kind }
   const n = narrate(event)
   if (n) return { text: n.text, narrated: true, kind: n.kind }
   const p = event.payload ?? {}
   const roll = typeof p.roll === 'number' ? p.roll : null
   if (event.event_type === 'PITCH_ROLLED' && roll !== null) {
     return { text: `Pitch ${roll}`, narrated: false, kind: 'neutral' }
+  }
+  // A manager's call that is not itself a play: say what was chosen.
+  const words = (v: unknown) => String(v).replaceAll('_', ' ').toLowerCase()
+  if (p.resolutionKind === 'PRE_PITCH_ACTION_STARTED' && p.action) return { text: `Call: ${words(p.action)}`, narrated: false, kind: 'neutral' }
+  if (p.resolutionKind === 'PRE_PITCH_ACTION_CANCELLED') return { text: 'Call withdrawn', narrated: false, kind: 'neutral' }
+  if (p.decisionType && Array.isArray(p.selected) && p.selected.length) {
+    return { text: `${words(p.decisionType)}: ${p.selected.map((x) => words(String(x).split('::').pop())).join(', ')}`, narrated: false, kind: 'neutral' }
   }
   return { text: event.event_type.replaceAll('_', ' ').toLowerCase(), narrated: false, kind: 'neutral' }
 }

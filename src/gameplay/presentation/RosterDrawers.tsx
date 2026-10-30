@@ -1,7 +1,12 @@
 import { useState, type ReactNode } from 'react'
 import { battingSide } from '../gameBoundaryEngine'
+import { threeBatterMinimum } from '../pitcherMound'
 import { awaitingOffenseReady } from '../turnOrder'
-import { availableFor } from './availability'
+import { availableFor, rosterSlot } from './availability'
+import { CardArt } from './CardZoom'
+import { batsLabel, throwsLabel } from './handedness'
+import { hitterOnBaseFor, pitcherFatigueInputFor } from '../engine'
+import { effectivePitcherControl } from '../fatigueEngine'
 import GameLogPanel, { type LogEvent } from './GameLogPanel'
 import type { DecisionOption } from '../decisionEngine'
 import type { GameCardSnapshot, GameSide, GameState } from '../types'
@@ -24,8 +29,8 @@ import type { GameCardSnapshot, GameSide, GameState } from '../types'
  */
 
 const OFFENCE_MOVES = new Set(['PINCH_HITTER', 'PINCH_RUNNER'])
-const DEFENCE_MOVES = new Set(['DEFENSIVE_SUB', 'PITCHING_CHANGE', 'DOUBLE_SWITCH'])
-const PEN_FOOTER = new Set(['PITCHING_CHANGE', 'DOUBLE_SWITCH'])
+const DEFENCE_MOVES = new Set(['DEFENSIVE_SUB', 'PITCHING_CHANGE', 'DOUBLE_SWITCH', 'POSITION_SWAP'])
+const PEN_FOOTER = new Set(['PITCHING_CHANGE', 'DOUBLE_SWITCH', 'POSITION_SWAP'])
 const BENCH_FOOTER = new Set(['PINCH_HITTER', 'PINCH_RUNNER', 'DEFENSIVE_SUB'])
 
 const SHORT: Record<string, string> = {
@@ -34,6 +39,7 @@ const SHORT: Record<string, string> = {
   DEFENSIVE_SUB: 'Def sub',
   PITCHING_CHANGE: 'Pitching change',
   DOUBLE_SWITCH: 'Double switch',
+  POSITION_SWAP: 'Fielder to mound',
 }
 
 type Drawer = 'log' | 'pen' | 'bench'
@@ -41,23 +47,57 @@ type Kind = 'pen' | 'bench'
 
 const other = (side: GameSide): GameSide => (side === 'home' ? 'away' : 'home')
 
-function rates(card: GameCardSnapshot, kind: Kind): string {
-  if (kind === 'pen') return `Ctrl ${card.pitcher.control ?? '—'} · IP ${card.pitcher.ip ?? '—'}`
+/**
+ * A pitcher's Control as he would enter -- rest debt applied, through the
+ * same pitcherFatigueInputFor the live roll uses -- with the card value and
+ * the fatigue beside it whenever they differ. Will picked a "C5" reliever who
+ * entered at C-5 in the first live game; this is what he should have seen.
+ */
+function PenRates({ state, side, card }: { state: GameState; side: GameSide; card: GameCardSnapshot }) {
+  const input = pitcherFatigueInputFor(state, side, card.cardKey)
+  const printed = card.pitcher.control
+  const effective = input ? effectivePitcherControl(input) : printed
+  const rest = input?.gamesFromRested ?? 0
+  const tired = printed !== null && effective !== printed
+  return (
+    <span className="gp-drawer-rates s-num">
+      <span className={`gp-drawer-ctrl${tired ? ' is-tired' : ''}`}>C{effective ?? '—'}</span>
+      {tired && <span className="gp-drawer-was">card C{printed} · fatigue {(effective ?? 0) - (printed ?? 0)}</span>}
+      <span>IP {card.pitcher.ip ?? '—'}</span>
+      <span>{rest > 0 ? `${rest} game${rest === 1 ? '' : 's'} from rested` : 'Rested'}</span>
+    </span>
+  )
+}
+
+function BenchRates({ state, side, card }: { state: GameState; side: GameSide; card: GameCardSnapshot }) {
+  const ob = hitterOnBaseFor(state, side, card.cardKey)
+  const tired = ob && ob.printed !== null && ob.effective !== ob.printed
   const field = Object.entries(card.defense)
     .filter(([, v]) => typeof v === 'number')
     .map(([pos, v]) => `${pos} ${(v as number) >= 0 ? '+' : ''}${v}`)
-  return [`OB ${card.hitter.onBase ?? '—'}`, `BsR ${card.hitter.baserunning ?? '—'}`, ...field].join(' · ')
+  return (
+    <span className="gp-drawer-rates s-num">
+      <span className={`gp-drawer-ctrl${tired ? ' is-tired' : ''}`}>OB {ob?.effective ?? card.hitter.onBase ?? '—'}</span>
+      {tired && <span className="gp-drawer-was">card {ob!.printed} · fatigue {ob!.effective - ob!.printed!}</span>}
+      <span>BsR {card.hitter.baserunning ?? '—'}</span>
+      {field.length > 0 && <span>{field.join(' · ')}</span>}
+    </span>
+  )
 }
 
-function Row({ card, kind, actions }: { card: GameCardSnapshot; kind: Kind; actions?: ReactNode }) {
+function Row({ state, side, card, kind, actions }: { state: GameState; side: GameSide; card: GameCardSnapshot; kind: Kind; actions?: ReactNode }) {
+  const slot = rosterSlot(state, side, card.cardKey).label
+  const hand = kind === 'pen' ? throwsLabel(card.pitcher.arm) : batsLabel(card.hitter.bats)
   return (
     <li className="gp-drawer-row">
-      <span className="gp-drawer-art">
-        {card.imageUrl ? <img src={card.imageUrl} alt="" loading="lazy" /> : <i aria-hidden="true" />}
-      </span>
+      <CardArt card={card} className="gp-drawer-art" />
       <span className="gp-drawer-who">
         <b>{card.playerName}</b>
-        <span className="s-num">{rates(card, kind)}</span>
+        <span className="gp-drawer-tags">
+          {slot && <span className="gp-tag">{slot}</span>}
+          {hand && <span className="gp-tag is-hand">{hand}</span>}
+        </span>
+        {kind === 'pen' ? <PenRates state={state} side={side} card={card} /> : <BenchRates state={state} side={side} card={card} />}
       </span>
       {actions && <span className="gp-drawer-row-acts">{actions}</span>}
     </li>
@@ -135,7 +175,12 @@ export default function RosterDrawers({
     const footMoves = moves.filter((a) =>
       kind === 'pen' ? PEN_FOOTER.has(a.id) || !(OFFENCE_MOVES.has(a.id) || DEFENCE_MOVES.has(a.id))
         : BENCH_FOOTER.has(a.id) || !(OFFENCE_MOVES.has(a.id) || DEFENCE_MOVES.has(a.id)))
-    const reason = moves.length === 0 ? why(kind, side) : null
+    // MLB 5.10(g): say why the pen is shut even when other moves are open.
+    const minimum = kind === 'pen' && side !== batting && actingSides.includes(side) && state.status !== 'complete'
+      ? threeBatterMinimum(state, side) : null
+    const reason = minimum
+      ? `${minimum.playerName} must face ${minimum.remaining} more batter${minimum.remaining === 1 ? '' : 's'} (three-batter minimum) before a pitching change.`
+      : moves.length === 0 ? why(kind, side) : null
     return (
       <>
         {cards.length === 0
@@ -143,7 +188,7 @@ export default function RosterDrawers({
           : (
             <ul className="gp-drawer-list">
               {cards.map((c) => (
-                <Row key={c.cardKey} card={c} kind={kind} actions={rowMoves.length > 0 && (
+                <Row key={c.cardKey} state={state} side={side} card={c} kind={kind} actions={rowMoves.length > 0 && (
                   <>{rowMoves.map((a) => button(a, a.id === 'PITCHING_CHANGE' ? 'Bring in' : SHORT[a.id], c.cardKey))}</>
                 )} />
               ))}

@@ -1,6 +1,8 @@
 import { effectiveCurrentHitterOnBase, effectiveCurrentPitcherControl } from '../engine'
 import { currentHitterOnBaseAdjustment, currentPitcherControlAdjustment } from './inGameFatigueDisplay'
 import RatingReadout from './RatingReadout'
+import { CardArt } from './CardZoom'
+import { batsLabel, throwsLabel } from './handedness'
 import type { GameCardSnapshot, GameSide, GameState } from '../types'
 
 /**
@@ -12,15 +14,14 @@ import type { GameCardSnapshot, GameSide, GameState } from '../types'
  * than being re-derived here.
  */
 
-function Card({ card, role }: { card: GameCardSnapshot | null; role: string }) {
+function Card({ card, role, hand }: { card: GameCardSnapshot | null; role: string; hand: string | null }) {
   return (
     <div className="gp-matchup-card">
-      <span className="gp-matchup-art">
-        {card?.imageUrl ? <img src={card.imageUrl} alt="" loading="lazy" /> : <i aria-hidden="true" />}
-      </span>
+      <CardArt card={card} className="gp-matchup-art" />
       <span className="gp-matchup-who">
         <b className="s-lbl">{role}</b>
-        <strong>{card?.playerName ?? '—'}</strong>
+        {/* Handedness at a glance -- no enlarging the card to find it. */}
+        <strong>{card?.playerName ?? '—'}{hand && <> <span className="gp-hand">{hand}</span></>}</strong>
       </span>
     </div>
   )
@@ -49,7 +50,7 @@ export default function MatchupPanel({ state }: { state: GameState }) {
     <section className="gp-panel gp-matchup" aria-label="Matchup">
       <div className="gp-matchup-sides">
         <div className="gp-matchup-side">
-          <Card card={batter} role="Hitter" />
+          <Card card={batter} role="Hitter" hand={batsLabel(batter?.hitter.bats)} />
           <div className="gp-matchup-rates">
             <RatingReadout label="OB" effective={effectiveCurrentHitterOnBase(state)} adjustment={currentHitterOnBaseAdjustment(state)} />
             <span className="s-sub s-num">BSR {batter?.hitter.baserunning ?? '—'}</span>
@@ -59,7 +60,7 @@ export default function MatchupPanel({ state }: { state: GameState }) {
         <div className="gp-matchup-vs" aria-hidden="true">vs</div>
 
         <div className="gp-matchup-side">
-          <Card card={pitcher} role="Pitcher" />
+          <Card card={pitcher} role="Pitcher" hand={throwsLabel(pitcher?.pitcher.arm)} />
           <div className="gp-matchup-rates">
             <RatingReadout label="CTRL" effective={effectiveCurrentPitcherControl(state)} adjustment={currentPitcherControlAdjustment(state)} />
             <span className="s-sub s-num">IP {pitcher?.pitcher.ip ?? '—'}</span>

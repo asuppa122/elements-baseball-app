@@ -1,3 +1,4 @@
+import { CardArt } from './CardZoom'
 import { battingSide } from '../gameBoundaryEngine'
 import type { DefensivePosition, GameSide, GameState } from '../types'
 
@@ -50,11 +51,9 @@ export default function LineupRail({ state }: { state: GameState }) {
             >
               <i className="gp-lineup-bar" aria-hidden="true" />
               <span className="gp-lineup-order s-num">{index + 1}</span>
-              <span className="gp-lineup-card">
-                {card?.imageUrl
-                  ? <img src={card.imageUrl} alt="" loading="lazy" />
-                  : <i className="gp-lineup-card-empty" aria-hidden="true" />}
-              </span>
+              {card?.imageUrl
+                ? <CardArt card={card} className="gp-lineup-card" />
+                : <span className="gp-lineup-card"><i className="gp-lineup-card-empty" aria-hidden="true" /></span>}
               <span className="gp-lineup-who">
                 <b>{card?.playerName ?? cardKey}</b>
                 <small>
