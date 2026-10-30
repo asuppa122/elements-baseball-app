@@ -52,9 +52,13 @@ export function shutoutBonusApplies(input:PitcherFatigueInput){
 export function distanceControlPenalty(input:PitcherFatigueInput){
   if(input.useDefaultAttributes)return 0
   const limit=cardIpOuts(input.cardIp)
-  const beyond=Math.max(0,input.outsRecorded-limit)
-  // SOB begins on the out that completes the card-IP threshold (e.g. 7.33 IP = 22 outs => first -1 at out 22).
-  const sobOutsAtOrBeyond=Math.max(0,input.outsRecorded-limit+1)
+  // Distance fatigue begins on the out that completes the card-IP threshold: a
+  // 6.67 IP pitcher (20 outs) pays his first penalty at out 20, because every
+  // batter he faces after it is pitched beyond his card. Anthony's ruling after
+  // the first live game (2026-10-30); it moves the Rulebook's "0.2 IP past" example
+  // from -4 to -6, and is recorded as a Proposed Digital Gameplay Update.
+  // Same counting for the -2 branch and the Shutout Bonus's -1 branch.
+  const outsAtOrBeyond=input.outsRecorded>0?Math.max(0,input.outsRecorded-limit+1):0
   const baseBeforeDistance=clampPitcherControl((input.printedControl??-5)-Math.max(0,input.gamesFromRested??0)-performanceControlPenalty(input.earnedRunsAllowed))
   const brokenAt=input.shutoutBonusBrokenAtOuts
   if(brokenAt!==undefined){
@@ -68,10 +72,9 @@ export function distanceControlPenalty(input:PitcherFatigueInput){
   if(shutoutBonusApplies(input)){
     // Shutout Bonus: the threshold-completing out is the first -1, then -1 for every later out.
     // The bonus cannot by itself push Control below 0.
-    return Math.min(sobOutsAtOrBeyond,Math.max(0,baseBeforeDistance))
+    return Math.min(outsAtOrBeyond,Math.max(0,baseBeforeDistance))
   }
-  if(!beyond)return 0
-  return beyond*2
+  return outsAtOrBeyond*2
 }
 export function effectivePitcherControl(input:PitcherFatigueInput){
   if(input.useDefaultAttributes || input.printedControl===null)return -5

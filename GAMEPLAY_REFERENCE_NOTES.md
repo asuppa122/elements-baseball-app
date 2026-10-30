@@ -436,3 +436,17 @@ session's play.)
 | Both full lineups/bench always visible during an at-bat | Yes, plus separate BULLPEN/MOUND sections | Yes (starters + bench); no separate bullpen section seen |
 | In-game chat | Not observed | Yes — live chat box on the game screen |
 | Live rewards/economy preview during play | Not observed | Yes — a running credits-earned panel, updating mid-game |
+
+## Rulings from the first live two-player game (Anthony vs. Will, 2026-10-30)
+
+Anthony's answers to questions the Rulebook does not settle, or settles
+differently. Each is implemented and pinned by the scenario IDs listed.
+
+| # | Ruling | Category | Rulebook text it touches | Scenarios |
+|---|---|---|---|---|
+| 1 | Over-IP fatigue starts on the out that **reaches** card IP: a 6.67 IP pitcher pays -2 at his 20th out, then -2 per out. Shutout Bonus counts the same way (-1). | Proposed Digital Gameplay Update | IX-C: "-2 for each out … beyond their card IP length"; its example (0.2 IP past = -4) becomes -6 | FAT-DIST-01..06, FAT-SO-03, REG-FAT-01 |
+| 2 | Postgame rest: a player who appeared adds his full card fatigue and does **not** also get the day's -1; a player who sat gets -1. Milestone bonus still applies to everyone. | Official Rule (the Rulebook's own IX-B examples: 2 + 6 = 8) — the code was wrong | IX-B | REST-FULL-01..07, restTrackingSqlParity; migration 20261030_gameplay_rest_appearance_fix.sql |
+| 3 | Any pitcher on the staff (rotation **or** bullpen) may start. | Approved Digital Gameplay Behavior | V: start at P only with Control and pitcher-primary card (rotation/bullpen slot is the proxy; the snapshot has no primary flag) | — (UI) |
+| 4 | A fielder already in the game may move to P with the pitcher moving to the field, nobody entering. Unlisted positions at -10; unlisted only after the game's first PA. Not offered in DH games (it would end the DH). | Proposed Digital Gameplay Update | X: "Fielders are only allowed to shift … when there is another … replacement player entering" | SWAP-01..06 |
+| 5 | MLB 5.10(d) Comment: a pitcher moved to the field may return to pitch; P → field at most once per inning; one continuous pitching line. | MLB fallback (Rulebook I: defer to MLB) | — | SWAP-05, SWAP-06 |
+| 6 | MLB 5.10(g) three-batter minimum for every pitcher, starter included; removable between innings if the half ends first, owes the rest if he returns. Games created before 2026-10-30 carry no minimum. | MLB fallback, adopted | — | MOUND-01..04 |

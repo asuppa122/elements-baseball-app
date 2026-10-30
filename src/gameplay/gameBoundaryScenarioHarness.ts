@@ -43,7 +43,7 @@ export function runGameBoundaryScenarioMatrix(): ScenarioReport {
   test('REG-GB-01','Multi-mechanic regression','Equality on INF fielding remains safe',()=>a(!infieldCheckOut(10,2,12),'Tie must remain safe.'))
   test('REG-GB-02','Multi-mechanic regression','Natural 20 on INF check remains automatic out',()=>a(infieldCheckOut(20,-99,99),'Natural 20 must be out.'))
   test('REG-GB-03','Multi-mechanic regression','Natural 1 on INF check remains all safe',()=>a(!infieldCheckOut(1,99,1),'Natural 1 must be safe.'))
-  test('REG-FAT-01','Multi-mechanic regression','Pregame + distance fatigue still stack',()=>a(effectivePitcherControl({printedControl:6,gamesFromRested:2,cardIp:5,outsRecorded:16,earnedRunsAllowed:1})===2,'Expected Control 2.'))
+  test('REG-FAT-01','Multi-mechanic regression','Pregame + distance fatigue still stack',()=>a(effectivePitcherControl({printedControl:6,gamesFromRested:2,cardIp:5,outsRecorded:15,earnedRunsAllowed:1})===2,'Expected Control 2.'))
   test('REG-FAT-02','Multi-mechanic regression','Fatigue Control floor remains -5',()=>a(effectivePitcherControl({printedControl:2,gamesFromRested:3,cardIp:1,outsRecorded:12,earnedRunsAllowed:10})===-5,'Expected -5 floor.'))
   test('REG-SEASON-01','Multi-mechanic regression','1925 extra innings stay free of modern automatic-runner rule',()=>a(!automaticExtraInningRunnerApplies(ACTIVE_SEASON_CONFIG.mlbYear,10),'1925 extras must have no automatic runner.'))
 

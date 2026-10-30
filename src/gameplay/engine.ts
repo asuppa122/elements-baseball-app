@@ -3,6 +3,7 @@ import { canAssignDefensivePosition } from './defense'
 import { resolveCoreResult, resolveSwingChart } from './coreGame'
 import { effectiveHitterOnBase, effectivePitcherControl, type PitcherFatigueInput } from './fatigueEngine'
 import { readPitcherStateValue } from './pitcherStateKey'
+import { openingStints } from './pitcherMound'
 import { awaitingOffenseReady } from './turnOrder'
 import type {
   GameManagerSnapshot,
@@ -263,6 +264,7 @@ export function startGame(state: GameState): GameState {
     status: 'in_progress',
     lineupCursor: { home: 0, away: 0 },
     naturalStolenBaseUsed: { home:false, away:false },
+    pitcherStint: openingStints(state),
     appearedCardKeys: {
       away:[...new Set([...state.pregame.away.battingOrderCardKeys, ...Object.values(state.pregame.away.defensiveAlignment).filter(Boolean) as string[]])],
       home:[...new Set([...state.pregame.home.battingOrderCardKeys, ...Object.values(state.pregame.home.defensiveAlignment).filter(Boolean) as string[]])],

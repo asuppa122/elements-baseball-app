@@ -15,6 +15,7 @@ import m6 from '../../supabase/migrations/20260826_gameplay_player_rest_state.sq
 import m7 from '../../supabase/migrations/20260826_gameplay_rest_tracking_on_completion.sql?raw'
 import m8 from '../../supabase/migrations/20260827_gameplay_away_side_access.sql?raw'
 import m9 from '../../supabase/migrations/20261029_gameplay_two_player.sql?raw'
+import m10 from '../../supabase/migrations/20261030_gameplay_rest_appearance_fix.sql?raw'
 
 /**
  * A real Postgres with the gameplay schema, for development only.
@@ -34,7 +35,7 @@ export const DEV_USERS = {
   outsider: '00000000-0000-4000-8000-000000000003',
 } as const
 
-export const MIGRATIONS = [m0, m1, m2, m3, m4, m5, m6, m7, m8, m9]
+export const MIGRATIONS = [m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10]
 
 export type DevDb = {
   db: PGlite

@@ -1,4 +1,5 @@
 import { defensiveOutsRecorded } from './engine'
+import { outsPitched } from './pitcherMound'
 import { lineScore } from './inningScore'
 import { readPitcherStateValue } from './pitcherStateKey'
 import { applyGameCompletionRest } from './restTracking'
@@ -129,17 +130,21 @@ export function pitchingLinesFor(state: GameState, side: GameSide): PitchingLine
 
   return order.map((cardKey, index) => {
     const card = cardOf(state, side, cardKey)
+    // Exits are recorded since pitchers could leave the mound and come back
+    // (pitcherMound.ts); older games fall back to the next pitcher's entry.
+    const recorded = outsPitched(state, side, cardKey)
     const exit = index + 1 < order.length ? entryOuts[index + 1] : totalOuts
+    const outs = recorded ?? Math.max(0, exit - entryOuts[index])
     return {
       cardKey,
       playerName: nameOf(state, side, cardKey),
       order: index,
-      outsRecorded: Math.max(0, exit - entryOuts[index]),
-      inningsPitched: formatInningsPitched(Math.max(0, exit - entryOuts[index])),
+      outsRecorded: outs,
+      inningsPitched: formatInningsPitched(outs),
       runsAllowed: readPitcherStateValue(state.pitcherRunsAllowed, side, cardKey) ?? 0,
       printedControl: card?.pitcher.control ?? null,
       printedIp: card?.pitcher.ip ?? null,
-      finished: index === order.length - 1,
+      finished: recorded !== null ? state.pregame[side].defensiveAlignment.P === cardKey : index === order.length - 1,
     }
   })
 }

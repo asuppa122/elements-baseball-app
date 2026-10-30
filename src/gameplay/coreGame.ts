@@ -2,6 +2,7 @@ import { getFieldingRating } from './defense'
 import { cardIpOuts } from './fatigueEngine'
 import { creditRunsToInning } from './inningScore'
 import { pitcherInstanceKey, readPitcherStateValue } from './pitcherStateKey'
+import { recordBatterFaced } from './pitcherMound'
 import type {
   BaseRunnerState,
   GameCardSnapshot,
@@ -280,7 +281,7 @@ function markPlateAppearanceCompleted(state: GameState, offense: GameSide, defen
   const pitcherKeys = state.pitcherAppearanceCardKeys ?? { home: [], away: [] }
 
   return {
-    ...state,
+    ...recordBatterFaced(state, defense, pitcherKey),
     hitterPlateAppearanceCardKeys: batterKey
       ? { ...hitterKeys, [offense]: [...new Set([...hitterKeys[offense], batterKey])] }
       : hitterKeys,

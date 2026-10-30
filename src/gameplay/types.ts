@@ -83,6 +83,15 @@ export type GameRosterSnapshot = {
   cards: Record<string, GameCardSnapshot>
 }
 
+export type PitcherStint = {
+  cardKey: string
+  /** Completed plate appearances against him since he took the mound. */
+  battersFaced: number
+  /** The half-inning (`${inning}-${half}`) he last completed a batter in, or
+   *  took the mound in; null for a starter who has not yet pitched. */
+  halfKey: string | null
+}
+
 export type DefensivePosition = 'C' | '1B' | '2B' | '3B' | 'SS' | 'LF' | 'CF' | 'RF' | 'P' | 'DH'
 
 export type PregameManagerState = {
@@ -202,6 +211,18 @@ export type GameState = {
   pitcherEntryDefenseOuts?: Record<string, number>
   pitcherRunsAllowed?: Record<string, number>
   pitcherShutoutBonusBrokenAtOuts?: Record<string, number>
+  // Defensive out count when each pitcher (pitcherInstanceKey) last left the
+  // mound. With pitcherEntryDefenseOuts it gives every pitcher one continuous
+  // line even when he moves to the field and comes back (MLB 5.10, adopted
+  // 2026-10-30). See pitcherMound.ts.
+  pitcherExitDefenseOuts?: Record<string, number>
+  // The pitcher now on each side's mound, for the three-batter minimum (MLB
+  // 5.10(g), adopted 2026-10-30). Absent in games created before it, which
+  // therefore carry no minimum.
+  pitcherStint?: Partial<Record<GameSide, PitcherStint>>
+  // Inning in which a pitcher (pitcherInstanceKey) last moved from P to a
+  // field position: MLB 5.10(d) Comment allows that once per inning.
+  pitcherToFieldInning?: Record<string, number>
   waitingFor: GameplayWaitingFor | null
   nextActor: GameSide | null
   paused: {

@@ -32,14 +32,14 @@ export function runRestTrackingScenarioMatrix():ScenarioReport{
  test('REST-MILE-07','Milestone bonus (broken-formula guard)','A regression that fired every game (not just on cadence) would fail this off-cadence check',()=>assert(milestoneBonusForGameCount(5,[{gamesPlayed:8,bonusRestDays:1}])===0,'Expected 0 -- 5 is not a multiple of 8.'))
 
  // Full three-step composition
- test('REST-FULL-01','Full sequence','Appeared, non-milestone game: increment then flat -1 only',()=>{
+ test('REST-FULL-01','Full sequence','Appeared, non-milestone game: full card fatigue added, no flat -1',()=>{
    const r=applyGameCompletionRest({priorHitterGamesRemaining:2,priorPitcherGamesRemaining:0,hitterFatigueScore:5,pitcherFatigueScore:null,hitterAppeared:true,pitcherAppeared:false,gmCompletedGamesThisSeason:3,restMilestones:[{gamesPlayed:8,bonusRestDays:1}]})
-   assert(r.hitterGamesRemaining===6,'Expected 2+5-1=6.')
+   assert(r.hitterGamesRemaining===7,'Expected 2+5=7 (Rulebook IX-B example shape).')
  })
- test('REST-FULL-02','Full sequence','Appeared on a milestone game: increment, then -1 flat, then -1 milestone (matches the user’s own worked example)',()=>{
+ test('REST-FULL-02','Full sequence','Appeared on a milestone game: increment, no flat -1, then the milestone -1',()=>{
    const r=applyGameCompletionRest({priorHitterGamesRemaining:2,priorPitcherGamesRemaining:2,hitterFatigueScore:5,pitcherFatigueScore:5,hitterAppeared:true,pitcherAppeared:true,gmCompletedGamesThisSeason:8,restMilestones:[{gamesPlayed:8,bonusRestDays:1}]})
-   assert(r.hitterGamesRemaining===5,'Expected 2+5-1-1=5.')
-   assert(r.pitcherGamesRemaining===5,'Expected 2+5-1-1=5.')
+   assert(r.hitterGamesRemaining===6,'Expected 2+5-1=6.')
+   assert(r.pitcherGamesRemaining===6,'Expected 2+5-1=6.')
  })
  test('REST-FULL-03','Full sequence','Did not appear on a milestone game: still gets the flat -1 AND the milestone -1, no increment',()=>{
    const r=applyGameCompletionRest({priorHitterGamesRemaining:3,priorPitcherGamesRemaining:3,hitterFatigueScore:5,pitcherFatigueScore:5,hitterAppeared:false,pitcherAppeared:false,gmCompletedGamesThisSeason:8,restMilestones:[{gamesPlayed:8,bonusRestDays:1}]})
@@ -51,8 +51,15 @@ export function runRestTrackingScenarioMatrix():ScenarioReport{
  })
  test('REST-FULL-05','Full sequence','Two-way player: hitter and pitcher tracks move independently in the same game',()=>{
    const r=applyGameCompletionRest({priorHitterGamesRemaining:0,priorPitcherGamesRemaining:4,hitterFatigueScore:2,pitcherFatigueScore:6,hitterAppeared:true,pitcherAppeared:false,gmCompletedGamesThisSeason:5,restMilestones:[]})
-   assert(r.hitterGamesRemaining===1,'Expected hitter 0+2-1=1 (appeared as hitter).')
+   assert(r.hitterGamesRemaining===2,'Expected hitter 0+2=2 (appeared as hitter).')
    assert(r.pitcherGamesRemaining===3,'Expected pitcher 4-1=3 (did not pitch this game).')
+ })
+ // Regression from the first live game: Rube Curry pitched (should end at 3), Nelson Dean sat at 3 (ends at 2).
+ test('REST-FULL-07','Full sequence','Pitcher who appeared keeps his full card fatigue; one who sat ticks down',()=>{
+   const curry=applyGameCompletionRest({priorHitterGamesRemaining:0,priorPitcherGamesRemaining:0,hitterFatigueScore:null,pitcherFatigueScore:3,hitterAppeared:false,pitcherAppeared:true,gmCompletedGamesThisSeason:1,restMilestones:[{gamesPlayed:8,bonusRestDays:1}]})
+   const dean=applyGameCompletionRest({priorHitterGamesRemaining:0,priorPitcherGamesRemaining:3,hitterFatigueScore:null,pitcherFatigueScore:2,hitterAppeared:false,pitcherAppeared:false,gmCompletedGamesThisSeason:1,restMilestones:[{gamesPlayed:8,bonusRestDays:1}]})
+   assert(curry.pitcherGamesRemaining===3,'Expected Curry 0+3=3.')
+   assert(dean.pitcherGamesRemaining===2,'Expected Dean 3-1=2.')
  })
  test('REST-FULL-06','Full sequence (no-bonus season)','An empty restMilestones season never applies a milestone decrement, even on what would be a cadence multiple elsewhere',()=>{
    const r=applyGameCompletionRest({priorHitterGamesRemaining:9,priorPitcherGamesRemaining:0,hitterFatigueScore:0,pitcherFatigueScore:0,hitterAppeared:false,pitcherAppeared:false,gmCompletedGamesThisSeason:8,restMilestones:[]})

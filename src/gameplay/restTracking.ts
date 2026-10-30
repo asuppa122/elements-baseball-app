@@ -14,8 +14,11 @@ import type { RestMilestone } from './seasonConfig'
  * as one and rested as the other):
  *   a. Appearance increment  -- unconditional per player who appeared this
  *      game: += their printed card fatigue score for that track.
- *   b. Flat per-game decrement -- unconditional, every game, every rostered
- *      player regardless of appearance: -1.
+ *   b. Flat per-game decrement -- every rostered player who did NOT appear
+ *      on this track: -1. A player who appeared does not also get it: the
+ *      Rulebook's examples (IX-B) put a hitter 2 away with fatigue 6 who
+ *      appears at 8, not 7. Corrected 2026-10-30 after the first live game
+ *      (Rube Curry finished at 2 instead of 3).
  *   c. Milestone bonus decrement -- conditional: only on a game where the
  *      GM's completed-game count this season lands on a season-configured
  *      milestone (see seasonConfig.ts's `restMilestones`), an additional
@@ -48,7 +51,7 @@ export function applyAppearanceIncrement(priorGamesRemaining: number, fatigueSco
   return Math.max(0, priorGamesRemaining) + Math.max(0, fatigueScore ?? 0)
 }
 
-/** Step (b): -1, every game, unconditionally, floored at 0. */
+/** Step (b): -1 for a game this track sat out, floored at 0. */
 export function applyFlatPerGameDecrement(gamesRemaining: number): number {
   return Math.max(0, gamesRemaining - 1)
 }
@@ -76,11 +79,11 @@ export function applyMilestoneDecrement(gamesRemaining: number, gmCompletedGames
   return Math.max(0, gamesRemaining - milestoneBonusForGameCount(gmCompletedGamesThisSeason, restMilestones))
 }
 
-/** Runs all three steps, in order, for both the hitter and pitcher tracks independently. */
+/** Runs the steps, in order, for both the hitter and pitcher tracks independently. */
 export function applyGameCompletionRest(input: GameCompletionRestInput): RestTrack {
   const runTrack = (priorGamesRemaining: number, fatigueScore: number | null, appeared: boolean): number => {
     const afterAppearance = applyAppearanceIncrement(priorGamesRemaining, fatigueScore, appeared)
-    const afterFlat = applyFlatPerGameDecrement(afterAppearance)
+    const afterFlat = appeared ? afterAppearance : applyFlatPerGameDecrement(afterAppearance)
     return applyMilestoneDecrement(afterFlat, input.gmCompletedGamesThisSeason, input.restMilestones)
   }
 
