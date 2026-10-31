@@ -5,7 +5,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
 import { getCardImageUrl, handleCardImageLoadError } from '../utils/cardHelpers'
 import { attachPregameRoster, attachRestState, lockPregame, setPregameSelections, startGame } from '../gameplay/engine'
-import { canAssignDefensivePosition, getFieldingRating } from '../gameplay/defense'
+import { canStartAtPosition, getFieldingRating } from '../gameplay/defense'
 import { pregameEffectiveControl, pregameEffectiveOnBase } from '../gameplay/pregameFatigueDisplay'
 import {
   hasGameplayLabAccess,
@@ -337,7 +337,7 @@ export default function GameplayPregamePage() {
         .filter(([otherPosition, key]) => otherPosition !== position && Boolean(key))
         .map(([, key]) => key as string),
     )
-    return rosterCards.filter((card) => canAssignDefensivePosition(card, position) && (card.cardKey === currentCardKey || !usedElsewhere.has(card.cardKey)))
+    return rosterCards.filter((card) => canStartAtPosition(card, position) && (card.cardKey === currentCardKey || !usedElsewhere.has(card.cardKey)))
   }
 
   function toggleDefault(cardKey: string) {

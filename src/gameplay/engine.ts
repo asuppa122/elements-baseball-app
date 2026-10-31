@@ -1,5 +1,5 @@
 import { cloneSeasonConfiguration, type ActiveSeasonConfiguration } from './seasonConfig'
-import { canAssignDefensivePosition } from './defense'
+import { canStartAtPosition } from './defense'
 import { resolveCoreResult, resolveSwingChart } from './coreGame'
 import { effectiveHitterOnBase, effectivePitcherControl, type PitcherFatigueInput } from './fatigueEngine'
 import { readPitcherStateValue } from './pitcherStateKey'
@@ -177,13 +177,13 @@ export function setPregameSelections(
       if (!cardKey) throw new Error(`Assign a player at ${position} before locking pregame.`)
       const card = rosterCards[cardKey]
       if (!card) throw new Error(`The ${position} assignment must be part of the frozen game roster.`)
-      if (!canAssignDefensivePosition(card, position)) {
+      if (!canStartAtPosition(card, position)) {
         if (position === 'P') throw new Error('The P defensive assignment must have a valid pitcher chart.')
         if (position === 'DH') throw new Error('The DH assignment must have a valid hitter chart.')
-        throw new Error(`${card.playerName} cannot be assigned to ${position}.`)
+        throw new Error(`${card.playerName} has no ${position} fielding score on his card, and starters may only start at a listed position.`)
       }
-      // All rostered cards are legal at C/1B/2B/3B/SS/LF/CF/RF.
-      // If the card does not list that position, gameplay evaluates the fielding rating as -10.
+      // Starters only at listed positions (Rulebook V). Unlisted positions at
+      // -10 open in-game, after the first plate appearance -- not here.
     }
 
     const assignedKeys = required.map((position) => defensiveAlignment[position] as string)

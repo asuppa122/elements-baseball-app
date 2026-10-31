@@ -18,3 +18,16 @@ export function getFieldingRating(card: GameCardSnapshot, position: DefensivePos
   if (position === 'P' || position === 'DH') return null
   return card.defense[position] ?? -10
 }
+
+/**
+ * Where a player may START a game (Rulebook V): only at a position with an
+ * on-card fielding score, or DH with a hitter side, or P with a pitcher card.
+ * The -10 for an unlisted position is an in-game allowance only, once the
+ * game's first plate appearance is complete -- canAssignDefensivePosition
+ * above is that in-game rule. (P: any pitcher card, two-way players
+ * included -- Anthony's ruling, 2026-10-30.)
+ */
+export function canStartAtPosition(card: GameCardSnapshot, position: DefensivePosition): boolean {
+  if (position === 'P' || position === 'DH') return canAssignDefensivePosition(card, position)
+  return typeof card.defense[position] === 'number'
+}

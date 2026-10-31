@@ -1,3 +1,11 @@
+# v1.5.3 — Starters at Listed Positions, One-Screen Fix, Rest Correction
+
+- **Rulebook V enforced in pregame:** a starter may only take a position with a fielding score on his card (DH: any hitter; P: any pitcher card, two-way players included). The −10 for an unlisted position is in-game only, once the first plate appearance is complete. Pregame dropdowns no longer offer unlisted positions, and the engine rejects them.
+- One-screen test games no longer stall on the new screen at the first away-side decision ("Waiting on Will"); one manager plays both sides there.
+- After a deploy, an open page whose code chunk was replaced reloads itself once instead of going blank.
+- Pregame labels relievers RP1, RP2… like the game drawer.
+- **Data correction (run by hand):** `supabase/data-fixes/20261030_first_live_game_rest_correction.sql` adds back the extra −1 the old rule took from players who appeared in the first live game (Rube Curry 2 → 3). Step 1 previews; step 2 applies and is safe to run twice.
+
 # v1.5.2 — Clean Game Log, Two-Way Players in Both Drawers
 
 - The game log reads like a published play-by-play: plays only, in order under half-inning headings ("Top 3rd · Will batting"), current half-inning on top. Pitch rolls, ready-ups and board selections are gone (the roll is under the Roll button).

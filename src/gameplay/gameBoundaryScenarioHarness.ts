@@ -1,4 +1,6 @@
 import { ACTIVE_SEASON_CONFIG, getMlbTimelineRules } from './seasonConfig'
+import { attachPregameRoster, createInitialGameState, setPregameSelections } from './engine'
+import { buildNonGbCoverageFixture } from './rulebookCoverage'
 import { effectivePitcherControl } from './fatigueEngine'
 import { extraBaseEffectiveBaserunning, fieldingCheckIsOut } from './ruleAssertions'
 import { infieldCheckOut } from './groundBallEngine'
@@ -38,6 +40,10 @@ export function runGameBoundaryScenarioMatrix(): ScenarioReport {
   test('SEASON-2023-03','Season boundaries','2023 inning 10 activates automatic runner',()=>a(automaticExtraInningRunnerApplies(2023,10),'2023 extras must use runner.'))
   test('SEASON-CONFIG-01','Season boundaries','Active season configuration passes boundary validation',()=>a(validateSeasonBoundaryConfiguration(ACTIVE_SEASON_CONFIG).length===0,'Active config failed boundary validation.'))
 
+  // Rulebook V: starters only at a position with an on-card fielding score (Anthony, 2026-10-30: enforce).
+  const pregameWith=(mutate:(cards:Record<string,{defense:Record<string,number>}>)=>void)=>{const f=buildNonGbCoverageFixture();const s=createInitialGameState({gameId:'pos-test',configuration:f.configuration,homeManager:f.managers.home,awayManager:f.managers.away});const roster=structuredClone(f.pregame.home.roster!);mutate(roster.cards as unknown as Record<string,{defense:Record<string,number>}>);const g=attachPregameRoster(s,'home',roster);return ()=>setPregameSelections(g,'home',{startingPitcherCardKey:f.pregame.home.startingPitcherCardKey!,battingOrderCardKeys:f.pregame.home.battingOrderCardKeys,defensiveAlignment:f.pregame.home.defensiveAlignment,defaultBatterCardKeys:[]})}
+  test('PRE-POS-01','Pregame','A starter at a position listed on his card is accepted',()=>{pregameWith(()=>undefined)()})
+  test('PRE-POS-02','Pregame','A starter at a position NOT on his card is rejected (no -10 starts)',()=>{const run=pregameWith(c=>{delete c['HOME-2'].defense['2B']});let threw='';try{run()}catch(e){threw=e instanceof Error?e.message:String(e)}a(/no 2B fielding score/.test(threw),`Expected a rejection naming 2B, got "${threw}".`)})
   test('REG-ADV-01','Multi-mechanic regression','Two-out 2B-to-home hit advancement uses +6 BsR',()=>a(extraBaseEffectiveBaserunning(14,'2B','HOME',2)===20,'Expected BsR20.'))
   test('REG-ADV-02','Multi-mechanic regression','Equality on OF fielding remains safe',()=>a(!fieldingCheckIsOut(10,4,14),'Tie must remain safe.'))
   test('REG-GB-01','Multi-mechanic regression','Equality on INF fielding remains safe',()=>a(!infieldCheckOut(10,2,12),'Tie must remain safe.'))
