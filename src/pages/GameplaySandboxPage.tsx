@@ -52,12 +52,32 @@ const SCENARIOS: Scenario[] = [
     state: decision as unknown as GameState,
   },
   {
+    key: 'loaded',
+    label: 'Bases loaded',
+    blurb: 'The mid-game state with a runner on every base -- for checking the field: fielders, runner labels and bases together.',
+    state: basesLoaded(midgame as unknown as GameState),
+  },
+  {
     key: 'final',
     label: 'Final',
     blurb: 'A finished game, showing the post-game board and final line.',
     state: final as unknown as GameState,
   },
 ]
+
+/** The mid-game state with the next three batters standing on base. */
+function basesLoaded(source: GameState): GameState {
+  const s = structuredClone(source)
+  const side = s.half === 'top' ? 'away' : 'home'
+  const order = s.pregame[side].battingOrderCardKeys
+  const at = order.indexOf(s.plateAppearance.batterCardKey ?? '')
+  const runner = (offset: number) => {
+    const card = s.pregame[side].roster!.cards[order[(at + offset + 9) % 9]]
+    return { cardKey: card.cardKey, playerName: card.playerName, baserunning: card.hitter.baserunning, stolenBase: card.hitter.stolenBase }
+  }
+  s.bases = { first: runner(-1), second: runner(-2), third: runner(-3) }
+  return s
+}
 
 /** Wraps a bare GameState in the row shape the screen expects. */
 function asGame(state: GameState, key: string): PersistedGameplayLabGame {

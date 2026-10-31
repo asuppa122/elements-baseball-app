@@ -1526,3 +1526,50 @@ button.gp-lineup-card img { width: 100%; height: 100%; object-fit: cover; displa
 }
 .gp-log-half .gp-log-list li { display: block; padding: 4px 0; }
 .gp-log-half .gp-log-text { white-space: normal; overflow: visible; }
+
+
+/* =====================================================================
+ * Layout step 1: a square field, the DEF strip under it (2026-10-30)
+ * useSquareField.ts publishes --field-size: the largest square that fits
+ * above the strip. Field and strip are one unit, centred in the column. Below
+ * 1024px the page scrolls and the field is simply as wide as its column (the
+ * base .gp-field rule), so none of this applies.
+ * ===================================================================== */
+@media (min-width: 1024px) {
+  .gp-region-field {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-width: 0;
+  }
+  .gp-region-field .gp-field {
+    width: var(--field-size, 100%);
+    height: var(--field-size, auto);
+    max-width: 100%;
+    flex: none;
+  }
+  .gp-region-field > .gp-defbar { width: var(--field-size, 100%); max-width: 100%; }
+}
+
+/* Layout step 2: on a big field the fielders grow with it (~11%), so they
+ * stay in proportion instead of shrinking into the grass. */
+@container field (min-width: 760px) {
+  .gp-fc-art { width: 60px; height: 84px; }
+  .gp-fc-fielder.is-catcher .gp-fc-art { width: 51px; height: 71px; }
+  .gp-fc-batter .gp-fc-art, .gp-fc-pitcher .gp-fc-art { width: 78px; height: 109px; }
+  .gp-fc-pos { font-size: 9.5px; }
+  .gp-fc-name { font-size: 10.5px; }
+  .gp-fc-live { font-size: 11px; }
+  .gp-runner-name { font-size: 12px; }
+  .gp-runner-rates i { font-size: 10px; }
+}
+
+/* On a small field the runner on second is squeezed between SS, 2B and the
+ * pitcher: it keeps its name, drops the ratings line (they are on the
+ * runner's card and in the steal/advance options) and sits a little higher
+ * on the bag, so it never covers the pitcher's card. */
+@container field (max-width: 400px) {
+  .gp-runner.is-second { transform: translate(-50%, -72%); padding: 2px 6px; }
+  .gp-runner.is-second .gp-runner-rates { display: none; }
+}

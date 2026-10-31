@@ -20,11 +20,19 @@ export const FIELDER_POINTS: Record<Exclude<DefensivePosition, 'DH'>, FieldPoint
   LF: { left: 18.90, top: 19.21 },
   CF: { left: 49.60, top: 15.50 },
   RF: { left: 81.10, top: 19.21 },
-  SS: { left: 34.61, top: 40.02 },
-  '2B': { left: 65.39, top: 40.02 },
-  '3B': { left: 23.13, top: 50.71 },
-  '1B': { left: 76.87, top: 50.71 },
-  P: { left: 50.00, top: 50.88 },
+  // Middle infielders up toward centre field and apart, corners a touch wider
+  // and lower: the artboard values left SS and 2B 12px from the corner cards
+  // and crowding the pitcher once the field was drawn square (layout review,
+  // approved 2026-10-30). Was SS 34.61/40.02, 2B 65.39/40.02, 3B 23.13/50.71,
+  // 1B 76.87/50.71.
+  SS: { left: 33.0, top: 35.5 },
+  '2B': { left: 67.0, top: 35.5 },
+  '3B': { left: 21.5, top: 52.0 },
+  '1B': { left: 78.5, top: 52.0 },
+  // 0.9% lower (toward the mound) than the artboard's 50.88, with the 2B
+  // runner 0.8% higher: on a square field the bag's label otherwise touched
+  // the pitcher card at ~560px.
+  P: { left: 50.00, top: 51.8 },
   C: { left: 50.00, top: 86.49 },
 }
 
@@ -34,9 +42,12 @@ export const FIELDER_POINTS: Record<Exclude<DefensivePosition, 'DH'>, FieldPoint
  * artboard would have put it -- it only ever drew runners on second and third.
  */
 export const RUNNER_POINTS: Record<'first' | 'second' | 'third', FieldPoint> = {
-  third: { left: 23.29, top: 62.76 },
-  second: { left: 49.84, top: 38.60 },
-  first: { left: 76.71, top: 62.76 },
+  // Corner runners moved off the 3B/1B name labels (they sat 10px under
+  // them); second stays on the bag, nudged up from 38.60 to clear the
+  // pitcher. Was third 23.29/62.76, first 76.71/62.76.
+  third: { left: 20.5, top: 66.5 },
+  second: { left: 49.84, top: 37.8 },
+  first: { left: 79.5, top: 66.5 },
 }
 
 /**

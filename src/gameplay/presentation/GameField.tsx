@@ -123,7 +123,7 @@ function Batter({ state }: { state: GameState }) {
 function Runner({ base, runner }: { base: 'first' | 'second' | 'third'; runner: BaseRunnerState }) {
   const point = RUNNER_POINTS[base]
   return (
-    <div className="gp-runner" style={{ left: `${point.left}%`, top: `${point.top}%` }}>
+    <div className={`gp-runner is-${base}`} style={{ left: `${point.left}%`, top: `${point.top}%` }}>
       <span className="gp-runner-name">{shortName(runner.playerName)}</span>
       <span className="gp-runner-rates s-num">
         <i>BsR {runner.baserunning ?? '—'}</i>

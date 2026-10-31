@@ -19,7 +19,8 @@ import { awaitingOffenseReady, sideToAct } from '../turnOrder'
 import type { useGameplayActions } from './useGameplayActions'
 import type { HalfInningTransition as HalfInningTransitionModel } from '../halfInningTransition'
 import type { GameSide, GameState } from '../types'
-import type { ReactNode } from 'react'
+import { useRef, type ReactNode } from 'react'
+import { useSquareField } from './useSquareField'
 
 /**
  * The gameplay screen's layout, with no idea where its game came from.
@@ -163,6 +164,8 @@ export default function GameplayScreenView({
     noPitch, declareReady, rollPitch, rollSwing, startAction, changeAction, confirmDecision, rollDecision, togglePause,
   } = actions
   const acting = actingSides ?? [viewerSide]
+  const fieldColumn = useRef<HTMLElement>(null)
+  useSquareField(fieldColumn)
   // Two managers at two screens: each sees only their own calls and buttons,
   // and only on their turn (turnOrder.ts). A one-screen game is one person
   // playing both sides, so nothing is gated there.
@@ -252,7 +255,7 @@ export default function GameplayScreenView({
         {/* Centre is strictly the game: score, the field, the defence. The
             matchup is the batter at the plate against the pitcher on the
             mound, so it needs no panel of its own. */}
-        <section className="gp-region-field" aria-label="Field">
+        <section className="gp-region-field" aria-label="Field" ref={fieldColumn}>
           <GameField state={state} />
           <DefBar state={state} />
         </section>
