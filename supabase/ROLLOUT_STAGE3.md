@@ -1,84 +1,110 @@
-# Stage 3 rollout — one active game, pre-launch tracking off
+# Stage 3 rollout — one active game, nothing counts before launch
 
-Nothing here has been run against production. Each step needs Anthony's go-ahead.
-Deploying the site never turns official tracking on; only step 9 does, and only
-when Anthony declares Elements Baseball live.
+Nothing here has been run against production. Each step needs Anthony's
+go-ahead. Deploying the site never turns official tracking on; only the launch
+step does, and only when Anthony declares Elements Baseball live — after every
+item in `LAUNCH_BLOCKERS.md` is done.
 
-## Before (read-only)
+## A. Preflight (read-only; repeat on the day)
 
 1. **Backups.** Confirm today's Supabase backup exists (Dashboard → Database →
-   Backups), then take a local snapshot: `npm run snapshot:gameplay`
-   (writes `backups/gameplay-<time>/`, git-ignored).
-2. **Inventory.** `npm run inventory:games` — expect the same 14 unfinished
-   games as the migration's list and no others. A new game since the
-   inventory: stop and decide about it first.
-3. **Preview.** Run `supabase/data-fixes/20261031_one_active_game_preview.sql`
-   in the SQL Editor. Expect exactly 14 `CLOSE` rows, nothing else, and no rows
-   from the second query.
-4. **Quiet moment.** Nobody (Will included) mid-move: the old app cannot create
-   games once step 5 runs, and the new one cannot load until step 6.
+   Backups). Then `npm run snapshot:gameplay` (writes `backups/gameplay-<time>/`,
+   git-ignored: games, events, dice, rest, access, profiles).
+2. **Inventory.** `npm run inventory:games` must say
+   `on the migration's list: 14 of its 14  NOT on it: 0`. Anything not on the
+   list: stop and decide about it first. `npm run inventory:progression`
+   should still show 72 rest rows, all traced to a game completion.
+3. **Rehearsal.** `npm run check:rollout` replays this whole runbook on a copy
+   of that snapshot on a throwaway local Postgres (never Supabase). All 16
+   checks must pass.
+4. **Preview, live.** Run `supabase/data-fixes/20261031_one_active_game_preview.sql`
+   in the SQL Editor: exactly 14 `CLOSE` rows, nothing else, and no rows from
+   the second query.
+5. **Quiet moment.** Nobody (Will included) mid-move: the old app cannot create
+   games once B6 runs, and the new app cannot load until B7.
 
-## Apply
+## B. Migration and deploy
 
-5. **Migration.** Run all of `supabase/migrations/20261031_gameplay_one_active_game.sql`
-   in the SQL Editor. It is one transaction: if it fails, nothing changed.
-6. **Deploy** the app straight after (push to `main` → Vercel). Order matters:
+6. **Migration.** Run all of `supabase/migrations/20261031_gameplay_one_active_game.sql`
+   in the SQL Editor. One transaction: if it fails, nothing changed.
+7. **Deploy** the app straight after (push `main` → Vercel). Order matters:
 
    | | old database | new database |
    |---|---|---|
    | old app | works | cannot create games or pause; everything else works |
    | new app | games page fails to load | works |
 
-## Verify (read-only SQL, then the app)
-
-7. In the SQL Editor:
+8. **Verify** (SQL Editor, read-only):
 
    ```sql
-   select official_tracking_enabled from public.gameplay_settings;            -- false
+   select official_tracking_enabled, official_tracking_started_at from public.gameplay_settings; -- false, null
    select status, count(*) from public.games group by 1 order by 1;            -- complete 7, terminated 14
    select count(*) from public.games where end_reason = 'practice_cleanup';    -- 14
    select progression, count(*) from public.games group by 1;                  -- prelaunch 21
    select count(*) from public.gameplay_active_games;                          -- 0
-   select has_function_privilege('authenticated', 'public.activate_official_tracking(text)', 'execute'); -- false
+   select bool_or(has_function_privilege(r, f, 'execute'))
+   from unnest(array['authenticated','anon','service_role']) r,
+        unnest(array['public.activate_official_tracking(text)','public.suspend_official_tracking(text)',
+                     'public.resume_official_tracking(text)']) f;              -- false
    select p.manager_name, a.can_create_test_games, a.can_terminate_games
    from public.gameplay_feature_access a join public.profiles p using (user_id); -- Anthony t/t, Will t/f
    ```
 
-8. In the app, from both accounts (these are pre-launch games: nothing counts):
-   the games page shows the pre-launch notice; create a two-player game;
-   neither manager can start another; cancel it before the first pitch and
-   both are free; create another and play it to the end from both screens;
-   resume after leaving mid-game; then confirm
-   `select count(*) from public.player_rest_state where updated_at > '<deploy time>'` is 0.
+## C. Pre-launch rest archive (approved 2026-10-31)
 
-## Pre-launch clean slate (separate approval)
+Run `supabase/data-fixes/20261031_prelaunch_rest_archive.sql` one step at a
+time in the SQL Editor:
 
-- Run `supabase/data-fixes/20261031_prelaunch_rest_archive.sql` STEP 1, read
-  it, then STEP 2: the 72 pre-launch rest rows move to
-  `player_rest_state_prelaunch_archive`. Do **not** run
-  `20261030_first_live_game_rest_correction.sql` (superseded).
+9.  **STEP 1** (read-only): 72 rows, each with the game that wrote it.
+10. **STEP 2**: copies them into `player_rest_state_prelaunch_archive`. Removes nothing.
+11. **STEP 3** (read-only): `live_rows = archived_rows = 72`,
+    `rows_missing_from_archive = 0`, `archived_rows_traced_to_a_game = 72`.
+    Anything else: stop.
+12. **STEP 4**: removes the archived rows from `player_rest_state`; it re-checks
+    STEP 3 itself and refuses, removing nothing, if any row lacks an identical copy.
+13. **STEP 5** (read-only): `live_rows = 0`, `archived_rows = 72`, `source_games = 2`.
 
-## Launch day (only when Anthony declares it)
+Do **not** run `20261030_first_live_game_rest_correction.sql` (superseded).
 
-9. In the SQL Editor, as the project owner:
+## D. Two-account test (required; pre-launch, so nothing counts)
 
-   ```sql
-   select public.activate_official_tracking('Elements Baseball is officially live');
-   ```
+14. Anthony and Will on the deployed site: the games page shows the pre-launch
+    notice; create a two-player game; neither can start another (official or
+    friendly); cancel it before the first pitch — both free; create another,
+    pregame on both sides, alternate turns, make decisions, leave mid-game and
+    resume, play to the end. Then:
 
-   It refuses if any pre-launch rest row remains. Games created from then on
-   are official (two-player) or practice (one-screen, or friendlies); every
-   earlier game stays pre-launch for good. Emergency stop:
-   `select public.suspend_official_tracking('<reason>');`
+    ```sql
+    select progression, status from public.games order by created_at desc limit 2;  -- prelaunch
+    select count(*) from public.player_rest_state;                                    -- 0
+    ```
 
-## If something goes wrong
+## E. Launch day (only when Anthony declares it, after LAUNCH_BLOCKERS.md)
 
-- **Migration error:** nothing was applied (one transaction). Fix and re-run.
+15. ```sql
+    select public.activate_official_tracking('Elements Baseball is officially live');
+    ```
+    Refuses if any rest row remains (C not done). From then on two-player games
+    are `official` (or `practice` if created as friendlies; both count toward
+    the one-game limit), one-screen games `practice`. Every earlier game stays
+    `prelaunch` for good.
+
+**Emergency suspension:** `select public.suspend_official_tracking('<reason>');`
+New games are `untracked`; official games play on but their final move is
+refused (nothing saved) until `select public.resume_official_tracking('<reason>');`,
+after which the same move finishes them and records their progression.
+
+## F. If something goes wrong
+
+- **Migration error:** nothing was applied (one transaction). Fix, re-run A.
 - **Problem after applying:** prefer a forward fix. Otherwise run
   `supabase/rollbacks/20261031_gameplay_one_active_game_rollback.sql`, then the
   whole of `20261030_gameplay_rest_appearance_fix.sql`, and redeploy the
   previous app version. The 14 closed games stay closed; the migration can be
   re-applied later. (The restored writer writes rest on every completion
   again until it is.)
-- **Data damaged:** restore the affected rows from the local snapshot or the
+- **Archive problem:** STEPs 2–4 are idempotent; STEP 4 never removes a row
+  without an identical archived copy. The archive table itself is the backup
+  of those rows; the snapshot from A1 is a second copy.
+- **Data damaged:** restore the affected rows from the A1 snapshot or the
   Supabase backup.

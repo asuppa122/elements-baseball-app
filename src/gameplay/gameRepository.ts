@@ -43,11 +43,11 @@ export type PersistedGameplayLabGame = {
   /** Set by the database from the game itself (20261031). Two-player games count toward the one-game limit. */
   play_mode?: 'two_player' | 'one_screen'
   /**
-   * Fixed by the database when the game is created: `prelaunch` while official
-   * tracking is off (every game so far), then `official` or `practice`. Only
-   * official games feed persistent rest and milestones.
+   * Fixed by the database when the game is created: `prelaunch` before launch
+   * (every game so far), then `official` or `practice`, or `untracked` during
+   * a suspension. Only official games feed persistent rest and milestones.
    */
-  progression?: 'prelaunch' | 'practice' | 'official'
+  progression?: 'prelaunch' | 'practice' | 'official' | 'untracked'
   ended_at?: string | null
   ended_by_user_id?: string | null
   end_reason?: 'cancelled_before_first_pitch' | 'admin_terminated' | 'practice_cleanup' | null
@@ -251,13 +251,15 @@ export type GameplayPermissions = {
   can_terminate_games: boolean
   /** Off until Anthony declares Elements Baseball live; nothing counts while off. */
   official_tracking_enabled: boolean
+  /** Launch has happened (so "off" means suspended, not pre-launch). */
+  official_tracking_started: boolean
 }
 
 export async function loadGameplayPermissions(): Promise<GameplayPermissions> {
   const { data, error } = await supabase.rpc('get_my_gameplay_permissions')
   if (error) throw error
   const row = ((data as GameplayPermissions[] | null) ?? [])[0]
-  return row ?? { can_create_test_games: false, can_terminate_games: false, official_tracking_enabled: false }
+  return row ?? { can_create_test_games: false, can_terminate_games: false, official_tracking_enabled: false, official_tracking_started: false }
 }
 
 export async function loadGameplayLabGames(): Promise<PersistedGameplayLabGame[]> {

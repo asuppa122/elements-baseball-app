@@ -93,6 +93,11 @@ describe('before launch (the default)', () => {
     expect(await restRows()).toEqual([])
   })
 
+  it('cannot be suspended or resumed before launch', async () => {
+    await rejects(owner(`select public.suspend_official_tracking('not launched yet')`), /nothing to suspend/)
+    await rejects(owner(`select public.resume_official_tracking('not launched yet')`), /has not launched yet/)
+  })
+
   it('the owner\'s activation needs the exact confirmation and a clean slate', async () => {
     await rejects(owner(`select public.activate_official_tracking('yes')`), /pass exactly/)
     await owner(`insert into public.player_rest_state (user_id, season_id, card_key, hitter_games_remaining) values ($1, 'test-season', 'Old Card', 2)`, [HOME])
@@ -166,11 +171,95 @@ describe('after the owner declares it live', () => {
     expect(new Set(rows.map((r) => r.user_id))).toEqual(new Set([HOME, AWAY]))
   })
 
-  it('the owner can suspend it with a reason; new games are then untracked again', async () => {
-    await rejects(owner(`select public.suspend_official_tracking('')`), /Give a reason/)
-    await owner(`select public.suspend_official_tracking('Found a scoring bug, pausing the season')`)
-    expect((await owner<{ on: boolean }>('select public.gameplay_official_tracking_enabled() as on'))[0].on).toBe(false)
-    const g = await midGame(true)
-    expect(await progressionOf(g.gameId)).toBe('prelaunch')
+  it('a two-player friendly counts toward the one-unfinished-game limit but never toward progression', async () => {
+    await dev.endAll()
+    const fixture = buildNonGbCoverageFixture()
+    const friendly = attachPregameRoster(createInitialGameState({
+      gameId: '50000000-0000-4000-8000-0000000000f3', configuration: { ...fixture.configuration, seasonId: 'test-season' },
+      homeManager: { userId: HOME, managerName: 'Anthony' }, awayManager: { userId: AWAY, managerName: 'Will' },
+    }), 'home', fixture.pregame.home.roster!)
+    friendly.turnHandshake = true
+    await dev.asOwner(async () => {
+      await dev.db.exec(`set role authenticated; select set_config('test.uid', '${HOME}', false);`)
+      await dev.db.query('select public.create_gameplay_game($1::jsonb, true)', [JSON.stringify(friendly)])
+    })
+    expect(await progressionOf(friendly.gameId)).toBe('practice')
+    // neither manager can start another game, official or friendly, while it is unfinished
+    const another = { ...friendly, gameId: '50000000-0000-4000-8000-0000000000f4' }
+    await rejects(dev.create(HOME, another), /ACTIVE_GAME_HOME/)
+    await rejects(dev.create(AWAY, { ...another, managers: { home: friendly.managers.away, away: friendly.managers.home } }), /ACTIVE_GAME_HOME/)
+    // finished as a friendly: no rest written
+    const restBefore = await restRows()
+    await dev.endAll()
+    const f2 = buildNonGbCoverageFixture()
+    f2.gameId = '50000000-0000-4000-8000-0000000000f5'
+    f2.managers = { home: { userId: HOME, managerName: 'Anthony' }, away: { userId: AWAY, managerName: 'Will' } }
+    f2.configuration.seasonId = 'test-season'
+    f2.turnHandshake = true
+    f2.restState = { home: {}, away: {} }
+    await owner(`insert into public.games (id, season_id, season_year, status, home_user_id, away_user_id, configuration_snapshot, game_state, progression)
+      values ($1, 'test-season', 1925, 'in_progress', $2, $3, '{}'::jsonb, $4::jsonb, 'practice')`, [f2.gameId, HOME, AWAY, JSON.stringify(f2)])
+    expect(await progressionOf(f2.gameId)).toBe('practice')
+    await finish(f2)
+    expect(await restRows()).toEqual(restBefore)
+  })
+
+  describe('an emergency suspension', () => {
+    let officialBefore: GameState
+
+    beforeAll(async () => {
+      officialBefore = await midGame(true) // official, unfinished when the suspension starts
+      await rejects(owner(`select public.suspend_official_tracking('')`), /Give a reason/)
+      await owner(`select public.suspend_official_tracking('Found a scoring bug, pausing the season')`)
+    })
+
+    it('is recorded, and only the owner can do it', async () => {
+      expect((await owner<{ on: boolean }>('select public.gameplay_official_tracking_enabled() as on'))[0].on).toBe(false)
+      const notes = (await owner<{ note: string }>('select note from public.gameplay_settings_history order by id')).map((r) => r.note)
+      expect(notes.at(-1)).toBe('SUSPENDED: Found a scoring bug, pausing the season')
+      await rejects(dev.asOwner(async () => {
+        await dev.db.exec(`set role authenticated; select set_config('test.uid', '${HOME}', false);`)
+        await dev.db.query(`select public.resume_official_tracking('let me back in')`)
+      }), /permission denied/)
+      await rejects(owner(`select public.suspend_official_tracking('twice in a row')`), /nothing to suspend/)
+      await rejects(owner(`select public.activate_official_tracking('${PHRASE}')`), /already launched/)
+    })
+
+    it('classifies games created meanwhile as untracked, not pre-launch, and they finish without progression', async () => {
+      const officialId = officialBefore.gameId
+      await owner(`update public.games set status = 'terminated' where id <> $1 and not public.gameplay_is_ended(status)`, [officialId])
+      await owner(`update public.games set status = 'terminated' where id = $1`, [officialId]) // free the managers for this check
+      const g = await midGame(true)
+      expect(await progressionOf(g.gameId)).toBe('untracked')
+      const restBefore = await restRows()
+      await finish(g)
+      expect((await dev.load(HOME, g.gameId)).status).toBe('complete')
+      expect(await restRows()).toEqual(restBefore)
+    })
+
+    it('lets an official game play on but not finish; nothing is saved, and the same move finishes it after resuming', async () => {
+      // a fresh official game: created while on, then suspended mid-game
+      await owner(`select public.resume_official_tracking('bug fixed, back on')`)
+      const g = await midGame(true)
+      expect(await progressionOf(g.gameId)).toBe('official')
+      await owner(`select public.suspend_official_tracking('second scare, pausing again')`)
+      const restBefore = await restRows()
+      const before = await dev.load(HOME, g.gameId)
+      await rejects(finish(g), /OFFICIAL_TRACKING_SUSPENDED/)
+      const after = await dev.load(HOME, g.gameId)
+      expect(after.status).toBe(before.status)
+      expect(after.state_version).toBe(before.state_version)
+      expect(await restRows()).toEqual(restBefore)
+      expect(await dev.activeGame(HOME)).toMatchObject({ game_id: g.gameId }) // still the managers' active game
+      // resumed: the same final move finishes it, and its progression is recorded
+      await rejects(owner(`select public.resume_official_tracking('')`), /Give a reason/)
+      await owner(`select public.resume_official_tracking('all clear')`)
+      const [{ t }] = await owner<{ t: string }>('select clock_timestamp() as t')
+      await finish(g)
+      expect((await dev.load(HOME, g.gameId)).status).toBe('complete')
+      const written = await owner<{ user_id: string }>('select distinct user_id from public.player_rest_state where updated_at >= $1', [t])
+      expect(new Set(written.map((r) => r.user_id))).toEqual(new Set([HOME, AWAY]))
+      expect(await dev.activeGame(HOME)).toBeNull()
+    })
   })
 })

@@ -40,6 +40,10 @@ const EDITABLE_PRE_PITCH = [
 
 /** Supabase errors are plain objects, not Error instances; keep the server's reason. */
 function errorMessage(e: unknown): string {
+  // The database holds an official game's final move during a tracking suspension.
+  if (e && typeof e === 'object' && (e as { message?: unknown }).message === 'OFFICIAL_TRACKING_SUSPENDED') {
+    return 'Official tracking is suspended. This official game can finish once it resumes; nothing has been lost.'
+  }
   if (e instanceof Error) return e.message
   if (e && typeof e === 'object' && 'message' in e && typeof (e as { message: unknown }).message === 'string') {
     return (e as { message: string }).message

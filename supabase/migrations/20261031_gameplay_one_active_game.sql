@@ -20,15 +20,22 @@
 --     practice:  created after launch but not official (one-screen games, or
 --                a two-player game created as a friendly).
 --     official:  created after launch as a competitive two-player game.
+--     untracked: created after launch while official tracking is suspended.
 --   Only `official` games write persistent rest or count toward milestones.
 --   It is fixed when the game is created and never changes, so a game started
 --   before launch never counts, however late it finishes.
+--
+--   DURING A SUSPENSION an official game keeps playing but cannot finish: the
+--   writer refuses the move that would complete it, the game stays exactly as
+--   it was, and the same move finishes it (and records its progression) once
+--   tracking resumes. Untracked, practice and pre-launch games finish normally.
 --
 --   OFFICIAL TRACKING (gameplay_settings) -- a single switch, OFF by default.
 --   Only the database owner can turn it on (activate_official_tracking, run in
 --   the SQL Editor with a typed confirmation); no app, deploy, migration or
 --   date turns it on. Activation refuses while any pre-launch rest row is
---   still in player_rest_state, so official totals start from zero.
+--   still in player_rest_state, so official totals start from zero. After
+--   launch the owner may suspend it and resume it (never re-activate).
 --
 -- What it does, in order (one transaction -- any failure leaves nothing changed):
 --   1. End states `cancelled` and `terminated`: no result, no rest tracking.
@@ -86,7 +93,7 @@ alter table public.games add column if not exists progression text;
 update public.games set progression = 'prelaunch' where progression is null;
 alter table public.games alter column progression set not null;
 alter table public.games drop constraint if exists games_progression_check;
-alter table public.games add constraint games_progression_check check (progression in ('prelaunch','practice','official'));
+alter table public.games add constraint games_progression_check check (progression in ('prelaunch','practice','official','untracked'));
 
 -- 3) The official-tracking switch ---------------------------------------------------
 create table if not exists public.gameplay_settings (
@@ -136,6 +143,9 @@ begin
   if public.gameplay_official_tracking_enabled() then
     raise exception 'Official tracking is already on (since %).', (select official_tracking_started_at from public.gameplay_settings where id);
   end if;
+  if (select official_tracking_started_at from public.gameplay_settings where id) is not null then
+    raise exception 'Elements Baseball already launched; official tracking is suspended. Use resume_official_tracking.';
+  end if;
   -- A clean slate: no persistent rest may predate launch (archive it first:
   -- supabase/data-fixes/20261031_prelaunch_rest_archive.sql).
   select count(*) into v_rest from public.player_rest_state;
@@ -150,7 +160,9 @@ begin
 end;
 $$;
 
--- The emergency stop. Games already created keep their classification.
+-- The emergency stop, after launch only. Games already created keep their
+-- classification; new games are `untracked`; official games cannot finish
+-- until tracking resumes.
 create or replace function public.suspend_official_tracking(p_reason text)
 returns jsonb
 language plpgsql
@@ -159,14 +171,49 @@ set search_path = public
 as $$
 begin
   if length(trim(coalesce(p_reason, ''))) < 5 then raise exception 'Give a reason.'; end if;
+  if not public.gameplay_official_tracking_enabled() then
+    raise exception 'Official tracking is not on, so there is nothing to suspend.';
+  end if;
   update public.gameplay_settings set official_tracking_enabled = false, updated_at = now(), note = trim(p_reason) where id;
-  insert into public.gameplay_settings_history (official_tracking_enabled, note) values (false, trim(p_reason));
+  insert into public.gameplay_settings_history (official_tracking_enabled, note) values (false, 'SUSPENDED: ' || trim(p_reason));
   return jsonb_build_object('official_tracking_enabled', false);
 end;
 $$;
 
+-- Ends a suspension. Official games paused at their final move can finish.
+create or replace function public.resume_official_tracking(p_reason text)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if length(trim(coalesce(p_reason, ''))) < 5 then raise exception 'Give a reason.'; end if;
+  if (select official_tracking_started_at from public.gameplay_settings where id) is null then
+    raise exception 'Elements Baseball has not launched yet; use activate_official_tracking.';
+  end if;
+  if public.gameplay_official_tracking_enabled() then
+    raise exception 'Official tracking is already on.';
+  end if;
+  update public.gameplay_settings set official_tracking_enabled = true, updated_at = now(), note = trim(p_reason) where id;
+  insert into public.gameplay_settings_history (official_tracking_enabled, note) values (true, 'RESUMED: ' || trim(p_reason));
+  return jsonb_build_object('official_tracking_enabled', true);
+end;
+$$;
+
+-- Whether launch has happened, for the games page's notice.
+create or replace function public.gameplay_official_tracking_started()
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$ select (select official_tracking_started_at from public.gameplay_settings where id) is not null $$;
+grant execute on function public.gameplay_official_tracking_started() to authenticated;
+
 revoke all on function public.activate_official_tracking(text) from public;
 revoke all on function public.suspend_official_tracking(text) from public;
+revoke all on function public.resume_official_tracking(text) from public;
 do $$
 declare r text;
 begin
@@ -174,6 +221,7 @@ begin
     if exists (select 1 from pg_roles where rolname = r) then
       execute format('revoke all on function public.activate_official_tracking(text) from %I', r);
       execute format('revoke all on function public.suspend_official_tracking(text) from %I', r);
+      execute format('revoke all on function public.resume_official_tracking(text) from %I', r);
     end if;
   end loop;
 end;
@@ -217,13 +265,14 @@ $$;
 -- What the games page shows and enables: both permissions and whether
 -- official tracking is on.
 create or replace function public.get_my_gameplay_permissions()
-returns table (can_create_test_games boolean, can_terminate_games boolean, official_tracking_enabled boolean)
+returns table (can_create_test_games boolean, can_terminate_games boolean, official_tracking_enabled boolean, official_tracking_started boolean)
 language sql
 stable
 security definer
 set search_path = public
 as $$
-  select public.gameplay_can_create_test_games(), public.gameplay_can_terminate_games(), public.gameplay_official_tracking_enabled();
+  select public.gameplay_can_create_test_games(), public.gameplay_can_terminate_games(),
+    public.gameplay_official_tracking_enabled(), public.gameplay_official_tracking_started();
 $$;
 grant execute on function public.gameplay_can_create_test_games() to authenticated;
 grant execute on function public.gameplay_can_terminate_games() to authenticated;
@@ -240,11 +289,12 @@ begin
     -- The play mode comes from the game, never from what the writer claims.
     new.play_mode := case when coalesce((new.game_state->>'turnHandshake')::boolean, false) then 'two_player' else 'one_screen' end;
     -- Progression is decided here and only here. A writer may ask for
-    -- `practice` (a friendly) but can never make a game official: while
-    -- tracking is off every game is prelaunch, and a one-screen game is
-    -- never official.
+    -- `practice` (a friendly) but can never make a game official: before
+    -- launch every game is prelaunch, during a suspension untracked, and a
+    -- one-screen game is never official.
     new.progression := case
-      when not public.gameplay_official_tracking_enabled() then 'prelaunch'
+      when not public.gameplay_official_tracking_enabled() and not public.gameplay_official_tracking_started() then 'prelaunch'
+      when not public.gameplay_official_tracking_enabled() then 'untracked'
       when new.play_mode = 'one_screen' then 'practice'
       when new.progression = 'practice' then 'practice'
       else 'official'
@@ -262,7 +312,7 @@ begin
     raise exception 'A game''s play mode cannot change.';
   end if;
   if new.progression is distinct from old.progression then
-    raise exception 'A game''s progression (pre-launch, practice or official) is fixed when it is created.';
+    raise exception 'A game''s progression (pre-launch, practice, official or untracked) is fixed when it is created.';
   end if;
   if new.home_user_id is distinct from old.home_user_id or new.away_user_id is distinct from old.away_user_id then
     raise exception 'A game''s managers cannot change.';
@@ -708,6 +758,14 @@ begin
   -- functions, never a save.
   if p_next_state->>'status' = 'paused' and current_game.status <> 'paused' then
     raise exception 'Games can no longer be paused.';
+  end if;
+  -- [Stage 3] An official game cannot finish while official tracking is
+  -- suspended: it would finish without its progression. Nothing is saved; the
+  -- same move finishes it once tracking resumes.
+  if p_next_state->>'status' = 'complete' and current_game.status <> 'complete'
+     and current_game.progression = 'official' and not public.gameplay_official_tracking_enabled() then
+    raise exception 'OFFICIAL_TRACKING_SUSPENDED'
+      using detail = 'Official tracking is suspended. This official game can finish once it resumes; nothing has been lost.';
   end if;
   -- GAME_RESUMED is not turn-checked, so it is accepted only for what it is
   -- for: taking a legacy-paused game out of pause.

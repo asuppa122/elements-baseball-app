@@ -7,17 +7,22 @@
 //
 // For each game that is not complete: id, status, game type (two-player or
 // one-screen test), home and away manager, created/updated, the last event,
-// and a FLAG when a manager is not one of the known practice testers or the
-// game is newer than the cleanup cut-off -- those are listed for review, not
-// closed.
+// and whether it is on the Stage 3 migration's explicit list of games to
+// close. A FLAG means it is not on that list -- a game created since the
+// inventory -- and must be decided on before the migration runs.
 //
 //   node scripts/inventory-unfinished-games.mjs
 
 import "dotenv/config";
+import fs from "node:fs";
+import path from "node:path";
 import process from "node:process";
 import { createClient } from "@supabase/supabase-js";
 
-const KNOWN_TESTERS = new Set(["Anthony", "Will"]);
+// The migration's practice list (section 5), read from the file itself.
+const migrationSql = fs.readFileSync(path.join(import.meta.dirname, "..", "supabase", "migrations", "20261031_gameplay_one_active_game.sql"), "utf8");
+const listSection = migrationSql.slice(migrationSql.indexOf("-- 5) Practice cleanup"), migrationSql.indexOf("-- 6) The active-game registry"));
+const ON_LIST = new Set([...listSection.matchAll(/^\s+'([0-9a-f-]{36})',?$/gm)].map((m) => m[1]));
 const FINISHED = new Set(["complete", "cancelled", "terminated"]);
 
 const url = process.env.VITE_SUPABASE_URL;
@@ -60,9 +65,7 @@ for (const g of games) byStatus[g.status] = (byStatus[g.status] ?? 0) + 1;
 const rows = unfinished.map((g) => {
   const home = nameOf.get(g.home_user_id) ?? g.home_user_id;
   const away = nameOf.get(g.away_user_id) ?? g.away_user_id;
-  const flags = [];
-  if (!KNOWN_TESTERS.has(home)) flags.push(`home "${home}" not a known tester`);
-  if (!KNOWN_TESTERS.has(away)) flags.push(`away "${away}" not a known tester`);
+  const flags = ON_LIST.has(g.id) ? [] : ["NOT on the migration's list"];
   const last = lastEvent.get(g.id);
   return {
     id: g.id,
@@ -82,7 +85,7 @@ console.log(`All games: ${games.length}  by status: ${JSON.stringify(byStatus)}`
 // Completed games feed persistent rest tracking today whatever their type.
 const done = games.filter((g) => g.status === "complete");
 console.log(`Completed: ${done.map((g) => `${g.id.slice(0, 8)} ${g.turnHandshake === true ? "two-player" : "one-screen"} ${nameOf.get(g.home_user_id)} v ${nameOf.get(g.away_user_id)}`).join(" | ")}`);
-console.log(`Unfinished: ${rows.length}  flagged for review: ${rows.filter((r) => r.flag).length}\n`);
+console.log(`Unfinished: ${rows.length}  on the migration's list: ${rows.filter((r) => !r.flag).length} of its ${ON_LIST.size}  NOT on it: ${rows.filter((r) => r.flag).length}\n`);
 console.table(rows);
-console.log("\nIDs (unflagged):");
-console.log(rows.filter((r) => !r.flag).map((r) => `  '${r.id}',`).join("\n"));
+const missing = [...ON_LIST].filter((id) => !rows.some((r) => r.id === id));
+if (missing.length) console.log(`\nOn the list but no longer unfinished (the migration will skip them): ${missing.join(", ")}`);

@@ -136,6 +136,12 @@ describe('opening a legacy-paused game', () => {
     expect(saveState).not.toHaveBeenCalled()
   })
 
+  it('turns the server holding an official game\'s final move (tracking suspended) into a plain message', async () => {
+    const held: SaveGameState = async () => { throw { message: 'OFFICIAL_TRACKING_SUSPENDED', details: 'Official tracking is suspended.' } }
+    const { result } = harness(paused(base(true)), HOME, held)
+    await waitFor(() => expect(result.current.error).toBe('Official tracking is suspended. This official game can finish once it resumes; nothing has been lost.'))
+  })
+
   it('no longer offers a pause action', () => {
     const { result } = harness(base(true), HOME)
     expect('togglePause' in result.current).toBe(false)

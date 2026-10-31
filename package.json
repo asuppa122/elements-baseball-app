@@ -22,7 +22,8 @@
     "inventory:games": "node scripts/inventory-unfinished-games.mjs",
     "inventory:progression": "node scripts/inventory-prelaunch-progression.mjs",
     "snapshot:gameplay": "node scripts/snapshot-gameplay-tables.mjs",
-    "check:concurrency": "node scripts/concurrency-check.mjs"
+    "check:concurrency": "node scripts/concurrency-check.mjs",
+    "check:rollout": "node scripts/dry-run-rollout.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.111.0",

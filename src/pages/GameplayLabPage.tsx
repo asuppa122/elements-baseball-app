@@ -101,7 +101,7 @@ export default function GameplayLabPage() {
   const [selectedLineupId, setSelectedLineupId] = useState('')
   const [twoPlayer, setTwoPlayer] = useState(true)
   const [activeGame, setActiveGame] = useState<ActiveGame | null>(null)
-  const [permissions, setPermissions] = useState<GameplayPermissions>({ can_create_test_games: false, can_terminate_games: false, official_tracking_enabled: false })
+  const [permissions, setPermissions] = useState<GameplayPermissions>({ can_create_test_games: false, can_terminate_games: false, official_tracking_enabled: false, official_tracking_started: false })
   const [busy, setBusy] = useState(false)
   const [loading, setLoading] = useState(true)
   const [creating, setCreating] = useState(false)
@@ -268,10 +268,16 @@ export default function GameplayLabPage() {
       </section>
 
       {/* The database decides this (gameplay_settings); the page only says it. */}
-      {!permissions.official_tracking_enabled && (
+      {!permissions.official_tracking_enabled && !permissions.official_tracking_started && (
         <div className="gameplay-lab-message gameplay-lab-prelaunch">
           <b>Pre-launch testing.</b> Games play, save and finish normally, but nothing counts toward official
           records — no game counts, milestones, rest or fatigue carry-over — until Elements Baseball is declared live.
+        </div>
+      )}
+      {!permissions.official_tracking_enabled && permissions.official_tracking_started && (
+        <div className="gameplay-lab-message gameplay-lab-prelaunch">
+          <b>Official tracking is suspended.</b> Games still play and save. New games do not count, and an official
+          game in progress cannot finish until tracking resumes — its last move is kept waiting, nothing is lost.
         </div>
       )}
       {error && <div className="gameplay-lab-message error">{error}</div>}

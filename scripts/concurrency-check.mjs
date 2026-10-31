@@ -3,51 +3,22 @@
 // PostgreSQL server -- many separate connections at once, which PGlite (one
 // connection) cannot do.
 //
-// Throwaway and isolated: it creates a new cluster in a temp folder, on a
-// private Unix socket with TCP off, runs every gameplay migration, races the
-// requests, prints the results, then stops the server and deletes the folder.
-// It never connects to Supabase and reads no .env.
+// Throwaway and isolated (scripts/lib/localPostgres.mjs): a new cluster in a
+// temp folder on a private Unix socket, every gameplay migration, the races,
+// then the server is stopped and the folder deleted. It never connects to
+// Supabase and reads no .env.
 //
 //   node scripts/concurrency-check.mjs            (needs Homebrew postgresql@17)
 //   PG_BIN=/path/to/postgres/bin node scripts/concurrency-check.mjs
 
-import { execFileSync, spawn } from "node:child_process";
-import fs from "node:fs";
-import os from "node:os";
-import path from "node:path";
 import process from "node:process";
 import { randomUUID } from "node:crypto";
+import { GAMEPLAY_MIGRATIONS, installSupabaseStandIns, startLocalPostgres } from "./lib/localPostgres.mjs";
 
-const BIN = process.env.PG_BIN ?? "/opt/homebrew/opt/postgresql@17/bin";
-const MIGRATIONS = [
-  "20260818_gameplay_phase1_foundation.sql", "20260818_gameplay_phase1a_private_lab.sql",
-  "20260818_gameplay_phase1b_pregame_state.sql", "20260818_gameplay_phase1d_start_state.sql",
-  "20260818_gameplay_phase2a_pitch_roll.sql", "20260818_gameplay_build1_core_game.sql",
-  "20260826_gameplay_player_rest_state.sql", "20260826_gameplay_rest_tracking_on_completion.sql",
-  "20260827_gameplay_away_side_access.sql", "20261029_gameplay_two_player.sql",
-  "20261030_gameplay_rest_appearance_fix.sql", "20261031_gameplay_one_active_game.sql",
-].map((f) => path.join(import.meta.dirname, "..", "supabase", "migrations", f));
+let db;
+const sql = (text) => db.sql(text);
+const request = (text) => db.request(text);
 
-// Short on purpose: a Unix socket path must stay under ~100 characters on macOS.
-const dir = fs.mkdtempSync(path.join(os.platform() === "darwin" ? "/tmp" : os.tmpdir(), "epg-"));
-const data = path.join(dir, "data");
-const PORT = "54329";
-// Postgres on macOS refuses to start without a valid locale (Homebrew says so too).
-const env = { ...process.env, LC_ALL: "en_US.UTF-8" };
-const pg = (args, opts = {}) => execFileSync(path.join(BIN, args[0]), args.slice(1), { stdio: "pipe", env, ...opts }).toString();
-const psqlArgs = ["-X", "-q", "-At", "-v", "ON_ERROR_STOP=1", "-h", dir, "-p", PORT, "-U", "postgres", "-d", "postgres"];
-const sql = (text) => pg(["psql", ...psqlArgs, "-c", text]).trim();
-const sqlFile = (file) => pg(["psql", ...psqlArgs, "-f", file]);
-
-/** One request on its own connection; resolves with ok or the error text. */
-function request(text) {
-  return new Promise((resolve) => {
-    const p = spawn(path.join(BIN, "psql"), [...psqlArgs, "-c", text], { env });
-    let err = "";
-    p.stderr.on("data", (d) => { err += d; });
-    p.on("close", (code) => resolve(code === 0 ? { ok: true } : { ok: false, error: err.trim() }));
-  });
-}
 const asUser = (uid, body) => `set role authenticated; select set_config('test.uid', '${uid}', false); ${body}`;
 const gameJson = (home, away) => JSON.stringify({
   gameId: randomUUID(), status: "pregame", stateVersion: 1, turnHandshake: true,
@@ -66,17 +37,10 @@ let failed = false;
 const check = (label, cond, detail) => { console.log(`${cond ? "PASS" : "FAIL"}  ${label}${detail ? `  ${JSON.stringify(detail)}` : ""}`); if (!cond) failed = true; };
 
 try {
-  pg(["initdb", "-D", data, "-U", "postgres", "-A", "trust", "--no-sync"]);
-  pg(["pg_ctl", "-D", data, "-l", path.join(dir, "log"), "-w", "-o", `-p ${PORT} -k ${dir} -c listen_addresses='' -c max_connections=200`, "start"]);
-  console.log(`Postgres ${sql("show server_version")} running in ${dir} (socket only)\n`);
-
-  // Supabase stand-ins: auth.uid() from a session setting, the authenticated role, profiles.
-  sql(`create role authenticated nologin; create role anon nologin; create role service_role nologin;
-       create schema auth; create table auth.users (id uuid primary key);
-       create function auth.uid() returns uuid language sql stable as $$ select nullif(current_setting('test.uid', true), '')::uuid $$;
-       create table public.profiles (user_id uuid primary key references auth.users(id), manager_name text not null unique, avatar_url text);
-       grant usage on schema public, auth to authenticated; grant execute on function auth.uid() to authenticated;`);
-  for (const m of MIGRATIONS) sqlFile(m);
+  db = startLocalPostgres();
+  console.log(`Postgres ${sql("show server_version")} running in ${db.dir} (socket only)\n`);
+  installSupabaseStandIns(db);
+  for (const m of GAMEPLAY_MIGRATIONS) db.file(m);
   sql("grant select, insert, update, delete on all tables in schema public to authenticated;");
 
   const users = Array.from({ length: 50 }, (_, i) => ({ id: randomUUID(), name: `M${i}` }));
@@ -133,12 +97,11 @@ try {
     cancelled === 1 && [cA, cB].some((r) => !r.ok && /already ended/.test(r.error)) && Number(sql("select count(*) from public.gameplay_active_games")) === 0,
     { cancelled, errors: [cA, cB].filter((r) => !r.ok).map((r) => r.error.split("\n")[0]) });
 } catch (e) {
-  failed = true
-  console.error(e.stderr?.toString() || e.message)
-  try { console.error(fs.readFileSync(path.join(dir, "log"), "utf8").slice(-2000)) } catch { /* no log */ }
+  failed = true;
+  console.error(e.stderr?.toString() || e.message);
+  if (db) console.error(db.log().slice(-2000));
 } finally {
-  try { pg(["pg_ctl", "-D", data, "-m", "fast", "-w", "stop"]); } catch { /* not started */ }
-  fs.rmSync(dir, { recursive: true, force: true });
-  console.log(`\nServer stopped; ${dir} removed.`);
+  db?.stop();
+  console.log(`\nServer stopped; ${db?.dir} removed.`);
 }
 process.exit(failed ? 1 : 0);

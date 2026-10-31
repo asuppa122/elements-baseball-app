@@ -22,6 +22,7 @@ const repo = vi.hoisted(() => ({
   tester: false,
   terminator: false,
   live: false,
+  launched: false,
   games: [] as PersistedGameplayLabGame[],
   create: vi.fn(),
   cancel: vi.fn(),
@@ -48,7 +49,7 @@ vi.mock('../../gameplay/gameRepository', async (orig) => {
     loadGameplayOpponents: async () => [{ user_id: WILL, manager_name: 'Will', avatar_url: null }],
     loadGameplayLabGames: async () => repo.games,
     loadMyActiveGame: async () => repo.active,
-    loadGameplayPermissions: async () => ({ can_create_test_games: repo.tester, can_terminate_games: repo.terminator, official_tracking_enabled: repo.live }),
+    loadGameplayPermissions: async () => ({ can_create_test_games: repo.tester, can_terminate_games: repo.terminator, official_tracking_enabled: repo.live, official_tracking_started: repo.launched }),
     createGameplayLabGame: repo.create,
     cancelGameplayGame: repo.cancel,
     terminateGameplayGame: repo.terminate,
@@ -69,6 +70,7 @@ beforeEach(() => {
   repo.tester = false
   repo.terminator = false
   repo.live = false
+  repo.launched = false
   repo.games = []
   repo.create.mockReset(); repo.cancel.mockReset(); repo.terminate.mockReset()
 })
@@ -133,9 +135,17 @@ describe('games page: pre-launch', () => {
     expect(await screen.findByText(/nothing counts toward official/)).toBeInTheDocument()
     view.unmount()
     repo.live = true
+    repo.launched = true
     show()
     await screen.findByRole('button', { name: 'Create Game' })
     expect(screen.queryByText(/nothing counts toward official/)).toBeNull()
+  })
+
+  it('during a suspension says so instead -- it is not pre-launch', async () => {
+    repo.launched = true
+    show()
+    expect(await screen.findByText('Official tracking is suspended.')).toBeInTheDocument()
+    expect(screen.queryByText(/Pre-launch testing/)).toBeNull()
   })
 
   it('a tester who is not an administrator gets the one-screen option but never "End without result"', async () => {
