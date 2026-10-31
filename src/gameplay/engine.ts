@@ -606,21 +606,11 @@ export function resolveSwingRoll(state: GameState, roll: number): GameState {
   return resolveCoreResult(rolled, result)
 }
 
-export function pauseGame(state: GameState, pausedByUserId: string): GameState {
-  if (state.status === 'complete') throw new Error('A completed game cannot be paused.')
-  if (state.status === 'paused') return state
-
-  return withVersion(state, {
-    ...state,
-    status: 'paused',
-    paused: {
-      pausedAt: nowIso(),
-      pausedByUserId,
-      resumeStatus: state.status,
-    },
-  })
-}
-
+/**
+ * Pause was removed from the game (2026-10-31); nothing sets `paused` any more.
+ * This stays so a game paused before then can be returned to the exact status
+ * it was paused from (presentation/legacyPause.ts).
+ */
 export function resumeGame(state: GameState): GameState {
   if (state.status !== 'paused') throw new Error('Only a paused game can be resumed.')
   if (!state.paused.resumeStatus) throw new Error('Paused game is missing its resume state.')

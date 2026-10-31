@@ -19,7 +19,7 @@ import type { GameSide, GameState } from '../gameplay/types'
  * drifted, and four completed games ended up unable to produce a scoring play.
  *
  * This screen is INTERACTIVE. It shares one action layer with the shell --
- * useGameplayActions below -- so rolls, manager decisions, pause/resume and
+ * useGameplayActions below -- so rolls, manager decisions, legacy-pause recovery and
  * persistence behave identically on both surfaces and cannot drift apart.
  *
  * LAYOUT: Type 2 proportional scaling. `.gp-screen` is a fixed, size-queried

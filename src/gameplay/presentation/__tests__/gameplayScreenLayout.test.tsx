@@ -159,3 +159,55 @@ describe('D2 desktop: decision ownership on the Call button', () => {
     expect(screen.getByRole('status')).toHaveTextContent(/Waiting on/)
   })
 })
+
+describe('the header slot is the game screen\'s only while it is mounted', () => {
+  it('empties when the game screen unmounts (leaving gameplay for any other page)', () => {
+    const view = show(clone(midgame))
+    expect(slot!.querySelector('.gp-gamebar')).not.toBeNull()
+    view.unmount()
+    expect(slot!.childElementCount).toBe(0)
+  })
+
+  it('holds one game bar, for the current game, when the screen switches games', () => {
+    const first = clone(midgame)
+    const view = show(first)
+    const second = clone(midgame)
+    second.gameId = 'another-game'
+    second.score = { away: 7, home: 3 }
+    view.rerender(
+      <HeaderSlotContext.Provider value={slot}>
+        <GameplayScreenView state={second} events={[]} actions={actionsFor(second)}
+          transition={null} onDismissTransition={() => {}} onExit={() => {}} viewerSide="home" actingSides={['home', 'away']} />
+      </HeaderSlotContext.Provider>,
+    )
+    expect(slot!.querySelectorAll('.gp-gamebar')).toHaveLength(1)
+    const runs = Array.from(slot!.querySelectorAll('.gp-scorebug-runs'), (r) => r.textContent)
+    expect(runs).toEqual(['7', '3'])
+  })
+
+  it('empties when the window narrows to tablet width (the bar moves back into the screen)', () => {
+    const view = show(clone(midgame))
+    desktop = false
+    view.rerender(
+      <HeaderSlotContext.Provider value={slot}>
+        <GameplayScreenView state={clone(midgame)} events={[]} actions={actionsFor(clone(midgame))}
+          transition={null} onDismissTransition={() => {}} onExit={() => {}} viewerSide="home" actingSides={['home', 'away']} />
+      </HeaderSlotContext.Provider>,
+    )
+    expect(slot!.childElementCount).toBe(0)
+    expect(view.container.querySelector('.gp-topbar')).not.toBeNull()
+  })
+})
+
+describe('no Pause', () => {
+  it('offers Exit and nothing else in the game menu, on desktop and tablet', () => {
+    show(clone(midgame))
+    expect(within(slot!).getByRole('button', { name: 'Exit' })).toBeInTheDocument()
+    expect(within(slot!).queryByRole('button', { name: /pause|resume/i })).toBeNull()
+    slot!.remove(); slot = null
+    desktop = false
+    show(clone(midgame))
+    expect(screen.queryByRole('button', { name: /pause|resume/i })).toBeNull()
+    expect(screen.getByRole('button', { name: 'Exit' })).toBeInTheDocument()
+  })
+})

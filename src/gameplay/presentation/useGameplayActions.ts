@@ -1,7 +1,7 @@
 import { decisionRollView, describePlay, pitchRollView, swingRollView } from './playRecord'
 import { useCallback, useState } from 'react'
 import {
-  declareOffenseReady, pauseGame, resolveAutomaticPitcherAdvantage, resolvePitchRoll, resolveSwingRoll, resumeGame,
+  declareOffenseReady, resolveAutomaticPitcherAdvantage, resolvePitchRoll, resolveSwingRoll, resumeGame,
 } from '../engine'
 import { resolveSwingChart } from '../coreGame'
 import {
@@ -10,6 +10,7 @@ import {
 import { buildEventEnvelope } from '../eventPayload'
 import { rollGameplayDie, saveGameplayLabState, type PersistedGameplayLabGame, type RollKind } from '../gameRepository'
 import type { GameSide, GameState } from '../types'
+import { useLegacyPauseResume } from './legacyPause'
 
 /**
  * Every way a manager can change a game, in one place.
@@ -245,16 +246,16 @@ export function useGameplayActions({ game, userId, surface, onSaved, onAfterSave
     })
   }, [state, decision, persist, withRoll])
 
-  const togglePause = useCallback(async () => {
-    if (!game || !state || !userId) return
-    const paused = state.status === 'paused'
-    await persist(
-      paused ? resumeGame(state) : pauseGame(state, userId),
-      paused ? 'GAME_RESUMED' : 'GAME_PAUSED',
-      { from: state.status, to: paused ? 'resumed' : 'paused', playableShell: true },
-      paused ? 'Resumed at the exact saved state.' : 'Paused. You can close this and come back to it.',
-    )
-  }, [game, state, userId, persist])
+  // A game paused before Pause was removed resumes when it is opened, through
+  // the same versioned save as every other move (legacyPause.ts).
+  const resumeLegacyPause = useCallback(async (paused: GameState) => {
+    let next: GameState
+    try { next = resumeGame(paused) } catch (e) { setError(errorMessage(e)); return }
+    await persist(next, 'GAME_RESUMED',
+      { from: 'paused', to: next.status, legacyPause: true, automatic: true, playableShell: true },
+      'This game was paused; it has been resumed exactly where it left off.')
+  }, [persist])
+  useLegacyPauseResume(game, userId, resumeLegacyPause)
 
   const toggleSelection = useCallback((id: string, single: boolean) => {
     setSelection((current) => (single ? [id] : current.includes(id) ? current.filter((x) => x !== id) : [...current, id]))
@@ -264,6 +265,6 @@ export function useGameplayActions({ game, userId, surface, onSaved, onAfterSave
     saving, error, notice, setError, setNotice,
     selection, setSelection, toggleSelection,
     decision, editablePrePitchDecision, finalSubstitutionCommit,
-    noPitch, declareReady, rollPitch, rollSwing, startAction, changeAction, confirmDecision, rollDecision, togglePause,
+    noPitch, declareReady, rollPitch, rollSwing, startAction, changeAction, confirmDecision, rollDecision,
   }
 }

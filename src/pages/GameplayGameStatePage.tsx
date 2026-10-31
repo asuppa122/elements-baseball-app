@@ -1,8 +1,8 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
+import { useLegacyPauseResume } from '../gameplay/presentation/legacyPause'
 import {
-  pauseGame,
   preparePrivateLabOpponentFixture,
   resumeGame,
   resolvePitchRoll,
@@ -118,6 +118,30 @@ export default function GameplayGameStatePage() {
   }, [gameId, user?.id, isDemo])
 
   const state = game?.game_state as GameState | undefined
+
+  // Pause is gone; a game paused before it was removed resumes when opened
+  // (legacyPause.ts), through the same versioned save as any other move.
+  const resumeLegacyPause = useCallback(async (paused: GameState) => {
+    if (!game) return
+    setSaving(true); setError(''); setSuccess('')
+    try {
+      const next = resumeGame(paused)
+      const saved = await saveGameplayLabState({
+        gameId: game.id,
+        expectedStateVersion: game.state_version,
+        nextState: next,
+        eventType: 'GAME_RESUMED',
+        eventPayload: { from: 'paused', to: next.status, legacyPause: true, automatic: true },
+      })
+      setGame(saved)
+      setSuccess('This game was paused; it has been resumed at the exact saved baseball state.')
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Could not resume this game.')
+    } finally {
+      setSaving(false)
+    }
+  }, [game])
+  useLegacyPauseResume(game, user?.id, resumeLegacyPause)
   useEffect(() => { setDecisionSelection([]) }, [state?.pendingDecision?.id])
 
   const offense: GameSide = state?.half === 'bottom' ? 'home' : 'away'
@@ -461,29 +485,6 @@ export default function GameplayGameStatePage() {
     },0)
   }
 
-  async function togglePause() {
-    if (!game || !state || !user) return
-    setSaving(true); setError(''); setSuccess('')
-    try {
-      const next = state.status === 'paused' ? resumeGame(state) : pauseGame(state, user.id)
-      const saved = await saveGameplayLabState({
-        gameId: game.id,
-        expectedStateVersion: game.state_version,
-        nextState: next,
-        eventType: state.status === 'paused' ? 'GAME_RESUMED' : 'GAME_PAUSED',
-        eventPayload: { from: state.status, to: next.status },
-      })
-      setGame(saved)
-      setSuccess(next.status === 'paused'
-        ? 'Game paused. You can refresh, close the browser, or return later.'
-        : 'Game resumed at the exact saved baseball state.')
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not update pause state.')
-    } finally {
-      setSaving(false)
-    }
-  }
-
   if (loading) return <main className="gameplay-lab-page"><section className="gameplay-lab-panel">Loading game state…</section></main>
   if (!game || !state) return <main className="gameplay-lab-page"><section className="gameplay-lab-panel"><h1>Game unavailable</h1><p>{error || 'Game state not found.'}</p></section></main>
 
@@ -779,7 +780,6 @@ export default function GameplayGameStatePage() {
             <button className="gameplay-lab-secondary-button" onClick={() => navigate('/games/lab')}>Back to Lab</button>
             <button className="gameplay-lab-secondary-button" onClick={() => navigate(`/games/lab/${game.id}/play`)}>Open Playable Shell</button>
             <button className="gameplay-lab-secondary-button" disabled={saving} onClick={() => void reload()}>Reload Saved State</button>
-            <button className="gameplay-lab-create-button" disabled={saving || state.status === 'complete'} onClick={() => void togglePause()}>{saving ? 'Saving…' : state.status === 'paused' ? 'Resume Exact State' : 'Pause Game'}</button>
           </div>
         </>
       )}

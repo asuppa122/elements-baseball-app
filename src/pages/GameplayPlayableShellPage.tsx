@@ -112,7 +112,7 @@ export default function GameplayPlayableShellPage() {
     saving, error, notice, setError,
     selection, setSelection, toggleSelection,
     decision, editablePrePitchDecision,
-    noPitch, rollPitch, rollSwing, startAction, changeAction, confirmDecision, rollDecision, togglePause,
+    noPitch, rollPitch, rollSwing, startAction, changeAction, confirmDecision, rollDecision,
   } = useGameplayActions({
     game, userId: user?.id, surface: 'shell',
     onSaved: setGame,
@@ -204,7 +204,7 @@ export default function GameplayPlayableShellPage() {
           )}
         </section>
 
-        <section className="retro-log"><header><span>GAME LOG</span><div className="retro-log-controls">{state.status !== 'complete' && <button disabled={saving} onClick={() => void togglePause()}>{state.status === 'paused' ? 'RESUME' : 'PAUSE'}</button>}<button onClick={() => navigate('/games')}>EXIT TO GAMES</button></div></header>{recent.length === 0 ? <p>No saved events yet.</p> : recent.map((event) => <div key={`${event.state_version}-${event.event_type}`}><b>v{event.state_version}</b> {event.event_type.replaceAll('_',' ')}</div>)}</section>
+        <section className="retro-log"><header><span>GAME LOG</span><div className="retro-log-controls"><button onClick={() => navigate('/games')}>EXIT TO GAMES</button></div></header>{recent.length === 0 ? <p>No saved events yet.</p> : recent.map((event) => <div key={`${event.state_version}-${event.event_type}`}><b>v{event.state_version}</b> {event.event_type.replaceAll('_',' ')}</div>)}</section>
       </div>
     </main>
   )

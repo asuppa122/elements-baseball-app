@@ -229,7 +229,7 @@ export async function saveGameplayLabState(args: {
   gameId: string
   expectedStateVersion: number
   nextState: GameState
-  eventType: 'PREGAME_SUBMITTED' | 'PREGAME_LOCKED' | 'GAME_READY' | 'GAME_STARTED' | 'OFFENSE_READY' | 'PITCH_ROLLED' | 'SWING_RESOLVED' | 'DECISION_RESOLVED' | 'GAME_PAUSED' | 'GAME_RESUMED'
+  eventType: 'PREGAME_SUBMITTED' | 'PREGAME_LOCKED' | 'GAME_READY' | 'GAME_STARTED' | 'OFFENSE_READY' | 'PITCH_ROLLED' | 'SWING_RESOLVED' | 'DECISION_RESOLVED' | 'GAME_RESUMED'
   eventPayload?: Record<string, unknown>
 }): Promise<PersistedGameplayLabGame> {
   const { data, error } = await supabase.rpc('save_gameplay_lab_state', {

@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { beforeAll, describe, expect, it } from 'vitest'
 import { buildNonGbCoverageFixture } from '../rulebookCoverage'
-import { attachPregameRoster, createInitialGameState, declareOffenseReady, lockPregame, pauseGame, resolvePitchRoll, resolveSwingRoll, resumeGame, setPregameSelections, startGame } from '../engine'
+import { attachPregameRoster, createInitialGameState, declareOffenseReady, lockPregame, resolvePitchRoll, resolveSwingRoll, resumeGame, setPregameSelections, startGame } from '../engine'
 import { beginPrePitchDecision, confirmManagerDecision, getDecisionView, resolveDecisionRoll } from '../decisionEngine'
 import { awaitingOffenseReady, sideToAct } from '../turnOrder'
 import { botSelection, maybeBotPrePitchAction } from '../testHarness'
@@ -66,6 +66,12 @@ async function createGame(twoPlayer: boolean): Promise<GameState> {
   await dev.createGame(HOME, s)
   return s
 }
+
+/** A state as the removed pauseGame() wrote it: the status it was paused from is kept. */
+const legacyPaused = (prev: GameState, by: string): GameState => ({
+  ...prev, status: 'paused', stateVersion: prev.stateVersion + 1,
+  paused: { pausedAt: '2026-10-30T00:00:00.000Z', pausedByUserId: by, resumeStatus: prev.status === 'paused' ? null : prev.status },
+})
 
 const userFor = (side: GameSide) => (side === 'home' ? HOME : AWAY)
 const otherUser = (side: GameSide) => (side === 'home' ? AWAY : HOME)
@@ -166,10 +172,30 @@ describe('two-player migration (real Postgres)', () => {
     state = await loadState(s.gameId)
     expect(state.plateAppearance.pitchRoll).toBe(roll)
 
-    // pause and resume belong to neither turn
-    await save(HOME, s.gameId, 3, pauseGame(state, HOME), 'GAME_PAUSED', {})
+    // A game paused before Pause was removed (the server still holds the
+    // status and accepts the old event, so such games exist): resuming it
+    // belongs to neither turn -- either manager may -- and to nobody else.
+    await save(HOME, s.gameId, 3, legacyPaused(state, HOME), 'GAME_PAUSED', {})
     state = await loadState(s.gameId)
+    expect(state.status).toBe('paused')
+    await rejects(save(OUTSIDER, s.gameId, 4, resumeGame(state), 'GAME_RESUMED', {}), /not a manager|access is not enabled/)
     await save(AWAY, s.gameId, 4, resumeGame(state), 'GAME_RESUMED', {})
+    state = await loadState(s.gameId)
+    expect(state.status).toBe('in_progress')
+    expect(state.plateAppearance.pitchRoll).toBe(roll)
+  })
+
+  it('resumes a one-screen game paused before Pause was removed for its home tester only', async () => {
+    const s = await createGame(false)
+    await save(HOME, s.gameId, s.stateVersion, legacyPaused(s, HOME), 'GAME_PAUSED', {})
+    let state = await loadState(s.gameId)
+    expect(state.status).toBe('paused')
+    // its away manager is only a name in a one-screen game
+    await rejects(save(AWAY, s.gameId, state.stateVersion, resumeGame(state), 'GAME_RESUMED', {}), /does not belong/)
+    await save(HOME, s.gameId, state.stateVersion, resumeGame(state), 'GAME_RESUMED', {})
+    state = await loadState(s.gameId)
+    expect(state.status).toBe(s.status)
+    expect(state.paused).toEqual({ pausedAt: null, pausedByUserId: null, resumeStatus: null })
   })
 
   it.each([1925, 77, 4242])('plays a complete game, seed %i, every move by the right manager', async (seed) => {

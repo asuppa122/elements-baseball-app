@@ -56,7 +56,8 @@ const DEFENCE_ACTIONS = new Set(['INTENTIONAL_WALK', 'INFIELD_IN'])
  */
 function TurnStatus({ state, mine, toAct }: { state: GameState; mine: boolean; toAct: GameSide | null }) {
   if (state.status === 'complete') return <p className="gp-turn is-final">Final</p>
-  if (state.status === 'paused') return <p className="gp-turn">Paused</p>
+  // A game paused before Pause was removed resumes as soon as it opens.
+  if (state.status === 'paused') return <p className="gp-turn">Resuming…</p>
   if (!toAct) return null
   const what = state.pendingDecision ? 'decide'
     : awaitingOffenseReady(state) ? 'ready up'
@@ -166,7 +167,7 @@ export default function GameplayScreenView({
 }) {
   const {
     saving, error, notice, selection, toggleSelection, decision, editablePrePitchDecision,
-    noPitch, declareReady, rollPitch, rollSwing, startAction, changeAction, confirmDecision, rollDecision, togglePause,
+    noPitch, declareReady, rollPitch, rollSwing, startAction, changeAction, confirmDecision, rollDecision,
   } = actions
   const acting = actingSides ?? [viewerSide]
   const fieldColumn = useRef<HTMLElement>(null)
@@ -234,7 +235,7 @@ export default function GameplayScreenView({
     setTool((current) => (current === next ? null : next))
   }
 
-  const menu = <GameMenu state={state} saving={saving} onTogglePause={() => void togglePause()} onExit={onExit} />
+  const menu = <GameMenu onExit={onExit} />
   const toolbar = (
     <ManagerToolbar
       state={state}
