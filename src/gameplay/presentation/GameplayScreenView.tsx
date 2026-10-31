@@ -202,6 +202,14 @@ export default function GameplayScreenView({
     : state.status === 'complete' && (tool === 'final' || !finalDismissed) ? 'final'
     : transition && !decision ? 'transition'
     : null
+  // The half-inning summary covers the cards, so it is read before play
+  // resumes and stands down once it does: the first pitch, an automatic
+  // pitcher advantage, or a call. It never blocks Roll -- it only sits over
+  // the cards -- and the same runs stay in the game log afterwards.
+  const halfUnderway = state.plateAppearance.pitchRoll !== null || state.plateAppearance.advantage !== null || Boolean(decision)
+  useEffect(() => {
+    if (transition && halfUnderway) onDismissTransition()
+  }, [transition, halfUnderway, onDismissTransition])
   // A notice (not an error) floats over the bottom of the matchup column, so
   // it fades after a few seconds rather than sitting over the calls.
   const [noticeShown, setNoticeShown] = useState('')
@@ -326,12 +334,14 @@ export default function GameplayScreenView({
             </ManagerPanel>
           )}
           {panel === 'final' && (
+            // The whole column: once the game is over nothing under the cards
+            // can be used, and the box score needs the room.
             <ManagerPanel state={state} title="Final" onClose={() => { setFinalDismissed(true); setTool(null) }}>
               <PostGameBoard state={state} />
             </ManagerPanel>
           )}
           {panel === 'transition' && transition && (
-            <ManagerPanel state={state} title="Half-inning summary" onClose={onDismissTransition}>
+            <ManagerPanel overCards state={state} title="Half-inning summary" onClose={onDismissTransition}>
               <HalfInningTransition
                 transition={transition}
                 managers={{ away: state.managers.away.managerName, home: state.managers.home.managerName }}

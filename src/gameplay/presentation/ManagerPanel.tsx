@@ -36,7 +36,7 @@ function Situation({ state }: { state: GameState }) {
   )
 }
 
-export default function ManagerPanel({ state, title, onClose, children, footer }: {
+export default function ManagerPanel({ state, title, onClose, children, footer, overCards }: {
   state: GameState
   title: string
   /** Absent while a decision is pending: it is closed by resolving it. */
@@ -44,9 +44,12 @@ export default function ManagerPanel({ state, title, onClose, children, footer }
   children: ReactNode
   /** Pinned under the scrolling body. */
   footer?: ReactNode
+  /** Cover only the cards row, leaving Roll, the calls and the order usable:
+   * for a panel that opens on its own (the half-inning summary). */
+  overCards?: boolean
 }) {
   return (
-    <aside className="gp-mp" aria-label={title}>
+    <aside className={`gp-mp${overCards ? ' is-over-cards' : ''}`} aria-label={title}>
       <header className="gp-mp-head">
         <Situation state={state} />
         {onClose && <button type="button" className="gp-mp-close" onClick={onClose} aria-label={`Close ${title}`}>×</button>}

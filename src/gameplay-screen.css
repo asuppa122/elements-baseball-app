@@ -1711,3 +1711,147 @@ button.gp-lineup-card img { width: 100%; height: 100%; object-fit: cover; displa
   .gp-toast { position: fixed; bottom: 16px; }
 }
 @media (min-width: 768px) { .gp-screen.has-panel .gp-toast { bottom: auto; top: 84px; } }
+
+/* =====================================================================
+ * Elements 2.0, stage 2 (2026-10-31): the matchup column as a grid.
+ * Rows, top to bottom: the two cards (the only elastic row), Roll, the last
+ * roll, the calls, the batting-order tray. Every row but the cards holds one
+ * height for the whole game, so the cards are the same size on every phase
+ * -- Ready, Roll pitch, Roll swing, a long result or a short one.
+ *
+ * The cards lose their panel frame, role labels and padding: the art is the
+ * point. Each side is a size container, and the art takes the largest
+ * 820x1150 rectangle that fits it after one line of name and one of ratings.
+ * ===================================================================== */
+@media (min-width: 1025px) {
+  .gp-region-lineup {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) var(--s-control-h) var(--s2-result-h) var(--s2-calls-h) auto;
+    gap: var(--s2-gap);
+    overflow: hidden;
+    --s2-gap: max(6px, calc(var(--u) * 0.8));
+    --s2-result-h: max(64px, calc(var(--u) * 7.6));
+    --s2-calls-h: max(34px, calc(var(--u) * 4));
+    --s2-who-h: max(42px, calc(var(--u) * 4.9));
+  }
+  .gp-region-lineup > .gp-matchup { grid-row: 1; }
+  .gp-region-lineup > .gp-rollbox { grid-row: 2; }
+  .gp-region-lineup > .gp-rollresult { grid-row: 3; }
+  .gp-region-lineup > .gp-calls { grid-row: 4; }
+  .gp-region-lineup > .gp-lineup-strip { grid-row: 5; }
+
+  /* ---- the cards ---- */
+  .gp-region-lineup .gp-matchup {
+    min-height: 0; height: 100%; padding: 0; gap: 0;
+    background: none; border: 0; box-shadow: none;
+  }
+  .gp-region-lineup .gp-matchup-sides {
+    display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: calc(var(--u) * 1.1); height: 100%; min-height: 0;
+  }
+  .gp-region-lineup .gp-matchup-vs { display: none; }
+  .gp-region-lineup .gp-matchup-side {
+    container-type: size;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 2px; min-height: 0; min-width: 0;
+  }
+  .gp-region-lineup .gp-matchup-card { flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; gap: 4px; width: 100%; min-height: 0; }
+  .gp-region-lineup .gp-matchup-art {
+    flex: 0 0 auto;
+    width: min(100cqw, (100cqh - var(--s2-who-h)) * 820 / 1150);
+    height: auto; min-height: 0; max-height: none;
+    aspect-ratio: 820 / 1150;
+  }
+  /* One line: name and hand. Which card is the hitter is said by where it
+   * sits and by the hand pill (Bats / Throws). */
+  .gp-region-lineup .gp-matchup-who { display: flex; align-items: baseline; justify-content: center; gap: 6px; max-width: 100%; }
+  .gp-region-lineup .gp-matchup-who > .s-lbl { display: none; }
+  .gp-region-lineup .gp-matchup-who strong { font-size: max(13px, calc(var(--u) * 1.4)); }
+  .gp-region-lineup .gp-matchup-rates { justify-content: center; flex-wrap: nowrap; gap: 10px; white-space: nowrap; }
+
+  /* ---- Roll: one row at one height; the Ready hint sits beside the button ---- */
+  .gp-region-lineup .gp-rollbox {
+    display: flex; align-items: center; gap: 10px;
+    height: var(--s-control-h); min-height: 0;
+  }
+  .gp-region-lineup .gp-rollbox > .gp-action { flex: 1 1 auto; min-height: 0; height: 100%; }
+  .gp-region-lineup .gp-rollbox > .gp-roll-hint {
+    flex: 0 1 46%; line-height: 1.3;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  }
+  .gp-region-lineup .gp-rollbox > .gp-roll-wait,
+  .gp-region-lineup .gp-rollbox > .gp-actions-msg { flex: 1 1 auto; margin: 0; padding: 0; text-align: center; }
+
+  /* ---- the last roll: die, title, the outcome in one line, the math ---- */
+  .gp-region-lineup .gp-rollresult { height: auto; min-height: 0; padding: 6px 10px; overflow: hidden; }
+  .gp-region-lineup .gp-rollresult-die { width: calc(var(--s2-result-h) - 16px); height: calc(var(--s2-result-h) - 16px); max-width: 60px; max-height: 60px; }
+  .gp-region-lineup .gp-rollresult-main { gap: 1px; }
+  /* Two lines when there is no math row under it, one when there is; the row
+   * is a fixed height either way, so a long result never moves the cards. */
+  .gp-region-lineup .gp-rollresult-outcome {
+    display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden;
+    line-height: 1.2;
+  }
+  .gp-region-lineup .gp-rollresult-main:has(.gp-rollresult-math) .gp-rollresult-outcome { -webkit-line-clamp: 1; }
+  .gp-region-lineup .gp-rollresult-math { flex-wrap: nowrap; overflow: hidden; white-space: nowrap; }
+  .gp-rollresult-math li.gp-rollresult-natural { font-size: inherit; }
+
+  /* ---- calls: one row, no label; buttons share the width, never cut ---- */
+  .gp-region-lineup .gp-calls {
+    height: auto; min-height: 0; padding: 0; gap: 0;
+    background: none; border: 0; box-shadow: none; overflow: visible;
+    justify-content: center;
+  }
+  .gp-region-lineup .gp-calls > .s-lbl { display: none; }
+  .gp-region-lineup .gp-calls-list { flex-wrap: nowrap; gap: calc(var(--u) * 0.6); height: 100%; }
+  .gp-region-lineup .gp-calls-list > .gp-action {
+    flex: 1 1 0; min-width: 0; min-height: 0; height: 100%;
+    padding: 0 6px; white-space: normal; line-height: 1.1; overflow: visible; text-overflow: clip;
+    font-size: max(10.5px, calc(var(--u) * 1.15));
+  }
+  .gp-region-lineup .gp-calls-rest { align-self: center; }
+
+  /* ---- the tray: nine whole cards in one row, the order number on the card ---- */
+  .gp-region-lineup .gp-lineup-strip { padding: 0; background: none; border: 0; box-shadow: none; }
+  .gp-region-lineup .gp-lineup-strip .gp-lineup-list { gap: calc(var(--u) * 0.35); }
+  .gp-region-lineup .gp-lineup-strip .gp-lineup-row { position: relative; flex: 1 1 0; gap: 0; }
+  .gp-region-lineup .gp-lineup-strip .gp-lineup-card { width: 100%; height: auto; aspect-ratio: 820 / 1150; }
+  .gp-region-lineup .gp-lineup-strip .gp-lineup-card img,
+  .gp-region-lineup .gp-lineup-strip .gp-lineup-card-empty { object-fit: contain; }
+  .gp-region-lineup .gp-lineup-strip .gp-lineup-order {
+    position: absolute; left: 2px; bottom: 2px; z-index: 1; pointer-events: none;
+    min-width: 15px; padding: 0 3px; border-radius: 4px; text-align: center;
+    background: rgba(7, 8, 9, 0.8); color: var(--s-cream);
+    font-size: max(9px, calc(var(--u) * 0.9)); font-weight: 800; line-height: 1.45;
+  }
+  .gp-region-lineup .gp-lineup-strip .gp-lineup-row.is-active .gp-lineup-order { background: var(--s-gold-bright); color: var(--s-ink); }
+  /* Inset rings: an outline outside the card would be cut by the column edge. */
+  .gp-region-lineup .gp-lineup-strip .gp-lineup-row .gp-lineup-card img { outline: 0; }
+  .gp-region-lineup .gp-lineup-strip .gp-lineup-row.is-active .gp-lineup-card { box-shadow: 0 0 0 2px var(--s-gold-bright); border-radius: var(--s-r-control); }
+  .gp-region-lineup .gp-lineup-strip .gp-lineup-row.is-ondeck .gp-lineup-card { box-shadow: 0 0 0 1px var(--s-gold-muted); border-radius: var(--s-r-control); }
+
+  /* ---- panels: anything the manager opened -- a decision, the log, the
+   * bullpen, the bench, the final box score -- takes the whole column. The
+   * one panel that opens on its own, the half-inning summary, takes only the
+   * cards, so Roll, the last roll, the calls and the order stay usable under
+   * it and nobody has to close it to keep playing. ---- */
+  .gp-region-lineup > .gp-mp { grid-column: 1; grid-row: 1 / -1; }
+  /* An explicit end line: for an absolutely positioned grid item, an `auto`
+   * end means the container's edge, not the end of row 1. */
+  .gp-region-lineup > .gp-mp.is-over-cards { grid-row: 1 / 2; }
+  /* Notices float over the foot of the cards, not over the batting order. */
+  .gp-region-lineup > .gp-toast { grid-column: 1; grid-row: 1 / 2; }
+}
+
+/* ---- the DEF strip on one line down to a 1100px window ----
+ * At 1100x700 the strip is ~525px (the field's width) and its natural width
+ * was ~523, so a two-digit rating anywhere wrapped it onto a second line and
+ * took 37px from the field. Tighter gaps, the groups spread across the width,
+ * nothing removed and the type unchanged. It still wraps, rather than clips,
+ * if a window ever gets narrower than that. */
+@media (min-width: 1025px) {
+  .gp-region-field > .gp-defbar { justify-content: space-between; gap: 6px; padding: 8px 10px; }
+  .gp-region-field > .gp-defbar .gp-defbar-group { gap: 6px; }
+  .gp-region-field > .gp-defbar .gp-defbar-item { gap: 2px; }
+}

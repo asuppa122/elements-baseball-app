@@ -36,6 +36,13 @@ export type RollView = {
 export type PlayRecord = {
   /** Chronological sentences for this one step. */
   lines: string[]
+  /**
+   * The step in one line for the roll area: what happened, then who scored,
+   * who moved and the out count -- "Single — Dean scores", "Strikeout — second
+   * out". Built from the same resolved before/after states as `lines`, never
+   * from the die. Absent on events saved before it existed.
+   */
+  summary?: string
   /** Groups the steps of one plate appearance, for the recap. */
   paKey: string
   runs: number
@@ -188,11 +195,14 @@ export function describePlay(before: GameState, after: GameState, chartResult?: 
   if (batterDone && batterKey) movers.push({ key: batterKey, name: batter, from: 'batter' })
 
   let toCredit = runs
+  const scored: string[] = []
+  const advanced: Array<{ name: string; to: Base }> = []
   const tagging = kind === 'OUTFIELD_FIELDING_ROLL' && String(ctx.kind) === 'TAG_UP' || kind === 'TAG_UP_RTS'
   const gb = Boolean(kind?.startsWith('GB_')) || chartResult === 'GB'
   for (const m of movers) {
     const now = half ? where(after, m.key) : null
     if (now) {
+      if (m.from !== now && m.from !== 'batter') advanced.push({ name: m.name, to: now })
       if (m.from !== now && !mentioned.has(m.key)) {
         if (m.from === 'batter') { if (!chartResult && kind !== 'INTENTIONAL_WALK_CONFIRM') lines.push(`${m.name} reaches ${BASE_WORD[now]}.`) }
         else lines.push(`${m.name} ${tagging ? 'tags up and goes' : 'goes'} to ${BASE_WORD[now]}.`)
@@ -201,6 +211,7 @@ export function describePlay(before: GameState, after: GameState, chartResult?: 
     }
     if (toCredit > 0) {
       toCredit -= 1
+      scored.push(m.name)
       if (m.from === 'batter') { if (chartResult !== 'HR') lines.push(`${m.name} comes all the way around to score.`) }
       else if (!(throwTarget && throwTarget.runner.cardKey === m.key && throwTarget.to === 'HOME') && !(kind === 'SECOND_STEAL_HOME_ROLL') && !(kind === 'CATCHER_FIELDING_ROLL' && throwTarget?.runner.cardKey === m.key))
         lines.push(`${m.name} ${tagging ? 'tags up and scores' : `scores from ${BASE_WORD[m.from as Base]}`}.`)
@@ -230,7 +241,8 @@ export function describePlay(before: GameState, after: GameState, chartResult?: 
   const all = [...roster, ...lines]
   const kindOut: PlayRecord['kind'] = runs > 0 ? 'scoring' : outsAdded > 0 ? 'out'
     : movers.some((m) => m.from === 'batter' && half && where(after, m.key)) ? 'onbase' : 'neutral'
-  return { lines: all, paKey: paKeyOf(before), runs, kind: kindOut }
+  const summary = summarize({ before, after, chartResult, kind, ctx, throwTarget, lines, scored, advanced, outsAdded, runs, half, ended, batterKey })
+  return { lines: all, summary, paKey: paKeyOf(before), runs, kind: kindOut }
 }
 
 /** The pitch roll: the die, the pitcher's Control (after fatigue), against the batter's On Base. */
@@ -291,4 +303,69 @@ export function decisionRollView(before: GameState, roll: number, play: PlayReco
 export function playOf(event: { payload?: Record<string, unknown> | null }): PlayRecord | null {
   const p = event.payload?.play
   return p && typeof p === 'object' && Array.isArray((p as PlayRecord).lines) && (p as PlayRecord).lines.length ? p as PlayRecord : null
+}
+
+const CHART_NOUN: Record<string, string> = {
+  PU: 'Pop out', K: 'Strikeout', FB: 'Fly out', BB: 'Walk',
+  '1B': 'Single', '1B+': 'Single', '2B': 'Double', '3B': 'Triple', HR: 'Home run',
+}
+const ORDINAL_OUT = ['', 'first out', 'second out', 'third out']
+const BASE_SHORT: Record<Base, string> = { first: 'first', second: 'second', third: 'third' }
+
+/** describePlay's facts as one compact line for the roll area. */
+function summarize(f: {
+  before: GameState; after: GameState; chartResult?: string | null; kind: string | null
+  ctx: Record<string, unknown>; throwTarget: RunnerAttempt | null; lines: string[]
+  scored: string[]; advanced: Array<{ name: string; to: Base }>
+  outsAdded: number; runs: number; half: boolean; ended: boolean; batterKey: string | null
+}): string | undefined {
+  const last = (name: string) => name.split(' ').slice(-1)[0] || name
+  let head: string | null = null
+  if (f.chartResult === 'GB') {
+    head = f.after.pendingDecision ? 'Ground ball'
+      : f.outsAdded >= 2 ? 'Double play'
+      : f.batterKey && where(f.after, f.batterKey) ? 'Ground ball, safe at first'
+      : f.outsAdded ? 'Groundout' : 'Ground ball'
+  } else if (f.chartResult) head = CHART_NOUN[f.chartResult] ?? f.chartResult
+  else if (f.kind === 'GROUND_BALL_RESOLUTION' || f.kind?.startsWith('GB_')) {
+    // The roll that finishes a ground ball the defence chose how to play: say
+    // what the whole play came to, not the first runner that moved.
+    const batterSafe = Boolean(f.batterKey && where(f.after, f.batterKey))
+    head = f.after.pendingDecision?.decisionType.startsWith('GB_') ? (f.outsAdded ? 'Force out' : 'Ground ball')
+      : f.kind === 'GB_TRIPLE_THIRD_CHECK' && f.outsAdded ? 'Triple play'
+      : /_SECOND_CHECK$/.test(f.kind) && f.outsAdded && !batterSafe ? 'Double play'
+      : batterSafe ? (f.outsAdded ? "Fielder's choice" : 'Ground ball, all safe')
+      : f.outsAdded ? 'Groundout' : 'Ground ball'
+  } else if (f.kind === 'INTENTIONAL_WALK_CONFIRM') head = 'Intentional walk'
+  else if (f.kind === 'SAC_BUNT_RTS' || f.kind === 'SAC_BUNT_WHEEL_RTS') head = f.after.waitingFor === 'SWING_ROLL' ? 'Bunt fails — swing away' : 'Sacrifice bunt'
+  else if (f.kind === 'SQUEEZE_BUNT_ROLL') head = 'Squeeze'
+  else if (f.kind === 'CATCHER_FIELDING_ROLL' || f.kind === 'ONE_BASE_PLUS_STOLEN_BASE' || f.kind === 'SECOND_STEAL_HOME_ROLL') {
+    const target = f.kind === 'CATCHER_FIELDING_ROLL' ? f.throwTarget?.runner : f.ctx.target as BaseRunnerState | undefined
+    const to = f.kind === 'CATCHER_FIELDING_ROLL' ? ATTEMPT_WORD[f.throwTarget?.to ?? ''] : f.kind === 'SECOND_STEAL_HOME_ROLL' ? 'home' : 'second'
+    if (target) {
+      const safe = to === 'home' ? f.runs > 0 : Boolean(where(f.after, target.cardKey))
+      head = safe ? `${last(target.playerName)} steals ${to}` : `${last(target.playerName)} caught stealing ${to}`
+    }
+  } else if (f.kind === 'OUTFIELD_FIELDING_ROLL' && f.throwTarget) {
+    const t = f.throwTarget
+    const safe = t.to === 'HOME' ? f.runs > 0 : Boolean(where(f.after, t.runner.cardKey))
+    head = safe ? `${last(t.runner.playerName)} safe at ${ATTEMPT_WORD[t.to] ?? t.to}` : `${last(t.runner.playerName)} thrown out at ${ATTEMPT_WORD[t.to] ?? t.to}`
+  } else if (f.lines.length) head = f.lines[0].replace(/[.!]$/, '')
+  if (!head) return undefined
+
+  const facts: string[] = []
+  const scoredHere = f.scored.filter((n) => !head!.startsWith(last(n)))
+  if (scoredHere.length === 1) facts.push(`${last(scoredHere[0])} scores`)
+  else if (scoredHere.length === 2) facts.push(`${last(scoredHere[0])} and ${last(scoredHere[1])} score`)
+  else if (scoredHere.length > 2) facts.push(`${scoredHere.length} runs score`)
+  const moved = f.advanced.filter((m) => !head!.startsWith(last(m.name)))
+  if (moved.length === 1) facts.push(`${last(moved[0].name)} to ${BASE_SHORT[moved[0].to]}`)
+  else if (moved.length > 1) facts.push('runners advance')
+  if (f.after.status === 'complete') facts.push('ballgame')
+  else if (f.ended && f.outsAdded > 0) facts.push('inning over')
+  // An out already on the board counts even while a decision follows (a fly
+  // out before the tag-up call); a ground ball's outs wait on the defence's
+  // choice, and until then outsAdded is 0.
+  else if (f.half && f.outsAdded > 0) facts.push(ORDINAL_OUT[f.after.outs] ?? `${f.after.outs} outs`)
+  return facts.length ? `${head} — ${facts.join(', ')}` : head
 }

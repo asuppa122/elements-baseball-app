@@ -165,3 +165,90 @@ describe('describePlay', () => {
     expect(describePlay(before, before).lines).toEqual([])
   })
 })
+
+// The one line under the roll button. Same before/after states as the lines
+// above, so it can only claim what actually changed.
+describe('describePlay summary', () => {
+  it('a run-scoring single names who scored', () => {
+    const before = game(); before.bases.second = reyes
+    const after = structuredClone(before)
+    after.bases = { first: wright, second: null, third: null }; after.score.away = 1
+    expect(describePlay(before, after, '1B').summary).toBe('Single — Reyes scores')
+  })
+
+  it('a strikeout gives the out count, and a third out says the inning is over', () => {
+    const before = game()
+    expect(describePlay(before, { ...structuredClone(before), outs: 1 }, 'K').summary).toBe('Strikeout — first out')
+    const two = game(); two.outs = 2
+    const over = structuredClone(two); over.half = 'bottom'; over.outs = 0
+    expect(describePlay(two, over, 'K').summary).toBe('Strikeout — inning over')
+  })
+
+  it('a double play, a groundout, and a ground ball still waiting on the defence', () => {
+    const before = game(); before.bases.first = reyes
+    const dp = structuredClone(before); dp.bases.first = null; dp.outs = 2
+    expect(describePlay(before, dp, 'GB').summary).toBe('Double play — second out')
+    const plain = game()
+    expect(describePlay(plain, { ...structuredClone(plain), outs: 1 }, 'GB').summary).toBe('Groundout — first out')
+    const open = pending(structuredClone(before), 'GROUND_BALL_RESOLUTION', { preBases: structuredClone(before.bases) })
+    expect(describePlay(before, open, 'GB').summary).toBe('Ground ball')
+  })
+
+  it('a walk that moves the runner, and a bases-loaded double that clears them', () => {
+    const before = game(); before.bases.first = reyes
+    const walk = structuredClone(before); walk.bases = { first: wright, second: reyes, third: null }
+    expect(describePlay(before, walk, 'BB').summary).toBe('Walk — Reyes to second')
+    const loaded = game()
+    loaded.bases = { first: runner('AWAY-1', 'Jose Reyes'), second: runner('AWAY-2', 'Carlos Beltran'), third: runner('AWAY-3', 'Mike Piazza') }
+    const cleared = structuredClone(loaded); cleared.bases = { first: null, second: wright, third: null }; cleared.score.away = 3
+    expect(describePlay(loaded, cleared, '2B').summary).toBe('Double — 3 runs score')
+  })
+
+  it('a steal and a caught stealing lead with the runner', () => {
+    const s = game(); s.bases.first = reyes
+    const att = { runner: reyes, from: '1B', to: '2B' }
+    const roll = pending(s, 'CATCHER_FIELDING_ROLL', { attempts: [att], target: att, kind: 'NATURAL_STEAL' })
+    expect(describePlay(roll, resolveDecisionRoll(roll, 1)).summary).toBe('Reyes steals second')
+    expect(describePlay(roll, resolveDecisionRoll(roll, 20)).summary).toBe('Reyes caught stealing second — first out')
+  })
+})
+
+describe('describePlay summary after a ground-ball decision', () => {
+  it('leads with the play, not the first runner who moved', () => {
+    const before = pending(game(), 'GB_SINGULAR_RFO', {})
+    before.outs = 1
+    before.bases = { first: runner('AWAY-1', 'Jose Reyes'), second: runner('AWAY-2', 'Carlos Beltran'), third: runner('AWAY-3', 'Mike Piazza') }
+    const after = structuredClone(before)
+    after.pendingDecision = null; after.status = 'in_progress'
+    after.bases = { first: null, second: runner('AWAY-1', 'Jose Reyes'), third: runner('AWAY-2', 'Carlos Beltran') }
+    after.outs = 2; after.score.away = 1
+    expect(describePlay(before, after).summary).toBe('Groundout — Piazza scores, runners advance, second out')
+  })
+
+  it("a second check that retires the batter is a double play; a batter safe with a force is a fielder's choice", () => {
+    const before = pending(game(), 'GB_STANDARD_SECOND_CHECK', {})
+    before.outs = 1
+    const dp = structuredClone(before); dp.pendingDecision = null; dp.half = 'bottom'; dp.outs = 0
+    expect(describePlay(before, dp).summary).toBe('Double play — inning over')
+    const fc0 = pending(game(), 'GB_STANDARD_SECOND_CHECK', {})
+    const fc = structuredClone(fc0); fc.pendingDecision = null; fc.outs = 1; fc.bases.first = wright
+    expect(describePlay(fc0, fc).summary).toBe("Fielder's choice — first out")
+  })
+})
+
+describe('describePlay summary while a decision follows', () => {
+  it('a fly out keeps its out count before the tag-up call', () => {
+    const before = game(); before.bases.third = reyes
+    const after = pending({ ...structuredClone(before), outs: 1 }, 'TAG_UP_DECISION', {})
+    expect(describePlay(before, after, 'FB').summary).toBe('Fly out — first out')
+  })
+})
+
+describe('describePlay summary: runs and advances together', () => {
+  it('a single that scores one runner and moves another says both', () => {
+    const before = game(); before.bases.second = reyes; before.bases.first = runner('AWAY-2', 'Carlos Beltran')
+    const after = structuredClone(before)
+    after.bases = { first: wright, second: null, third: runner('AWAY-2', 'Carlos Beltran') }; after.score.away = 1
+    expect(describePlay(before, after, '1B').summary).toBe('Single — Reyes scores, Beltran to third')
+  })
+})
