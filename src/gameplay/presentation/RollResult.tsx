@@ -40,6 +40,10 @@ export default function RollResult({ events }: { events: LogEvent[] }) {
     )
   }
   const { view } = latest
+  const outcome = latest.summary ?? view.result
+  const cut = outcome.indexOf(' — ')
+  const head = cut < 0 ? outcome : outcome.slice(0, cut)
+  const facts = cut < 0 ? '' : outcome.slice(cut + 3)
   const decisive = new Set(view.decisive ?? [])
 
   return (
@@ -52,7 +56,12 @@ export default function RollResult({ events }: { events: LogEvent[] }) {
         <span className="gp-rollresult-title"><b className="s-lbl">Last roll</b> {view.title}</span>
         {/* What the roll did on the field -- who scored, who moved, the outs --
             from the saved play. Older events without one keep the chart result. */}
-        <p className="gp-rollresult-outcome" title={latest.summary ?? view.result}>{latest.summary ?? view.result}</p>
+        <p className="gp-rollresult-outcome" title={outcome}>
+          {/* The headline, then its facts ("Single" / "Dean scores"): set
+              apart so the desktop band can show them as a graphic. */}
+          <span className="gp-rollresult-head">{head}</span>
+          {facts && <><span className="gp-rollresult-sep"> — </span><span className="gp-rollresult-facts">{facts}</span></>}
+        </p>
         {(view.modifiers.length > 0 || view.versus) && (
           <ul className="gp-rollresult-math s-num" aria-label="Roll breakdown">
             <li>d20 {view.roll}</li>

@@ -12,7 +12,10 @@
  * mockup is a fixed 1440x900 of inline styles; reproducing that literally and
  * making it responsive later would mean laying out the screen twice. */
 
-.gp-screen {
+/* The game bar (.gp-gamebar) is rendered into the app header on desktop,
+ * outside .gp-screen, so it carries the same vocabulary. */
+.gp-screen,
+.gp-gamebar {
   /* Colour comes from ONE source. Every name below aliases the canonical token
    * in gameplay-tokens.css, which in turn aliases App.css -- these used to
    * hardcode the same hex values a third time, so a change to --gold would
@@ -51,7 +54,9 @@
   --s-gap: 12px;
   --s-pad: 16px;
   --s-control-h: 44px;
+}
 
+.gp-screen {
   display: flex;
   flex-direction: column;
   min-height: 100dvh;
@@ -64,10 +69,14 @@
 
 .gp-screen *,
 .gp-screen *::before,
-.gp-screen *::after { box-sizing: border-box; }
+.gp-screen *::after,
+.gp-gamebar *,
+.gp-gamebar *::before,
+.gp-gamebar *::after { box-sizing: border-box; }
 
 /* Uppercase micro-label: 10px/900/0.14em gold-bright, per _shared-notes.md */
-.gp-screen .s-lbl {
+.gp-screen .s-lbl,
+.gp-gamebar .s-lbl {
   font-size: 10px;
   font-weight: 900;
   letter-spacing: 0.14em;
@@ -76,7 +85,8 @@
 }
 
 .gp-screen .s-sub { font-size: 10px; color: var(--s-gray-muted); }
-.gp-screen .s-num { font-variant-numeric: tabular-nums; }
+.gp-screen .s-num,
+.gp-gamebar .s-num { font-variant-numeric: tabular-nums; }
 
 .gp-panel {
   background: var(--s-panel);
@@ -126,17 +136,28 @@
  * the field -- which flexes to the space available -- became taller than the
  * viewport and got clipped. `height` plus `min-height: 0` on the descendants
  * is what actually makes the rails scroll instead of stretch. */
-@media (min-width: 1024px) {
-  /* 100dvh would be right if this were the whole page, but it sits under the
-   * global app header -- so a full viewport height always overflowed by a
-   * header's worth, which is what pushed the DEF strip off screen.
+@media (min-width: 1025px) {
+  /* The screen fills exactly what the app header leaves. It used to be sized
+   * calc(100dvh - 50px), a guess at the header -- which is 56px at 1100 wide,
+   * so the page scrolled by 6px there. Now the shell is a 100dvh column and
+   * the header takes what it takes; no header height is assumed anywhere.
+   *
+   * This starts at 1025px with the desktop stage. It used to start at 1024,
+   * which locked the TABLET layout into a viewport-high box at exactly 1024
+   * wide and clipped the field and Roll; 1024 now flows like 1023.
    *
    * min-height must be overridden too: the base rule sets `min-height: 100dvh`
-   * and a min-height beats a height, so setting height alone changed nothing.
-   * 50px is the measured header at desktop widths; if the shell ever exposes
-   * its height as a custom property, this should read that instead. */
+   * and a min-height beats a height. */
+  .authenticated-app:has(> .gp-screen) {
+    height: 100dvh;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
+  .authenticated-app:has(> .gp-screen) > .global-app-header { flex: 0 0 auto; }
   .gp-screen {
-    height: calc(100dvh - 50px);
+    flex: 1 1 auto;
+    height: auto;
     min-height: 0;
     overflow: hidden;
   }
@@ -1855,3 +1876,341 @@ button.gp-lineup-card img { width: 100%; height: 100%; object-fit: cover; displa
   .gp-region-field > .gp-defbar .gp-defbar-group { gap: 6px; }
   .gp-region-field > .gp-defbar .gp-defbar-item { gap: 2px; }
 }
+
+/* =====================================================================
+ * Elements 2.0, D2 (2026-10-31): the approved desktop layout.
+ *
+ *  - The scoreboard, the manager's tools and the menu are the game bar, in
+ *    the app header (GameplayScreenView renders it into AppShell's slot).
+ *    The game below spends nothing on navigation: two columns, matchup |
+ *    field, and no tool strip.
+ *  - Nothing under the batter and pitcher cards: the card prints the name,
+ *    hand and ratings, and the field shows the live (fatigue-adjusted) OB and
+ *    CTRL on its at-bat and mound cards.
+ *  - The live roll (Pitch / Advantage / Swing / Result) and the calls share
+ *    one slot under the cards. Calls are pre-pitch only, exactly when the roll
+ *    is still empty, so they swap in place: no row of their own, no click.
+ *  - The tray shows the position alone under each card; the card prints OB.
+ *
+ * Scoped to .gp-screen.is-d2, which is set only when the game bar is in the
+ * header (desktop, inside a shell). Tablet and phone are unchanged.
+ * ===================================================================== */
+@media (min-width: 1025px) {
+  .gp-screen.is-d2,
+  .gp-gamebar {
+    --d2-surface: #141519;
+    --d2-surface-2: #1b1d22;
+    --d2-line: rgba(255, 255, 255, 0.07);
+    --d2-gold: #e2b23a;
+    --d2-gold-hi: #f4cf5c;
+    --d2-gold-glow: rgba(244, 207, 92, 0.28);
+    --d2-text: #f1ead8;
+    --d2-dim: #9a968c;
+    --d2-off: #e9a23b;
+    --d2-def: #5fa8e8;
+    --d2-ease: cubic-bezier(.2, .7, .2, 1);
+    --d2-cond: "Barlow Condensed", "Oswald", "Arial Narrow", sans-serif;
+  }
+
+  /* ---- the header on the game screen: brand mark and avatar only ---- */
+  .global-app-header:has(.gp-gamebar) { gap: 14px; }
+  .global-app-header:has(.gp-gamebar) .global-brand span,
+  .global-app-header:has(.gp-gamebar) .profile-menu-trigger-copy,
+  .global-app-header:has(.gp-gamebar) .profile-menu-chevron { display: none; }
+  .global-header-slot { flex: 1 1 auto; min-width: 0; display: flex; align-items: center; }
+
+  /* ---- the game bar: AWAY 0 | ▲2 ◇ ●●○ | 1 HOME, then the tools ---- */
+  .gp-gamebar { flex: 1 1 auto; min-width: 0; display: flex; align-items: center; gap: 12px; color: var(--d2-text); font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; }
+  .gp-gamebar-tools { margin-left: auto; display: flex; align-items: center; gap: 14px; flex: 0 0 auto; }
+
+  .gp-gamebar .gp-scorebug {
+    display: grid; grid-template-columns: auto auto auto; grid-template-areas: "away mid home";
+    height: 36px; gap: 0; padding: 0; flex: 0 0 auto;
+    border-radius: 6px; overflow: hidden;
+    background: #0f1013; box-shadow: 0 0 0 1px rgba(255, 255, 255, .08), 0 6px 16px rgba(0, 0, 0, .5);
+  }
+  .gp-gamebar .gp-scorebug-side { grid-area: away; display: flex; align-items: center; gap: 12px; padding: 0 12px; min-width: 0; }
+  .gp-gamebar .gp-scorebug-side.is-home { grid-area: home; justify-content: flex-start; }
+  .gp-gamebar .gp-scorebug-side.is-batting { box-shadow: inset 0 -3px 0 var(--d2-gold-hi); }
+  .gp-gamebar .gp-scorebug-name { font-family: var(--d2-cond); font-size: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; max-width: 140px; }
+  .gp-gamebar .gp-scorebug-runs { font-family: var(--d2-cond); font-size: 17px; font-weight: 800; }
+  .gp-gamebar .gp-scorebug-centre {
+    grid-area: mid; flex-direction: row; align-items: center; gap: 8px; padding: 0 10px;
+    background: #191b20; border-left: 1px solid var(--d2-line); border-right: 1px solid var(--d2-line);
+  }
+  .gp-gamebar .gp-scorebug-inning { font-family: var(--d2-cond); font-size: 15px; font-weight: 700; }
+  .gp-gamebar .gp-scorebug-outs { gap: 3px; }
+
+  .gp-gamebar .gp-turn { padding: 5px 11px; }
+
+  /* the tools as pills: icon, label, count */
+  .gp-gamebar .gp-toolbar { flex-direction: row; align-items: center; gap: 6px; padding: 0; }
+  .gp-gamebar .gp-tool {
+    width: auto; height: 36px; min-height: 0; padding: 0 12px 0 10px;
+    display: inline-flex; flex-direction: row; align-items: center; gap: 7px;
+    border-radius: 999px; border: 1px solid var(--d2-line); background: #17181c; color: var(--s-gray);
+  }
+  .gp-gamebar .gp-tool svg { width: 17px; height: 17px; }
+  .gp-gamebar .gp-tool-label { font-size: 11px; letter-spacing: .08em; }
+  .gp-gamebar .gp-tool-count {
+    min-width: 18px; height: 18px; line-height: 18px; border-radius: 9px; padding: 0 5px;
+    background: #2a2c33; color: var(--d2-text); font-size: 10px; text-align: center;
+  }
+  .gp-gamebar .gp-tool:hover { border-color: var(--s-gold); color: var(--s-cream); }
+  .gp-gamebar .gp-tool.is-open { border-color: var(--d2-gold-hi); color: var(--d2-gold-hi); background: #17181c; }
+  .gp-gamebar .gp-tool.is-hot { background: linear-gradient(180deg, var(--d2-gold-hi), var(--d2-gold)); color: #15120a; border-color: transparent; box-shadow: 0 0 0 3px rgba(244, 207, 92, .18); }
+  .gp-gamebar .gp-tool.is-hot .gp-tool-count { background: #15120a; color: var(--d2-gold-hi); }
+  .gp-gamebar .gp-tool.is-muted { border-style: dashed; color: var(--s-gray-muted); }
+
+  .gp-gamebar .gp-menu { padding: 0; border: 0; gap: 0; }
+  .gp-gamebar .gp-menu > .s-lbl { display: none; }
+  .gp-gamebar .gp-menu-btn { height: 34px; padding: 0 12px; border-radius: 999px; background: var(--d2-surface); border-color: var(--d2-line); }
+}
+/* a narrower header drops the tool labels, never the counts; a lit Call or a
+ * "Waiting" keeps its word */
+@media (min-width: 1025px) and (max-width: 1279px) {
+  .gp-gamebar .gp-tool { padding: 0 9px; }
+  .gp-gamebar .gp-tool-label { display: none; }
+  .gp-gamebar .gp-tool.is-hot .gp-tool-label,
+  .gp-gamebar .gp-tool.is-muted .gp-tool-label { display: inline; }
+}
+
+@media (min-width: 1025px) {
+  .gp-screen.is-d2 {
+    container-name: gpscreen;
+    background: radial-gradient(120% 90% at 65% 40%, #16151a 0%, #0a0a0c 72%);
+  }
+
+  /* ---- the stage: two columns ----
+   * The matchup column's width solves for both limits:
+   *  - field height-bound: the width the square field cannot use is
+   *    100cqw - 100cqh + 49px (the DEF strip and the stage padding);
+   *  - cards height-bound past ~116.65cqh - 217px: two cards, the slot, the
+   *    Roll band and the tray then fill the column's height, and more width
+   *    would only pad the cards.
+   * The column takes the smaller, plus 60px from the field toward the cards
+   * (the approved balanced split: 709 / 345x484 at 1440x900). */
+  .gp-screen.is-d2 .gp-stage {
+    --d2-gap: max(8px, calc(var(--u) * 0.9));
+    --s-rail-left: clamp(400px, min(calc(116.65cqh - 217px), calc(100cqw - 100cqh + 109px)), 1100px);
+    display: grid;
+    grid-template-columns: var(--s-rail-left) minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr);
+    grid-template-areas: "lineup field";
+    column-gap: var(--d2-gap);
+  }
+  .gp-screen.is-d2 .gp-layout { display: contents; }
+  .gp-screen.is-d2 .gp-region-lineup { grid-area: lineup; }
+  .gp-screen.is-d2 .gp-region-field { grid-area: field; }
+  /* the one-screen game's development banner is stale -- this is the game
+   * screen now (it stays on tablet and phone) */
+  .gp-screen.is-d2 .gp-stage > .gp-wip { display: none; }
+
+  /* ---- the matchup column: cards / slot / Roll + last roll / tray ---- */
+  .gp-screen.is-d2 .gp-region-lineup {
+    --s2-who-h: 0px;
+    --d2-slot-h: max(44px, calc(var(--u) * 5.2));
+    --d2-band-h: max(60px, calc(var(--u) * 8.4));
+    grid-template-columns: minmax(150px, 32%) minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) var(--d2-slot-h) var(--d2-band-h) auto;
+    grid-template-areas: "match match" "slot slot" "roll result" "tray tray";
+  }
+  /* the matchup spans the card row and the slot row; its live roll sits in the slot */
+  .gp-screen.is-d2 .gp-region-lineup > .gp-matchup {
+    grid-row: 1 / 3; grid-column: 1 / -1;
+    display: grid; grid-template-rows: minmax(0, 1fr) var(--d2-slot-h); row-gap: var(--s2-gap);
+  }
+  .gp-screen.is-d2 .gp-region-lineup .gp-matchup-who,
+  .gp-screen.is-d2 .gp-region-lineup .gp-matchup-rates { display: none; }
+  .gp-screen.is-d2 .gp-region-lineup > .gp-rollbox { grid-area: roll; height: 100%; }
+  .gp-screen.is-d2 .gp-region-lineup > .gp-rollresult { grid-area: result; }
+  .gp-screen.is-d2 .gp-region-lineup > .gp-lineup-strip { grid-area: tray; }
+
+  /* the cards: depth and a sheen, no frame */
+  .gp-screen.is-d2 .gp-region-lineup .gp-matchup-art {
+    position: relative; border-radius: 12px;
+    box-shadow: 0 2px 0 rgba(255, 255, 255, .05) inset, 0 16px 30px rgba(0, 0, 0, .65), 0 3px 8px rgba(0, 0, 0, .6);
+    transition: transform 160ms var(--d2-ease);
+  }
+  .gp-screen.is-d2 .gp-region-lineup .gp-matchup-art:hover { transform: translateY(-2px); }
+  .gp-screen.is-d2 .gp-region-lineup .gp-matchup-art img { border-radius: 12px; }
+  .gp-screen.is-d2 .gp-region-lineup .gp-matchup-art::after {
+    content: ""; position: absolute; inset: 0; border-radius: 12px; pointer-events: none;
+    background: linear-gradient(130deg, rgba(255, 255, 255, .09) 0%, transparent 26%);
+  }
+
+  /* the live roll: Pitch -> Advantage -> Swing -> Result */
+  .gp-screen.is-d2 .gp-region-lineup .gp-matchup > .gp-roll {
+    display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0; padding: 0; height: 100%;
+    border: 0; border-radius: 10px; overflow: hidden; background: #111215; box-shadow: 0 0 0 1px var(--d2-line);
+  }
+  .gp-screen.is-d2 .gp-matchup > .gp-roll .gp-roll-cell {
+    position: relative; display: flex; align-items: baseline; justify-content: center; align-content: center; gap: 8px;
+    padding: 0 6px; align-self: center;
+  }
+  .gp-screen.is-d2 .gp-matchup > .gp-roll .gp-roll-cell + .gp-roll-cell::before {
+    content: ""; position: absolute; left: -6px; top: 50%; width: 10px; height: 10px; transform: translateY(-50%) rotate(45deg);
+    border-top: 1px solid rgba(255, 255, 255, .18); border-right: 1px solid rgba(255, 255, 255, .18);
+  }
+  .gp-screen.is-d2 .gp-matchup > .gp-roll .s-lbl { font-size: 9px; color: var(--d2-dim); letter-spacing: .12em; }
+  .gp-screen.is-d2 .gp-matchup > .gp-roll strong { font-family: var(--d2-cond); font-size: max(20px, calc(var(--u) * 2.9)); font-weight: 800; color: var(--d2-text); }
+  .gp-screen.is-d2 .gp-matchup > .gp-roll strong.is-hitter { color: var(--d2-off); font-size: 16px; }
+  .gp-screen.is-d2 .gp-matchup > .gp-roll strong.is-pitcher { color: var(--d2-def); font-size: 16px; }
+
+  /* the calls take the live roll's slot while there are any */
+  .gp-screen.is-d2 .gp-region-lineup > .gp-calls {
+    grid-area: slot; z-index: 2;
+    display: flex; flex-direction: row; align-items: center; gap: 10px; padding: 0 4px 0 12px;
+    border-radius: 10px; background: #111215; box-shadow: 0 0 0 1px rgba(226, 178, 58, .22);
+  }
+  .gp-screen.is-d2 .gp-region-lineup > .gp-calls.is-empty { display: none; }
+  .gp-screen.is-d2 .gp-region-lineup.has-calls .gp-matchup > .gp-roll { visibility: hidden; }
+  .gp-screen.is-d2 .gp-region-lineup > .gp-calls > .s-lbl { display: block; flex: 0 0 auto; font-size: 9px; color: var(--d2-gold-hi); }
+  .gp-screen.is-d2 .gp-region-lineup .gp-calls-list { flex: 1 1 auto; height: calc(100% - 10px); }
+  .gp-screen.is-d2 .gp-region-lineup .gp-calls-list > .gp-action {
+    border-radius: 999px; border: 1px solid var(--d2-line); background: transparent;
+    color: var(--d2-text); font-weight: 700; letter-spacing: .02em; text-transform: none;
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    transition: border-color 140ms, transform 140ms;
+  }
+  .gp-screen.is-d2 .gp-region-lineup .gp-calls-list > .gp-action:hover:not(:disabled) { border-color: currentColor; transform: translateY(-1px); }
+  /* offence and defence read as two sides */
+  .gp-screen.is-d2 .gp-calls-list > .gp-action::before { content: ""; width: 7px; height: 7px; border-radius: 50%; flex: 0 0 auto; background: var(--d2-off); }
+  .gp-screen.is-d2 .gp-calls-list > .gp-action.is-defence::before { background: var(--d2-def); }
+
+  /* Roll: a gold pill */
+  .gp-screen.is-d2 .gp-region-lineup .gp-rollbox > .gp-roll-hint { display: none; }
+  .gp-screen.is-d2 .gp-region-lineup .gp-rollbox > .gp-action {
+    border-radius: 999px; border: 0; height: 100%; min-height: 0;
+    background: linear-gradient(180deg, var(--d2-gold-hi), var(--d2-gold)); color: #15120a;
+    font-family: var(--d2-cond); font-size: 18px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase;
+    box-shadow: 0 6px 18px var(--d2-gold-glow), 0 1px 0 rgba(255, 255, 255, .4) inset;
+    transition: transform 120ms var(--d2-ease), box-shadow 120ms var(--d2-ease);
+  }
+  .gp-screen.is-d2 .gp-region-lineup .gp-rollbox > .gp-action:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 10px 24px var(--d2-gold-glow); }
+  .gp-screen.is-d2 .gp-region-lineup .gp-rollbox > .gp-action:disabled { opacity: .5; box-shadow: none; }
+
+  /* the last roll as a lower third: the die, the headline, its facts */
+  .gp-screen.is-d2 .gp-region-lineup .gp-rollresult {
+    border: 0; border-radius: 4px; padding: 0 14px 0 0; gap: 12px; overflow: hidden;
+    background: linear-gradient(90deg, #15171b 0%, #121316 100%); box-shadow: 0 0 0 1px rgba(255, 255, 255, .06);
+    animation: gp-d2-reveal 260ms var(--d2-ease);
+  }
+  .gp-screen.is-d2 .gp-region-lineup .gp-rollresult-die {
+    height: 100%; max-height: none; width: auto; max-width: none; aspect-ratio: 1; border: 0; border-radius: 0; background: var(--d2-gold-hi);
+  }
+  .gp-screen.is-d2 .gp-rollresult-die small { color: #3a2e0c; }
+  .gp-screen.is-d2 .gp-rollresult-die strong { color: #111; font-family: var(--d2-cond); font-size: 30px; }
+  .gp-screen.is-d2 .gp-rollresult.is-defense .gp-rollresult-die { background: var(--d2-def); }
+  .gp-screen.is-d2 .gp-rollresult.is-empty .gp-rollresult-die { display: none; }
+  .gp-screen.is-d2 .gp-rollresult.is-empty { padding-left: 14px; }
+  .gp-screen.is-d2 .gp-rollresult-title .s-lbl { background: #fff; color: #111; padding: 1px 6px; border-radius: 2px; font-size: 9px; }
+  .gp-screen.is-d2 .gp-region-lineup .gp-rollresult-main { container: gprr / inline-size; }
+  .gp-screen.is-d2 .gp-region-lineup .gp-rollresult-outcome {
+    display: flex; align-items: baseline; gap: 10px; white-space: nowrap; overflow: hidden; -webkit-line-clamp: unset;
+  }
+  .gp-screen.is-d2 .gp-rollresult-sep { display: none; }
+  .gp-screen.is-d2 .gp-rollresult-head {
+    font-family: var(--d2-cond); font-size: max(24px, calc(var(--u) * 3.3)); font-weight: 800; text-transform: uppercase;
+    letter-spacing: .03em; color: var(--d2-text); line-height: 1; flex: 0 0 auto;
+  }
+  .gp-screen.is-d2 .gp-rollresult.is-offense .gp-rollresult-head { color: var(--d2-gold-hi); }
+  .gp-screen.is-d2 .gp-rollresult-outcome.is-empty .gp-rollresult-head { font-family: inherit; font-size: inherit; text-transform: none; color: inherit; font-weight: 600; }
+  .gp-screen.is-d2 .gp-rollresult-facts { font-size: 13.5px; font-weight: 600; color: var(--d2-dim); overflow: hidden; text-overflow: ellipsis; }
+
+  /* the tray: whole cards in a recessed rail, the position alone under each */
+  .gp-screen.is-d2 .gp-region-lineup .gp-lineup-strip {
+    padding: 8px 10px 6px; border-radius: 14px;
+    background: linear-gradient(180deg, #08080a, #111114);
+    box-shadow: inset 0 3px 8px rgba(0, 0, 0, .85), inset 0 -1px 0 rgba(226, 178, 58, .16);
+  }
+  .gp-screen.is-d2 .gp-region-lineup .gp-lineup-strip .gp-lineup-who {
+    display: block; width: 100%; margin-top: 4px; text-align: center; overflow: visible;
+    height: calc(1.15 * max(9px, calc(var(--u) * 0.95)) + 3px);
+  }
+  .gp-screen.is-d2 .gp-region-lineup .gp-lineup-strip .gp-lineup-who b,
+  .gp-screen.is-d2 .gp-region-lineup .gp-lineup-strip .gp-lineup-ob { display: none; }
+  .gp-screen.is-d2 .gp-region-lineup .gp-lineup-strip .gp-lineup-who small {
+    display: block; font-size: max(9px, calc(var(--u) * 0.95)); font-weight: 700; color: var(--d2-dim); line-height: 1.15; white-space: nowrap;
+  }
+  .gp-screen.is-d2 .gp-region-lineup .gp-lineup-strip .gp-lineup-row.is-active .gp-lineup-who small { color: var(--d2-gold-hi); }
+  .gp-screen.is-d2 .gp-region-lineup .gp-lineup-strip .gp-lineup-order { top: 3px; left: 3px; bottom: auto; }
+  .gp-screen.is-d2 .gp-region-lineup .gp-lineup-strip .gp-lineup-card { border: 0; box-shadow: 0 4px 10px rgba(0, 0, 0, .5); transition: transform 160ms var(--d2-ease); }
+  .gp-screen.is-d2 .gp-region-lineup .gp-lineup-strip .gp-lineup-row.is-active .gp-lineup-card {
+    transform: translateY(-4px); box-shadow: 0 0 0 2px var(--d2-gold-hi), 0 8px 18px var(--d2-gold-glow);
+  }
+
+  /* the field and the DEF strip */
+  .gp-screen.is-d2 .gp-region-field .gp-field { border: 0; border-radius: 14px; box-shadow: 0 0 0 1px rgba(226, 178, 58, .28), 0 22px 46px rgba(0, 0, 0, .65); }
+  .gp-screen.is-d2 .gp-region-field > .gp-defbar { border: 0; border-radius: 4px; background: #0f1013; box-shadow: 0 0 0 1px var(--d2-line); }
+  .gp-screen.is-d2 .gp-defbar-item strong { font-family: var(--d2-cond); font-size: 16px; }
+
+  /* panels over the column */
+  .gp-screen.is-d2 .gp-region-lineup > .gp-mp { grid-column: 1 / -1; grid-row: 1 / -1; border-radius: 14px; border-color: rgba(226, 178, 58, .5); background: var(--d2-surface); animation: gp-d2-panel 200ms var(--d2-ease); }
+  .gp-screen.is-d2 .gp-region-lineup > .gp-mp.is-over-cards { grid-row: 1 / 2; }
+  .gp-screen.is-d2 .gp-region-lineup > .gp-toast { grid-column: 1 / -1; grid-row: 1 / 2; }
+}
+
+/* A narrow result band stacks the headline over its facts instead of
+ * cutting the facts off. */
+@container gprr (max-width: 330px) {
+  .gp-screen.is-d2 .gp-rollresult-title,
+  .gp-screen.is-d2 .gp-rollresult-math { display: none; }
+  .gp-screen.is-d2 .gp-region-lineup .gp-rollresult-outcome { flex-direction: column; align-items: flex-start; gap: 2px; }
+  .gp-screen.is-d2 .gp-rollresult-head { white-space: normal; font-size: min(20px, 21cqw); line-height: 1.05; }
+  .gp-screen.is-d2 .gp-rollresult-facts { white-space: normal; line-height: 1.2; font-size: 12px; }
+}
+
+/* ---- short, wide windows: batter | live roll, Roll, result | pitcher ----
+ * Past ~1.88:1 both the field and two stacked cards are height-bound, so the
+ * column takes all the width the field can't use and rearranges rather than
+ * shrinking the cards. (A query on the screen: a container can't restyle
+ * itself.) */
+@container gpscreen (min-aspect-ratio: 188 / 100) {
+  .gp-screen.is-d2 .gp-stage { --s-rail-left: calc(100cqw - 100cqh + 49px); }
+  .gp-screen.is-d2 .gp-region-lineup {
+    grid-template-columns: minmax(0, 1fr) minmax(190px, 27%) minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) var(--d2-band-h) auto auto;
+    grid-template-areas: "bat slot pit" "bat roll pit" "bat res pit" "tray tray tray";
+  }
+  .gp-screen.is-d2 .gp-region-lineup > .gp-matchup,
+  .gp-screen.is-d2 .gp-region-lineup .gp-matchup-sides { display: contents; }
+  .gp-screen.is-d2 .gp-region-lineup .gp-matchup-side:first-child { grid-area: bat; }
+  .gp-screen.is-d2 .gp-region-lineup .gp-matchup-side:last-child { grid-area: pit; }
+  .gp-screen.is-d2 .gp-region-lineup .gp-matchup > .gp-roll { grid-area: slot; align-self: end; height: auto; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .gp-screen.is-d2 .gp-region-lineup .gp-matchup > .gp-roll .gp-roll-cell { flex-direction: column; align-items: center; gap: 1px; padding: 6px 2px; min-width: 0; }
+  .gp-screen.is-d2 .gp-region-lineup .gp-matchup > .gp-roll .gp-roll-cell + .gp-roll-cell::before { display: none; }
+  .gp-screen.is-d2 .gp-matchup > .gp-roll .s-lbl { font-size: 8px; letter-spacing: .08em; }
+  .gp-screen.is-d2 .gp-matchup > .gp-roll strong { font-size: 18px; }
+  .gp-screen.is-d2 .gp-matchup > .gp-roll strong.is-hitter,
+  .gp-screen.is-d2 .gp-matchup > .gp-roll strong.is-pitcher { font-size: 13px; }
+  .gp-screen.is-d2 .gp-region-lineup > .gp-rollresult { grid-area: res; height: auto; min-height: 92px; padding: 0 10px 0 0; }
+  .gp-screen.is-d2 .gp-region-lineup > .gp-calls { grid-area: slot; align-self: end; flex-direction: column; align-items: stretch; padding: 8px; height: auto; }
+  .gp-screen.is-d2 .gp-region-lineup > .gp-calls > .s-lbl { text-align: center; }
+  .gp-screen.is-d2 .gp-region-lineup .gp-calls-list { flex-direction: column; height: auto; gap: 6px; }
+  .gp-screen.is-d2 .gp-region-lineup .gp-calls-list > .gp-action { flex: 0 0 34px; height: 34px; }
+  /* the half-inning summary covers the whole matchup band; Roll, the last
+   * roll and any calls stay docked on top of it, so the next pitch or call is
+   * never behind it. Its foot is padded by what is docked: the Roll band, the
+   * last roll, and the calls box (--d2-calls is how many calls there are). */
+  .gp-screen.is-d2 .gp-region-lineup > .gp-mp.is-over-cards {
+    grid-row: 1 / 4; grid-column: 1 / -1;
+    padding-bottom: calc(var(--d2-band-h) + 104px + 2 * var(--s2-gap) + min(var(--d2-calls, 0), 1) * 38px + var(--d2-calls, 0) * 40px);
+  }
+  .gp-screen.is-d2 .gp-region-lineup:has(> .gp-mp.is-over-cards) > .gp-rollbox,
+  .gp-screen.is-d2 .gp-region-lineup:has(> .gp-mp.is-over-cards) > .gp-rollresult,
+  .gp-screen.is-d2 .gp-region-lineup:has(> .gp-mp.is-over-cards) > .gp-calls { position: relative; z-index: 21; }
+}
+
+@keyframes gp-d2-reveal { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@keyframes gp-d2-panel { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .gp-screen.is-d2 .gp-rollresult, .gp-screen.is-d2 .gp-mp { animation: none; }
+  .gp-screen.is-d2 *, .gp-gamebar * { transition: none !important; }
+}
+
+/* the sandbox's own header: the scenario picker where the brand would be */
+.gp-sandbox-nav { gap: 10px; }
+.gp-sandbox-nav > b { color: #f4cf5c; font-size: 11px; font-weight: 900; letter-spacing: .14em; text-transform: uppercase; }
+.gp-sandbox-nav select,
+.gp-sandbox-nav button { height: 32px; border-radius: 8px; border: 1px solid #50452d; background: #15130e; color: #e8dfca; font: inherit; font-size: 12px; padding: 0 8px; cursor: pointer; }

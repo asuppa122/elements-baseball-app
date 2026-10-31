@@ -19,7 +19,10 @@ import { awaitingOffenseReady, sideToAct } from '../turnOrder'
 import type { useGameplayActions } from './useGameplayActions'
 import type { HalfInningTransition as HalfInningTransitionModel } from '../halfInningTransition'
 import type { GameSide, GameState } from '../types'
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
+import { createPortal } from 'react-dom'
+import { useHeaderSlot } from '../../components/headerSlot'
+import { useMediaQuery } from '../../lib/useMediaQuery'
 import ManagerPanel from './ManagerPanel'
 import ManagerToolbar, { type ManagerTool } from './ManagerToolbar'
 import { useSquareField } from './useSquareField'
@@ -168,6 +171,13 @@ export default function GameplayScreenView({
   const acting = actingSides ?? [viewerSide]
   const fieldColumn = useRef<HTMLElement>(null)
   useSquareField(fieldColumn)
+  // Desktop (D2): the scoreboard and the manager's tools live in the app
+  // header, so the game is two columns, matchup | field, with nothing spent on
+  // navigation. Tablet and phone keep the header row and the tool strip, and so
+  // does any surface without an app header to render into.
+  const desktop = useMediaQuery('(min-width: 1025px)')
+  const headerSlot = useHeaderSlot()
+  const barInHeader = desktop && headerSlot !== null
   // Two managers at two screens: each sees only their own calls and buttons,
   // and only on their turn (turnOrder.ts). A one-screen game is one person
   // playing both sides, so nothing is gated there.
@@ -224,37 +234,62 @@ export default function GameplayScreenView({
     setTool((current) => (current === next ? null : next))
   }
 
+  const menu = <GameMenu state={state} saving={saving} onTogglePause={() => void togglePause()} onExit={onExit} />
+  const toolbar = (
+    <ManagerToolbar
+      state={state}
+      events={events}
+      open={panel === 'decision' ? 'call' : panel === 'drawers' ? drawerTool : panel === 'final' ? 'final' : null}
+      onOpen={toggleTool}
+      decisionPending={Boolean(decision)}
+      decisionMine={decisionMine}
+      viewerSide={viewerSide}
+      actingSides={acting}
+    />
+  )
+
   return (
     <CardZoomProvider>
-    <main className={`gp-screen${panel ? ' has-panel' : ''}${panel === 'decision' ? ' has-decision' : ''}`}>
+    <main className={`gp-screen${barInHeader ? ' is-d2' : ''}${panel ? ' has-panel' : ''}${panel === 'decision' ? ' has-decision' : ''}`}>
       <div className="gp-stage">
       {banner}
 
-      {/* One full-width header, matching the artboards: the whole game
-          situation reads left to right in a single row, and the centre
-          column below is strictly the field. */}
-      <header className="gp-panel gp-topbar" aria-label="Game situation">
-        <Scorebug state={state} />
-        <i className="gp-topbar-rule" aria-hidden="true" />
-        <PlayRecap events={events} />
-        <i className="gp-topbar-rule" aria-hidden="true" />
-        {twoPlayer && <TurnStatus state={state} mine={myTurn} toAct={toAct} />}
-        <div className="gp-topbar-fielding">
-          <b className="s-lbl">Fielding</b>
-          <p>{state.managers[battingSide(state.half) === 'home' ? 'away' : 'home'].managerName}</p>
-        </div>
-        <GameMenu
-          state={state}
-          saving={saving}
-          onTogglePause={() => void togglePause()}
-          onExit={onExit}
-        />
-      </header>
+      {barInHeader ? createPortal(
+        // The game bar, in the app header: the score and situation on the
+        // left, the tools and the menu on the right. The play itself is told
+        // by the last roll under the cards, so the header carries no recap.
+        <div className="gp-gamebar" aria-label="Game situation">
+          <Scorebug state={state} />
+          {twoPlayer && <TurnStatus state={state} mine={myTurn} toAct={toAct} />}
+          <div className="gp-gamebar-tools">
+            {toolbar}
+            {menu}
+          </div>
+        </div>,
+        headerSlot,
+      ) : (
+        /* One full-width header, matching the artboards: the whole game
+           situation reads left to right in a single row, and the centre
+           column below is strictly the field. */
+        <header className="gp-panel gp-topbar" aria-label="Game situation">
+          <Scorebug state={state} />
+          <i className="gp-topbar-rule" aria-hidden="true" />
+          <PlayRecap events={events} />
+          <i className="gp-topbar-rule" aria-hidden="true" />
+          {twoPlayer && <TurnStatus state={state} mine={myTurn} toAct={toAct} />}
+          <div className="gp-topbar-fielding">
+            <b className="s-lbl">Fielding</b>
+            <p>{state.managers[battingSide(state.half) === 'home' ? 'away' : 'home'].managerName}</p>
+          </div>
+          {menu}
+        </header>
+      )}
 
       <div className="gp-layout">
         {/* The left rail is the manager's column: who is up, the roll, who is
             pitching, the batting order, and the calls available right now. */}
-        <section className="gp-region gp-region-lineup" aria-label="Matchup and lineup">
+        <section className={`gp-region gp-region-lineup${sideActions.length ? ' has-calls' : ''}`} aria-label="Matchup and lineup"
+          style={{ '--d2-calls': sideActions.length } as CSSProperties}>
           <MatchupPanel state={state} />
 
           <RollControls
@@ -279,12 +314,14 @@ export default function GameplayScreenView({
               belonging to the other manager is not shown disabled -- that is
               permanent noise on a screen you look at every pitch. The box
               keeps a fixed height so the Type 2 board does not shift between
-              pitches as calls come and go. */}
-          <section className="gp-panel gp-calls" aria-label="Manager decisions">
-            <b className="s-lbl">Manager decisions</b>
+              pitches as calls come and go. On desktop (D2) the calls take the
+              live roll's slot under the cards: calls are pre-pitch only,
+              exactly when that roll is still empty, so the two swap in place. */}
+          <section className={`gp-panel gp-calls${sideActions.length ? '' : ' is-empty'}`} aria-label="Manager decisions">
+            <b className="s-lbl">{barInHeader ? 'Before the pitch' : 'Manager decisions'}</b>
             <div className="gp-calls-list">
               {sideActions.map((a) => (
-                <button key={a.id} className="gp-action gp-action-secondary" disabled={saving}
+                <button key={a.id} className={`gp-action gp-action-secondary ${OFFENCE_ACTIONS.has(a.id) ? 'is-offence' : 'is-defence'}`} disabled={saving}
                   title={a.detail} onClick={() => void startAction(a.id)}>{a.label}</button>
               ))}
             </div>
@@ -368,18 +405,11 @@ export default function GameplayScreenView({
           <DefBar state={state} />
         </section>
 
-        <section className="gp-region gp-region-rail" aria-label="Manager tools">
-          <ManagerToolbar
-            state={state}
-            events={events}
-            open={panel === 'decision' ? 'call' : panel === 'drawers' ? drawerTool : panel === 'final' ? 'final' : null}
-            onOpen={toggleTool}
-            decisionPending={Boolean(decision)}
-            decisionMine={decisionMine}
-            viewerSide={viewerSide}
-            actingSides={acting}
-          />
-        </section>
+        {!barInHeader && (
+          <section className="gp-region gp-region-rail" aria-label="Manager tools">
+            {toolbar}
+          </section>
+        )}
 
       </div>
       </div>

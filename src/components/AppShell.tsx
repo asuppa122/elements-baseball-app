@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
 import logo from '../assets/elements-baseball-logo.png'
 import { appPath } from '../lib/appPaths'
+import { HeaderSlotContext } from './headerSlot'
 
 export default function AppShell({ children }: { children: ReactNode }) {
   const navigate = useNavigate()
@@ -10,6 +11,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
   const { profile, signOut, isDemo } = useAuth()
   const [profileOpen, setProfileOpen] = useState(false)
   const profileMenuRef = useRef<HTMLDivElement | null>(null)
+  const [headerSlot, setHeaderSlot] = useState<HTMLDivElement | null>(null)
 
 
   useEffect(() => {
@@ -74,6 +76,10 @@ export default function AppShell({ children }: { children: ReactNode }) {
         </button>
         </div>
 
+        {/* Pages render into this (the game's scoreboard and tools); it is
+            empty everywhere else. */}
+        <div className="global-header-slot" ref={setHeaderSlot} />
+
         <div className="global-user-menu">
           {isDemo ? (
             <>
@@ -118,7 +124,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
           )}
         </div>
       </header>
-      {children}
+      <HeaderSlotContext.Provider value={headerSlot}>{children}</HeaderSlotContext.Provider>
     </div>
   )
 }

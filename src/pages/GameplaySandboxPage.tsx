@@ -1,5 +1,7 @@
 import { useCallback, useMemo, useRef, useState } from 'react'
 import GameplayScreenView from '../gameplay/presentation/GameplayScreenView'
+import { HeaderSlotContext } from '../components/headerSlot'
+import { useMediaQuery } from '../lib/useMediaQuery'
 import { type LogEvent } from '../gameplay/presentation/GameLogPanel'
 import { useGameplayActions, type SaveGameState } from '../gameplay/presentation/useGameplayActions'
 import { buildHalfInningTransition, previousHalf } from '../gameplay/halfInningTransition'
@@ -136,6 +138,8 @@ export default function GameplaySandboxPage() {
   })
 
   const state = game.game_state as GameState
+  const [headerSlot, setHeaderSlot] = useState<HTMLDivElement | null>(null)
+  const desktop = useMediaQuery('(min-width: 1025px)')
   const halfKey = `${state.inning}-${state.half}`
   const justEnded = lastHalfSeen !== null && lastHalfSeen !== halfKey
     ? previousHalf(state.inning, state.half)
@@ -164,19 +168,40 @@ export default function GameplaySandboxPage() {
     </div>
   ), [scenario.blurb, scenarioKey, load])
 
+  // The same shell as the signed-in app -- a header with a slot for the game
+  // bar, the screen under it -- so the sandbox lays out exactly like a real
+  // game. On desktop the scenario picker moves into that header too.
   return (
-    <GameplayScreenView
-      state={state}
-      events={events}
-      actions={actions}
-      transition={transition}
-      onDismissTransition={() => setTransitionDismissed(halfKey)}
-      onExit={() => load(scenarioKey)}
-      banner={banner}
-      /* No opponent here: the reviewer acts for whichever side the engine is
-         asking, so every legal decision is actually reachable. */
-      viewerSide={actions.decision?.actingSide ?? 'home'}
-      actingSides={['home', 'away']}
-    />
+    <div className="authenticated-app">
+      <header className="global-app-header">
+        <div className="global-header-navigation gp-sandbox-nav">
+          <b>Sandbox</b>
+          {desktop && (
+            <>
+              <select value={scenarioKey} onChange={(e) => load(e.target.value)} aria-label="Scenario">
+                {SCENARIOS.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}
+              </select>
+              <button type="button" onClick={() => load(scenarioKey)}>Reset</button>
+            </>
+          )}
+        </div>
+        <div className="global-header-slot" ref={setHeaderSlot} />
+      </header>
+      <HeaderSlotContext.Provider value={headerSlot}>
+        <GameplayScreenView
+          state={state}
+          events={events}
+          actions={actions}
+          transition={transition}
+          onDismissTransition={() => setTransitionDismissed(halfKey)}
+          onExit={() => load(scenarioKey)}
+          banner={desktop ? undefined : banner}
+          /* No opponent here: the reviewer acts for whichever side the engine is
+             asking, so every legal decision is actually reachable. */
+          viewerSide={actions.decision?.actingSide ?? 'home'}
+          actingSides={['home', 'away']}
+        />
+      </HeaderSlotContext.Provider>
+    </div>
   )
 }

@@ -56,10 +56,12 @@ export default function LineupRail({ state }: { state: GameState }) {
                 : <span className="gp-lineup-card"><i className="gp-lineup-card-empty" aria-hidden="true" /></span>}
               <span className="gp-lineup-who">
                 <b>{card?.playerName ?? cardKey}</b>
+                {/* On the desktop tray the card prints OB, so only the
+                    position shows under it. */}
                 <small>
-                  {position ?? '—'}
+                  <span className="gp-lineup-pos">{position ?? '—'}</span>
                   {card?.hitter.onBase !== null && card?.hitter.onBase !== undefined && (
-                    <> · OB {card.hitter.onBase}</>
+                    <span className="gp-lineup-ob"> · OB {card.hitter.onBase}</span>
                   )}
                 </small>
               </span>
