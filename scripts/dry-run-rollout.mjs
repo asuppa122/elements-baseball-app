@@ -7,8 +7,8 @@
 // In order, exactly as supabase/ROLLOUT_STAGE3.md: the live schema (every
 // migration before Stage 3), the snapshot's rows, the read-only preview, the
 // migration, the post-migration verification queries, the pre-launch rest
-// archive (all five steps), and finally launch activation -- here only, to
-// prove the clean slate is accepted.
+// archive (all five steps), a rollback and re-apply, and finally launch
+// activation -- here only, to prove the clean slate is accepted.
 
 import fs from "node:fs";
 import path from "node:path";
@@ -102,7 +102,21 @@ try {
   const afterArchive = step(4).split("|");
   check("archive STEP 5: live rest empty, all rows archived, from the two source games", afterArchive[0] === "0" && afterArchive[1] === String(rest.length), { live: afterArchive[0], archived: afterArchive[1], sourceGames: afterArchive[2] });
 
-  // 5. Launch day (in this throwaway copy only): the clean slate is accepted.
+  // 5. Rollback rehearsal: back to the old app's behaviour, protections kept, then forward again.
+  db.file(path.join(root, "supabase/rollbacks/20261031_gameplay_one_active_game_rollback.sql"));
+  check("rollback: the old app's insert policy is back and the one-game triggers are gone",
+    q("select count(*) from pg_policies where tablename = 'games' and policyname = 'Gameplay lab testers can create private test games'") === "1"
+    && q("select count(*) from pg_trigger where tgname in ('gameplay_games_guard','gameplay_sync_active_games')") === "0");
+  check("rollback: the pre-launch rest guard is kept, and the restored writer only writes rest while tracking is on",
+    q("select count(*) from pg_trigger where tgname = 'gameplay_rest_write_guard'") === "1"
+    && q("select prosrc like '%public.gameplay_official_tracking_enabled()%' from pg_proc where proname = 'save_gameplay_lab_state'") === "t"
+    && q("select official_tracking_enabled from public.gameplay_settings") === "f");
+  check("rollback: closed games stay closed, history intact",
+    q("select count(*) from public.games where status = 'terminated'") === "14" && Number(q("select count(*) from public.game_events")) === before.events + 14);
+  db.file(migration);
+  check("re-applying the migration after the rollback succeeds", q("select count(*) from pg_trigger where tgname in ('gameplay_games_guard','gameplay_sync_active_games','gameplay_rest_write_guard')") === "3");
+
+  // 6. Launch day (in this throwaway copy only): the clean slate is accepted.
   q("select public.activate_official_tracking('Elements Baseball is officially live')");
   check("activation accepts the clean slate (rehearsal only)", q("select official_tracking_enabled from public.gameplay_settings") === "t");
 } catch (e) {

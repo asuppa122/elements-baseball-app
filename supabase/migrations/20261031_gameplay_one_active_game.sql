@@ -40,7 +40,8 @@
 -- What it does, in order (one transaction -- any failure leaves nothing changed):
 --   1. End states `cancelled` and `terminated`: no result, no rest tracking.
 --   2. play_mode and progression on every game; all existing games prelaunch.
---   3. The official-tracking switch, OFF.
+--   3. The official-tracking switch, OFF, and a trigger that refuses any app
+--      write to persistent rest while it is off (whatever writer is in place).
 --   4. Two separate permissions: create one-screen test games (Anthony, Will)
 --      and end a game without a result (Anthony).
 --   5. Closes the 14 inventoried practice games (`terminated`,
@@ -226,6 +227,33 @@ begin
   end loop;
 end;
 $$;
+
+-- The backstop: persistent rest can only be written while official tracking
+-- is on. Whatever writer is in place -- this migration's, an older one
+-- restored by a rollback, anything run by mistake -- a write from the app
+-- before launch (or during a suspension) fails instead of recording rest; the
+-- completing save then fails with it, so nothing is silently counted. Only the
+-- database owner (auth.uid() is null: the SQL Editor, migrations) may write
+-- rows directly, for maintenance. Deleting is not affected (the pre-launch
+-- archive removes rows).
+create or replace function public.gameplay_rest_write_guard()
+returns trigger
+language plpgsql
+set search_path = public
+as $$
+begin
+  if auth.uid() is not null and not public.gameplay_official_tracking_enabled() then
+    raise exception 'PRELAUNCH_REST_BLOCKED'
+      using detail = 'Persistent rest cannot be written while official tracking is off (pre-launch or suspended).';
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists gameplay_rest_write_guard on public.player_rest_state;
+create trigger gameplay_rest_write_guard
+before insert or update on public.player_rest_state
+for each row execute function public.gameplay_rest_write_guard();
 
 -- 4) Permissions -------------------------------------------------------------------
 -- Two flags, not one: Will helps test (one-screen games) without being able

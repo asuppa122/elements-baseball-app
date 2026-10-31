@@ -3,6 +3,7 @@ import { buildNonGbCoverageFixture } from '../rulebookCoverage'
 import { attachPregameRoster, createInitialGameState, lockPregame, resolvePitchRoll, setPregameSelections, startGame } from '../engine'
 import { beginPrePitchDecision, confirmManagerDecision, getDecisionView } from '../decisionEngine'
 import { createGameplayDevDb, DEV_USERS, MIGRATIONS, type DevDb } from '../devDb'
+import { sideToAct } from '../turnOrder'
 import type { GameSide, GameState } from '../types'
 import oneActiveGame from '../../../supabase/migrations/20261031_gameplay_one_active_game.sql?raw'
 import preview from '../../../supabase/data-fixes/20261031_one_active_game_preview.sql?raw'
@@ -524,29 +525,51 @@ const CARL_SEED = DEV_USERS.outsider
 const DANA_SEED = DEV_USERS.away
 
 describe('the rollback', () => {
-  it('restores the old behaviour, keeps the closed games closed, and the migration can be re-applied', async () => {
+  it('restores the old behaviour without breaking the pre-launch rule, keeps the closed games closed, and the migration can be re-applied', async () => {
     const db = await createGameplayDevDb()
-    const oldWriter = MIGRATIONS[MIGRATIONS.length - 2]
+    const originalOct30Writer = MIGRATIONS[MIGRATIONS.length - 2]
     const run = (sql: string) => db.asOwner(() => db.db.exec(sql))
+    const restCount = async () => Number((await db.asOwner(async () => (await db.db.query<{ n: number }>('select count(*)::int as n from public.player_rest_state')).rows))[0].n)
     const fixture = buildNonGbCoverageFixture()
     const closedId = '70000000-0000-4000-8000-000000000001'
     await db.asOwner(() => db.db.query(
       `insert into public.games (id, season_id, season_year, status, home_user_id, away_user_id, configuration_snapshot, game_state)
        values ($1, 's', 1925, 'terminated', $2, $3, '{}', $4::jsonb)`, [closedId, HOME, AWAY, JSON.stringify({ ...fixture, gameId: closedId, status: 'terminated' })]))
     await run(rollbackSql)
-    await run(oldWriter)
     // the old app's direct insert works again, for two two-player games at once
+    const game = (id: string): GameState => ({ ...fixture, gameId: id, stateVersion: 1, turnHandshake: true,
+      managers: { home: { userId: HOME, managerName: 'Anthony' }, away: { userId: AWAY, managerName: 'Will' } },
+      configuration: { ...fixture.configuration, seasonId: 's' }, restState: { home: {}, away: {} } })
     const insertAs = (id: string) => db.asOwner(async () => {
       await db.db.exec(`set role authenticated; select set_config('test.uid', '${HOME}', false);`)
       await db.db.query(`insert into public.games (id, season_id, season_year, status, home_user_id, away_user_id, configuration_snapshot, game_state, state_version)
-        values ($1, 's', 1925, 'in_progress', $2, $3, '{}', $4::jsonb, 1)`, [id, HOME, AWAY, JSON.stringify({ ...fixture, gameId: id, stateVersion: 1, turnHandshake: true })])
+        values ($1, 's', 1925, 'in_progress', $2, $3, '{}', $4::jsonb, 1)`, [id, HOME, AWAY, JSON.stringify(game(id))])
     })
+    const finishAs = (id: string) => {
+      const s0 = game(id)
+      const side = sideToAct(s0) as GameSide
+      return db.save(side === 'home' ? HOME : AWAY, { gameId: id, expectedStateVersion: 1, nextState: { ...s0, status: 'complete', stateVersion: 2 }, eventType: 'DECISION_RESOLVED' })
+    }
     await insertAs('70000000-0000-4000-8000-000000000002')
     await insertAs('70000000-0000-4000-8000-000000000003')
     expect((await db.asOwner(async () => (await db.db.query<{ status: string }>('select status from public.games where id = $1', [closedId])).rows))[0].status).toBe('terminated')
+
+    // a game completed on the rolled-back site completes, and records nothing
+    await finishAs('70000000-0000-4000-8000-000000000003')
+    expect((await db.load(HOME, '70000000-0000-4000-8000-000000000003')).status).toBe('complete')
+    expect(await restCount()).toBe(0)
+
+    // the original 20261030 writer re-run by mistake: the guard refuses its
+    // rest write, so the completing save fails -- nothing is silently counted
+    await run(originalOct30Writer)
+    await insertAs('70000000-0000-4000-8000-000000000004')
+    await expect(finishAs('70000000-0000-4000-8000-000000000004')).rejects.toThrow(/PRELAUNCH_REST_BLOCKED/)
+    expect((await db.load(HOME, '70000000-0000-4000-8000-000000000004')).status).toBe('in_progress')
+    expect(await restCount()).toBe(0)
+
     // re-applying refuses (two unfinished two-player games), as it should, until one is ended
     await expect(run(oneActiveGame)).rejects.toThrow(/more than one unfinished two-player game/)
-    await run(`update public.games set status = 'terminated' where id = '70000000-0000-4000-8000-000000000003'`)
+    await run(`update public.games set status = 'terminated' where id = '70000000-0000-4000-8000-000000000004'`)
     await run(oneActiveGame)
     const rows = await db.asOwner(async () => (await db.db.query<{ play_mode: string; progression: string }>(`select play_mode, progression from public.games where id = '70000000-0000-4000-8000-000000000002'`)).rows)
     expect(rows).toEqual([{ play_mode: 'two_player', progression: 'prelaunch' }])

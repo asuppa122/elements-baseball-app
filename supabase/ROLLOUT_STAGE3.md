@@ -15,8 +15,8 @@ item in `LAUNCH_BLOCKERS.md` is done.
    list: stop and decide about it first. `npm run inventory:progression`
    should still show 72 rest rows, all traced to a game completion.
 3. **Rehearsal.** `npm run check:rollout` replays this whole runbook on a copy
-   of that snapshot on a throwaway local Postgres (never Supabase). All 16
-   checks must pass.
+   of that snapshot on a throwaway local Postgres (never Supabase), including
+   a rollback and re-apply. All 20 checks must pass.
 4. **Preview, live.** Run `supabase/data-fixes/20261031_one_active_game_preview.sql`
    in the SQL Editor: exactly 14 `CLOSE` rows, nothing else, and no rows from
    the second query.
@@ -97,12 +97,16 @@ after which the same move finishes them and records their progression.
 ## F. If something goes wrong
 
 - **Migration error:** nothing was applied (one transaction). Fix, re-run A.
-- **Problem after applying:** prefer a forward fix. Otherwise run
-  `supabase/rollbacks/20261031_gameplay_one_active_game_rollback.sql`, then the
-  whole of `20261030_gameplay_rest_appearance_fix.sql`, and redeploy the
-  previous app version. The 14 closed games stay closed; the migration can be
-  re-applied later. (The restored writer writes rest on every completion
-  again until it is.)
+- **Problem after applying:** prefer a forward fix. Otherwise run all of
+  `supabase/rollbacks/20261031_gameplay_one_active_game_rollback.sql` (one
+  transaction) and redeploy the previous app version. It restores the old
+  app's behaviour but **keeps the pre-launch rule**: its writer records rest
+  only while official tracking is on (it is off), and the
+  `gameplay_rest_write_guard` trigger stays, so even the original 20261030
+  writer re-run by mistake has its rest write refused (the completing save
+  fails; nothing is recorded). **Do not re-run 20261030 after a rollback.**
+  The 14 closed games stay closed; the migration can be re-applied later
+  (rehearsed by `npm run check:rollout`).
 - **Archive problem:** STEPs 2–4 are idempotent; STEP 4 never removes a row
   without an identical archived copy. The archive table itself is the backup
   of those rows; the snapshot from A1 is a second copy.
