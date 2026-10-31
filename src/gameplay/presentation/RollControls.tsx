@@ -1,4 +1,5 @@
 import { pitcherAdvantageIsAutomatic } from '../engine'
+import { endedLabel, gameEnded } from '../gameEnd'
 import { awaitingOffenseReady } from '../turnOrder'
 import type { GameState } from '../types'
 
@@ -34,7 +35,8 @@ export default function RollControls({
   const pa = state.plateAppearance
   const advantage = pa.advantage
   const tone = advantage === 'hitter' ? 'is-hitter' : advantage === 'pitcher' ? 'is-pitcher' : undefined
-  const live = state.status !== 'complete' && state.status !== 'paused' && !hasDecision && canAct
+  const ended = gameEnded(state.status)
+  const live = !ended && state.status !== 'paused' && !hasDecision && canAct
   const readyUp = live && awaitingOffenseReady(state)
 
   return (
@@ -47,6 +49,7 @@ export default function RollControls({
       </div>
 
       {state.status === 'complete' && <p className="gp-actions-msg">This game is final.</p>}
+      {ended && state.status !== 'complete' && <p className="gp-actions-msg">{endedLabel(state.status)}.</p>}
 
       {readyUp && onReady && (
         <>
@@ -62,7 +65,7 @@ export default function RollControls({
       {live && state.waitingFor === 'SWING_ROLL' && (
         <button className="gp-action" disabled={saving} onClick={onRollSwing}>Roll swing</button>
       )}
-      {waitingOn && !hasDecision && state.status !== 'complete' && (
+      {waitingOn && !hasDecision && !ended && (
         <p className="gp-roll-wait" role="status">Waiting on {waitingOn}…</p>
       )}
     </section>

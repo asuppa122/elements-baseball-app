@@ -543,3 +543,20 @@
 .pregame-pitcher-ctrl { font-size: 12.5px; }
 .pregame-pitcher-ctrl b { color: #f6ecd0; }
 .pregame-pitcher-ctrl.is-tired, .pregame-pitcher-ctrl.is-tired b { color: #ff8a7a; }
+
+/* ---- one active game (Stage 3) ---- */
+.gameplay-lab-active { display: flex; align-items: center; justify-content: space-between; gap: 20px; border-color: rgba(242, 200, 75, .7); }
+.gameplay-lab-active span { color: #f2c84b; font-size: .7rem; font-weight: 900; letter-spacing: .14em; text-transform: uppercase; }
+.gameplay-lab-active h2 { margin: 4px 0 6px; }
+.gameplay-lab-active p { margin: 0; max-width: 62ch; color: rgba(242, 234, 216, .7); font-size: .88rem; }
+.gameplay-lab-active .gameplay-lab-create-button { flex: 0 0 auto; text-decoration: none; text-align: center; }
+.gameplay-lab-saved-game.is-active { border-color: rgba(242, 200, 75, .7); }
+.gameplay-lab-saved-game.is-ended { opacity: .75; }
+.gameplay-lab-active-tag { margin-right: 8px; padding: 1px 6px; border-radius: 4px; background: #f2c84b; color: #111; letter-spacing: .08em; }
+.gameplay-lab-saved-buttons { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+@media (max-width: 800px) {
+  .gameplay-lab-active { flex-direction: column; align-items: stretch; }
+  .gameplay-lab-saved-buttons > * { flex: 1 1 auto; }
+}
+.gameplay-lab-prelaunch { border: 1px solid rgba(95, 168, 232, .45); background: rgba(30, 70, 110, .2); color: rgba(242, 234, 216, .85); }
+.gameplay-lab-prelaunch b { color: #8cc4f2; }

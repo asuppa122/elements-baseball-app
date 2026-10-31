@@ -23,6 +23,9 @@
 --
 -- STATUS: written 2026-10-30, tested against a real Postgres by
 -- src/gameplay/__tests__/restCorrectionSql.test.ts. NOT run yet.
+-- SUPERSEDED 2026-10-31 -- DO NOT RUN. Nothing played before launch counts,
+-- so these rows are archived instead, untouched:
+-- supabase/data-fixes/20261031_prelaunch_rest_archive.sql.
 
 -- ===================== STEP 1: preview (read-only) =====================
 with g as (

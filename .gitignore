@@ -55,3 +55,6 @@ card-source-audit.json
 # python bytecode from the mockup generator
 __pycache__/
 *.pyc
+
+# Local snapshots of live gameplay tables (scripts/snapshot-gameplay-tables.mjs)
+backups/

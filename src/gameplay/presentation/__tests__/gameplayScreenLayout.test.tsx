@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { render, screen, within } from '@testing-library/react'
 import GameplayScreenView from '../GameplayScreenView'
 import { HeaderSlotContext } from '../../../components/headerSlot'
@@ -209,5 +209,34 @@ describe('no Pause', () => {
     show(clone(midgame))
     expect(screen.queryByRole('button', { name: /pause|resume/i })).toBeNull()
     expect(screen.getByRole('button', { name: 'Exit' })).toBeInTheDocument()
+  })
+})
+
+describe('ended and cancellable games on the screen', () => {
+  it('offers Cancel game beside Exit only when the page passes it, and keeps them distinct', () => {
+    const state = clone(midgame)
+    const onCancel = vi.fn()
+    const view = render(
+      <HeaderSlotContext.Provider value={(slot = Object.assign(document.createElement('div'), { className: 'global-header-slot' }), document.body.appendChild(slot), slot)}>
+        <GameplayScreenView state={state} events={[]} actions={actionsFor(state)} transition={null}
+          onDismissTransition={() => {}} onExit={() => {}} onCancel={onCancel} viewerSide="home" actingSides={['home', 'away']} />
+      </HeaderSlotContext.Provider>,
+    )
+    const cancel = within(slot!).getByRole('button', { name: 'Cancel game' })
+    expect(cancel).toHaveClass('is-danger')
+    expect(within(slot!).getByRole('button', { name: 'Exit' })).not.toHaveClass('is-danger')
+    cancel.click()
+    expect(onCancel).toHaveBeenCalledTimes(1)
+    view.unmount()
+  })
+
+  it('a cancelled or admin-ended game says so and offers no Roll', () => {
+    for (const [status, text] of [['cancelled', 'Cancelled before the first pitch — no result.'], ['terminated', 'Ended by an admin — no result.']] as const) {
+      const state = { ...clone(midgame), status }
+      const view = show(state)
+      expect(view.screenEl.querySelector('.gp-rollbox')).toHaveTextContent(text)
+      expect(screen.queryByRole('button', { name: /roll|ready/i })).toBeNull()
+      view.unmount(); slot?.remove(); slot = null
+    }
   })
 })

@@ -53,7 +53,7 @@ function rng(seed: number) {
 
 let gameCounter = 0
 const decisionsPlayed = new Set<string>()
-async function createGame(twoPlayer: boolean): Promise<GameState> {
+async function createGame(twoPlayer: boolean, shape: (s: GameState) => GameState = (x) => x): Promise<GameState> {
   gameCounter += 1
   const id = `10000000-0000-4000-8000-${String(gameCounter).padStart(12, '0')}`
   const s = buildNonGbCoverageFixture()
@@ -63,8 +63,11 @@ async function createGame(twoPlayer: boolean): Promise<GameState> {
   if (twoPlayer) s.turnHandshake = true
   s.restState = { home: {}, away: {} }
   s.configuration.seasonId = 'test-season'
-  await dev.createGame(HOME, s)
-  return s
+  // One active competitive game per manager (20261031): each test starts clean.
+  await dev.endAll()
+  const shaped = shape(s)
+  await dev.createGame(HOME, shaped)
+  return shaped
 }
 
 /** A state as the removed pauseGame() wrote it: the status it was paused from is kept. */
@@ -172,34 +175,45 @@ describe('two-player migration (real Postgres)', () => {
     state = await loadState(s.gameId)
     expect(state.plateAppearance.pitchRoll).toBe(roll)
 
-    // A game paused before Pause was removed (the server still holds the
-    // status and accepts the old event, so such games exist): resuming it
-    // belongs to neither turn -- either manager may -- and to nobody else.
-    await save(HOME, s.gameId, 3, legacyPaused(state, HOME), 'GAME_PAUSED', {})
-    state = await loadState(s.gameId)
+    // Pause was removed: neither a GAME_PAUSED save nor a paused state under
+    // another event is accepted, from either manager.
+    await rejects(save(HOME, s.gameId, 3, legacyPaused(state, HOME), 'GAME_PAUSED', {}), /Unsupported .* GAME_PAUSED/)
+    await rejects(save(AWAY, s.gameId, 3, legacyPaused(state, AWAY), 'GAME_RESUMED', {}), /no longer be paused/)
+  })
+
+  it('resumes a two-player game paused before Pause was removed, by either manager and nobody else', async () => {
+    // The game as the live database holds it: paused, with its resume point.
+    const s = await createGame(true, (x) => legacyPaused(x, HOME))
+    const state = await loadState(s.gameId)
     expect(state.status).toBe('paused')
-    await rejects(save(OUTSIDER, s.gameId, 4, resumeGame(state), 'GAME_RESUMED', {}), /not a manager|access is not enabled/)
-    await save(AWAY, s.gameId, 4, resumeGame(state), 'GAME_RESUMED', {})
-    state = await loadState(s.gameId)
-    expect(state.status).toBe('in_progress')
-    expect(state.plateAppearance.pitchRoll).toBe(roll)
+    await rejects(save(OUTSIDER, s.gameId, state.stateVersion, resumeGame(state), 'GAME_RESUMED', {}), /not a manager|access is not enabled/)
+    await save(AWAY, s.gameId, state.stateVersion, resumeGame(state), 'GAME_RESUMED', {})
+    const resumed = await loadState(s.gameId)
+    expect(resumed.status).toBe('in_progress')
+    // only the status and the pause record change
+    expect({ ...resumed, status: state.status, paused: state.paused, stateVersion: state.stateVersion, updatedAt: state.updatedAt }).toEqual(state)
+    // and it cannot be paused again, even by the owner writing the row directly
+    await rejects(dev.asOwner(() => dev.db.exec(`update public.games set status = 'paused' where id = '${s.gameId}'`)), /no longer be paused/)
   })
 
   it('resumes a one-screen game paused before Pause was removed for its home tester only', async () => {
-    const s = await createGame(false)
-    await save(HOME, s.gameId, s.stateVersion, legacyPaused(s, HOME), 'GAME_PAUSED', {})
+    const s = await createGame(false, (x) => legacyPaused(x, HOME))
     let state = await loadState(s.gameId)
     expect(state.status).toBe('paused')
     // its away manager is only a name in a one-screen game
     await rejects(save(AWAY, s.gameId, state.stateVersion, resumeGame(state), 'GAME_RESUMED', {}), /does not belong/)
     await save(HOME, s.gameId, state.stateVersion, resumeGame(state), 'GAME_RESUMED', {})
     state = await loadState(s.gameId)
-    expect(state.status).toBe(s.status)
+    expect(state.status).toBe(s.paused.resumeStatus)
     expect(state.paused).toEqual({ pausedAt: null, pausedByUserId: null, resumeStatus: null })
   })
 
+  // The first two games are played before launch, the last after official
+  // tracking is switched on (it stays on for the rest of this file's database).
   it.each([1925, 77, 4242])('plays a complete game, seed %i, every move by the right manager', async (seed) => {
     const next = rng(seed)
+    const official = seed === 4242
+    if (official) await dev.asOwner(() => dev.db.query(`select public.activate_official_tracking('Elements Baseball is officially live')`))
     let state = await createGame(true)
     const id = state.gameId
     let probes = 0
@@ -252,12 +266,22 @@ describe('two-player migration (real Postgres)', () => {
       expect(state.stateVersion).toBe(v + 1)
     }
     expect(state.status).toBe('complete')
+    // completing through the writer releases both managers (20261031)
+    expect(await dev.activeGame(HOME)).toBeNull()
+    expect(await dev.activeGame(AWAY)).toBeNull()
 
-    // rest tracking still fires on completion, for both managers
-    await dev.load(HOME, id) // sets the session user for RLS
-    const rest = await dev.db.query<{ n: number }>(
-      `select count(*)::int as n from public.player_rest_state where season_id = 'test-season' and user_id = $1`, [HOME])
-    expect(rest.rows[0].n).toBeGreaterThan(0)
+    // Persistent rest: never before launch; for both managers after it.
+    const restFor = async (user: string) => (await dev.asOwner(() => dev.db.query<{ n: number }>(
+      `select count(*)::int as n from public.player_rest_state where season_id = 'test-season' and user_id = $1`, [user]))).rows[0].n
+    const progression = (await dev.asOwner(() => dev.db.query<{ progression: string }>('select progression from public.games where id = $1', [id]))).rows[0].progression
+    expect(progression).toBe(official ? 'official' : 'prelaunch')
+    if (official) {
+      expect(await restFor(HOME)).toBeGreaterThan(0)
+      expect(await restFor(AWAY)).toBeGreaterThan(0)
+    } else {
+      expect(await restFor(HOME)).toBe(0)
+      expect(await restFor(AWAY)).toBe(0)
+    }
   }, 120_000)
 
   // The games above are only evidence for the moves they actually made. The

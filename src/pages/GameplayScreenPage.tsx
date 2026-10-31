@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
-import { hasGameplayLabAccess, loadGameplayLabGame, loadGameplayLabGameVersion, type PersistedGameplayLabGame } from '../gameplay/gameRepository'
+import { cancelGameplayGame, hasGameplayLabAccess, loadGameplayLabGame, loadGameplayLabGameVersion, type PersistedGameplayLabGame } from '../gameplay/gameRepository'
+import { canCancelBeforeFirstPitch, gameEnded } from '../gameplay/gameEnd'
 import { type LogEvent } from '../gameplay/presentation/GameLogPanel'
 import GameplayScreenView from '../gameplay/presentation/GameplayScreenView'
 import { buildHalfInningTransition, previousHalf } from '../gameplay/halfInningTransition'
@@ -79,7 +80,8 @@ export default function GameplayScreenPage() {
   const versionRef = useRef<number | null>(null)
   versionRef.current = game?.state_version ?? null
   const twoPlayer = game?.game_state?.turnHandshake === true
-  const finished = game?.game_state?.status === 'complete'
+  // An ended game (final, cancelled, ended by an admin) has nothing to wait for.
+  const finished = gameEnded(game?.game_state?.status)
   useEffect(() => {
     if (!gameId || !twoPlayer || finished) return
     let busy = false
@@ -135,6 +137,19 @@ export default function GameplayScreenPage() {
     ? buildHalfInningTransition(state, events, justEnded)
     : null
 
+  // Either manager of a two-player game (the home tester of a one-screen one)
+  // may cancel before the first pitch; the server re-checks both.
+  const mayCancel = canCancelBeforeFirstPitch(state) && (twoPlayer || viewerSide === 'home')
+  async function cancelGame() {
+    if (!game || !window.confirm('Cancel this game?\n\nThe first pitch has not been thrown, so no result is recorded and both managers are free to start another game. This cannot be undone.\n\nTo leave and come back later, use Exit instead.')) return
+    try {
+      setGame(await cancelGameplayGame(game.id))
+      try { setEvents(await loadGameplayLabEvents(game.id)) } catch { /* log is supplemental */ }
+    } catch (e) {
+      actions.setError(e instanceof Error ? e.message : (e as { message?: string })?.message ?? 'Could not cancel the game.')
+    }
+  }
+
   return (
     <GameplayScreenView
       state={state}
@@ -143,6 +158,7 @@ export default function GameplayScreenPage() {
       transition={transition}
       onDismissTransition={() => setTransitionDismissed(halfKey)}
       onExit={() => navigate('/games')}
+      onCancel={mayCancel ? () => void cancelGame() : undefined}
       viewerSide={viewerSide}
       // A one-screen game is one manager playing both teams.
       actingSides={twoPlayer ? [viewerSide] : ['home', 'away']}

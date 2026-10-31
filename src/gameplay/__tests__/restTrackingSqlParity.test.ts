@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 // Loaded through Vite's ?raw rather than node:fs so this stays inside the app
 // tsconfig's browser lib -- the point is only to read the migration's text.
-import migrationSql from '../../../supabase/migrations/20261030_gameplay_rest_appearance_fix.sql?raw'
+import migrationSql from '../../../supabase/migrations/20261031_gameplay_one_active_game.sql?raw'
 import { applyGameCompletionRest } from '../restTracking'
 import type { RestMilestone } from '../seasonConfig'
 import { countAssignments, evaluateSql, extractAssignment, normalizeJsonbAccessors } from './sqlExpression'

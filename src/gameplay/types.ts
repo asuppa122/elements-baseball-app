@@ -12,6 +12,10 @@ export type GameLifecycleStatus =
   | 'inning_transition'
   | 'paused'
   | 'complete'
+  /** A manager cancelled it before the first pitch. No result. */
+  | 'cancelled'
+  /** Ended by a gameplay admin (or the Stage 3 practice cleanup). No result. */
+  | 'terminated'
 
 export type RuleConditionType =
   | 'RC1_VISIBLE_STATE'

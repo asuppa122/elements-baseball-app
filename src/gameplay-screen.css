@@ -957,6 +957,9 @@
 }
 
 .gp-menu-btn:hover:not(:disabled) { color: var(--s-cream); border-color: var(--s-gold); }
+/* Cancel ends the game for good (before the first pitch only); it must never read like Exit. */
+.gp-menu-btn.is-danger { color: var(--s-bad); border-color: rgba(224, 92, 92, 0.45); }
+.gp-menu-btn.is-danger:hover:not(:disabled) { color: #fff; border-color: var(--s-bad); background: rgba(224, 92, 92, 0.18); }
 .gp-menu-btn:disabled { opacity: 0.45; cursor: not-allowed; }
 
 .gp-rollbox { display: grid; gap: 8px; }

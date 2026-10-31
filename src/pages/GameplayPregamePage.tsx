@@ -12,9 +12,11 @@ import {
   loadGameplayLabGame,
   loadGameplayLabGameVersion,
   loadPlayerRestState,
+  cancelGameplayGame,
   saveGameplayLabState,
   type PersistedGameplayLabGame,
 } from '../gameplay/gameRepository'
+import { canCancelBeforeFirstPitch, endedLabel, gameEnded } from '../gameplay/gameEnd'
 import { loadLineupChoices, rosterIssueSummary, snapshotFor, type LineupChoice } from '../gameplay/lineupChoice'
 import type { DefensivePosition, GameCardSnapshot, GameRosterSnapshot, GameSide, GameState } from '../gameplay/types'
 
@@ -216,7 +218,7 @@ export default function GameplayPregamePage() {
     try { setGame(await loadGameplayLabGame(gameId)) } catch { /* retried next tick */ }
   }, [gameId])
   useEffect(() => {
-    if (!gameId || !twoPlayer || status === 'in_progress' || status === 'complete') return
+    if (!gameId || !twoPlayer || status === 'in_progress' || gameEnded(status)) return
     let busy = false
     const timer = window.setInterval(async () => {
       if (busy || document.visibilityState === 'hidden') return
@@ -231,6 +233,25 @@ export default function GameplayPregamePage() {
   useEffect(() => {
     if (twoPlayer && game && (status === 'in_progress' || status === 'awaiting_decision')) navigate(`/games/lab/${game.id}/screen`)
   }, [twoPlayer, status, game, navigate])
+
+  // Either manager of a two-player game (the home tester of a one-screen one)
+  // may cancel before the first pitch: the way out when an opponent never
+  // finishes pregame. The server re-checks who and when.
+  const mayCancel = Boolean(game) && canCancelBeforeFirstPitch(game!.game_state) && (twoPlayer || side === 'home')
+  async function cancelGame() {
+    if (!game || !window.confirm('Cancel this game?\n\nIt has not started, so no result is recorded and both managers are free to start another game. This cannot be undone.\n\nTo leave and come back later, use Back instead.')) return
+    setSaving(true); setError(''); setSuccess('')
+    try {
+      setGame(await cancelGameplayGame(game.id))
+    } catch (e) {
+      setError(errorText(e, 'Could not cancel the game.'))
+    } finally {
+      setSaving(false)
+    }
+  }
+  const cancelButton = mayCancel && (
+    <button type="button" className="gameplay-lab-secondary-button pregame-cancel" disabled={saving} onClick={() => void cancelGame()}>Cancel Game</button>
+  )
 
   async function chooseTeam() {
     const choice = choices?.find((c) => c.lineup.id === choiceId)
@@ -417,6 +438,20 @@ export default function GameplayPregamePage() {
     return <main className="gameplay-lab-page"><section className="gameplay-lab-panel">Loading pregame…</section></main>
   }
 
+  // An ended game shows as ended to both managers, whatever step they were on.
+  const ended = game ? endedLabel(status, game.end_reason) : null
+  if (game && ended) {
+    return (
+      <main className="gameplay-lab-page">
+        <section className="gameplay-lab-panel">
+          <span>Game over</span>
+          <h1>vs. {game.game_state.managers[opponentSide].managerName}</h1>
+          <p>{ended}. Both managers are free to start another game.</p>
+          <button type="button" className="gameplay-lab-secondary-button" onClick={() => navigate('/games/lab')}>Back to Gameplay Lab</button>
+        </section>
+      </main>
+    )
+  }
   if (game && !roster && choices) {
     const choice = choices.find((c) => c.lineup.id === choiceId)
     const host = game.game_state.managers[opponentSide].managerName
@@ -444,6 +479,7 @@ export default function GameplayPregamePage() {
           </div>
           <div className="pregame-actions">
             <button type="button" className="gameplay-lab-secondary-button" onClick={() => navigate('/games/lab')}>Back</button>
+            {cancelButton}
             <button type="button" className="gameplay-lab-create-button" disabled={saving || !choice?.eligibility.eligible} onClick={() => void chooseTeam()}>
               {saving ? 'Saving…' : 'Use This Roster'}
             </button>
@@ -615,6 +651,7 @@ export default function GameplayPregamePage() {
 
       <div className="pregame-actions">
         <button type="button" className="gameplay-lab-secondary-button" onClick={() => navigate('/games/lab')}>Back to Lab</button>
+        {cancelButton}
         {locked && !twoPlayer && <button type="button" className="gameplay-lab-create-button" onClick={() => navigate(`/games/lab/${game.id}/state`)}>Open Game State Test</button>}
         {twoPlayer && status === 'ready' && <button type="button" className="gameplay-lab-create-button" disabled={saving} onClick={() => void beginGame()}>{saving ? 'Starting…' : 'Start Game'}</button>}
         {!locked && <button type="button" className="gameplay-lab-secondary-button" disabled={saving || !startingPitcher} onClick={() => void persistSelections(false)}>{saving ? 'Saving…' : 'Save Selections'}</button>}

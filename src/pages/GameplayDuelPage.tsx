@@ -63,6 +63,8 @@ export default function GameplayDuelPage() {
     try {
       const db = existing ?? await createGameplayDevDb()
       const state = freshGame()
+      // One active game per manager: a new duel ends the previous one first.
+      await db.endAll()
       await db.createGame(MANAGERS.home.userId, state)
       setDev(db)
       setGame(await db.load(MANAGERS.home.userId, state.gameId))

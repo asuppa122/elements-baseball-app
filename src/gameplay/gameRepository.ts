@@ -40,6 +40,18 @@ export type PersistedGameplayLabGame = {
   state_version: number
   created_at: string
   updated_at: string
+  /** Set by the database from the game itself (20261031). Two-player games count toward the one-game limit. */
+  play_mode?: 'two_player' | 'one_screen'
+  /**
+   * Fixed by the database when the game is created: `prelaunch` while official
+   * tracking is off (every game so far), then `official` or `practice`. Only
+   * official games feed persistent rest and milestones.
+   */
+  progression?: 'prelaunch' | 'practice' | 'official'
+  ended_at?: string | null
+  ended_by_user_id?: string | null
+  end_reason?: 'cancelled_before_first_pitch' | 'admin_terminated' | 'practice_cleanup' | null
+  end_note?: string | null
 }
 
 export async function hasGameplayLabAccess(): Promise<boolean> {
@@ -178,29 +190,74 @@ export async function loadPlayerRestState(
   return result
 }
 
+/**
+ * Creates a game through the server, which enforces one active competitive
+ * game per manager (20261031_gameplay_one_active_game.sql). A refusal for
+ * that reason comes back as an ActiveGameConflict.
+ */
 export async function createGameplayLabGame(state: GameState): Promise<PersistedGameplayLabGame> {
-  const { data, error } = await supabase
-    .from('games')
-    .insert({
-      id: state.gameId,
-      season_id: state.configuration.seasonId,
-      season_year: state.configuration.mlbYear,
-      status: state.status,
-      home_user_id: state.managers.home.userId,
-      away_user_id: state.managers.away.userId,
-      configuration_snapshot: state.configuration,
-      home_roster_snapshot: state.pregame.home.roster,
-      away_roster_snapshot: state.pregame.away.roster,
-      home_pregame: state.pregame.home,
-      away_pregame: state.pregame.away,
-      game_state: state,
-      state_version: state.stateVersion,
-    })
-    .select('*')
-    .single()
+  const { data, error } = await supabase.rpc('create_gameplay_game', { p_state: state })
+  if (error) throw activeGameConflict(error) ?? error
+  return data as PersistedGameplayLabGame
+}
 
+/** Who is already in an unfinished competitive game, and which one. */
+export class ActiveGameConflict extends Error {
+  readonly who: 'you' | 'opponent'
+  readonly gameId: string | null
+  constructor(who: 'you' | 'opponent', gameId: string | null) {
+    super(who === 'you'
+      ? 'You already have an active game. Finish or exit that game before starting another.'
+      : 'That manager is already playing another unfinished game. Choose a different opponent, or wait until their game ends.')
+    this.who = who
+    this.gameId = gameId
+  }
+}
+
+export function activeGameConflict(error: unknown): ActiveGameConflict | null {
+  const e = error as { message?: string; hint?: string } | null
+  if (e?.message === 'ACTIVE_GAME_HOME') return new ActiveGameConflict('you', e.hint || null)
+  if (e?.message === 'ACTIVE_GAME_AWAY') return new ActiveGameConflict('opponent', e.hint || null)
+  return null
+}
+
+export type ActiveGame = { game_id: string; status: string; side: 'home' | 'away'; opponent_name: string | null }
+
+/** The signed-in manager's unfinished competitive game, if any. */
+export async function loadMyActiveGame(): Promise<ActiveGame | null> {
+  const { data, error } = await supabase.rpc('get_my_active_game')
+  if (error) throw error
+  return ((data as ActiveGame[] | null) ?? [])[0] ?? null
+}
+
+/** Either manager, before the first pitch. No result; both managers are released. */
+export async function cancelGameplayGame(gameId: string): Promise<PersistedGameplayLabGame> {
+  const { data, error } = await supabase.rpc('cancel_gameplay_game', { p_game_id: gameId })
   if (error) throw error
   return data as PersistedGameplayLabGame
+}
+
+/** Gameplay admins only: ends a stuck game without a result, with a reason. */
+export async function terminateGameplayGame(gameId: string, reason: string): Promise<PersistedGameplayLabGame> {
+  const { data, error } = await supabase.rpc('terminate_gameplay_game', { p_game_id: gameId, p_reason: reason })
+  if (error) throw error
+  return data as PersistedGameplayLabGame
+}
+
+export type GameplayPermissions = {
+  /** May create one-screen test games (Anthony, Will). */
+  can_create_test_games: boolean
+  /** May end a game without a result (Anthony). */
+  can_terminate_games: boolean
+  /** Off until Anthony declares Elements Baseball live; nothing counts while off. */
+  official_tracking_enabled: boolean
+}
+
+export async function loadGameplayPermissions(): Promise<GameplayPermissions> {
+  const { data, error } = await supabase.rpc('get_my_gameplay_permissions')
+  if (error) throw error
+  const row = ((data as GameplayPermissions[] | null) ?? [])[0]
+  return row ?? { can_create_test_games: false, can_terminate_games: false, official_tracking_enabled: false }
 }
 
 export async function loadGameplayLabGames(): Promise<PersistedGameplayLabGame[]> {
