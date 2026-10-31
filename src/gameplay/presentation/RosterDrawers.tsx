@@ -131,7 +131,7 @@ function Section({ id, label, count, open, onToggle, children }: {
 }
 
 export default function RosterDrawers({
-  state, events, viewerSide, actingSides, rosterActions, disabled, onStart,
+  state, events, viewerSide, actingSides, rosterActions, disabled, onStart, initialOpen = 'log',
 }: {
   state: GameState
   events: LogEvent[]
@@ -144,8 +144,10 @@ export default function RosterDrawers({
   /** Saving, or a decision already open: nothing new can start. */
   disabled: boolean
   onStart: (actionId: string, preferOptionId?: string) => void
+  /** The section open when the drawers are shown (the toolbar tool chosen). */
+  initialOpen?: Drawer
 }) {
-  const [open, setOpen] = useState<Drawer | null>('log')
+  const [open, setOpen] = useState<Drawer | null>(initialOpen)
   const toggle = (id: Drawer) => setOpen((current) => (current === id ? null : id))
 
   const batting = battingSide(state.half)

@@ -1614,3 +1614,100 @@ button.gp-lineup-card img { width: 100%; height: 100%; object-fit: cover; displa
 
 .gp-rollresult.is-empty { border-left-color: var(--s-line); }
 .gp-rollresult-outcome.is-empty { color: var(--s-gray-muted); font-weight: 600; font-style: italic; }
+
+/* =====================================================================
+ * Elements 2.0, stage 1 (2026-10-30): cards and field own the screen.
+ * Left: the matchup column, about 44% of the stage. Centre: the square
+ * field, sized by useSquareField. Right: a 56px tool strip; every tool opens
+ * in one panel over the matchup column (ManagerPanel), never over the field.
+ * ===================================================================== */
+@media (min-width: 1025px) {
+  .gp-stage {
+    --s-rail-left: clamp(392px, 44cqw, 732px);
+    --s-rail-right: 56px;
+  }
+}
+@media (min-width: 768px) and (max-width: 1024px) {
+  .gp-screen { --s-rail-left: clamp(240px, 36vw, 360px); --s-rail-right: 56px; }
+}
+
+.gp-region-lineup { position: relative; }
+.gp-region-rail { padding: 0; background: none; border: 0; min-width: 0; }
+
+/* ---- the tool strip ---- */
+.gp-toolbar { display: flex; flex-direction: column; align-items: center; gap: 8px; padding-top: 2px; }
+.gp-tool {
+  position: relative; width: 48px; min-height: 60px; padding: 6px 0;
+  display: grid; place-items: center; gap: 3px;
+  border-radius: 12px; border: 1px solid var(--s-line); background: transparent;
+  color: var(--s-gray); cursor: pointer;
+  font: 800 9px/1.1 inherit; letter-spacing: 0.06em; text-transform: uppercase;
+}
+.gp-tool:hover { border-color: var(--s-gold); color: var(--s-cream); }
+.gp-tool:focus-visible { outline: 2px solid var(--s-gold-bright); outline-offset: 2px; }
+.gp-tool.is-open { border-color: var(--s-gold-bright); color: var(--s-gold-bright); background: rgba(242, 200, 75, 0.1); }
+.gp-tool.is-hot { border-color: var(--s-gold-bright); color: var(--s-ink); background: var(--s-gold-bright); }
+.gp-tool.is-hot.is-open { color: var(--s-ink); background: var(--s-gold-bright); box-shadow: 0 0 0 3px rgba(242, 200, 75, 0.25); }
+.gp-tool.is-muted { border-style: dashed; color: var(--s-gray-muted); }
+.gp-tool-count { font-size: 10px; font-weight: 800; color: var(--s-gold-bright); letter-spacing: 0; }
+.gp-tool.is-hot .gp-tool-count { color: var(--s-ink); }
+
+/* ---- the panel over the matchup column ---- */
+.gp-mp {
+  position: absolute; inset: 0; z-index: 20;
+  display: flex; flex-direction: column; min-height: 0;
+  background: var(--s-panel);
+  border: 1px solid var(--s-gold);
+  border-radius: var(--s-r-panel);
+  box-shadow: 0 24px 60px rgba(7, 8, 9, 0.7);
+  overflow: hidden;
+}
+.gp-screen.has-decision .gp-mp { border-color: var(--s-gold-bright); box-shadow: 0 0 0 3px rgba(242, 200, 75, 0.14), 0 24px 60px rgba(7, 8, 9, 0.7); }
+.gp-mp-head {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 10px 12px; border-bottom: 1px solid var(--s-line-soft);
+  flex: 0 0 auto;
+}
+.gp-mp-summary { flex: 1 1 auto; min-width: 0; display: grid; gap: 4px; }
+.gp-mp-matchup { margin: 0; display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; font-size: 13px; }
+.gp-mp-matchup b { color: var(--s-cream); }
+.gp-mp-matchup small { color: var(--s-gray); font-size: 11.5px; }
+.gp-mp-matchup i { font-style: normal; font-size: 10px; font-weight: 900; color: var(--s-gold); text-transform: uppercase; }
+.gp-mp-situation { margin: 0; font-size: 11.5px; color: var(--s-gray-muted); }
+.gp-mp-close {
+  flex: 0 0 auto; width: 32px; height: 32px; border-radius: 50%;
+  border: 1px solid var(--s-line); background: none; color: var(--s-cream); font-size: 20px; line-height: 1; cursor: pointer;
+}
+.gp-mp-close:focus-visible { outline: 2px solid var(--s-gold-bright); outline-offset: 2px; }
+.gp-mp-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 10px 12px; }
+.gp-mp-foot { flex: 0 0 auto; padding: 8px 12px 12px; border-top: 1px solid var(--s-line-soft); }
+.gp-mp-foot .gp-action { width: 100%; }
+/* The decision board fills the panel; its options scroll, its Confirm row
+ * stays pinned at the bottom however long the list is. */
+.gp-mp-body .gp-decision { border: 0; background: none; padding: 0; box-shadow: none; }
+.gp-mp-body .gp-decision-foot { position: sticky; bottom: -10px; background: var(--s-panel); padding-bottom: 10px; z-index: 1; }
+.gp-mp-body .gp-drawers { gap: 8px; }
+.gp-mp-body .gp-drawer.is-open { flex: none; }
+
+/* Messages float over the bottom of the matchup column rather than taking a
+ * row of their own, so they never resize the cards. */
+.gp-toast {
+  position: absolute; left: 12px; right: 12px; bottom: 12px; z-index: 30;
+  margin: 0; padding: 8px 12px; border-radius: 10px;
+  background: rgba(7, 8, 9, 0.92); border: 1px solid var(--s-line);
+  font-size: 12px; color: var(--s-cream); pointer-events: none;
+}
+.gp-toast.is-error { border-color: var(--s-bad); color: var(--s-bad); }
+
+/* ---- tablet and phone ---- */
+@media (max-width: 767px) {
+  .gp-toolbar { flex-direction: row; justify-content: center; }
+  .gp-mp {
+    position: fixed; inset: auto 0 0 0; max-height: 72dvh; z-index: 40;
+    border-radius: 16px 16px 0 0; border-bottom: 0;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  .gp-screen.has-panel { padding-bottom: 72dvh; }
+  .gp-toast { position: fixed; bottom: 16px; }
+}
+@media (min-width: 768px) { .gp-screen.has-panel .gp-toast { bottom: auto; top: 84px; } }

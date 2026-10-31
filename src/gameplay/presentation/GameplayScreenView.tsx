@@ -19,7 +19,9 @@ import { awaitingOffenseReady, sideToAct } from '../turnOrder'
 import type { useGameplayActions } from './useGameplayActions'
 import type { HalfInningTransition as HalfInningTransitionModel } from '../halfInningTransition'
 import type { GameSide, GameState } from '../types'
-import { useRef, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
+import ManagerPanel from './ManagerPanel'
+import ManagerToolbar, { type ManagerTool } from './ManagerToolbar'
 import { useSquareField } from './useSquareField'
 
 /**
@@ -181,9 +183,42 @@ export default function GameplayScreenView({
     && (!twoPlayer || acting.includes(ownerOf(a.id))))
   const rosterActions = prePitchActions.filter((a) => !OFFENCE_ACTIONS.has(a.id) && !DEFENCE_ACTIONS.has(a.id))
 
+  // Elements 2.0: the manager's tools open in one panel over the matchup
+  // column, never over the field. What it shows, in order: your decision; a
+  // tool you opened from the toolbar; the final box score; the half-inning
+  // summary. Nothing is open the rest of the time, and opening or closing it
+  // never moves the field or the cards.
+  const [tool, setTool] = useState<ManagerTool | null>(null)
+  const [finalDismissed, setFinalDismissed] = useState(false)
+  const decisionMine = Boolean(decision) && (!twoPlayer || acting.includes(decision!.actingSide))
+  const decisionId = state.pendingDecision?.id ?? null
+  // A new decision takes the panel back from whatever tool was open -- this is
+  // also how "Bring in" from the bullpen lands on its decision board.
+  useEffect(() => { setTool(null) }, [decisionId])
+  const drawerTool = tool === 'log' || tool === 'pen' || tool === 'bench' ? tool : null
+  const panel: 'decision' | 'drawers' | 'final' | 'transition' | null =
+    decision && ((decisionMine && !drawerTool) || tool === 'call') ? 'decision'
+    : drawerTool ? 'drawers'
+    : state.status === 'complete' && (tool === 'final' || !finalDismissed) ? 'final'
+    : transition && !decision ? 'transition'
+    : null
+  // A notice (not an error) floats over the bottom of the matchup column, so
+  // it fades after a few seconds rather than sitting over the calls.
+  const [noticeShown, setNoticeShown] = useState('')
+  useEffect(() => {
+    setNoticeShown(notice)
+    if (!notice) return
+    const timer = window.setTimeout(() => setNoticeShown(''), 3000)
+    return () => window.clearTimeout(timer)
+  }, [notice])
+  const toggleTool = (next: ManagerTool) => {
+    if (next === 'final') setFinalDismissed(false)
+    setTool((current) => (current === next ? null : next))
+  }
+
   return (
     <CardZoomProvider>
-    <main className={`gp-screen${decision ? ' has-decision' : ''}`}>
+    <main className={`gp-screen${panel ? ' has-panel' : ''}${panel === 'decision' ? ' has-decision' : ''}`}>
       <div className="gp-stage">
       {banner}
 
@@ -247,6 +282,69 @@ export default function GameplayScreenView({
             </div>
             {sideActions.length === 0 && <p className="gp-calls-rest">No decisions this pitch.</p>}
           </section>
+
+          {panel === 'decision' && decision && (
+            <ManagerPanel state={state} title={decision.title}
+              onClose={tool === 'call' && !decisionMine ? () => setTool(null) : undefined}
+              footer={editablePrePitchDecision && decisionMine ? (
+                <button className="gp-action gp-action-secondary" disabled={saving} onClick={() => void changeAction()}>
+                  Change action
+                </button>
+              ) : undefined}>
+              <DecisionBoard
+                state={state}
+                view={decision}
+                selection={selection}
+                // Whoever is playing this side from this screen decides: in a
+                // one-screen game that is both sides.
+                viewerSide={acting.includes(decision.actingSide) ? decision.actingSide : viewerSide}
+                onToggle={(id) => toggleSelection(id, decision.mode === 'single')}
+                onConfirm={() => void confirmDecision()}
+                onRoll={() => void rollDecision()}
+                saving={saving}
+              />
+            </ManagerPanel>
+          )}
+          {panel === 'drawers' && drawerTool && (
+            <ManagerPanel state={state} title={drawerTool === 'log' ? 'Game log' : drawerTool === 'pen' ? 'Bullpen' : 'Bench'}
+              onClose={() => setTool(null)}>
+              {/* Game log, bullpen and bench as one accordion, opened at the
+                  tool chosen. Roster moves start from the player they are
+                  about to use and finish on the decision board; nothing is
+                  made on a single click. */}
+              <RosterDrawers
+                key={drawerTool}
+                initialOpen={drawerTool}
+                state={state}
+                events={events}
+                viewerSide={viewerSide}
+                actingSides={acting}
+                rosterActions={rosterActions}
+                disabled={saving || Boolean(decision)}
+                onStart={(id, prefer) => void startAction(id, prefer)}
+              />
+            </ManagerPanel>
+          )}
+          {panel === 'final' && (
+            <ManagerPanel state={state} title="Final" onClose={() => { setFinalDismissed(true); setTool(null) }}>
+              <PostGameBoard state={state} />
+            </ManagerPanel>
+          )}
+          {panel === 'transition' && transition && (
+            <ManagerPanel state={state} title="Half-inning summary" onClose={onDismissTransition}>
+              <HalfInningTransition
+                transition={transition}
+                managers={{ away: state.managers.away.managerName, home: state.managers.home.managerName }}
+                onDismiss={onDismissTransition}
+              />
+            </ManagerPanel>
+          )}
+
+          {/* While a panel is open it already says what is happening, so only
+              an error is worth interrupting it for. */}
+          {(error || (noticeShown && !panel)) && (
+            <p className={`gp-toast${error ? ' is-error' : ''}`} role="status">{error || noticeShown}</p>
+          )}
         </section>
 
         {/* Centre is a transparent stack, not a panel — matching the artboards,
@@ -260,57 +358,17 @@ export default function GameplayScreenView({
           <DefBar state={state} />
         </section>
 
-        <section className="gp-panel gp-region gp-region-rail" aria-label="Game rail">
-          {/* The decision board is the one already built and verified against
-              both saved awaiting_decision games -- reused, not rewritten. */}
-          <div className={`gp-decision-dock${decision ? ' is-open' : ''}`}>
-            {decision && <i className="gp-sheet-grip" aria-hidden="true" />}
-            {decision && (
-              <DecisionBoard
-                state={state}
-                view={decision}
-                selection={selection}
-                // Whoever is playing this side from this screen decides: in a
-                // one-screen game that is both sides.
-                viewerSide={acting.includes(decision.actingSide) ? decision.actingSide : viewerSide}
-                onToggle={(id) => toggleSelection(id, decision.mode === 'single')}
-                onConfirm={() => void confirmDecision()}
-                onRoll={() => void rollDecision()}
-                saving={saving}
-              />
-            )}
-            {decision && editablePrePitchDecision && (!twoPlayer || acting.includes(decision.actingSide)) && (
-              <button className="gp-action gp-action-secondary" disabled={saving} onClick={() => void changeAction()}>
-                Change action
-              </button>
-            )}
-          </div>
-
-          {/* Game log, bullpen and bench as one accordion. Roster moves start
-              from the player they are about to use and finish on the decision
-              board above; nothing is made on a single click. */}
-          <RosterDrawers
+        <section className="gp-region gp-region-rail" aria-label="Manager tools">
+          <ManagerToolbar
             state={state}
             events={events}
+            open={panel === 'decision' ? 'call' : panel === 'drawers' ? drawerTool : panel === 'final' ? 'final' : null}
+            onOpen={toggleTool}
+            decisionPending={Boolean(decision)}
+            decisionMine={decisionMine}
             viewerSide={viewerSide}
             actingSides={acting}
-            rosterActions={rosterActions}
-            disabled={saving || Boolean(decision)}
-            onStart={(id, prefer) => void startAction(id, prefer)}
           />
-
-          {error && <p className="gp-actions-msg is-error">{error}</p>}
-          {notice && !error && <p className="gp-actions-msg">{notice}</p>}
-
-          {transition && !decision && (
-            <HalfInningTransition
-              transition={transition}
-              managers={{ away: state.managers.away.managerName, home: state.managers.home.managerName }}
-              onDismiss={onDismissTransition}
-            />
-          )}
-
-          {!decision && state.status === 'complete' && <PostGameBoard state={state} />}
         </section>
 
       </div>
