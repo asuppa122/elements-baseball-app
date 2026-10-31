@@ -27,7 +27,18 @@ export default function RollResult({ events }: { events: LogEvent[] }) {
     const view = asRollView(events[i].payload?.rollView)
     if (view) { latest = { view, version: events[i].state_version }; break }
   }
-  if (!latest) return null
+  // Before the first roll the slot is still drawn, so the cards above it are
+  // the same size on the first pitch as on the hundredth.
+  if (!latest) {
+    return (
+      <section className="gp-rollresult is-empty" aria-label="Last roll">
+        <div className="gp-rollresult-main">
+          <span className="gp-rollresult-title"><b className="s-lbl">Last roll</b></span>
+          <p className="gp-rollresult-outcome is-empty">No rolls yet this game.</p>
+        </div>
+      </section>
+    )
+  }
   const { view } = latest
   const decisive = new Set(view.decisive ?? [])
 

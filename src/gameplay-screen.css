@@ -1553,8 +1553,9 @@ button.gp-lineup-card img { width: 100%; height: 100%; object-fit: cover; displa
 }
 
 /* Layout step 2: on a big field the fielders grow with it (~11%), so they
- * stay in proportion instead of shrinking into the grass. */
-@container field (min-width: 760px) {
+ * stay in proportion instead of shrinking into the grass. From a 640px field
+ * (1440 and up after step 3; was 760, approved 2026-10-30). */
+@container field (min-width: 640px) {
   .gp-fc-art { width: 60px; height: 84px; }
   .gp-fc-fielder.is-catcher .gp-fc-art { width: 51px; height: 71px; }
   .gp-fc-batter .gp-fc-art, .gp-fc-pitcher .gp-fc-art { width: 78px; height: 109px; }
@@ -1573,3 +1574,43 @@ button.gp-lineup-card img { width: 100%; height: 100%; object-fit: cover; displa
   .gp-runner.is-second { transform: translate(-50%, -72%); padding: 2px 6px; }
   .gp-runner.is-second .gp-runner-rates { display: none; }
 }
+
+
+/* =====================================================================
+ * Layout step 3: the cards and the field get the screen (2026-10-30)
+ * Left rail (cards, roll, lineup) and the field take most of the width; the
+ * right rail keeps all of today's behaviour at a narrower width until its
+ * compact version (step 4). Widths read the stage's width (cqw), not its
+ * height: about 518 / field / 288 at 1440, 640 / field / 360 at 1920.
+ * The batter and pitcher cards are sized by the rail's HEIGHT (the matchup
+ * is the rail's elastic element), so their cap is raised and the decisions
+ * box below them is given a fixed, compact height -- one row of calls, or the
+ * empty line. Fixed rather than collapsing, so the cards do not resize every
+ * time calls come and go between turns.
+ * ===================================================================== */
+@media (min-width: 1025px) {
+  .gp-stage {
+    --s-rail-left: clamp(380px, 36cqw, 640px);
+    --s-rail-right: clamp(260px, 20cqw, 360px);
+  }
+  .gp-region-lineup .gp-matchup-art { max-height: calc(var(--u) * 36); }
+  /* A floor for very short windows: the matchup keeps its art floor plus its
+   * name and rating lines, and the rail scrolls rather than letting the
+   * names overprint each other (seen at 1100x700 with the sandbox toolbar). */
+  .gp-region-lineup .gp-matchup { min-height: calc(var(--u) * 11 + 110px); }
+  .gp-region-lineup { overflow-y: auto; }
+  /* One row of calls or the empty line, at one height either way. */
+  .gp-calls { min-height: 0; height: calc(var(--u) * 8.7); overflow: hidden; }
+  /* The batter and pitcher cards take whatever height the rail has left, so
+   * everything else in the rail holds one height through the whole game: the
+   * roll row whether or not it has a button, the last roll whether its
+   * breakdown takes one line or two. Otherwise the cards resize between
+   * turns. */
+  .gp-region-lineup .gp-rollbox { min-height: var(--s-control-h); display: grid; align-content: center; }
+  .gp-region-lineup .gp-rollresult { height: calc(var(--u) * 10.5); overflow: hidden; }
+  .gp-calls-list { flex-wrap: nowrap; }
+  .gp-calls-list > .gp-action { flex: 0 1 auto; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+}
+
+.gp-rollresult.is-empty { border-left-color: var(--s-line); }
+.gp-rollresult-outcome.is-empty { color: var(--s-gray-muted); font-weight: 600; font-style: italic; }
