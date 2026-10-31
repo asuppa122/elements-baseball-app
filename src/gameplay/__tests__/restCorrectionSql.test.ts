@@ -61,10 +61,10 @@ beforeAll(async () => {
 
 describe('first live game rest correction', () => {
   it('previews exactly what it will change and why it skips the rest', async () => {
-    const r = await dev.db.query<{ card_key: string; track: string; action: string; corrected_value: number | null }>(step1)
-    const by = Object.fromEntries(r.rows.map((x) => [`${x.card_key}/${x.track}`, x]))
-    expect(by['Rube Curry/pitcher']).toMatchObject({ action: 'add 1', corrected_value: 3 })
-    expect(by['Hitter Appeared/hitter']).toMatchObject({ action: 'add 1', corrected_value: 3 })
+    const r = await dev.db.query<{ player: string; track: string; action: string; manager: string; corrected_games_from_rested: number }>(step1)
+    const by = Object.fromEntries(r.rows.map((x) => [`${x.player}/${x.track}`, x]))
+    expect(by['Rube Curry/pitcher']).toMatchObject({ action: 'add 1', corrected_games_from_rested: 3, manager: 'Anthony' })
+    expect(by['Hitter Appeared/hitter']).toMatchObject({ action: 'add 1', corrected_games_from_rested: 3 })
     expect(by['Zero Fatigue/hitter'].action).toMatch(/^skip: saved 0/)
     expect(by['Away Later/hitter'].action).toMatch(/^skip: row changed/)
     expect(by['Nelson Dean/pitcher']).toBeUndefined() // did not appear

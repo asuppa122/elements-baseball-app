@@ -60,7 +60,7 @@ appeared as (
   where not (coalesce(sd.s->'pregame'->sd.side->'defaultPitcherCardKeys', '[]'::jsonb) ? k)
 ),
 decided as (
-  select a.side, a.track, a.card_key, a.fatigue, b.b as milestone_bonus,
+  select a.user_id, a.side, a.track, a.card_key, a.fatigue, b.b as milestone_bonus,
     case a.track when 'hitter' then r.hitter_games_remaining else r.pitcher_games_remaining end as current_value,
     case
       when r.user_id is null then 'skip: no rest row'
@@ -74,10 +74,13 @@ decided as (
   left join public.player_rest_state r
     on r.user_id = a.user_id and r.season_id = a.season_id and r.card_key = a.card_key
 )
-select side, track, card_key, fatigue, milestone_bonus, current_value,
-  case when action = 'add 1' then current_value + 1 end as corrected_value, action
-from decided
-order by side, track, card_key;
+select p.manager_name as manager, d.side, d.track, d.card_key as player, d.fatigue as card_fatigue,
+  d.current_value as current_games_from_rested,
+  case when d.action = 'add 1' then d.current_value + 1 else d.current_value end as corrected_games_from_rested,
+  d.action
+from decided d
+left join public.profiles p on p.user_id = d.user_id
+order by d.side, d.track, d.card_key;
 
 -- ===================== STEP 2: apply =====================
 with g as (
