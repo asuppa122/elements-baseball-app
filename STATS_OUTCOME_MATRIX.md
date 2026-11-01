@@ -1,6 +1,6 @@
 # Gameplay outcome → statistics matrix (2026-11-01)
 
-> **Status 2026-11-01 (implementation):** the rows are now implemented: `playLog.ts` records each outcome and `stats/gameStats.ts` attributes it; the matrix is exercised by `rulesV2ScenarioHarness.ts`, `stats/statsScenarioHarness.ts` and 60 reconciled simulated games (`statsFullGame.test.ts`). Infield In rows for 1B, 2B and 1B + 2B are approved (audit 4); R1 + R3 hold sends R1 to 2B (audit 1).
+> **Status 2026-11-01 (implementation):** the rows are now implemented: `playLog.ts` records each outcome and `stats/gameStats.ts` attributes it; the matrix is exercised by `rulesV2ScenarioHarness.ts`, `stats/statsScenarioHarness.ts` and 60 reconciled simulated games (`statsFullGame.test.ts`). Infield In rows for 1B, 2B and 1B + 2B are approved (audit 4); R1 + R3 hold: batter safe, R1 to 2B, R3 holds, no out (audit 1, confirmed).
 
 Status: **specification only.** Updated for Anthony's 12 decisions
 (2026-11-01): rows for walks, GIDP, RBI, W/SV, TBP/DBP and pitching G are now
@@ -82,7 +82,8 @@ Outs before the play are 0 or 1 unless stated. Every row is a chart out [A]
 | … 2 outs (batter safe) | AB, no hit, **GIDP** | Runner to 3B and 2B out; R3 scores | TBP 0/1; **no DBP/DBPa** (EDSR-TP [P]); box "DP" | none |
 | … 3 outs (incl. roll 20 on check 1 or 2) | out (AB); **no GIDP** (extra out follows — EDSR-GIDP [P]) | Inning over, no run | **TBP 1/1** each; box "TP" | none |
 | **Infield In**, bases loaded | FC (AB) | Runner from 3B out at home; others +1 | — | — |
-| Infield In, 3B / 2B+3B / 1B+3B (+ 2B only, U5) | out (AB) | Runners hold (1B + 3B: R1 per U1) | — | — |
+| Infield In, 3B / 2B+3B (+ 2B only) | out (AB) | Runners hold; batter out | — | — |
+| Infield In, 1B + 3B (Anthony, 2026-11-01) | FC (AB), no out | Batter safe at 1B, R1 to 2B, R3 holds -- bases loaded, no out | — | — |
 | Infield In, 1B / 1B+2B (new states, U5) | FC (AB) | Lead runner forced out; others +1; batter safe | — | — |
 | **Contact play** (Infield In, offence option): lead runner out (check or 20) | FC (AB) | Lead out; others +1; batter safe | — | — |
 | … lead runner safe (check failed, or roll 1 "all safe") | **FC** (AB), no error | No outs; lead scores; all +1 | — | 1 |

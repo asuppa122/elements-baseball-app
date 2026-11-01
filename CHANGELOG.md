@@ -9,7 +9,7 @@ rulings 9–19; plan and status: `IMPLEMENTATION_PLAN.md`.
 - Walk-offs end at the winning run; only a HR counts every run; the game-ending hit is credited with the bases the winning runner advanced; no extra-base decision or 1B+ steal after it (D2, D7).
 - Squeeze 1–7 for the third out completes no plate appearance; the same batter leads off (D1). Squeeze 16–19 with two outs scores no run (D8).
 - After any resolved steal attempt in a plate appearance, every manager action is locked until it ends.
-- Infield In with a runner on any base and fewer than 2 outs, judged at the swing; with R1 + R3 the runner on 1B goes to 2B.
+- Infield In with a runner on any base and fewer than 2 outs, judged at the swing; with R1 + R3 a ground ball loads the bases: the batter is safe, the runner on 1B goes to 2B, the runner on 3B holds, no out.
 - Runs are charged to the responsible pitcher (fatigue ladder, Shutout Bonus Option B); 9.16(g) transfers; pinch runners inherit.
 - The Shutout Bonus never restores Control (D10).
 - One ground-ball implementation shared by play, tests and demos (D3) — the old copy's phantom out is gone.

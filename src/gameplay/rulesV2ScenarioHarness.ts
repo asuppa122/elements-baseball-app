@@ -281,10 +281,19 @@ export function runRulesV2ScenarioMatrix(initial: GameState): ScenarioReport {
     const s = roll(confirm(after, 'CONTACT_PLAY'), 20)
     assert(!keyAt(s, 'third') && !keyAt(s, 'second') && keyAt(s, 'first') === runnerKeyOf(before, 0) && s.outs === 1, `Bases ${JSON.stringify(s.bases)}.`)
   })
-  test('V2-II-GB-1B3B-HOLD', 'Infield In', 'R1 + R3, hold (Option A): R1 forced to 2B, R3 holds, batter out, no run', () => {
-    const { before, after } = gbInfieldIn({ first: 1, third: 3 })
+  test('V2-II-GB-1B3B-HOLD', 'Infield In', 'R1 + R3, hold (Anthony, 2026-11-01): batter safe at 1B, R1 forced to 2B, R3 holds, no out, no run -- bases loaded', () => {
+    const { before, after } = gbInfieldIn({ first: 1, third: 3 }, 1)
     const s = confirm(after, 'HOLD_RUNNERS')
-    assert(!keyAt(s, 'first') && keyAt(s, 'second') === runnerKeyOf(before, 1) && keyAt(s, 'third') === runnerKeyOf(before, 3) && s.outs === 1 && s.score.away === 0, `Bases ${JSON.stringify(s.bases)}.`)
+    assert(keyAt(s, 'first') === runnerKeyOf(before, 0) && keyAt(s, 'second') === runnerKeyOf(before, 1) && keyAt(s, 'third') === runnerKeyOf(before, 3), `Bases ${JSON.stringify(s.bases)}.`)
+    assert(s.outs === 1 && s.score.away === 0, `No out added (outs ${s.outs}), no run.`)
+    const play = lastPlay(s)
+    assert(play.batting?.credit === 'fielders_choice' && play.batting.rbi === 0 && play.outsAfter === play.outsBefore, `Credit ${play.batting?.credit}.`)
+  })
+  test('V2-II-GB-1B3B-CONTACT', 'Infield In', 'R1 + R3: contact play is still the offence\'s alternative (roll 20: R3 out at home, R1 to 2B, batter safe)', () => {
+    const { before, after } = gbInfieldIn({ first: 1, third: 3 })
+    assert(optionIds(after).includes('CONTACT_PLAY'), 'Contact play offered.')
+    const s = roll(confirm(after, 'CONTACT_PLAY'), 20)
+    assert(s.outs === 1 && keyAt(s, 'second') === runnerKeyOf(before, 1) && keyAt(s, 'first') === runnerKeyOf(before, 0) && !keyAt(s, 'third'), `Bases ${JSON.stringify(s.bases)}.`)
   })
   test('V2-II-GB-LOADED', 'Infield In', 'Bases loaded, GB: runner from 3B out at home, bases still loaded, no run', () => {
     const { before, after } = gbInfieldIn({ first: 1, second: 2, third: 3 })

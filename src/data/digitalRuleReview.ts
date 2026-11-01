@@ -179,7 +179,7 @@ export const DIGITAL_RULE_REVIEW_MARKERS: DigitalRuleReviewMarker[] = [
     afterText: "When there is a runner on 2B, a runner on 3B, runners on both 2B & 3B, or runners on both 1B & 3B, & the swing is a GB result, all existing runners “hold” at their base unless forced to advance 1 base, & the runner heading to 1B is out on a GB result.",
     status: 'approved',
     title: "Approved Rule Amendment — 2026-11-01",
-    text: "Approved (2026-11-01): with runners on 1B & 3B, the runner on 1B is the forced runner — he advances to 2B, the runner on 3B holds, and the hitter is out at 1B. Contact play stays available on every hold state (2B, 3B, 2B & 3B, 1B & 3B).",
+    text: "Approved (2026-11-01): with runners on 1B & 3B, the hitter reaches 1B safely, the runner on 1B is forced to 2B and the runner on 3B holds — no out is recorded and the bases are loaded. Contact play stays available on every hold state (2B, 3B, 2B & 3B, 1B & 3B).",
   },
   {
     id: "approved-squeeze",

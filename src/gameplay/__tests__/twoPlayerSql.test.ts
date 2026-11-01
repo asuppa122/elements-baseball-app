@@ -7,6 +7,8 @@ import { awaitingOffenseReady, sideToAct } from '../turnOrder'
 import { botSelection, maybeBotPrePitchAction } from '../testHarness'
 import type { GameSide, GameState } from '../types'
 import { createGameplayDevDb, DEV_USERS, type DevDb } from '../devDb'
+import { startPlayLog } from '../playLog'
+import { reconcileBoxScore } from '../stats/reconcile'
 
 /**
  * The two-player migration, run for real.
@@ -207,6 +209,44 @@ describe('two-player migration (real Postgres)', () => {
     expect(state.status).toBe(s.paused.resumeStatus)
     expect(state.paused).toEqual({ pausedAt: null, pausedByUserId: null, resumeStatus: null })
   })
+
+  // Rules v2 (2026-11-01) on the schema that is live today -- no 20261101
+  // migration: the play log, rest facts and v2 fields travel inside game_state,
+  // so a preview build can run whole v2 games against the current database.
+  it.each([31, 2026])('plays a complete rules-v2 game against the live schema, seed %i', async (seed) => {
+    const next = rng(seed)
+    let state = await createGame(true, (s) => startPlayLog({ ...s, rulesVersion: 2 }))
+    const id = state.gameId
+    for (let step = 0; step < 4000 && state.status !== 'complete'; step += 1) {
+      const side = sideToAct(state) as GameSide
+      expect(await dev.sideToAct(state)).toBe(side)
+      const me = userFor(side)
+      const v = state.stateVersion
+      let after: GameState
+      let event: string
+      let payload: Record<string, unknown> = {}
+      if (state.pendingDecision) {
+        const view = getDecisionView(state)!
+        if (view.mode === 'roll') { const roll = await rollDie(me, id, v, 'decision'); after = resolveDecisionRoll(state, roll); event = 'DECISION_RESOLVED'; payload = { resolutionKind: 'ROLL', roll } }
+        else { after = confirmManagerDecision(state, botSelection(state, next)); event = 'DECISION_RESOLVED' }
+      } else if (state.waitingFor === 'PITCH_ROLL') {
+        const call = maybeBotPrePitchAction(state, next)
+        if (call.pendingDecision) { after = call; event = 'DECISION_RESOLVED' }
+        else if (awaitingOffenseReady(state)) { after = declareOffenseReady(state); event = 'OFFENSE_READY' }
+        else { const roll = await rollDie(me, id, v, 'pitch'); after = resolvePitchRoll(state, roll); event = 'PITCH_ROLLED'; payload = { roll } }
+      } else {
+        const roll = await rollDie(me, id, v, 'swing'); after = resolveSwingRoll(state, roll); event = 'SWING_RESOLVED'; payload = { roll }
+      }
+      await save(me, id, v, bump(state, after), event, payload)
+      state = await loadState(id)
+    }
+    expect(state.status).toBe('complete')
+    expect(state.rulesVersion).toBe(2)
+    expect(state.playLog!.plays.length).toBeGreaterThan(50)
+    expect(reconcileBoxScore(state)).toEqual([])
+    const rest = (await dev.asOwner(() => dev.db.query<{ n: number }>(`select count(*)::int as n from public.player_rest_state`))).rows[0].n
+    expect(rest).toBe(0) // pre-launch: an exhibition never writes rest
+  }, 120_000)
 
   // The first two games are played before launch, the last after official
   // tracking is switched on (it stays on for the rest of this file's database).

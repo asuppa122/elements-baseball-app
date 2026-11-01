@@ -150,17 +150,18 @@ export function gbInfieldInForcedOut(pre: BasesState, batter: BaseRunnerState, o
 
 /**
  * Infield In "hold" states (R2, R3, R2 + R3, R1 + R3): runners hold unless
- * forced and the batter is out at 1B. With R1 + R3, rules v2 sends R1 to 2B
- * (the only runner the "unless forced" clause can apply to -- Anthony's
- * Option A, 2026-11-01); rules v1 kept him at 1B.
+ * forced and the batter is out at 1B.
+ *
+ * R1 + R3 under rules v2 (Anthony, 2026-11-01, confirmed): the batter reaches
+ * 1B safely, the runner from 1B is forced to 2B, the runner on 3B holds, and
+ * NO out is recorded -- the bases end loaded. Rules v1 kept R1 at 1B and put
+ * the batter out.
  */
-export function gbInfieldInHold(pre: BasesState, batter: BaseRunnerState, outsBefore: number, forcedRunnerAdvances: boolean): GbOutcome {
-  const bases: BasesState = { ...pre }
-  if (forcedRunnerAdvances && pre.first && pre.third && !pre.second) {
-    bases.first = null
-    bases.second = pre.first
+export function gbInfieldInHold(pre: BasesState, batter: BaseRunnerState, outsBefore: number, rulesV2: boolean): GbOutcome {
+  if (rulesV2 && pre.first && pre.third && !pre.second) {
+    return finalize(outsBefore, { bases: { first: batter, second: pre.first, third: pre.third }, outsAdded: 0, scorers: [], retired: [] })
   }
-  return finalize(outsBefore, { bases, outsAdded: 1, scorers: [], retired: [{ runner: batter, at: 'first' }] })
+  return finalize(outsBefore, { bases: { ...pre }, outsAdded: 1, scorers: [], retired: [{ runner: batter, at: 'first' }] })
 }
 
 /** Which Infield In ground-ball branch a base state takes (Rulebook §7). */

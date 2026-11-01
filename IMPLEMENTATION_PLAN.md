@@ -44,19 +44,18 @@ Companion documents (all local, uncommitted): `STATS_SPEC.md` (v6),
 
 ### Interpretations taken where the wording left a gap (flagged for Anthony)
 
-1. **Audit decision 1 wording.** The decision is labelled Option A (my plan's
-   U1: R1 to 2B, R3 holds, *batter out at 1B*), but its text says "the batter
-   reaches first". Read literally that is a ground ball with no out, which the
-   Rulebook's hold rule ("the runner heading to 1B is out") contradicts. I
-   implemented Option A as defined in the approved plan (batter out). If the
-   intended play is "R1 forced out at 2B, batter safe on a fielder's choice",
-   it is a one-line change in `gbInfieldInHold` plus its two scenarios.
-2. **Audit decision 5 and further steals.** "No additional managerial actions"
+1. **Audit decision 1 — RESOLVED (Anthony, 2026-11-01, follow-up).** With
+   runners on 1B and 3B and Infield In, a GB "hold" result: the batter reaches
+   1B safely, the runner from 1B is forced to 2B, the runner on 3B holds, and
+   no out is recorded (bases loaded). Implemented in `gbInfieldInHold`;
+   scenarios V2-II-GB-1B3B-HOLD and INF-13. Credited as a fielder's choice
+   (AB, no hit, no RBI). Contact play remains the offence's alternative.
+2. **Audit decision 5 and further steals — CONFIRMED by Anthony.** "No additional managerial actions"
    is applied to *every* pre-pitch action, including another natural steal in
    the same PA. The second-steal-of-home follow-up that the Rulebook attaches
    to a successful steal of 2B is part of the same attempt and is still
    offered.
-3. **Rulebook text.** The website's official text mirrors the Google Doc word
+3. **Rulebook text — CONFIRMED: keep the boxes; the Google Doc is not changed without separate authorization.** The website's official text mirrors the Google Doc word
    for word (project rule), so the approved amendments are shown as green
    "Approved Rule Amendment" markers beside the affected rules rather than
    by rewriting the official text. The Google Doc needs the §2 edits; then the
