@@ -79,14 +79,15 @@ function RulebookCardMedia({ title }: { title: string }) {
 
 function DigitalReviewMarker({ marker }: { marker: (typeof DIGITAL_RULE_REVIEW_MARKERS)[number] }) {
   const isProposal = marker.status === 'proposed'
+  const isApproved = marker.status === 'approved'
   return (
     <aside className={`rules-digital-marker rules-digital-marker-${marker.status}`} data-review-id={marker.id}>
-      <div className="rules-digital-marker-icon" aria-hidden="true">{isProposal ? '◆' : '?'}</div>
+      <div className="rules-digital-marker-icon" aria-hidden="true">{isApproved ? '✓' : isProposal ? '◆' : '?'}</div>
       <div className="rules-digital-marker-copy">
         <span>{marker.title}</span>
         <p>{marker.text}</p>
       </div>
-      <div className="rules-digital-marker-status">{isProposal ? 'Review' : 'Open Question'}</div>
+      <div className="rules-digital-marker-status">{isApproved ? 'Approved' : isProposal ? 'Review' : 'Open Question'}</div>
     </aside>
   )
 }
@@ -115,7 +116,7 @@ function hierarchyLabel(level: number, value: number) {
 
 function numberedLines(_sectionNumber: number, lines: readonly RuleLine[]) {
   const counters = [0, 0, 0, 0, 0, 0]
-  let hasSubsections = lines.some((line) => SUBSECTION_TITLES.has(line.text.trim()))
+  const hasSubsections = lines.some((line) => SUBSECTION_TITLES.has(line.text.trim()))
   let insideSubsection = false
 
   return lines.map((line) => {
@@ -289,6 +290,7 @@ export default function RulesPage() {
                 <small>Official Rulebook text remains unchanged. Highlighted items are separate review markers.</small>
               </div>
               <div className="rules-digital-legend-items">
+                <span className="rules-digital-legend-approved"><i>✓</i> Approved Rule Amendment</span>
                 <span className="rules-digital-legend-proposed"><i>◆</i> Proposed Digital Gameplay Update</span>
                 <span className="rules-digital-legend-clarification"><i>?</i> Digital Gameplay Clarification Needed</span>
               </div>

@@ -211,10 +211,17 @@ describe('the official statistics writer', () => {
     await rejects(write({ ...buildOfficialPayload(recorded), final: { home: 99, away: 0 } }), /do not match the saved final score/)
   })
 
-  it('refuses a card that is not on that side\'s roster', async () => {
+  it('refuses a card that is not on that side\'s roster -- atomically: the earlier rows are untouched', async () => {
+    const before = await owner<{ c: number }>('select count(*)::int c from public.official_batting_lines where game_id = $1', [recorded.gameId])
     const payload = buildOfficialPayload(recorded)
     payload.batting.home = [{ ...payload.batting.home[0], cardKey: 'NOT-ON-ROSTER' }]
     await rejects(write(payload), /not on the home roster/)
+    expect(await owner<{ c: number }>('select count(*)::int c from public.official_batting_lines where game_id = $1', [recorded.gameId])).toEqual(before)
+  })
+
+  it('season totals never mix seasons', async () => {
+    const other = await owner<{ c: number }>("select count(*)::int c from public.official_season_batting where season_id <> 'test-season'")
+    expect(other).toEqual([{ c: 0 }])
   })
 
   it('season totals are sums of game lines', async () => {

@@ -433,6 +433,45 @@ export function runRulesV2ScenarioMatrix(initial: GameState): ScenarioReport {
     assert(fatigue({ outsRecorded: 16, inheritedRunnersScored: 1 }) === 2, 'Ordinary progression.')
   })
 
+  // ---------------------------------------------------------------- in-progress games keep their rules (rulesVersion)
+  test('V1-COMPAT-SQUEEZE', 'Rules version', 'A game created before v2 keeps v1: squeeze 16-19 with two out still scores, and no play log is written', () => {
+    const v1 = { ...v2(initial, { outs: 2, runners: { third: 3 } }), rulesVersion: undefined, playLog: undefined }
+    let s = confirm(beginPrePitchDecision(v1, 'SQUEEZE_BUNT'), 'CONFIRM_SQUEEZE')
+    s = roll(s, 17)
+    assert(s.score.away === 1 && s.playLog === undefined, `v1 behaviour: score ${s.score.away}, log ${s.playLog ? 'present' : 'absent'}.`)
+  })
+  test('V1-COMPAT-WALKOFF', 'Rules version', 'A v1 game keeps v1 walk-offs (no mid-game rule change): both runs count and the extra-base decision is still offered', () => {
+    const v1 = { ...v2(initial, { inning: 9, half: 'bottom', score: { away: 4, home: 4 }, runners: { second: 2, third: 3 } }), rulesVersion: undefined, playLog: undefined }
+    const s = swing(v1, '2B')
+    assert(s.score.home === 6 && s.pendingDecision?.decisionType === 'EXTRA_BASE_DECISION', `v1: ${s.score.home} runs, ${s.pendingDecision?.decisionType}.`)
+  })
+  test('V1-COMPAT-NO-LOCK', 'Rules version', 'A v1 game offers manager actions after a steal, as before', () => {
+    const v1 = { ...v2(initial, { runners: { first: 1 } }), rulesVersion: undefined, playLog: undefined }
+    const s = stealOnce(v1, 1)
+    assert(preActions(s).includes('INTENTIONAL_WALK'), 'v1 has no lock.')
+  })
+
+  // ---------------------------------------------------------------- stolen bases and plate-appearance ownership (audit decision 10)
+  test('V2-SB-MULTI-TARGET-OUT', 'Stolen bases', 'EDSR-SB: double steal, the lead runner thrown out -- CS for him; the trailing runner advances with no SB', () => {
+    let s = beginPrePitchDecision(v2(initial, { runners: { first: 1, second: 2 } }), 'NATURAL_STEAL')
+    s = confirmManagerDecision(s, optionIds(s))
+    const lead = optionIds(s).find((id) => id.includes('2B->3B'))
+    assert(lead, 'Defense should be able to throw at the lead runner.')
+    s = roll(confirm(s, lead), 20)
+    const play = lastPlay(s)
+    assert(play.steals.length === 1 && play.steals[0].success === false && play.steals[0].runnerKey === runnerKeyOf(s, 2), `Steals ${JSON.stringify(play.steals)}.`)
+    assert(keyAt(s, 'second') === runnerKeyOf(s, 1) && s.outs === 1, 'Trailing runner on 2B, one out.')
+  })
+  test('V2-PA-OWNERSHIP', 'Plate appearances', 'EDSR-PA: a pinch hitter sent up before any roll owns the whole plate appearance', () => {
+    let s = beginPrePitchDecision(v2(initial), 'PINCH_HITTER')
+    s = confirm(s, optionIds(s)[0])
+    s = confirm(s, 'CARD_ATTRIBUTES')
+    const pinch = s.plateAppearance.batterCardKey
+    s = swing(s, 'K')
+    const play = lastPlay(s)
+    assert(play.batterKey === pinch && play.batterKey !== order(v2(initial), 'away')[0], `PA belongs to ${play.batterKey}.`)
+  })
+
   // ---------------------------------------------------------------- play log invariants
   test('V2-LOG-SEQUENCE', 'Play log', 'Plays are numbered in order and each records the bases, outs and score before and after', () => {
     let s = v2(initial, { runners: { first: 1 } })

@@ -310,6 +310,19 @@ export function runStatsScenarioMatrix(): ScenarioReport {
     const r1 = computeGameStats(s.state()).pitching.home.find((l) => l.cardKey === 'H-R1')!
     assert(r1.G === 1 && r1.BF === 0 && r1.outs === 1, JSON.stringify(r1))
   })
+  test('LINE-SAME-CARD-BOTH-TEAMS', 'Pitching lines', 'The same card pitching for both teams keeps two separate lines and decisions', () => {
+    const s = new Sim()
+    s.onMound = { home: 'SAME', away: 'SAME' }
+    s.pa({ runs: [{ runner: 'a1' }] }).side().quietInnings(8).side()
+    const state = s.state()
+    state.playLog!.start!.home.startingPitcher = 'SAME'
+    state.playLog!.start!.away.startingPitcher = 'SAME'
+    const stats = computeGameStats(state)
+    const home = stats.pitching.home.find((l) => l.cardKey === 'SAME')!, away = stats.pitching.away.find((l) => l.cardKey === 'SAME')!
+    assert(home.R === 1 && away.R === 0 && home.outs > 0 && away.outs > 0, `home R ${home.R} away R ${away.R}.`)
+    const d = computeDecisions({ plays: stats.plays, pitching: stats.pitching, final: state.score, complete: true })
+    assert(d.winner === 'away' && d.W === 'SAME' && d.L === 'SAME', 'W to the away line, L to the home line (side-scoped).')
+  })
   test('BOX-LEGACY', 'Box score', 'A game without a play log gets a legacy summary, nothing reconstructed', () => {
     const legacy = { ...new Sim().state(), playLog: undefined, pitcherEntryDefenseOuts: {}, pregame: { home: { roster: null, startingPitcherCardKey: 'H-SP' }, away: { roster: null, startingPitcherCardKey: 'A-SP' } } } as unknown as GameState
     const box = buildBoxScore(legacy, 'prelaunch')

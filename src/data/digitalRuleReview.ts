@@ -1,4 +1,4 @@
-export type DigitalReviewStatus = 'proposed' | 'clarification'
+export type DigitalReviewStatus = 'approved' | 'proposed' | 'clarification'
 
 export type DigitalRuleReviewMarker = {
   id: string
@@ -14,6 +14,11 @@ export type DigitalRuleReviewMarker = {
  * These markers intentionally do not modify RULE_SECTIONS or the official rule text.
  * They record previously discussed app/game-engine decisions and unresolved digital
  * implementation questions so Anthony + James can approve / reject / revise them later.
+ *
+ * `approved` markers are rule amendments Anthony approved on 2026-11-01. The
+ * official text above them still mirrors the Google Doc word for word; each
+ * marker carries the approved wording until the Google Doc itself is amended
+ * (IMPLEMENTATION_PLAN.md §2 lists the edits).
  */
 export const DIGITAL_RULE_REVIEW_MARKERS: DigitalRuleReviewMarker[] = [
   {
@@ -111,6 +116,134 @@ export const DIGITAL_RULE_REVIEW_MARKERS: DigitalRuleReviewMarker[] = [
     status: 'clarification',
     title: 'Digital Gameplay Clarification Needed',
     text: 'Confirm which pre-game and in-game fatigue adjustments the app should calculate and apply automatically versus which, if any, still require a manager acknowledgement. The underlying fatigue rules and thresholds remain the official source of truth.',
+  },
+  {
+    id: "approved-walks-forced-only",
+    sectionId: "section-7",
+    afterText: "BB, 1B, & 1B+ swing results = All existing runners automatically advance 1 base.",
+    status: 'approved',
+    title: "Approved Rule Amendment — 2026-11-01",
+    text: "Approved (Anthony, 2026-11-01): a BB swing result awards the hitter 1B and advances only forced runners; runners who are not forced stay on their base, so a runner on 3B scores on a walk only with the bases loaded (an RBI). Intentional walks move runners the same way. 1B and 1B+ are unchanged. The app has always played walks this way; the Google Doc line is to be updated to match.",
+  },
+  {
+    id: "approved-walkoff",
+    sectionId: "section-7",
+    afterText: "When a hitter reaches base via a BB, 1B, 1B+, 2B, 3B, or HR swing result, all existing runners automatically advance a specific amount of bases as outlined below.",
+    status: 'approved',
+    title: "Approved Rule Amendment — 2026-11-01",
+    text: "Approved (OBR 7.01(g), 5.08, 9.06(f)–(g)): in the bottom of the 9th or any later inning the game ends the moment the winning run scores. Later runs on that play do not count — except on a HR, where every run counts (every Elements HR is out of the park). A game-ending hit is credited with no more bases than the winning runner advanced, and no extra-base decision or 1B+ steal follows it.",
+  },
+  {
+    id: "approved-lock-ibb",
+    sectionId: "section-7",
+    afterText: "The defensive GM can issue an intentional walk to the current hitter so long as no die rolls have been made for the current at bat.",
+    status: 'approved',
+    title: "Approved Rule Amendment — 2026-11-01",
+    text: "Approved (2026-11-01): once any stolen-base attempt resolves during a plate appearance — a natural steal, a second steal of home, or a squeeze 1–7 — no further manager action is allowed in that plate appearance, whether the steal succeeded or failed: no intentional walk, pinch hitter, pinch runner, pitching change, defensive substitution, Infield In or bunt. If a caught stealing ends the inning, the same batter leads off next inning and the lock resets.",
+  },
+  {
+    id: "approved-lock-substitution",
+    sectionId: "section-7",
+    afterText: "When no die rolls have been completed against the current hitter, the offensive GM may substitute out an existing runner for a pinch runner &/or the current hitter for a pinch hitter off their bench so long as the replacement player has not yet appeared in the current game.",
+    status: 'approved',
+    title: "Approved Rule Amendment — 2026-11-01",
+    text: "Approved (2026-11-01): no pinch hitter or pinch runner after any stolen-base attempt has resolved in the current plate appearance (see the intentional-walk note).",
+  },
+  {
+    id: "approved-lock-defense",
+    sectionId: "section-7",
+    afterText: "The defensive GM can issue a defensive substitution replacing any fielder with a new fielder off the bench, or replace the current pitcher with a new pitcher out of the bullpen, at any time so long as no die rolls have been made for the current at bat.",
+    status: 'approved',
+    title: "Approved Rule Amendment — 2026-11-01",
+    text: "Approved (2026-11-01): no defensive substitution or pitching change after any stolen-base attempt has resolved in the current plate appearance.",
+  },
+  {
+    id: "approved-infield-in-home-dp",
+    sectionId: "section-7",
+    afterText: "All standard GB double play, 3B-to-1B double play, & 3B-to-2B-to-1B triple play attempts cannot be attempted on a runner heading toward home plate unless the defensive GM has also declared “infield-in” prior to any die rolls for an at bat.",
+    status: 'approved',
+    title: "Approved Rule Amendment — 2026-11-01",
+    text: "Approved (2026-11-01): double-play and triple-play attempts are never made on a runner heading toward home. With Infield In, the only out at home plate on a GB result is the bases-loaded force described below.",
+  },
+  {
+    id: "approved-infield-in-availability",
+    sectionId: "section-7",
+    afterText: "When there are runners on base with less than 2 out, the defensive GM may opt to declare “infield-in” prior to any die rolls in an at bat, which results in the following.",
+    status: 'approved',
+    title: "Approved Rule Amendment — 2026-11-01",
+    text: "Approved (2026-11-01): Infield In may be declared with a runner on any base and fewer than 2 outs — including a runner on 1B only, 2B only, or 1B & 2B — with the outcomes below. It is judged when the swing result is given: if by then there are 2 outs or the bases are empty, it has no effect.",
+  },
+  {
+    id: "approved-infield-in-hold",
+    sectionId: "section-7",
+    afterText: "When there is a runner on 2B, a runner on 3B, runners on both 2B & 3B, or runners on both 1B & 3B, & the swing is a GB result, all existing runners “hold” at their base unless forced to advance 1 base, & the runner heading to 1B is out on a GB result.",
+    status: 'approved',
+    title: "Approved Rule Amendment — 2026-11-01",
+    text: "Approved (2026-11-01): with runners on 1B & 3B, the runner on 1B is the forced runner — he advances to 2B, the runner on 3B holds, and the hitter is out at 1B. Contact play stays available on every hold state (2B, 3B, 2B & 3B, 1B & 3B).",
+  },
+  {
+    id: "approved-squeeze",
+    sectionId: "section-7",
+    afterText: "If the standard die roll is 1-7, the runner on 3B is automatically out on an unsuccessful stolen base attempt of home & no squeeze bunt attempt occurs.",
+    status: 'approved',
+    title: "Approved Rule Amendment — 2026-11-01",
+    text: "Approved (2026-11-01): a squeeze 1–7 is a caught stealing of home. If it is the third out, the inning ends without completing the plate appearance and the same batter leads off the next inning. On 16–19 with two outs, the batter-runner is the third out at 1B, so the run does not score.",
+  },
+  {
+    id: "approved-distance-threshold",
+    sectionId: "section-8",
+    afterText: "For each out that all pitchers record pitching beyond their card IP length, -2 is subtracted from their current Control score in the current game until the pitcher is removed.",
+    status: 'approved',
+    title: "Approved Rule Amendment — 2026-11-01",
+    text: "Approved (2026-11-01): the -2 begins with the out that completes the card IP length and applies to every out after it (3.0 IP: 9th out; 5.0: 15th; 6.0: 18th; 6.2: 20th; 7.0: 21st), unless the Shutout Bonus applies.",
+  },
+  {
+    id: "approved-distance-example",
+    sectionId: "section-8",
+    afterText: "For example: A pitcher with a Control 6 score has pitched 0.2 IP past their card IP length with no other active fatigue effects. This pitcher will have a Control 2 score for the next hitter (-2 for each out recorded beyond their card IP length totaling -4).",
+    status: 'approved',
+    title: "Approved Rule Amendment — 2026-11-01",
+    text: "Amended example (2026-11-01): Control 6, card IP 6.0, records his 18th out and 2 more — Control 0 for the next hitter (-2 for each of outs 18, 19 and 20).",
+  },
+  {
+    id: "approved-shutout-bonus",
+    sectionId: "section-8",
+    afterText: "For pitchers who have recorded at least 15 outs, allowed 0 earned runs & 0 inherited runners to score in the current game, they receive a “Shutout Bonus” & only -1 is subtracted from their Control score for each out in the current game that the pitcher records pitching beyond their card IP length. up until the pitcher has a Control score of 0 where the Control score remains until the pitcher is removed or allows an earned run.",
+    status: 'approved',
+    title: "Approved Rule Amendment — 2026-11-01",
+    text: "Approved (2026-11-01): the Shutout Bonus begins on the out that completes the card IP length (or the 15th out, if later) and charges -1 for that out and each one after it, only while Control is above 0. It never restores Control: reductions already applied stay, and a pitcher at 0 or below stays where he is. An inherited runner scoring ends the bonus — reductions so far stay, no immediate -2, then -2 per later out.",
+  },
+  {
+    id: "approved-shutout-example",
+    sectionId: "section-8",
+    afterText: "For example: A pitcher with a Control 6 score has pitched 1.1 IP past their card IP length having already pitched 5.0 IP & allowed 0 earned runs. This pitcher will have a Control 2 score for the next hitter (-1 for each 0.1 out recorded beyond their card IP length).",
+    status: 'approved',
+    title: "Approved Rule Amendment — 2026-11-01",
+    text: "Amended example (2026-11-01): Control 6, card IP 5.0, 19 outs and no earned runs — Control 1 for the next hitter (-1 for each of outs 15 through 19).",
+  },
+  {
+    id: "approved-shutout-short-ip",
+    sectionId: "section-8",
+    afterText: "Pitchers who have card IP scores of less than 5.0 IP have standard IP fatigue effects applied to them until they reach 15 outs & then these modified fatigue effects are applied going forward.",
+    status: 'approved',
+    title: "Approved Rule Amendment — 2026-11-01",
+    text: "Clarified (2026-11-01): reductions applied before the 15th out stay when the Shutout Bonus begins — a card IP 3.0 pitcher already at Control -5 stays at -5.",
+  },
+  {
+    id: "approved-earned-run-after-bonus",
+    sectionId: "section-8",
+    afterText: "If the current pitcher is over their card IP length & then allows an earned run, immediately subtract -2 from the current Control of the pitcher & then subtract -2 for each subsequent out recorded until the pitcher is removed from the game.",
+    status: 'approved',
+    title: "Approved Rule Amendment — 2026-11-01",
+    text: "Approved (2026-11-01): the earned run here is a run charged to this pitcher (his own runner scoring). An inherited runner scoring never triggers this -2. Amended example: Control 1 after the bonus, then a HR — Control -1 for the following hitter; -3 after the next out.",
+  },
+  {
+    id: "approved-efficiency",
+    sectionId: "section-8",
+    afterText: "Pitchers who retire the minimum number of batters faced in an appearance & are not appearing in back-to-back games having no rest days in between appearances are awarded an efficiency bonus +1 to their post game fatigue score.",
+    status: 'approved',
+    title: "Approved Rule Amendment — 2026-11-01",
+    text: "Approved (2026-11-01): a pitcher qualifies when he faced at least 1 batter and his batters faced is no more than his outs recorded (double plays and caught stealing count toward outs), and he did not also make a rest appearance in his GM’s previous official game. A pitcher who faces no batter gets no efficiency reduction — and, with no completed plate appearance, incurs no rest at all.",
   },
 ]
 

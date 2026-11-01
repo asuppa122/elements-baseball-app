@@ -5,6 +5,8 @@ import { runRestTrackingScenarioMatrix } from './restTrackingScenarioHarness'
 import { runPaMarkerScenarioMatrix } from './paMarkerScenarioHarness'
 import { runGameBoundaryScenarioMatrix } from './gameBoundaryScenarioHarness'
 import { runNonGbScenarioMatrix, type ScenarioReport, type ScenarioResult } from './scenarioHarness'
+import { runRulesV2ScenarioMatrix } from './rulesV2ScenarioHarness'
+import { runStatsScenarioMatrix } from './stats/statsScenarioHarness'
 import { ACTIVE_SEASON_CONFIG } from './seasonConfig'
 import type { GameCardSnapshot, GameRosterSnapshot, GameSide, GameState } from './types'
 
@@ -17,7 +19,7 @@ export type CoverageCase = {
   description: string
   passed: boolean
   detail: string
-  source: 'demo' | 'non_gb_matrix' | 'ground_ball_matrix' | 'fatigue_matrix' | 'rest_tracking_matrix' | 'pa_marker_matrix' | 'boundary_matrix'
+  source: 'demo' | 'non_gb_matrix' | 'ground_ball_matrix' | 'fatigue_matrix' | 'rest_tracking_matrix' | 'pa_marker_matrix' | 'boundary_matrix' | 'rules_v2_matrix' | 'stats_matrix'
 }
 
 export type MechanicCoverage = {
@@ -117,7 +119,9 @@ export function runRulebookCoverage(): RulebookCoverageReport {
   const restTracking = normalizeReport(runRestTrackingScenarioMatrix(), 'rest_tracking_matrix', 'Online League Structure / VIII')
   const paMarker = normalizeReport(runPaMarkerScenarioMatrix(buildNonGbCoverageFixture()), 'pa_marker_matrix', 'VIII (fatigue-accrual wiring)')
   const boundary = normalizeReport(runGameBoundaryScenarioMatrix(), 'boundary_matrix', 'Game / season boundaries')
-  const cases = [...demoCases, ...nonGb, ...groundBall, ...fatigue, ...restTracking, ...paMarker, ...boundary]
+  const rulesV2 = normalizeReport(runRulesV2ScenarioMatrix(buildNonGbCoverageFixture()), 'rules_v2_matrix', 'Rules v2 (decisions of 2026-11-01)')
+  const statistics = normalizeReport(runStatsScenarioMatrix(), 'stats_matrix', 'Statistics (EDSR)')
+  const cases = [...demoCases, ...nonGb, ...groundBall, ...fatigue, ...restTracking, ...paMarker, ...boundary, ...rulesV2, ...statistics]
 
   const byMechanic = new Map<string, CoverageCase[]>()
   for (const item of cases) {
