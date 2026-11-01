@@ -5,7 +5,10 @@
 --
 -- STATUS: written 2026-10-31. Tested against PGlite by oneActiveGameSql.test.ts
 -- and twoPlayerSql.test.ts, and against a real Postgres 17 server with two
--- connections by scripts/concurrency-check.mjs. NOT applied to the live project.
+-- connections by scripts/concurrency-check.mjs. APPLIED to the live project on
+-- 2026-10-31 (~20:00 ET) through the Supabase SQL Editor, the exact committed
+-- text (sha256 8cdf7e2a2089f0f0...), after a full read-only data snapshot
+-- (backups/full-2026-10-31T23-51-37-418Z; the Free plan has no Supabase backups).
 --
 -- Two separate ideas, kept separate on purpose:
 --

@@ -12,7 +12,8 @@
 --    after the cleanup. Must return NO rows, or the migration refuses to run.
 --
 -- STATUS: written 2026-10-31; tested against a real Postgres by
--- oneActiveGameSql.test.ts. NOT run live yet.
+-- oneActiveGameSql.test.ts. RUN live 2026-10-31 before the migration: 14 CLOSE
+-- of 14 unfinished, 0 conflicts.
 
 -- The migration's practice list -- keep identical to section 5 of the migration.
 with listed(id) as (values

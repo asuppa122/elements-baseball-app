@@ -112,3 +112,25 @@ after which the same move finishes them and records their progression.
   of those rows; the snapshot from A1 is a second copy.
 - **Data damaged:** restore the affected rows from the A1 snapshot or the
   Supabase backup.
+
+## Rollout record — 2026-10-31
+
+- Backup: Free plan (no Supabase backups). Full read-only snapshot of all 11
+  public tables, row counts matching live: `backups/full-2026-10-31T23-51-37-418Z`.
+- Live writer before: md5 6f3824a2… = the 20261030 file.
+- Preview (live): 14 CLOSE of 14 unfinished, 0 conflicts.
+- Migration applied (SQL Editor, committed text verified by sha256); writer
+  after: md5 91750108… = this migration's.
+- Pushed 22f8313..19c5aa8 (8 commits); Vercel served the new build ~30 s later.
+- Verified: tracking off/never started; complete 7 + terminated 14; 21
+  prelaunch; 0 active; app roles cannot toggle tracking; permissions Anthony
+  t/t, Will t/f; 1,739 events (1,725 + 14 closing); per-game event counts equal
+  the snapshot.
+- Archive: STEP 3 72/72/0/72; STEP 5 0/72/2; archived values = snapshot.
+- Server checks (rolled back): second game refused; Will refused while busy;
+  Will cannot terminate, can create one-screen; a pre-launch game finished with
+  0 rest rows and released both; app rest write blocked; ended game refuses saves.
+- App (live): created a two-player pre-launch game vs Will → active panel,
+  Create blocked, Resume opened it; cancelled before the first pitch → both
+  released (game 6505d59e…, cancelled/prelaunch). Box score of 5f851eed intact.
+- Official tracking: OFF, never started. Outstanding: the two-account game.

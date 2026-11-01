@@ -30,7 +30,10 @@
 --   STEPs 2 and 4 refuse once Elements Baseball has launched, and are safe to re-run.
 --
 -- STATUS: written 2026-10-31; tested against a real Postgres by
--- src/gameplay/__tests__/prelaunchRestArchiveSql.test.ts. NOT run yet.
+-- src/gameplay/__tests__/prelaunchRestArchiveSql.test.ts. RUN on the live
+-- project 2026-10-31, step by step: STEP 3 = 72/72/0 missing/72 traced; STEP 5
+-- = 0 live / 72 archived / 2 source games; archived values match the pre-change
+-- snapshot exactly.
 
 -- ===================== STEP 1: preview (read-only) =====================
 select p.manager_name, r.season_id, r.card_key, r.hitter_games_remaining, r.pitcher_games_remaining, r.updated_at,
