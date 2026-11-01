@@ -115,8 +115,11 @@ after which the same move finishes them and records their progression.
 
 ## Rollout record — 2026-10-31
 
-- Backup: Free plan (no Supabase backups). Full read-only snapshot of all 11
-  public tables, row counts matching live: `backups/full-2026-10-31T23-51-37-418Z`.
+- Backup: Free plan (no Supabase backups). Full read-only API snapshot of all 11
+  public tables, row counts matching live: `backups/full-2026-10-31T23-51-37-418Z`,
+  preserved as `Stable Backups/supabase-data-snapshot-2026-10-31-pre-stage3.tar.gz`.
+  What an API snapshot does and does not cover: `OPERATIONS.md`.
+- Open operational issue: Supabase billing "grace period is over" (`OPERATIONS.md`).
 - Live writer before: md5 6f3824a2… = the 20261030 file.
 - Preview (live): 14 CLOSE of 14 unfinished, 0 conflicts.
 - Migration applied (SQL Editor, committed text verified by sha256); writer
