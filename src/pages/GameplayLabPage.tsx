@@ -43,8 +43,13 @@ function GameSummary({ game, userId, active, canTerminate, busy, onCancel, onTer
   canTerminate: boolean
   busy: boolean
   onCancel: (game: PersistedGameplayLabGame) => void
-  onTerminate: (game: PersistedGameplayLabGame) => void
+  onTerminate: (game: PersistedGameplayLabGame, reason: string) => void
 }) {
+  // Confirmation and the reason are asked inline, on the card: browsers that
+  // suppress window.prompt/confirm (in-app browsers, "block dialogs") made the
+  // buttons do nothing at all.
+  const [confirming, setConfirming] = useState<'cancel' | 'end' | null>(null)
+  const [reason, setReason] = useState('')
   const s = game.game_state as GameState
   const mySide: GameSide = s?.managers?.away?.userId === userId ? 'away' : 'home'
   const opponentSide: GameSide = mySide === 'home' ? 'away' : 'home'
@@ -81,13 +86,35 @@ function GameSummary({ game, userId, active, canTerminate, busy, onCancel, onTer
           {s && (s.status === 'complete' || s.status === 'in_progress' || s.status === 'awaiting_decision') && (
             <Link className="gameplay-lab-secondary-button" to={`/games/lab/${game.id}/box`}>{s.playLog?.start ? 'Box score' : 'Summary'}</Link>
           )}
-          {cancellable && (
-            <button type="button" className="gameplay-lab-secondary-button" disabled={busy} onClick={() => onCancel(game)}>Cancel game</button>
+          {cancellable && confirming === null && (
+            <button type="button" className="gameplay-lab-secondary-button" disabled={busy} onClick={() => setConfirming('cancel')}>Cancel game</button>
           )}
-          {terminable && !cancellable && (
-            <button type="button" className="gameplay-lab-secondary-button" disabled={busy} onClick={() => onTerminate(game)}>End without result</button>
+          {terminable && !cancellable && confirming === null && (
+            <button type="button" className="gameplay-lab-secondary-button" disabled={busy} onClick={() => setConfirming('end')}>End without result</button>
           )}
         </div>
+        {confirming === 'cancel' && (
+          <div className="gameplay-lab-confirm" role="group" aria-label="Confirm cancelling the game">
+            <p>Cancel this game against {opponent}? It has not started, so no result is recorded and you are both free to start another game. This cannot be undone.</p>
+            <div className="gameplay-lab-saved-buttons">
+              <button type="button" className="gameplay-lab-open-button" disabled={busy} onClick={() => { setConfirming(null); onCancel(game) }}>Yes, cancel it</button>
+              <button type="button" className="gameplay-lab-secondary-button" disabled={busy} onClick={() => setConfirming(null)}>Keep it</button>
+            </div>
+          </div>
+        )}
+        {confirming === 'end' && (
+          <form className="gameplay-lab-confirm" aria-label="End the game without a result"
+            onSubmit={(e) => { e.preventDefault(); if (reason.trim().length >= 5) { setConfirming(null); onTerminate(game, reason.trim()) } }}>
+            <p>End this game without a result. No win, loss or forfeit is recorded and rest tracking is not applied; both managers are released. The reason is saved with the game.</p>
+            <label>Reason (at least 5 characters)
+              <input type="text" value={reason} onChange={(e) => setReason(e.target.value)} autoFocus minLength={5} />
+            </label>
+            <div className="gameplay-lab-saved-buttons">
+              <button type="submit" className="gameplay-lab-open-button" disabled={busy || reason.trim().length < 5}>End game</button>
+              <button type="button" className="gameplay-lab-secondary-button" disabled={busy} onClick={() => setConfirming(null)}>Back</button>
+            </div>
+          </form>
+        )}
       </div>
     </article>
   )
@@ -206,8 +233,6 @@ export default function GameplayLabPage() {
   }
 
   async function cancelGame(game: PersistedGameplayLabGame) {
-    const opponent = game.home_user_id === user?.id ? game.game_state?.managers?.away?.managerName : game.game_state?.managers?.home?.managerName
-    if (!window.confirm(`Cancel this game against ${opponent ?? 'your opponent'}?\n\nIt has not started, so no result is recorded and you are both free to start another game. This cannot be undone. (To just leave a game and come back later, use Exit instead.)`)) return
     setBusy(true); setError(''); setSuccess('')
     try {
       updateGame(await cancelGameplayGame(game.id))
@@ -220,9 +245,7 @@ export default function GameplayLabPage() {
     }
   }
 
-  async function terminateGame(game: PersistedGameplayLabGame) {
-    const reason = window.prompt('End this game without a result.\n\nNo win, loss or forfeit is recorded and rest tracking is not applied; both managers are released. The reason is saved with the game.\n\nReason:')
-    if (reason === null) return
+  async function terminateGame(game: PersistedGameplayLabGame, reason: string) {
     setBusy(true); setError(''); setSuccess('')
     try {
       updateGame(await terminateGameplayGame(game.id, reason))
@@ -381,7 +404,7 @@ export default function GameplayLabPage() {
           ) : (
             savedGames.map((game) => (
               <GameSummary key={game.id} game={game} userId={user?.id ?? ''} active={game.id === activeGame?.game_id}
-                canTerminate={permissions.can_terminate_games} busy={busy} onCancel={(g) => void cancelGame(g)} onTerminate={(g) => void terminateGame(g)} />
+                canTerminate={permissions.can_terminate_games} busy={busy} onCancel={(g) => void cancelGame(g)} onTerminate={(g, reason) => void terminateGame(g, reason)} />
             ))
           )}
         </div>

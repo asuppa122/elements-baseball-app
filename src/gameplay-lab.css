@@ -560,3 +560,9 @@
 }
 .gameplay-lab-prelaunch { border: 1px solid rgba(95, 168, 232, .45); background: rgba(30, 70, 110, .2); color: rgba(242, 234, 216, .85); }
 .gameplay-lab-prelaunch b { color: #8cc4f2; }
+
+/* Inline confirm / end-game reason on a game card (no browser dialogs). */
+.gameplay-lab-confirm { grid-column: 1 / -1; display: flex; flex-direction: column; gap: 8px; margin-top: 10px; padding: 10px 12px; border: 1px solid rgba(255,255,255,.14); border-radius: 8px; }
+.gameplay-lab-confirm p { margin: 0; font-size: .85rem; line-height: 1.45; }
+.gameplay-lab-confirm label { display: flex; flex-direction: column; gap: 4px; font-size: .8rem; }
+.gameplay-lab-confirm input { min-height: 40px; padding: 6px 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,.25); background: rgba(0,0,0,.25); color: inherit; font-size: 16px; }
