@@ -1118,8 +1118,13 @@
   /* mobile keeps the header but lets it wrap rather than truncate */
   .gp-topbar { flex-wrap: wrap; min-height: 0; padding: 10px; row-gap: 6px; }
   .gp-topbar-rule { display: none; }
-  .gp-topbar-recap { flex: 1 1 100%; }
-  .gp-topbar-play { white-space: normal; }
+  /* Same reading as the desktop game bar: the last roll under the cards tells
+   * the play, the scorebug's arrow says who is fielding, and the turn chip
+   * says who is being waited on -- so the header repeats none of them, and
+   * the rail keeps one Pitch/Advantage/Swing/Result row, beside the button. */
+  .gp-topbar-recap, .gp-topbar-fielding { display: none; }
+  .gp-region-lineup .gp-matchup > .gp-roll { display: none; }
+  .gp-screen:has(.gp-topbar .gp-turn) .gp-rollbox > .gp-roll-wait { display: none; }
 }
 
 /* GameMenu was written as a rail section with its own "Game" heading. In the
