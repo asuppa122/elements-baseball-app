@@ -1,3 +1,30 @@
+# v1.6.0 — Rules v2, Play-by-Play, Box Scores and Statistics (UNRELEASED — local branch, not deployed)
+
+Built locally on branch `stats-and-gameplay-v2` under Anthony's consolidated
+authorization of 2026-11-01. **Not pushed, not deployed; the database migration
+is not applied.** Official tracking stays OFF. Rulings: `GAMEPLAY_REFERENCE_NOTES.md`
+rulings 9–19; plan and status: `IMPLEMENTATION_PLAN.md`.
+
+**Gameplay (rules v2 — new games only; games created before finish under v1)**
+- Walk-offs end at the winning run; only a HR counts every run; the game-ending hit is credited with the bases the winning runner advanced; no extra-base decision or 1B+ steal after it (D2, D7).
+- Squeeze 1–7 for the third out completes no plate appearance; the same batter leads off (D1). Squeeze 16–19 with two outs scores no run (D8).
+- After any resolved steal attempt in a plate appearance, every manager action is locked until it ends.
+- Infield In with a runner on any base and fewer than 2 outs, judged at the swing; with R1 + R3 the runner on 1B goes to 2B.
+- Runs are charged to the responsible pitcher (fatigue ladder, Shutout Bonus Option B); 9.16(g) transfers; pinch runners inherit.
+- The Shutout Bonus never restores Control (D10).
+- One ground-ball implementation shared by play, tests and demos (D3) — the old copy's phantom out is gone.
+
+**Statistics**
+- Every play is recorded in a play log saved with the game; batting, pitching and fielding lines, team totals and W/L/SV/HLD/BS are derived from it (deterministic, no scorer judgment).
+- Box score (traditional, Elements, play-by-play) on the final board and at `/games/lab/:gameId/box`; Exhibition / Official labels; older games show only what they hold.
+- Live game lines beside the score; the season strip reads "No season stats yet".
+
+**Database (local migration `20261101_gameplay_stats_and_rest_v2.sql`, not applied)**
+- Exhibition / official classification; the server rest writer's three pitcher adjustments for v2 games; empty official statistics tables with a writer that is off by two switches; an owner-only exhibition cleanup that is never run automatically.
+
+**Rulebook**
+- Approved amendments shown as green markers beside the official text (which still mirrors the Google Doc).
+
 # v1.5.3 — Starters at Listed Positions, One-Screen Fix, Rest Correction
 
 - **Rulebook V enforced in pregame:** a starter may only take a position with a fielding score on his card (DH: any hitter; P: any pitcher card, two-way players included). The −10 for an unlisted position is in-game only, once the first plate appearance is complete. Pregame dropdowns no longer offer unlisted positions, and the engine rejects them.

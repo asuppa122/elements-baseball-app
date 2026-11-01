@@ -452,3 +452,26 @@ differently. Each is implemented and pinned by the scenario IDs listed.
 | 6 | MLB 5.10(g) three-batter minimum for every pitcher, starter included; removable between innings if the half ends first, owes the rest if he returns. Games created before 2026-10-30 carry no minimum. | MLB fallback, adopted | — | MOUND-01..04 |
 | 7 | Postgame relief distance rest (+1 game) stays strictly *beyond* card IP — reaching it exactly does not count. | Official Rule, confirmed | IX-C relief distance | FAT-REL-01..03 |
 | 8 | A pitcher is charged with an appearance (for rest) only when a plate appearance against him is completed; a reliever who only records an out on the bases is not. | Approved Digital Gameplay Behavior, confirmed | IX-B "makes an appearance" | — |
+
+## Rulings of 2026-11-01 (Anthony's 12 decisions and 14 audit decisions) — rules version 2
+
+Approved by Anthony on 2026-11-01 and implemented locally on branch
+`stats-and-gameplay-v2` (not deployed). They apply to games created under
+`rulesVersion` 2; games created before keep rules v1 to completion. Each
+amends or clarifies the Rulebook; the website shows the approved wording as a
+green "Approved Rule Amendment" marker beside the official text, which still
+mirrors the Google Doc until Anthony amends it. Superseded rulings are noted.
+
+| # | Ruling | Category | Rulebook text it touches | Scenarios |
+|---|---|---|---|---|
+| 9 | Chart walks and intentional walks: batter to 1B, only forced runners advance (bases-loaded walk = 1 run, RBI). The v1.3.73 engine behaviour is the rule. | Approved amendment | §7 automatic advancement ("BB, 1B, & 1B+ … all existing runners") | V2-WALK-*, V2-IBB-*, V2-WALK-WALKOFF |
+| 10 | Walk-offs (OBR 7.01(g), 5.08, 9.06(f)–(g)): game ends at the winning run; later runs count only on a HR (every Elements HR is out of the park); hit credited min(chart bases, winning runner's advance); nothing after the winning run. | Approved amendment | — (MLB) | V2-WO-* |
+| 11 | Ruling 1 confirmed (original decision 4): distance −2 from the out completing card IP. | Approved amendment (was Proposed) | §8 IX-C "beyond their card IP length", 0.2 IP example | V2-FAT-THRESHOLD |
+| 12 | Shutout Bonus never restores Control (D10); begins at the later of the card-IP out and the 15th out; inherited run ends it (Option B: no immediate −2, −2 per later out). | Approved amendment | §8 IX-C Shutout Bonus text and examples | V2-FAT-* |
+| 13 | ~~Steal rolls do not block intentional walks / pinch hitters (original decision 3)~~ **superseded by audit decision 5:** after any resolved steal attempt in a PA (natural steal, second steal of home, squeeze 1–7) no further manager action in that PA; lock resets with a new PA or half-inning. | Approved amendment | §7 intentional walk, pinch hitter/runner, defensive substitution ("no die rolls") | V2-LOCK-*, V2-D1-SQUEEZE-LOCK |
+| 14 | Infield In with a runner on any base and < 2 outs, using the Rulebook's outcomes for every state; judged at the swing (no effect with 2 outs or empty bases); R1+R3 hold sends R1 to 2B; no DP/TP toward home. | Approved amendment | §7 Infield In | V2-II-*, INF-13, INF-NO-PHANTOM-OUT* |
+| 15 | ~~Efficiency: BF = outs (original decision 5)~~ **superseded by audit decision 7:** BF ≥ 1 and BF ≤ outs, not back-to-back. | Approved amendment | §8 IX-B efficiency | statsV2Sql "efficiency …" |
+| 16 | Pitching G on entry even with BF 0; no rest for a zero-BF appearance (ruling 8 kept). | Approved statistics rule | — | LINE-ZERO-BF-APPEARANCE |
+| 17 | Squeeze: 1–7 is a CS; as the third out no PA, same batter leads off (D1); 16–19 with two outs scores no run (D8). | Approved amendment | §7 squeeze | V2-D1-*, V2-D8-* |
+| 18 | Scoring rules (EDSR): GIDP, RBI, W tree, L, SV (6 × ER ≤ outs), HLD, BSV, ORDER, RESP, SB, LOB, PA; TBP/TBPa for triple-play attempts. | Approved statistics rules | — | stats matrix |
+| 19 | All games before the official launch are exhibitions (progression ≠ official); never official statistics, standings or rest; cleanup only by separate authorization. | Approved policy | — | statsV2Sql, BOX-CLASSIFICATION |
