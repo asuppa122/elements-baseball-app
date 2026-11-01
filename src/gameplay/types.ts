@@ -116,6 +116,10 @@ export type BaseRunnerState = {
   playerName: string
   baserunning: number | null
   stolenBase: number | null
+  /** Rules v2: the fielding side's pitcher charged if this runner scores
+   *  (OBR 9.16). Set when he reaches; a pinch runner inherits it; a fielder's
+   *  choice that retires a runner hands that runner's to the batter (9.16(g)). */
+  responsiblePitcherKey?: string
 }
 
 export type BasesState = {
@@ -153,11 +157,19 @@ export type PlateAppearanceState = {
   // Two-player games only: the batting manager has made any calls and declared
   // ready, so the fielding manager may now act and pitch. See turnOrder.ts.
   offenseReady?: boolean
+  /** Rules v2 (Anthony, 2026-11-01): once any steal attempt -- natural steal,
+   *  second steal of home, squeeze 1-7 -- resolves in this plate appearance,
+   *  no further manager action is legal until it ends. A new plate appearance
+   *  or half-inning starts unlocked. */
+  actionsLocked?: boolean
 }
 
 export type GameState = {
   gameId: string
   stateVersion: number
+  /** Gameplay rules the game was created under, frozen for its whole life
+   *  (rulesVersion.ts). Absent = 1: games created before v2 finish as they began. */
+  rulesVersion?: number
   status: GameLifecycleStatus
   configuration: ActiveSeasonConfiguration
   managers: Record<GameSide, GameManagerSnapshot>
@@ -215,6 +227,17 @@ export type GameState = {
   pitcherEntryDefenseOuts?: Record<string, number>
   pitcherRunsAllowed?: Record<string, number>
   pitcherShutoutBonusBrokenAtOuts?: Record<string, number>
+  // Rules v2. Runs scored by runners another pitcher put on, while this one
+  // pitched; and the appearance out count at which such a run ended his
+  // Shutout Bonus (Option B: accrued reductions stay, no immediate -2).
+  pitcherInheritedRunsScored?: Record<string, number>
+  pitcherShutoutBonusEndedAtOuts?: Record<string, number>
+  // Rules v2. Per-pitcher facts the post-game rest calculation needs
+  // (efficiency, relief distance, negative Control) -- see restFacts.ts.
+  pitcherRestFacts?: Record<string, PitcherRestFacts>
+  // Rules v2. The structured play-by-play (playLog.ts); absent for games
+  // created before it, which have no trustworthy play-level history.
+  playLog?: PlayLog
   // Defensive out count when each pitcher (pitcherInstanceKey) last left the
   // mound. With pitcherEntryDefenseOuts it gives every pitcher one continuous
   // line even when he moves to the field and comes back (MLB 5.10, adopted
@@ -263,4 +286,103 @@ export type GameEvent = {
   actorUserId: string | null
   payload: Record<string, unknown>
   createdAt: string
+}
+
+export type PitcherRestFacts = {
+  /** His side's first pitcher of the game. */
+  starter: boolean
+  /** Completed plate appearances against him this game (every stint). */
+  battersFaced: number
+  /** Effective Control at his first pitch roll; null until he throws one. */
+  controlAtFirstPitch: number | null
+  /** He threw at least one pitch roll at effective Control -1 or lower. */
+  pitchedAtNegativeControl: boolean
+}
+
+export type PlayRunner = { cardKey: string; base: 'first' | 'second' | 'third' }
+export type PlayRun = {
+  cardKey: string
+  /** Base he started the play on; 'batter' for the batter-runner. */
+  from: 'first' | 'second' | 'third' | 'batter'
+  responsiblePitcherKey: string | null
+  pitcherOnMoundKey: string | null
+  /** False when it crossed the plate after a walk-off's winning run (non-HR). */
+  counted: boolean
+  /** Score after this run, when counted. */
+  scoreAfter: Record<GameSide, number> | null
+}
+export type PlayOut = {
+  cardKey: string
+  kind: 'strikeout' | 'batter_out' | 'force' | 'caught_stealing' | 'thrown_out' | 'fly_out' | 'pop_out'
+}
+export type PlaySteal = { runnerKey: string; from: 'first' | 'second' | 'third'; to: 'second' | 'third' | 'home'; success: boolean; catcherKey: string | null; kind: 'natural' | 'second_steal_home' | 'one_base_plus' | 'squeeze' }
+export type PlayDefenseAttempt = { kind: 'double_play' | 'triple_play'; fielderKeys: string[]; positions: string[]; outsOnPlay: number }
+export type BattingCredit =
+  | 'single' | 'double' | 'triple' | 'home_run'
+  | 'walk' | 'intentional_walk' | 'strikeout'
+  | 'out' | 'fielders_choice' | 'sacrifice_bunt' | 'sacrifice_fly'
+
+export type PlayRecord = {
+  seq: number
+  kind: 'plate_appearance' | 'baserunning' | 'substitution' | 'game_start' | 'game_end'
+  inning: number
+  half: HalfInning
+  battingSide: GameSide
+  batterKey: string | null
+  pitcherKey: string | null
+  outsBefore: number
+  outsAfter: number
+  basesBefore: PlayRunner[]
+  basesAfter: PlayRunner[]
+  scoreBefore: Record<GameSide, number>
+  scoreAfter: Record<GameSide, number>
+  /** Plate appearance plays: the completed result. */
+  batting?: {
+    credit: BattingCredit
+    /** Swing chart result as printed/converted; null without a chart swing. */
+    chartResult: string | null
+    advantage: 'hitter' | 'pitcher' | null
+    automaticAdvantage: boolean
+    /** Walk-off hit credited for fewer bases than the chart gave (OBR 9.06(f)). */
+    creditedFromChart?: string
+    gidp: boolean
+    rbi: number
+  }
+  runs: PlayRun[]
+  outs: PlayOut[]
+  steals: PlaySteal[]
+  defense: PlayDefenseAttempt[]
+  /** Outfield throws that retired a runner (OFA). */
+  outfieldAssists: string[]
+  substitution?: { side: GameSide; kind: string; incomingKey: string; outgoingKey: string | null; position: string | null; scoreBefore: Record<GameSide, number>; runnersOn: number }
+  /** Walk-off: the run that won the game. */
+  winningRun?: { cardKey: string; from: 'first' | 'second' | 'third' | 'batter' }
+  rulesVersion: number
+  note: string
+}
+
+export type PlayLog = {
+  plays: PlayRecord[]
+  /** Facts gathered since the current play began; flushed into `plays` when it ends. */
+  open: OpenPlay | null
+  /** Starting line-ups and alignments, for DEF positions and pitching G/GS. */
+  start: Record<GameSide, { battingOrder: string[]; alignment: Partial<Record<DefensivePosition, string>>; startingPitcher: string | null }> | null
+}
+
+export type OpenPlay = {
+  inning: number
+  half: HalfInning
+  outsBefore: number
+  basesBefore: PlayRunner[]
+  scoreBefore: Record<GameSide, number>
+  batterKey: string | null
+  pitcherKey: string | null
+  runs: PlayRun[]
+  outs: PlayOut[]
+  steals: PlaySteal[]
+  defense: PlayDefenseAttempt[]
+  outfieldAssists: string[]
+  batting: PlayRecord['batting'] | null
+  winningRun?: PlayRecord['winningRun']
+  note: string
 }

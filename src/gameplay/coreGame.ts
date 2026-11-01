@@ -1,8 +1,9 @@
 import { getFieldingRating } from './defense'
-import { cardIpOuts } from './fatigueEngine'
-import { creditRunsToInning } from './inningScore'
-import { pitcherInstanceKey, readPitcherStateValue } from './pitcherStateKey'
 import { recordBatterFaced } from './pitcherMound'
+import { closePlay, recordBattingCredit } from './playLog'
+import { recordPlateAppearanceFacts } from './restFacts'
+import { scoreRunners, walkoffWon, withResponsibility } from './runScoring'
+import { usesRulesV2 } from './rulesVersion'
 import type {
   BaseRunnerState,
   GameCardSnapshot,
@@ -201,22 +202,10 @@ function decision(state: GameState, type: string, actingSide: GameSide, legalAct
   }
 }
 
-function scoreRunner(state: GameState, side: GameSide, count=1): GameState {
-  const defense=other(side)
-  const pitcherKey=state.plateAppearance.pitcherCardKey ?? state.pregame[defense].defensiveAlignment.P ?? state.pregame[defense].startingPitcherCardKey
-  let pitcherShutoutBonusBrokenAtOuts=state.pitcherShutoutBonusBrokenAtOuts
-  const pitcherStateKey=pitcherKey?pitcherInstanceKey(defense,pitcherKey):null
-  if(pitcherKey && pitcherStateKey && (readPitcherStateValue(state.pitcherRunsAllowed,defense,pitcherKey)??0)===0 && readPitcherStateValue(state.pitcherShutoutBonusBrokenAtOuts,defense,pitcherKey)===undefined){
-    const pitcher=state.pregame[defense].roster?.cards[pitcherKey]
-    const totalDefenseOuts=(state.inning-1)*3+state.outs
-    const entry=readPitcherStateValue(state.pitcherEntryDefenseOuts,defense,pitcherKey)??0
-    const appearanceOuts=Math.max(0,totalDefenseOuts-entry)
-    if(pitcher && appearanceOuts>=15 && appearanceOuts>=cardIpOuts(pitcher.pitcher.ip)){
-      pitcherShutoutBonusBrokenAtOuts={...(state.pitcherShutoutBonusBrokenAtOuts??{}),[pitcherStateKey]:appearanceOuts}
-    }
-  }
-  const pitcherRunsAllowed=pitcherKey&&pitcherStateKey?{...(state.pitcherRunsAllowed??{}),[pitcherStateKey]:(readPitcherStateValue(state.pitcherRunsAllowed,defense,pitcherKey)??0)+count}:state.pitcherRunsAllowed
-  return {...state, score:{...state.score,[side]:state.score[side]+count},runsByInning:creditRunsToInning(state.runsByInning,side,state.inning,count),pitcherRunsAllowed,pitcherShutoutBonusBrokenAtOuts}
+// Every run goes through runScoring.ts, lead runner first.
+function scoreRunner(state: GameState, side: GameSide, runners: Array<BaseRunnerState|null>, options: { homeRun?: boolean } = {}): GameState {
+  const scored=runners.filter((r): r is BaseRunnerState => Boolean(r))
+  return scoreRunners(state, side, scored, options)
 }
 
 function clearPlateAppearance(state: GameState): GameState {
@@ -261,7 +250,7 @@ function completeGame(state: GameState): GameState {
 }
 
 function walkoffReached(state: GameState): boolean {
-  return state.inning >= 9 && state.half === 'bottom' && state.score.home > state.score.away
+  return walkoffWon(state)
 }
 
 /**
@@ -294,7 +283,8 @@ function markPlateAppearanceCompleted(state: GameState, offense: GameSide, defen
 export function finishPlateAppearance(state: GameState): GameState {
   const offense = sideAtBat(state)
   const defense = sideFielding(state)
-  const marked = markPlateAppearanceCompleted(state, offense, defense)
+  const recorded = recordPlateAppearanceFacts(closePlay(state, 'plate_appearance'), defense, state.plateAppearance.pitcherCardKey)
+  const marked = markPlateAppearanceCompleted(recorded, offense, defense)
   const nextCursor = (marked.lineupCursor[offense] + 1) % 9
   const cursors = {...marked.lineupCursor,[offense]:nextCursor}
   // A completed plate appearance opens roster moves even if no pitch was thrown
@@ -330,6 +320,13 @@ export function finishPlateAppearance(state: GameState): GameState {
 
 export function finishWithoutPlateAppearance(state: GameState): GameState {
   // Used for pre-pitch baserunning outs. No hitter completed a PA, so the lineup cursor must not advance.
+  if (usesRulesV2(state)) {
+    // A steal of home that wins it ends the game on the spot (EDSR-WO, D2):
+    // no plate appearance, the batting order does not move.
+    if (walkoffReached(state)) return completeGame(closePlay(state, 'baserunning'))
+    if (state.outs < 3) return state
+    state = closePlay(state, 'baserunning')
+  }
   if (state.outs < 3) return state
   if (state.inning >= 9 && state.half === 'top' && state.score.home > state.score.away) return completeGame(state)
   if (state.inning >= 9 && state.half === 'bottom' && state.score.home !== state.score.away) return completeGame(state)
@@ -337,18 +334,21 @@ export function finishWithoutPlateAppearance(state: GameState): GameState {
 }
 
 function automaticHit(state: GameState, result: 'BB'|'1B'|'1B+'|'2B'|'3B'|'HR', batter: BaseRunnerState): GameState {
+  // The batter-runner is charged to the pitcher throwing to him (rules v2).
   const offense=sideAtBat(state)
   // Do not silently delete an existing runner here. If the same card is ever
   // presented as a new batter while already on base, certification must expose
   // the upstream state/cursor error rather than allowing hit resolution to mask it.
   const b=structuredClone(state.bases)
   let next={...state,bases:b}
+  batter=withResponsibility(state,batter)
   if (result==='BB') {
     // Walks advance only runners who are forced by the batter-runner taking 1B.
     // A runner on 2B or 3B never advances on a BB unless a continuous force exists behind them.
+    // Anthony, 2026-11-01: this is the Elements rule for chart and intentional walks alike.
     if (b.first) {
       if (b.second) {
-        if (b.third) next=scoreRunner(next,offense)
+        if (b.third) next=scoreRunner(next,offense,[b.third])
         next={...next,bases:{first:batter,second:b.first,third:b.second}}
       } else {
         next={...next,bases:{first:batter,second:b.first,third:b.third}}
@@ -357,20 +357,16 @@ function automaticHit(state: GameState, result: 'BB'|'1B'|'1B+'|'2B'|'3B'|'HR', 
       next={...next,bases:{first:batter,second:b.second,third:b.third}}
     }
   } else if (result==='1B' || result==='1B+') {
-    if (b.third) next=scoreRunner(next,offense)
+    if (b.third) next=scoreRunner(next,offense,[b.third])
     next={...next,bases:{first:batter,second:b.first,third:b.second}}
   } else if (result==='2B') {
-    let runs=0
-    if (b.second) runs++; if (b.third) runs++
-    if (runs) next=scoreRunner(next,offense,runs)
+    next=scoreRunner(next,offense,[b.third,b.second])
     next={...next,bases:{first:null,second:batter,third:b.first}}
   } else if (result==='3B') {
-    const runs=[b.first,b.second,b.third].filter(Boolean).length
-    if (runs) next=scoreRunner(next,offense,runs)
+    next=scoreRunner(next,offense,[b.third,b.second,b.first])
     next={...next,bases:{first:null,second:null,third:batter}}
   } else {
-    const runs=1+[b.first,b.second,b.third].filter(Boolean).length
-    next=scoreRunner(next,offense,runs)
+    next=scoreRunner(next,offense,[b.third,b.second,b.first,batter],{homeRun:true})
     next={...next,bases:{first:null,second:null,third:null}}
   }
   return next
@@ -387,9 +383,15 @@ export function resolveCoreResult(state: GameState, result: CoreChartResult): Ga
   const preBases=structuredClone(state.bases)
   let next: GameState = {...state,plateAppearance:{...state.plateAppearance,chartResult:result}}
 
+  // Rules v2 (Anthony, 2026-11-01): Infield In is judged at the swing -- with two
+  // outs or the bases empty by then (a steal changed them), it has no effect.
+  const infieldIn = state.plateAppearance.infieldIn === true
+    && (!usesRulesV2(state) || (state.outs < 2 && Boolean(preBases.first || preBases.second || preBases.third)))
+
   // Rulebook infield-in: PU/FB become 1B and runners cannot attempt extra bases/tag ups.
-  if (state.plateAppearance.infieldIn && (result==='PU' || result==='FB')) {
+  if (infieldIn && (result==='PU' || result==='FB')) {
     next=automaticHit(next,'1B',batterRunner)
+    if (usesRulesV2(state)) next=recordBattingCredit(next,'single',`Infield In: ${result} becomes a single`)
     return finishPlateAppearance(next)
   }
 
@@ -412,7 +414,7 @@ export function resolveCoreResult(state: GameState, result: CoreChartResult): Ga
       return finishPlateAppearance(next)
     }
     // Infield-in uses the offense decision path because contact play is an offensive counter.
-    if (state.plateAppearance.infieldIn===true) {
+    if (infieldIn) {
       return decision(next,'GROUND_BALL_RESOLUTION',offense,['RESOLVE_ELEMENTS_GB'],{result,outs:state.outs,preBases,infieldIn:true})
     }
     // With 1B unoccupied, the Rulebook has two direct branches instead of a DP choice:
@@ -421,12 +423,13 @@ export function resolveCoreResult(state: GameState, result: CoreChartResult): Ga
       // Rulebook order: batter is automatically out at 1B; runner on 3B scores immediately;
       // only then does the runner from 2B receive the 1-10 advance / 11-20 hold RTH.
       next={...next,bases:{first:null,second:preBases.second,third:null},outs:Math.min(3,next.outs+1) as 0|1|2|3}
-      if(preBases.third) next=scoreRunner(next,offense,1)
+      if(preBases.third) next=scoreRunner(next,offense,[preBases.third])
+      if (usesRulesV2(state) && walkoffReached(next)) return finishPlateAppearance(next)
       return decision(next,'GB_RUNNER_2B_RTH',defense,['ROLL_RTH'],{result,outs:state.outs,preBases,infieldIn:false})
     }
     if (!preBases.first && !preBases.second && preBases.third) {
       next={...next,bases:{...next.bases,third:null},outs:Math.min(3,next.outs+1) as 0|1|2|3}
-      next=scoreRunner(next,offense,1)
+      next=scoreRunner(next,offense,[preBases.third])
       return finishPlateAppearance(next)
     }
     // Runner on 1B (with any other runners) enters the force / DBP decision tree.
@@ -434,6 +437,8 @@ export function resolveCoreResult(state: GameState, result: CoreChartResult): Ga
   }
 
   next=automaticHit(next,result,batterRunner)
+  // Walk-off: the game is over at the winning run -- no extra-base decision, no 1B+ steal.
+  if (usesRulesV2(state) && walkoffReached(next)) return finishPlateAppearance(next)
 
   if ((result==='1B' || result==='2B') && (preBases.first || preBases.second)) {
     return decision(next,'EXTRA_BASE_DECISION',offense,['DECLINE_EXTRA_BASES','ATTEMPT_EXTRA_BASES'],{result,preBases,automaticBases:next.bases})

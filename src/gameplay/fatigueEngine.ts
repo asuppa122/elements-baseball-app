@@ -8,6 +8,10 @@ export type PitcherFatigueInput = {
   inheritedRunnersScored?: number
   shutoutBrokenAfterBonus?: boolean
   shutoutBonusBrokenAtOuts?: number
+  /** Rules v2: appearance outs at which an inherited runner scoring ended the bonus (Option B). */
+  shutoutBonusEndedAtOuts?: number
+  /** Rules version of the game (rulesVersion.ts); absent = 1. */
+  rulesVersion?: number
 }
 
 function clampPitcherControl(value:number){ return Math.max(-5,value) }
@@ -49,8 +53,45 @@ export function shutoutBonusApplies(input:PitcherFatigueInput){
   const limit=cardIpOuts(input.cardIp)
   return input.outsRecorded>=15 && input.earnedRunsAllowed===0 && (input.inheritedRunnersScored??0)===0 && !input.shutoutBrokenAfterBonus && input.outsRecorded>=limit
 }
+/**
+ * Rules v2 distance penalty, walked out by out so nothing already charged is
+ * ever given back (Anthony, 2026-11-01; D10):
+ * - ordinary: -2 for the out that completes card IP and every out after it;
+ * - Shutout Bonus (from the later of that out and the 15th, while eligible):
+ *   -1 per out, but only while Control is above 0 -- a pitcher already at 0
+ *   or below stays where he is; reductions accrued before the bonus remain;
+ * - a run charged to him ends the bonus: -2 at once, then -2 per later out;
+ * - an inherited runner scoring ends it (Option B): no immediate -2, then -2
+ *   per later out.
+ * `base` is Control before any distance penalty with no earned run charged
+ * (the bonus only applies while none is).
+ */
+function distanceControlPenaltyV2(input:PitcherFatigueInput){
+  const limit=cardIpOuts(input.cardIp)
+  const n=Math.max(0,input.outsRecorded)
+  if(n===0||n<limit)return 0
+  // No card IP (never on a real pitcher card): every out is past it, as in v1.
+  if(limit===0)return (n+1)*2
+  const base=clampPitcherControl((input.printedControl??-5)-Math.max(0,input.gamesFromRested??0))
+  const bonusStart=Math.max(15,limit)
+  const brokenAt=input.shutoutBonusBrokenAtOuts
+  const endedAt=input.shutoutBonusEndedAtOuts
+  const bonusEnd=brokenAt!==undefined&&endedAt!==undefined?Math.min(brokenAt,endedAt):brokenAt??endedAt
+  // Without an explicit end, the bonus needs a clean line throughout.
+  const eligible=bonusEnd!==undefined||(input.earnedRunsAllowed===0&&(input.inheritedRunnersScored??0)===0)
+  let accrued=0
+  for(let out=Math.max(1,limit);out<=n;out++){
+    const bonusActive=eligible&&out>=bonusStart&&(bonusEnd===undefined||out<=bonusEnd)
+    if(bonusActive){ if(base-accrued>0)accrued+=1 }
+    else accrued+=2
+    // The run that broke the bonus scored after this out: -2 at once.
+    if(brokenAt!==undefined&&out===brokenAt&&(endedAt===undefined||brokenAt<=endedAt)&&eligible&&out>=bonusStart)accrued+=2
+  }
+  return accrued
+}
 export function distanceControlPenalty(input:PitcherFatigueInput){
   if(input.useDefaultAttributes)return 0
+  if((input.rulesVersion??1)>=2)return distanceControlPenaltyV2(input)
   const limit=cardIpOuts(input.cardIp)
   // Distance fatigue begins on the out that completes the card-IP threshold: a
   // 6.67 IP pitcher (20 outs) pays his first penalty at out 20, because every

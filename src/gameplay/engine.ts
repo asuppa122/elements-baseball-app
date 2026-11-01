@@ -4,6 +4,9 @@ import { resolveCoreResult, resolveSwingChart } from './coreGame'
 import { effectiveHitterOnBase, effectivePitcherControl, type PitcherFatigueInput } from './fatigueEngine'
 import { readPitcherStateValue } from './pitcherStateKey'
 import { openingStints } from './pitcherMound'
+import { openPlay, startPlayLog } from './playLog'
+import { recordPitchFacts } from './restFacts'
+import { CURRENT_RULES_VERSION, rulesVersionOf, usesRulesV2 } from './rulesVersion'
 import { awaitingOffenseReady } from './turnOrder'
 import type {
   GameManagerSnapshot,
@@ -46,6 +49,7 @@ export function createInitialGameState(args: {
   return {
     gameId: args.gameId,
     stateVersion: 1,
+    rulesVersion: CURRENT_RULES_VERSION,
     status: 'pregame',
     configuration: cloneSeasonConfiguration(args.configuration),
     managers: {
@@ -259,8 +263,9 @@ export function startGame(state: GameState): GameState {
     throw new Error('The game snapshot is missing the leadoff hitter or home starting pitcher.')
   }
 
+  const started = usesRulesV2(state) ? startPlayLog(state) : state
   return withVersion(state, {
-    ...state,
+    ...started,
     status: 'in_progress',
     lineupCursor: { home: 0, away: 0 },
     naturalStolenBaseUsed: { home:false, away:false },
@@ -464,6 +469,11 @@ export function pitcherFatigueInputFor(state: GameState, side: GameSide, cardKey
     outsRecorded: outs,
     earnedRunsAllowed: pitched?(readPitcherStateValue(state.pitcherRunsAllowed,side,cardKey)??0):0,
     shutoutBonusBrokenAtOuts: pitched?readPitcherStateValue(state.pitcherShutoutBonusBrokenAtOuts,side,cardKey):undefined,
+    ...(usesRulesV2(state) ? {
+      rulesVersion: rulesVersionOf(state),
+      inheritedRunnersScored: pitched?(readPitcherStateValue(state.pitcherInheritedRunsScored,side,cardKey)??0):0,
+      shutoutBonusEndedAtOuts: pitched?readPitcherStateValue(state.pitcherShutoutBonusEndedAtOuts,side,cardKey):undefined,
+    } : {}),
   }
 }
 
@@ -531,7 +541,8 @@ export function resolveAutomaticPitcherAdvantage(state: GameState): GameState {
   if(state.status!=='in_progress'||state.waitingFor!=='PITCH_ROLL')throw new Error('Automatic advantage is only available before the pitch roll.')
   if(!pitcherAdvantageIsAutomatic(state))throw new Error('Pitcher advantage is not automatic in this matchup.')
   if(awaitingOffenseReady(state))throw new Error('The batting manager has not declared ready.')
-  return withVersion(state,{...state,firstPitchThrown:true,waitingFor:'SWING_ROLL',nextActor:battingSide(state),plateAppearance:{...state.plateAppearance,pitchRoll:null,pitchTotal:null,advantage:'pitcher',swingRoll:null,chartResult:null}})
+  const pitched=recordPitchFacts(openPlay(state),fieldingSide(state),state.plateAppearance.pitcherCardKey,effectiveCurrentPitcherControl(state))
+  return withVersion(state,{...pitched,firstPitchThrown:true,waitingFor:'SWING_ROLL',nextActor:battingSide(state),plateAppearance:{...state.plateAppearance,pitchRoll:null,pitchTotal:null,advantage:'pitcher',swingRoll:null,chartResult:null}})
 }
 
 /** Two-player games: the batting manager is done with pre-pitch calls. See turnOrder.ts. */
@@ -576,8 +587,9 @@ export function resolvePitchRoll(state: GameState, roll: number): GameState {
             hitterBats: batter.hitter.bats ?? batter.pitcher.arm,
           })
 
+  const pitched = recordPitchFacts(openPlay(state), defense, pitcherKey, control)
   return withVersion(state, {
-    ...state,
+    ...pitched,
     firstPitchThrown: true,
     waitingFor: 'SWING_ROLL',
     nextActor: offense,
