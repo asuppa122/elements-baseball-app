@@ -91,6 +91,10 @@ export function recordDefenseAttempt(state: GameState, attempt: PlayDefenseAttem
   return withOpen(state, (open) => ({ ...open, defense: [...open.defense, attempt] }))
 }
 
+export function recordLeftOnBase(state: GameState, count: number): GameState {
+  return withOpen(state, (open) => ({ ...open, leftOnBase: count }))
+}
+
 export function recordOutfieldAssist(state: GameState, fielderKey: string): GameState {
   return withOpen(state, (open) => ({ ...open, outfieldAssists: [...open.outfieldAssists, fielderKey] }))
 }
@@ -178,6 +182,18 @@ function classifyPlateAppearance(state: GameState, open: OpenPlay): NonNullable<
   return { credit, chartResult, advantage, automaticAdvantage, creditedFromChart, gidp, rbi }
 }
 
+/**
+ * EDSR-LOB: runners left when a play ends the half -- those still on base
+ * after the third out (a ground ball that ends the half reports its own,
+ * since the resolver clears the bases), or, in a walk-off, those on base when
+ * the game ends plus any whose run did not count.
+ */
+function leftOnBaseAfter(state: GameState, open: OpenPlay): number | undefined {
+  if (state.outs >= 3) return open.leftOnBase ?? basesToRunners(state.bases).length
+  if (open.winningRun) return basesToRunners(state.bases).length + open.runs.filter((run) => !run.counted).length
+  return undefined
+}
+
 /** Ends the open play and appends its record. `kind` says how it ended. */
 export function closePlay(state: GameState, kind: 'plate_appearance' | 'baserunning'): GameState {
   const log = state.playLog
@@ -211,10 +227,16 @@ export function closePlay(state: GameState, kind: 'plate_appearance' | 'baserunn
     defense: open.defense,
     outfieldAssists: open.outfieldAssists,
     winningRun: open.winningRun,
+    leftOnBase: leftOnBaseAfter(state, open),
     rulesVersion: rulesVersionOf(state),
     note: open.note,
   }
   return { ...state, playLog: { ...log, plays: [...log.plays, record], open: null } }
+}
+
+function slotOf(state: GameState, side: GameSide, cardKey: string): number | null {
+  const slot = state.pregame[side].battingOrderCardKeys.indexOf(cardKey)
+  return slot >= 0 ? slot : null
 }
 
 /** A substitution or position change, recorded on its own as it happens. */
@@ -244,7 +266,7 @@ export function recordSubstitution(
     steals: [],
     defense: [],
     outfieldAssists: [],
-    substitution: { ...sub, scoreBefore: { ...state.score }, runnersOn },
+    substitution: { ...sub, scoreBefore: { ...state.score }, runnersOn, battingSlot: slotOf(state, sub.side, sub.incomingKey) },
     rulesVersion: rulesVersionOf(state),
     note: '',
   }

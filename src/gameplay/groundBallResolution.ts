@@ -23,13 +23,19 @@ export type GbOutcome = {
   scorers: BaseRunnerState[]
   /** Runners put out on the play, most advanced first; the batter is listed as 'batter'. */
   retired: Array<{ runner: BaseRunnerState; at: 'home' | 'third' | 'second' | 'first' }>
+  /** When the play ends the half: runners (batter included) neither retired nor scored -- team LOB. */
+  leftOnBase?: number
 }
 
 const EMPTY: BasesState = { first: null, second: null, third: null }
 
 /** Any play that reaches three outs ends the half with no run and nobody on. */
 function finalize(outsBefore: number, outcome: GbOutcome): GbOutcome {
-  if (outsBefore + outcome.outsAdded >= 3) return { ...outcome, bases: { ...EMPTY }, scorers: [] }
+  if (outsBefore + outcome.outsAdded >= 3) {
+    // Runs on a force third out never count (OBR 5.08(a)); those runners are stranded.
+    const stranded = [outcome.bases.first, outcome.bases.second, outcome.bases.third].filter(Boolean).length + outcome.scorers.length
+    return { ...outcome, bases: { ...EMPTY }, scorers: [], leftOnBase: stranded }
+  }
   return outcome
 }
 

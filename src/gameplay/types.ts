@@ -354,9 +354,11 @@ export type PlayRecord = {
   defense: PlayDefenseAttempt[]
   /** Outfield throws that retired a runner (OFA). */
   outfieldAssists: string[]
-  substitution?: { side: GameSide; kind: string; incomingKey: string; outgoingKey: string | null; position: string | null; scoreBefore: Record<GameSide, number>; runnersOn: number }
+  substitution?: { side: GameSide; kind: string; incomingKey: string; outgoingKey: string | null; position: string | null; scoreBefore: Record<GameSide, number>; runnersOn: number; /** Batting-order slot (0-8) he occupies after the move; null when not in the order (a pitcher under the DH). */ battingSlot: number | null }
   /** Walk-off: the run that won the game. */
   winningRun?: { cardKey: string; from: 'first' | 'second' | 'third' | 'batter' }
+  /** Runners stranded when this play ended the half (or the game). */
+  leftOnBase?: number
   rulesVersion: number
   note: string
 }
@@ -384,5 +386,7 @@ export type OpenPlay = {
   outfieldAssists: string[]
   batting: PlayRecord['batting'] | null
   winningRun?: PlayRecord['winningRun']
+  /** Set by a ground ball that ends the half: who was stranded before the bases were cleared. */
+  leftOnBase?: number
   note: string
 }

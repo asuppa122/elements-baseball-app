@@ -85,7 +85,7 @@ export function runCoreGameHarness(initial:GameState, seed=1925, maxPlateAppeara
   let sawNegativeOuts=false
   let sawDuplicateRunner=false
   let sawInvalidCursor=false
-  let plateAppearancesAfterComplete=0
+  const plateAppearancesAfterComplete=0
 
   while (state.status!=='complete' && pa<maxPlateAppearances) {
     if (state.status==='paused') throw new Error('Resume the game before running the local validation harness.')
@@ -253,7 +253,8 @@ function describeDecisionRoll(before:GameState, roll:number, after:GameState):st
  * Uses the real manager-decision API for every supported branch. Certification has
  * zero development bypasses: any unresolved information-only decision is a hard failure.
  */
-export function runDecisionStressHarness(initial:GameState, seed=1925, simulations=100, maxPlateAppearances=500):DecisionStressReport {
+/** `onComplete` checks each finished game (e.g. the box-score reconciliation) and returns any issues. */
+export function runDecisionStressHarness(initial:GameState, seed=1925, simulations=100, maxPlateAppearances=500, onComplete?:(state:GameState)=>string[]):DecisionStressReport {
   const master=rng(seed)
   const decisionCounts:Record<string,number>={}
   const bypassCounts:Record<string,number>={}
@@ -311,7 +312,7 @@ export function runDecisionStressHarness(initial:GameState, seed=1925, simulatio
         if(issues.length) throw new Error(`${issues.join('; ')}\nTRACE seed ${simSeed}:\n${trace.join('\n')}`)
       }
       totalPlateAppearances+=pa
-      if(state.status==='complete') completed++
+      if(state.status==='complete'){ completed++; const issues=onComplete?.(state)??[]; if(issues.length) invalidStates.push(`SIM ${sim+1} seed ${simSeed}: ${issues.join('; ')}`) }
       else { failed++; invalidStates.push(`SIM ${sim+1} seed ${simSeed}: did not complete within ${maxPlateAppearances} PA`) }
     } catch(e) {
       failed++
