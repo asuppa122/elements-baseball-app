@@ -1,7 +1,7 @@
 import { getFieldingRating } from './defense'
 import { recordBatterFaced } from './pitcherMound'
 import { closePlay, recordBattingCredit } from './playLog'
-import { recordPlateAppearanceFacts } from './restFacts'
+import { finalizeRestFacts, recordPlateAppearanceFacts } from './restFacts'
 import { scoreRunners, walkoffWon, withResponsibility } from './runScoring'
 import { usesRulesV2 } from './rulesVersion'
 import type {
@@ -241,7 +241,7 @@ function nextHalf(state: GameState): GameState {
 
 function completeGame(state: GameState): GameState {
   return {
-    ...state,
+    ...finalizeRestFacts(state),
     status:'complete',
     waitingFor:'GAME_COMPLETE',
     nextActor:null,

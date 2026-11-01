@@ -297,6 +297,8 @@ export type PitcherRestFacts = {
   controlAtFirstPitch: number | null
   /** He threw at least one pitch roll at effective Control -1 or lower. */
   pitchedAtNegativeControl: boolean
+  /** Outs recorded in the game (every stint), written when the game completes. */
+  outsRecorded?: number
 }
 
 export type PlayRunner = { cardKey: string; base: 'first' | 'second' | 'third' }

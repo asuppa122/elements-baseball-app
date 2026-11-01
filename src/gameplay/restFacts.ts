@@ -1,4 +1,6 @@
-import { pitcherInstanceKey } from './pitcherStateKey'
+import { defensiveOutsRecorded } from './engine'
+import { outsPitched } from './pitcherMound'
+import { pitcherInstanceKey, readPitcherStateValue } from './pitcherStateKey'
 import { usesRulesV2 } from './rulesVersion'
 import type { GameSide, GameState, PitcherRestFacts } from './types'
 
@@ -48,4 +50,22 @@ export function recordPitchFacts(state: GameState, side: GameSide, pitcherKey: s
 
 export function restFactsFor(state: GameState, side: GameSide, cardKey: string): PitcherRestFacts | null {
   return state.pitcherRestFacts?.[pitcherInstanceKey(side, cardKey)] ?? null
+}
+
+/**
+ * At completion: each pitcher's outs for the game, for the rest rules (the
+ * server reads them from the saved state). Every stint counts (MLB 5.10).
+ */
+export function finalizeRestFacts(state: GameState): GameState {
+  if (!usesRulesV2(state) || !state.pitcherRestFacts) return state
+  const facts = { ...state.pitcherRestFacts }
+  for (const key of Object.keys(facts)) {
+    const [side, cardKey] = key.split('::') as [GameSide, string]
+    const defensiveOuts = defensiveOutsRecorded(state, side)
+    const entry = readPitcherStateValue(state.pitcherEntryDefenseOuts, side, cardKey) ?? 0
+    const exit = readPitcherStateValue(state.pitcherExitDefenseOuts, side, cardKey)
+    const outs = outsPitched(state, side, cardKey) ?? Math.max(0, (exit ?? defensiveOuts) - entry)
+    facts[key] = { ...facts[key], outsRecorded: outs }
+  }
+  return { ...state, pitcherRestFacts: facts }
 }

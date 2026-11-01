@@ -24,9 +24,10 @@ export type BoxScore =
       final: Record<GameSide, number>
       stats: GameStats
       decisions: PitcherDecisions
-      qualityStarts: string[]
-      completeGames: string[]
-      shutouts: string[]
+      /** By side: the same card can start for both teams. */
+      qualityStarts: Array<{ side: GameSide; cardKey: string }>
+      completeGames: Array<{ side: GameSide; cardKey: string }>
+      shutouts: Array<{ side: GameSide; cardKey: string }>
       names: Record<string, string>
     }
   | {
@@ -74,18 +75,18 @@ export function buildBoxScore(state: GameState, progression?: string | null): Bo
 
   const stats = computeGameStats(state)
   const decisions = computeDecisions({ plays: stats.plays, pitching: stats.pitching, final: state.score, complete })
-  const qualityStarts: string[] = []
-  const completeGames: string[] = []
-  const shutouts: string[] = []
+  const qualityStarts: Array<{ side: GameSide; cardKey: string }> = []
+  const completeGames: Array<{ side: GameSide; cardKey: string }> = []
+  const shutouts: Array<{ side: GameSide; cardKey: string }> = []
   for (const side of ['away', 'home'] as GameSide[]) {
     const lines = stats.pitching[side]
     const starter = lines.find((l) => l.entryOrder === 0)
     if (!starter) continue
-    if (starter.outs >= 18 && starter.ER <= 3) qualityStarts.push(starter.cardKey)
+    if (starter.outs >= 18 && starter.ER <= 3) qualityStarts.push({ side, cardKey: starter.cardKey })
     if (complete && lines.length === 1) {
-      completeGames.push(starter.cardKey)
+      completeGames.push({ side, cardKey: starter.cardKey })
       const opponent = side === 'home' ? 'away' : 'home'
-      if (state.score[opponent] === 0) shutouts.push(starter.cardKey)
+      if (state.score[opponent] === 0) shutouts.push({ side, cardKey: starter.cardKey })
     }
   }
   return { kind: 'recorded', gameId: state.gameId, classification, complete, final: { ...state.score }, stats, decisions, qualityStarts, completeGames, shutouts, names }

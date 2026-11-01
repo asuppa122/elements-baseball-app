@@ -290,7 +290,7 @@ export function runStatsScenarioMatrix(): ScenarioReport {
     s.pa({ runs: [{ runner: 'a3' }] }).side() // top 9: 3-2
     s.change('away', 'A-CL').side() // bottom 9
     const { d } = decide(s)
-    assert(d.HLD.includes('A-SU') && d.BSV.includes('A-BL') && d.W === 'A-BL' && d.SV === 'A-CL', `HLD ${d.HLD} BSV ${d.BSV} W ${d.W} SV ${d.SV}.`)
+    assert(d.HLD.some((h) => h.side === 'away' && h.cardKey === 'A-SU') && d.BSV.some((b) => b.side === 'away' && b.cardKey === 'A-BL') && d.W === 'A-BL' && d.SV === 'A-CL', `HLD ${JSON.stringify(d.HLD)} BSV ${JSON.stringify(d.BSV)} W ${d.W} SV ${d.SV}.`)
   })
   test('LINE-AB-PA', 'Batting lines', 'AB = PA - BB - SAC - SF; OBP inputs count H + BB over PA', () => {
     const s = new Sim()

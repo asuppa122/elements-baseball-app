@@ -43,7 +43,12 @@ export type GameCompletionRestInput = {
   /** This GM's total completed games this season, INCLUDING the one just completed. */
   gmCompletedGamesThisSeason: number
   restMilestones: RestMilestone[]
+  /** Rules v2 pitcher adjustments (restRules.ts); absent = none (v1 games). */
+  pitcherAdjustments?: PitcherRestAdjustments
 }
+
+/** Rulebook §8 pitcher adjustments, applied only when he appeared (restRules.ts decides them). */
+export type PitcherRestAdjustments = { reliefDistance: 0 | 1; efficiency: boolean; negativeControl: 0 | 1 }
 
 /** Step (a): += printed fatigue score if this track's player appeared, else unchanged. */
 export function applyAppearanceIncrement(priorGamesRemaining: number, fatigueScore: number | null, appeared: boolean): number {
@@ -81,14 +86,20 @@ export function applyMilestoneDecrement(gamesRemaining: number, gmCompletedGames
 
 /** Runs the steps, in order, for both the hitter and pitcher tracks independently. */
 export function applyGameCompletionRest(input: GameCompletionRestInput): RestTrack {
-  const runTrack = (priorGamesRemaining: number, fatigueScore: number | null, appeared: boolean): number => {
-    const afterAppearance = applyAppearanceIncrement(priorGamesRemaining, fatigueScore, appeared)
+  const runTrack = (priorGamesRemaining: number, fatigueScore: number | null, appeared: boolean, adjustments?: PitcherRestAdjustments): number => {
+    let afterAppearance = applyAppearanceIncrement(priorGamesRemaining, fatigueScore, appeared)
+    // Rules v2, pitcher track, appeared only: relief distance +1, then
+    // efficiency -1 (floor 0), then negative Control +1 -- the order the SQL
+    // writer uses (20261101 migration; restRulesSql.test.ts).
+    if (appeared && adjustments) {
+      afterAppearance = Math.max(0, afterAppearance + adjustments.reliefDistance - (adjustments.efficiency ? 1 : 0)) + adjustments.negativeControl
+    }
     const afterFlat = appeared ? afterAppearance : applyFlatPerGameDecrement(afterAppearance)
     return applyMilestoneDecrement(afterFlat, input.gmCompletedGamesThisSeason, input.restMilestones)
   }
 
   return {
     hitterGamesRemaining: runTrack(input.priorHitterGamesRemaining, input.hitterFatigueScore, input.hitterAppeared),
-    pitcherGamesRemaining: runTrack(input.priorPitcherGamesRemaining, input.pitcherFatigueScore, input.pitcherAppeared),
+    pitcherGamesRemaining: runTrack(input.priorPitcherGamesRemaining, input.pitcherFatigueScore, input.pitcherAppeared, input.pitcherAdjustments),
   }
 }

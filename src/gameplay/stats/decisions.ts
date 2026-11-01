@@ -34,8 +34,9 @@ export type PitcherDecisions = {
   W: string | null
   L: string | null
   SV: string | null
-  HLD: string[]
-  BSV: string[]
+  /** Holds and blown saves, by side (the same card can pitch for both teams). */
+  HLD: Array<{ side: GameSide; cardKey: string }>
+  BSV: Array<{ side: GameSide; cardKey: string }>
   /** How W was decided, for the box score note and the tests. */
   winBranch: 'starter' | 'starter_short' | 'reliever' | 'reliever_brief_ineffective' | null
 }
@@ -174,8 +175,8 @@ export function computeDecisions(ctx: Ctx): PitcherDecisions {
     }
   }
 
-  const HLD: string[] = []
-  const BSV: string[] = []
+  const HLD: PitcherDecisions['HLD'] = []
+  const BSV: PitcherDecisions['BSV'] = []
   for (const side of [winner, loser] as GameSide[]) {
     const sideEntries = entries(ctx.plays, side, ctx.pitching[side].find((l) => l.entryOrder === 0)?.cardKey ?? null)
     let sideFinisher: string | null = null
@@ -189,8 +190,10 @@ export function computeDecisions(ctx: Ctx): PitcherDecisions {
       if (!situation.lead && !situation.tyingRun) continue
       const lost = leadLostWhilePitching(ctx.plays, side, entry.key, entry.seq)
       const line = ctx.pitching[side].find((l) => l.cardKey === entry.key)
-      if (lost) BSV.push(entry.key)
-      else if (line && line.outs >= 1 && entry.key !== sideFinisher && entry.key !== W?.cardKey && entry.key !== SV) HLD.push(entry.key)
+      const isW = side === winner && entry.key === W?.cardKey
+      const isSV = side === winner && entry.key === SV
+      if (lost) BSV.push({ side, cardKey: entry.key })
+      else if (line && line.outs >= 1 && entry.key !== sideFinisher && !isW && !isSV) HLD.push({ side, cardKey: entry.key })
     }
   }
 

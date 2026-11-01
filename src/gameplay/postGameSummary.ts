@@ -2,6 +2,7 @@ import { defensiveOutsRecorded } from './engine'
 import { outsPitched } from './pitcherMound'
 import { lineScore } from './inningScore'
 import { readPitcherStateValue } from './pitcherStateKey'
+import { pitcherRestAdjustmentsFor } from './restRules'
 import { applyGameCompletionRest } from './restTracking'
 import type { GameCardSnapshot, GameSide, GameState } from './types'
 
@@ -202,6 +203,10 @@ export function restProjectionFor(
       pitcherAppeared: pitchers.has(cardKey),
       gmCompletedGamesThisSeason: completedGamesThisSeason,
       restMilestones,
+      // Rules v2: the §8 pitcher adjustments, decided as the server decides them.
+      // Back-to-back is known only to the server (player_rest_state); the
+      // projection assumes not, and the server's written value is authoritative.
+      pitcherAdjustments: pitchers.has(cardKey) ? pitcherRestAdjustmentsFor(state, side, cardKey) : undefined,
     })
     return {
       cardKey,

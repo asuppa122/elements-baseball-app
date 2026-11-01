@@ -17,6 +17,8 @@ import m8 from '../../supabase/migrations/20260827_gameplay_away_side_access.sql
 import m9 from '../../supabase/migrations/20261029_gameplay_two_player.sql?raw'
 import m10 from '../../supabase/migrations/20261030_gameplay_rest_appearance_fix.sql?raw'
 import m11 from '../../supabase/migrations/20261031_gameplay_one_active_game.sql?raw'
+// Written locally, NOT applied to the live project (needs Anthony's authorization).
+import p0 from '../../supabase/migrations/20261101_gameplay_stats_and_rest_v2.sql?raw'
 
 /**
  * A real Postgres with the gameplay schema, for development only.
@@ -37,6 +39,8 @@ export const DEV_USERS = {
 } as const
 
 export const MIGRATIONS = [m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11]
+/** Applied migrations plus the local, unapplied ones -- what the live schema becomes once they are authorised. */
+export const MIGRATIONS_WITH_PENDING = [...MIGRATIONS, p0]
 
 export type DevDb = {
   db: PGlite
