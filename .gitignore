@@ -58,3 +58,6 @@ __pycache__/
 
 # Local snapshots of live gameplay tables (scripts/snapshot-gameplay-tables.mjs)
 backups/
+
+# Local design reference (concept mockups, screenshots, unused art); see design-archive/README.md
+design-archive/
