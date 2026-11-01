@@ -1,5 +1,6 @@
 import { buildPostGameSummary, type PostGameSummary, type RestConsequence } from '../postGameSummary'
 import type { GameSide, GameState } from '../types'
+import BoxScoreView from './BoxScoreView'
 
 /**
  * Post-game tier one. Everything here comes from postGameSummary.ts, which
@@ -58,9 +59,12 @@ function LineScore({ summary, managers }: { summary: PostGameSummary; managers: 
 export default function PostGameBoard({
   state,
   completedGamesThisSeason = { away: null, home: null },
+  progression,
 }: {
   state: GameState
   completedGamesThisSeason?: Record<GameSide, number | null>
+  /** games.progression when the page knows it, for the Exhibition / Official tag. */
+  progression?: string | null
 }) {
   const summary = buildPostGameSummary(state, completedGamesThisSeason)
   const managers: Record<GameSide, string> = {
@@ -179,10 +183,14 @@ export default function PostGameBoard({
       </div>
       )}
 
-      {/* Stated on the surface, not only in a doc: this box score is knowingly partial. */}
-      <p className="gp-postgame-note gp-postgame-footnote">
-        No batting lines: per-batter AB/H/RBI are not tracked by the engine yet.
-      </p>
+      {/* Games with a play log get the full box score; older games say what is missing. */}
+      {state.playLog?.start ? (
+        <BoxScoreView state={state} progression={progression} managers={managers} />
+      ) : (
+        <p className="gp-postgame-note gp-postgame-footnote">
+          No batting lines: this game was played before plays were recorded.
+        </p>
+      )}
     </section>
   )
 }

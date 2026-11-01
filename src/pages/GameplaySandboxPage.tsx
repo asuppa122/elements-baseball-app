@@ -11,6 +11,7 @@ import type { GameState } from '../gameplay/types'
 import midgame from '../gameplay/sandbox/states/midgame.json'
 import decision from '../gameplay/sandbox/states/decision.json'
 import final from '../gameplay/sandbox/states/final.json'
+import { asRecordedGame, playRecordedGameToEnd } from '../gameplay/sandbox/recordedGame'
 
 /**
  * A playable gameplay screen with no account and no database.
@@ -64,6 +65,18 @@ const SCENARIOS: Scenario[] = [
     label: 'Final',
     blurb: 'A finished game, showing the post-game board and final line.',
     state: final as unknown as GameState,
+  },
+  {
+    key: 'recorded',
+    label: 'Recorded (rules v2)',
+    blurb: 'The mid-game state under the 2026-11-01 rules, with the play log on: play it forward to see the live game lines fill in beside the score.',
+    state: asRecordedGame(midgame as unknown as GameState),
+  },
+  {
+    key: 'recorded-final',
+    label: 'Recorded final',
+    blurb: 'The same game played to the end by a seeded die (first legal choice at every decision): the full box score, Elements view and play-by-play.',
+    state: playRecordedGameToEnd(midgame as unknown as GameState),
   },
 ]
 

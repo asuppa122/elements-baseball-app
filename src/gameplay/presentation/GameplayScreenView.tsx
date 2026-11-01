@@ -2,6 +2,7 @@ import { battingSide } from '../gameBoundaryEngine'
 import DefBar from './DefBar'
 import GameField from './GameField'
 import LineupRail from './LineupRail'
+import LiveGameLines from './LiveStatLines'
 import MatchupPanel from './MatchupPanel'
 import RosterDrawers from './RosterDrawers'
 import RollControls from './RollControls'
@@ -265,6 +266,7 @@ export default function GameplayScreenView({
         // by the last roll under the cards, so the header carries no recap.
         <div className="gp-gamebar" aria-label="Game situation">
           <Scorebug state={state} />
+          <LiveGameLines state={state} />
           {twoPlayer && <TurnStatus state={state} mine={myTurn} toAct={toAct} />}
           <div className="gp-gamebar-tools">
             {toolbar}
@@ -278,6 +280,7 @@ export default function GameplayScreenView({
            column below is strictly the field. */
         <header className="gp-panel gp-topbar" aria-label="Game situation">
           <Scorebug state={state} />
+          <LiveGameLines state={state} />
           <i className="gp-topbar-rule" aria-hidden="true" />
           <PlayRecap events={events} />
           <i className="gp-topbar-rule" aria-hidden="true" />

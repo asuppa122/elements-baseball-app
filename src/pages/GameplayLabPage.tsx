@@ -66,7 +66,7 @@ function GameSummary({ game, userId, active, canTerminate, busy, onCancel, onTer
   return (
     <article className={`gameplay-lab-saved-game${active ? ' is-active' : ''}${ended ? ' is-ended' : ''}`}>
       <div>
-        <span>{active && <b className="gameplay-lab-active-tag">Active game</b>}{game.season_id} · You are {mySide}</span>
+        <span>{active && <b className="gameplay-lab-active-tag">Active game</b>}<b className={`gp-box-tag${game.progression === 'official' ? ' is-official' : ''}`}>{game.progression === 'official' ? 'Official' : 'Exhibition'}</b> {game.season_id} · You are {mySide}</span>
         <strong>vs. {opponent}</strong>
         <small>{turn}</small>
       </div>
@@ -78,6 +78,9 @@ function GameSummary({ game, userId, active, canTerminate, busy, onCancel, onTer
         </dl>
         <div className="gameplay-lab-saved-buttons">
           <Link className="gameplay-lab-open-button" to={link.to}>{link.label}</Link>
+          {s && (s.status === 'complete' || s.status === 'in_progress' || s.status === 'awaiting_decision') && (
+            <Link className="gameplay-lab-secondary-button" to={`/games/lab/${game.id}/box`}>{s.playLog?.start ? 'Box score' : 'Summary'}</Link>
+          )}
           {cancellable && (
             <button type="button" className="gameplay-lab-secondary-button" disabled={busy} onClick={() => onCancel(game)}>Cancel game</button>
           )}
