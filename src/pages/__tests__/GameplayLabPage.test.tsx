@@ -175,12 +175,13 @@ describe('games page: cancelling and ending', () => {
     repo.games = [g]
     repo.active = { game_id: 'g-pregame', status: 'pregame', side: 'home', opponent_name: 'Will' }
     repo.cancel.mockImplementation(async () => { repo.active = null; return { ...g, status: 'cancelled', game_state: { ...g.game_state, status: 'cancelled' } } })
-    vi.spyOn(window, 'confirm').mockReturnValueOnce(false).mockReturnValueOnce(true)
     show()
-    const button = await screen.findByRole('button', { name: 'Cancel game' })
-    fireEvent.click(button) // declined
+    // Confirmation is asked on the card, not in a browser dialog (some browsers suppress those).
+    fireEvent.click(await screen.findByRole('button', { name: 'Cancel game' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Keep it' })) // declined
     expect(repo.cancel).not.toHaveBeenCalled()
-    fireEvent.click(button)
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel game' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Yes, cancel it' }))
     await waitFor(() => expect(repo.cancel).toHaveBeenCalledWith('g-pregame'))
     expect(await screen.findByText('Cancelled before the first pitch — no result')).toBeInTheDocument()
     expect(screen.getByText(/Game cancelled before the first pitch/)).toBeInTheDocument()
@@ -193,9 +194,14 @@ describe('games page: cancelling and ending', () => {
     const g = game('g-started', { status: 'in_progress', firstPitchThrown: true })
     repo.games = [g]
     repo.terminate.mockResolvedValue({ ...g, status: 'terminated', end_reason: 'admin_terminated', game_state: { ...g.game_state, status: 'terminated' } })
-    vi.spyOn(window, 'prompt').mockReturnValue('Opponent stopped responding')
     show()
     fireEvent.click(await screen.findByRole('button', { name: 'End without result' }))
+    // The reason is typed on the card; under 5 characters the button stays disabled.
+    const input = screen.getByLabelText(/Reason/)
+    fireEvent.change(input, { target: { value: 'abc' } })
+    expect(screen.getByRole('button', { name: 'End game' })).toBeDisabled()
+    fireEvent.change(input, { target: { value: 'Opponent stopped responding' } })
+    fireEvent.click(screen.getByRole('button', { name: 'End game' }))
     await waitFor(() => expect(repo.terminate).toHaveBeenCalledWith('g-started', 'Opponent stopped responding'))
     expect(await screen.findByText('Ended by an admin — no result')).toBeInTheDocument()
   })
