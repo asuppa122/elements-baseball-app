@@ -97,3 +97,17 @@ describe('live box score window', () => {
     expect(onClose).toHaveBeenCalled()
   })
 })
+
+describe('box score column help', () => {
+  it('tabs read Standard / Advanced, and every Advanced heading explains itself on hover and in the key', () => {
+    render(<BoxScoreView state={recorded} progression="prelaunch" />)
+    expect(screen.getByRole('tab', { name: 'Standard' })).toBeTruthy()
+    fireEvent.click(screen.getByRole('tab', { name: 'Advanced' }))
+    const ochw = document.querySelector('abbr[title^="OCHW"]')
+    expect(ochw?.getAttribute('title')).toContain('Own Chart Hit/Walk')
+    for (const h of document.querySelectorAll('.gp-box-table thead th')) {
+      if (h.textContent) expect(h.querySelector('abbr[title]'), h.textContent).not.toBeNull()
+    }
+    expect(screen.getByText('Key')).toBeTruthy()
+  })
+})

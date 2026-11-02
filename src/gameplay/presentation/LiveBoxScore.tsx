@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { computeGameStats, hasPlayRecord } from '../stats/gameStats'
 import type { GameSide, GameState } from '../types'
-import BoxScoreView from './BoxScoreView'
+import BoxScoreView, { STAT_DEFS } from './BoxScoreView'
 
 /**
  * The box score during the game: the line score, then the batting, pitching,
@@ -38,8 +38,8 @@ function LineScore({ state }: { state: GameState }) {
           <tr>
             <th scope="col"></th>
             {Array.from({ length: innings }, (_, i) => <th scope="col" key={i}>{i + 1}</th>)}
-            <th scope="col">R</th>
-            {team && <><th scope="col">H</th><th scope="col">LOB</th></>}
+            <th scope="col"><abbr title={`R — ${STAT_DEFS.R}`}>R</abbr></th>
+            {team && <><th scope="col"><abbr title={`H — ${STAT_DEFS.H}`}>H</abbr></th><th scope="col"><abbr title={`LOB — ${STAT_DEFS.LOB}`}>LOB</abbr></th></>}
           </tr>
         </thead>
         <tbody>
