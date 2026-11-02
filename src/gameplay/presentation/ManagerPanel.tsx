@@ -14,7 +14,7 @@ import { batsLabel, throwsLabel } from './handedness'
  * On a tablet or phone the same panel is a bottom sheet (gameplay-screen.css).
  */
 
-function Situation({ state }: { state: GameState }) {
+function Situation({ state, lastPlay }: { state: GameState; lastPlay?: string | null }) {
   const offense: GameSide = state.half === 'top' ? 'away' : 'home'
   const defense: GameSide = offense === 'home' ? 'away' : 'home'
   const batter = state.plateAppearance.batterCardKey ? state.pregame[offense].roster?.cards[state.plateAppearance.batterCardKey] : null
@@ -23,6 +23,9 @@ function Situation({ state }: { state: GameState }) {
   const hand = (h: string | null) => (h ? ` ${h}` : '')
   return (
     <div className="gp-mp-summary" aria-label="Matchup summary">
+      {/* The panel covers the At-bat card, so a decision the play itself
+          raised (send the runners? throw where?) says what that play was. */}
+      {lastPlay && <p className="gp-mp-lastplay"><b className="s-lbl">Just happened</b> {lastPlay}</p>}
       <p className="gp-mp-matchup">
         <span><b>{batter?.playerName ?? '—'}</b><small>{hand(batsLabel(batter?.hitter.bats))} · OB {effectiveCurrentHitterOnBase(state)}</small></span>
         <i>vs</i>
@@ -36,9 +39,11 @@ function Situation({ state }: { state: GameState }) {
   )
 }
 
-export default function ManagerPanel({ state, title, onClose, children, footer, overCards }: {
+export default function ManagerPanel({ state, title, lastPlay, onClose, children, footer, overCards }: {
   state: GameState
   title: string
+  /** The play this plate appearance that led to the decision, in one line. */
+  lastPlay?: string | null
   /** Absent while a decision is pending: it is closed by resolving it. */
   onClose?: () => void
   children: ReactNode
@@ -51,7 +56,7 @@ export default function ManagerPanel({ state, title, onClose, children, footer, 
   return (
     <aside className={`gp-mp${overCards ? ' is-over-cards' : ''}`} aria-label={title}>
       <header className="gp-mp-head">
-        <Situation state={state} />
+        <Situation state={state} lastPlay={lastPlay} />
         {onClose && <button type="button" className="gp-mp-close" onClick={onClose} aria-label={`Close ${title}`}>×</button>}
       </header>
       <div className="gp-mp-body">{children}</div>

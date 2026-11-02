@@ -41,3 +41,17 @@ describe('dependencyLabel', () => {
     expect(dependencyLabel(trail, [trail])).toBeNull()
   })
 })
+
+describe('the defence\'s outfielder choice names the runner and his BsR as the throw faces it', () => {
+  it('Hines going home with two out: BsR 14 reads 20 (+3 extra base, +3 two out)', async () => {
+    const { getDecisionView } = await import('../../decisionEngine')
+    const midgame = (await import('../../sandbox/states/midgame.json')).default as unknown as import('../../types').GameState
+    const state = structuredClone(midgame)
+    state.outs = 2
+    state.pendingDecision = {
+      id: 'test', decisionType: 'OUTFIELD_SELECTION', actingSide: state.half === 'top' ? 'home' : 'away', legalActions: ['SELECT_OUTFIELDER'],
+      context: { kind: 'EXTRA_BASE', target: { runner: { cardKey: 'X', playerName: 'John Hines', baserunning: 14, stolenBase: 10 }, from: '2B', to: 'HOME' } },
+    } as unknown as typeof state.pendingDecision
+    expect(getDecisionView(state)?.description).toContain('Throw on John Hines going home: BsR 20 (14 +3 extra base, +3 two out)')
+  })
+})

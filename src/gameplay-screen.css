@@ -1723,6 +1723,11 @@ button.gp-lineup-card img { width: 100%; height: 100%; object-fit: cover; displa
 .gp-mp-matchup small { color: var(--s-gray); font-size: 11.5px; }
 .gp-mp-matchup i { font-style: normal; font-size: 10px; font-weight: 900; color: var(--s-gold); text-transform: uppercase; }
 .gp-mp-situation { margin: 0; font-size: 11.5px; color: var(--s-gray-muted); }
+.gp-mp-lastplay {
+  margin: 0 0 6px; padding: 6px 10px; border-radius: 8px; border-left: 3px solid var(--s-gold-bright);
+  background: rgba(242, 200, 75, 0.08); font-size: 14px; font-weight: 800; color: var(--s-cream); line-height: 1.3;
+}
+.gp-mp-lastplay .s-lbl { margin-right: 6px; font-size: 9px; color: var(--s-gold-bright); }
 .gp-mp-close {
   flex: 0 0 auto; width: 32px; height: 32px; border-radius: 50%;
   border: 1px solid var(--s-line); background: none; color: var(--s-cream); font-size: 20px; line-height: 1; cursor: pointer;

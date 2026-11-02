@@ -7,7 +7,7 @@ import RosterDrawers from './RosterDrawers'
 import RollControls from './RollControls'
 import GameMenu from './GameMenu'
 import { type LogEvent } from './GameLogPanel'
-import { playOf } from './playRecord'
+import { paKeyOf, playOf } from './playRecord'
 import { CardZoomProvider } from './CardZoom'
 import AtBatCard from './AtBatCard'
 import LiveBoxScore from './LiveBoxScore'
@@ -142,6 +142,24 @@ function PlayRecap({ events }: { events: LogEvent[] }) {
         : <p className="gp-topbar-play is-empty">Play ball!</p>}
     </div>
   )
+}
+
+/**
+ * The latest play of the plate appearance still in progress -- "John Barnes:
+ * Double — Dean to third" -- for a decision that play raised. Nothing for a
+ * decision made before the pitch, when the last play was someone else's.
+ */
+function playThisAtBat(events: LogEvent[], state: GameState): string | null {
+  const current = paKeyOf(state)
+  for (let i = events.length - 1; i >= 0; i -= 1) {
+    const play = playOf(events[i])
+    if (!play) continue
+    if (play.paKey !== current) return null
+    const text = play.summary ?? play.lines[0] ?? null
+    const batter = events[i].payload?.batter
+    return text && events[i].event_type === 'SWING_RESOLVED' && typeof batter === 'string' ? `${batter}: ${text}` : text
+  }
+  return null
 }
 
 export default function GameplayScreenView({
@@ -332,7 +350,7 @@ export default function GameplayScreenView({
           </div>
 
           {panel === 'decision' && decision && (
-            <ManagerPanel state={state} title={decision.title}
+            <ManagerPanel state={state} title={decision.title} lastPlay={playThisAtBat(events, state)}
               onClose={tool === 'call' && !decisionMine ? () => setTool(null) : undefined}
               footer={editablePrePitchDecision && decisionMine ? (
                 <button className="gp-action gp-action-secondary" disabled={saving} onClick={() => void changeAction()}>

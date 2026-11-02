@@ -10,6 +10,8 @@ From the first live v2 game with Will (2026-11-01).
 - **Ground-ball results say where the outs were made:** "Fielder's choice — out at second", "Double play — outs at second and first".
 - **Game log, after ERA:** one plain line per roll ("Roll: (10) +5, Advantage: Chuck Smith", "Roll: (20) Rodney Scott: Double [Smith]"), each run as it scores and the score right after it.
 - **Infield In** is offered only with a runner on 3B and fewer than 2 outs (revising the runner-on-any-base availability).
+- **Decisions say what happened:** a decision the play raised (send the runners, the ground-ball choice, a throw) opens with "Just happened — John Barnes: Double — Dean to third", since the panel covers the At-bat card.
+- **The defence's outfielder choice names the runner and his BsR as the throw faces it:** "Throw on John Hines going home: BsR 20 (14 +3 extra base, +3 two out)"; tag-up throw options list each runner's BsR.
 - Tablet and phone: the lineup spreads across the strip; Log / Box / Pen / Bench are one even row (their labels had been rendering at the browser's default size); the repeated roll row, wait message, recap and fielding label are gone.
 
 # v1.6.0 — Rules v2, Play-by-Play, Box Scores and Statistics
