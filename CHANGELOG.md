@@ -15,6 +15,7 @@ From the first live v2 game with Will (2026-11-01).
 - **Double- and triple-play choices name each check and the runner's BsR** ("Checks: Jose Reyes BsR 16 to 2B, then … BsR 12 to 1B"); the infield-combination choice says who it is against.
 - **Box score tabs read Standard, Advanced and Play-by-play;** every column heading explains itself on hover ("OCHW — Own Chart Hit/Walk: …"), and the Advanced tab has a Key for phones.
 - Wide windows: the half-inning recap is no longer covered by the At-bat card.
+- Safari: Roll swing after a failed bunt appears at once on a small window (a CSS check Safari did not re-run kept it hidden until a resize).
 - **The wheel play is announced:** "Anthony calls the wheel play." goes to the log, the offence's turn chip reads "Waiting on Anthony — Wheel Play…", and the result reads "Wheel play — lead runner Reyes out at second" (or "Sacrifice bunt beats the wheel play").
 - **The defence rolls the wheel play** on a sacrifice bunt (it is the defence's play); the no-wheel bunt is still rolled by the offence.
 - **Roll to hold is announced either way:** "Roll to hold — Beltran advances to third" or "Roll to hold — Beltran holds at second" (a hold used to read as nothing).

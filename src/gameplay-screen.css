@@ -1520,8 +1520,9 @@ button.gp-lineup-card img { width: 100%; height: 100%; object-fit: cover; displa
 .gp-atbat-roll > .gp-action { flex: 1 1 auto; min-height: 44px; }
 .gp-atbat-roll > .gp-roll-hint { flex: 0 1 50%; line-height: 1.3; }
 .gp-atbat-roll > .gp-roll-wait, .gp-atbat-roll > .gp-actions-msg { flex: 1 1 auto; margin: 0; padding: 4px 0; text-align: center; }
-.gp-atbat-roll:empty { display: none; }
-.gp-atbat-actions:not(:has(> *:not(:empty))) { display: none; }
+/* No :empty / :has() hiding of an empty actions area: Safari did not
+ * re-check it when Roll swing appeared after a failed bunt, and the button
+ * stayed hidden until the window was resized. An empty area costs one gap. */
 
 @container gpatbat (min-width: 620px) {
   .gp-atbat-grid {
