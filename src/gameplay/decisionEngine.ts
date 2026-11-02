@@ -208,7 +208,9 @@ export function confirmManagerDecision(state:GameState,ids:string[]):GameState{v
  if(d.decisionType==='NATURAL_STEAL_DEFENSE_TARGET'){const attempts=d.context.attempts as RunnerAttempt[];const target=attempts.find(a=>attemptId(a)===action);if(!target)throw new Error('Selected steal target is no longer legal.');return nextDecision(state,{type:'CATCHER_FIELDING_ROLL',actingSide:d.actingSide,legalActions:['ROLL_FIELDING'],context:{attempts,target,kind:'NATURAL_STEAL'}})}
  if(d.decisionType==='INTENTIONAL_WALK_CONFIRM')return awardWalk(state)
  if(d.decisionType==='SAC_BUNT_CONFIRM')return nextDecision(state,{type:'SAC_BUNT_DEFENSE',actingSide:other(d.actingSide),legalActions:['NO_WHEEL','WHEEL_PLAY'],context:{}})
- if(d.decisionType==='SAC_BUNT_DEFENSE')return nextDecision(state,{type:action==='WHEEL_PLAY'?'SAC_BUNT_WHEEL_RTS':'SAC_BUNT_RTS',actingSide:other(d.actingSide),legalActions:['ROLL_RTS'],context:{wheel:action==='WHEEL_PLAY'}})
+ // The wheel play is the defence's play, so the defence rolls it (Anthony,
+  // 2026-11-01); the no-wheel bunt is rolled by the offence.
+  if(d.decisionType==='SAC_BUNT_DEFENSE')return nextDecision(state,{type:action==='WHEEL_PLAY'?'SAC_BUNT_WHEEL_RTS':'SAC_BUNT_RTS',actingSide:action==='WHEEL_PLAY'?d.actingSide:other(d.actingSide),legalActions:['ROLL_RTS'],context:{wheel:action==='WHEEL_PLAY'}})
  if(d.decisionType==='SQUEEZE_BUNT_CONFIRM')return nextDecision(state,{type:'SQUEEZE_BUNT_ROLL',actingSide:d.actingSide,legalActions:['ROLL'],context:{}})
  if(d.decisionType==='INFIELD_IN_CONFIRM')return resumeSamePlateAppearance({...state,plateAppearance:{...state.plateAppearance,infieldIn:true}})
  if(d.decisionType==='SECOND_STEAL_HOME_DECISION'){if(action==='DECLINE_SECOND_STEAL_HOME')return resumeSamePlateAppearance({...state,pendingDecision:null,status:'in_progress'});const target=state.bases.third;if(!target)return resumeSamePlateAppearance(state);return nextDecision(state,{type:'SECOND_STEAL_HOME_ROLL',actingSide:other(d.actingSide),legalActions:['ROLL_FIELDING'],context:{target}})}
