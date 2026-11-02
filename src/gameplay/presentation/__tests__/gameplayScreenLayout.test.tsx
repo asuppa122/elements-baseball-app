@@ -80,7 +80,7 @@ describe('D2 desktop: the game bar in the app header', () => {
     expect(slot!.childElementCount).toBe(0)
     expect(screenEl.querySelector('.gp-topbar .gp-scorebug')).not.toBeNull()
     expect(screenEl.querySelector('.gp-region-rail .gp-toolbar')).not.toBeNull()
-    expect(screen.getByText('Manager decisions')).toBeInTheDocument()
+    expect(screenEl.querySelector('.gp-region-lineup > .gp-atbat')).not.toBeNull()
   })
 
   it('falls back to the header row and tool strip where there is no app header', () => {
@@ -98,43 +98,45 @@ describe('D2 desktop: the game bar in the app header', () => {
   })
 })
 
-describe('D2 desktop: calls and the live roll share one slot', () => {
+describe('the At-bat card: the last roll, the steps, the calls and Roll', () => {
   it('shows the calls, labelled "Before the pitch", while there are any', () => {
     const { screenEl } = show(clone(midgame))
-    const lineup = screenEl.querySelector('.gp-region-lineup')!
-    expect(lineup).toHaveClass('has-calls')
-    const calls = screenEl.querySelector('.gp-calls')!
-    expect(calls).not.toHaveClass('is-empty')
-    expect(within(calls as HTMLElement).getByText('Before the pitch')).toBeInTheDocument()
-    expect(within(calls as HTMLElement).getByRole('button', { name: 'Natural Steal' })).toHaveClass('is-offence')
-    expect(within(calls as HTMLElement).getByRole('button', { name: 'Intentional Walk' })).toHaveClass('is-defence')
+    const calls = screenEl.querySelector('.gp-atbat .gp-atbat-calls') as HTMLElement
+    expect(calls).not.toBeNull()
+    expect(within(calls).getByText('Before the pitch')).toBeInTheDocument()
+    expect(within(calls).getByRole('button', { name: 'Natural Steal' })).toHaveClass('is-offence')
+    expect(within(calls).getByRole('button', { name: 'Intentional Walk' })).toHaveClass('is-defence')
   })
 
-  it('gives the slot back to the live roll once the pitch is rolled', () => {
+  it('drops the calls once the pitch is rolled, and the steps show the pitch and the advantage', () => {
     const state = clone(midgame)
     state.waitingFor = 'SWING_ROLL'
     state.plateAppearance.pitchRoll = 14
     state.plateAppearance.advantage = 'hitter'
     const { screenEl } = show(state)
-    expect(screenEl.querySelector('.gp-region-lineup')).not.toHaveClass('has-calls')
-    expect(screenEl.querySelector('.gp-calls')).toHaveClass('is-empty')
-    const roll = screenEl.querySelector('.gp-matchup > .gp-roll') as HTMLElement
-    expect(within(roll).getByText('14')).toBeInTheDocument()
-    expect(within(roll).getByText('HITTER')).toBeInTheDocument()
+    expect(screenEl.querySelector('.gp-atbat-calls')).toBeNull()
+    const steps = screenEl.querySelector('.gp-atbat-steps') as HTMLElement
+    expect(within(steps).getByText('14')).toBeInTheDocument()
+    expect(within(steps).getByText('HITTER')).toBeInTheDocument()
+    expect(within(steps).getByText('Swing').closest('li')).toHaveClass('is-current')
   })
 
-  it('in a two-player game, shows calls only to the manager whose turn it is -- the other sees the live roll', () => {
+  it('repeats no rating or roll outside the card: no ratings or roll row in the matchup', () => {
+    const { screenEl } = show(clone(midgame))
+    expect(screenEl.querySelector('.gp-matchup .gp-roll, .gp-matchup-rates')).toBeNull()
+    expect(screenEl.querySelectorAll('.gp-atbat').length).toBe(1)
+  })
+
+  it('in a two-player game, shows calls only to the manager whose turn it is', () => {
     const state = clone(midgame)
     state.turnHandshake = true
     const toAct = sideToAct(state)!
     const waiting: GameSide = toAct === 'home' ? 'away' : 'home'
     const mine = show(state, { viewerSide: toAct, acting: [toAct] })
-    expect(mine.screenEl.querySelector('.gp-region-lineup')).toHaveClass('has-calls')
-    expect(mine.screenEl.querySelectorAll('.gp-calls-list > .gp-action').length).toBeGreaterThan(0)
+    expect(mine.screenEl.querySelectorAll('.gp-atbat-calls-list > .gp-action').length).toBeGreaterThan(0)
     mine.unmount(); slot?.remove()
     const theirs = show(state, { viewerSide: waiting, acting: [waiting] })
-    expect(theirs.screenEl.querySelector('.gp-region-lineup')).not.toHaveClass('has-calls')
-    expect(theirs.screenEl.querySelector('.gp-calls')).toHaveClass('is-empty')
+    expect(theirs.screenEl.querySelector('.gp-atbat-calls')).toBeNull()
   })
 })
 
@@ -234,7 +236,7 @@ describe('ended and cancellable games on the screen', () => {
     for (const [status, text] of [['cancelled', 'Cancelled before the first pitch — no result.'], ['terminated', 'Ended by an admin — no result.']] as const) {
       const state = { ...clone(midgame), status }
       const view = show(state)
-      expect(view.screenEl.querySelector('.gp-rollbox')).toHaveTextContent(text)
+      expect(view.screenEl.querySelector('.gp-atbat-roll')).toHaveTextContent(text)
       expect(screen.queryByRole('button', { name: /roll|ready/i })).toBeNull()
       view.unmount(); slot?.remove(); slot = null
     }

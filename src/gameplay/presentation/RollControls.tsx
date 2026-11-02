@@ -4,18 +4,10 @@ import { awaitingOffenseReady } from '../turnOrder'
 import type { GameState } from '../types'
 
 /**
- * The roll: what has happened this plate appearance, and the button that
- * advances it. Lives in the rail so the centre column is nothing but the game.
+ * The button that advances the plate appearance, or why there is none (the
+ * other manager's turn, the game is over). Drawn inside the At-bat card, which
+ * shows the rolls themselves.
  */
-
-function Cell({ label, value, tone }: { label: string; value: string; tone?: string }) {
-  return (
-    <div className="gp-roll-cell">
-      <b className="s-lbl">{label}</b>
-      <strong className={`s-num${tone ? ` ${tone}` : ''}`}>{value}</strong>
-    </div>
-  )
-}
 
 export default function RollControls({
   state, saving, hasDecision, canAct = true, waitingOn = null, onReady, onRollPitch, onRollSwing, onNoPitch,
@@ -32,21 +24,12 @@ export default function RollControls({
   onRollSwing: () => void
   onNoPitch: () => void
 }) {
-  const pa = state.plateAppearance
-  const advantage = pa.advantage
-  const tone = advantage === 'hitter' ? 'is-hitter' : advantage === 'pitcher' ? 'is-pitcher' : undefined
   const ended = gameEnded(state.status)
   const live = !ended && state.status !== 'paused' && !hasDecision && canAct
   const readyUp = live && awaitingOffenseReady(state)
 
   return (
-    <section className="gp-rollbox" aria-label="Roll">
-      <div className="gp-roll">
-        <Cell label="Pitch" value={pa.pitchRoll !== null ? String(pa.pitchRoll) : '—'} />
-        <Cell label="Adv" value={advantage ? advantage.toUpperCase() : '—'} tone={tone} />
-        <Cell label="Swing" value={pa.swingRoll !== null ? String(pa.swingRoll) : '—'} />
-        <Cell label="Result" value={pa.chartResult ?? '—'} />
-      </div>
+    <div className="gp-atbat-roll" aria-label="Roll">
 
       {state.status === 'complete' && <p className="gp-actions-msg">This game is final.</p>}
       {ended && state.status !== 'complete' && <p className="gp-actions-msg">{endedLabel(state.status)}.</p>}
@@ -68,6 +51,6 @@ export default function RollControls({
       {waitingOn && !hasDecision && !ended && (
         <p className="gp-roll-wait" role="status">Waiting on {waitingOn}…</p>
       )}
-    </section>
+    </div>
   )
 }

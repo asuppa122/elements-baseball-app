@@ -635,29 +635,16 @@
 .gp-matchup-art img { width: 100%; height: 100%; object-fit: cover; object-position: top center; display: block; }
 .gp-matchup-who { display: grid; gap: 2px; min-width: 0; }
 .gp-matchup-who strong { font-size: 14px; font-weight: 800; color: var(--s-cream); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.gp-matchup-rates { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
 
 .gp-matchup-vs { font-size: 10px; font-weight: 900; letter-spacing: 0.14em; text-transform: uppercase; color: var(--s-gray-muted); }
 
-.gp-roll {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 8px;
-  padding-top: 9px;
-  border-top: 1px solid var(--s-line-soft);
-}
 
-.gp-roll-cell { display: grid; gap: 3px; justify-items: center; text-align: center; min-width: 0; }
-.gp-roll-cell strong { font-size: 18px; font-weight: 900; color: var(--s-cream); line-height: 1; }
-.gp-roll-cell strong.is-hitter { color: var(--s-adv-hitter); font-size: 14px; }
-.gp-roll-cell strong.is-pitcher { color: var(--s-adv-pitcher); font-size: 14px; }
 
 /* On a phone the matchup stacks: two full-width rows and the roll below, so
  * neither name is squeezed into a third of a 390px screen. */
 @media (max-width: 560px) {
   .gp-matchup-sides { grid-template-columns: minmax(0, 1fr); gap: 8px; }
   .gp-matchup-vs { justify-self: center; }
-  .gp-roll { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 }
 
 /* --- chart readout ------------------------------------------------------- */
@@ -965,7 +952,6 @@
 .gp-menu-btn.is-danger:hover:not(:disabled) { color: #fff; border-color: var(--s-bad); background: rgba(224, 92, 92, 0.18); }
 .gp-menu-btn:disabled { opacity: 0.45; cursor: not-allowed; }
 
-.gp-rollbox { display: grid; gap: 8px; }
 .gp-manager-actions { display: grid; gap: 6px; }
 
 /* Collapsible availability. */
@@ -1121,13 +1107,11 @@
   /* mobile keeps the header but lets it wrap rather than truncate */
   .gp-topbar { flex-wrap: wrap; min-height: 0; padding: 10px; row-gap: 6px; }
   .gp-topbar-rule { display: none; }
-  /* Same reading as the desktop game bar: the last roll under the cards tells
-   * the play, the scorebug's arrow says who is fielding, and the turn chip
-   * says who is being waited on -- so the header repeats none of them, and
-   * the rail keeps one Pitch/Advantage/Swing/Result row, beside the button. */
+  /* Same reading as the desktop game bar: the At-bat card tells the play,
+   * the scorebug's arrow says who is fielding, and the turn chip says who is
+   * being waited on -- so neither the header nor the card repeats them. */
   .gp-topbar-recap, .gp-topbar-fielding { display: none; }
-  .gp-region-lineup .gp-matchup > .gp-roll { display: none; }
-  .gp-screen:has(.gp-topbar .gp-turn) .gp-rollbox > .gp-roll-wait { display: none; }
+  .gp-screen:has(.gp-topbar .gp-turn) .gp-atbat-roll > .gp-roll-wait { display: none; }
 }
 
 /* GameMenu was written as a rail section with its own "Game" heading. In the
@@ -1195,9 +1179,6 @@
 }
 .gp-lineup-strip .gp-lineup-row.is-active .gp-lineup-card img { outline: 2px solid var(--s-gold-bright); outline-offset: 2px; }
 .gp-lineup-strip .gp-lineup-row.is-ondeck .gp-lineup-card img { outline: 1px solid var(--s-gold-muted); outline-offset: 2px; }
-.gp-calls { display: flex; flex-direction: column; }
-.gp-calls-list { display: flex; flex-wrap: wrap; align-content: flex-start; }
-.gp-calls-rest { margin: 0; font-style: italic; color: var(--s-gray-muted); }
 
 /* ---------- desktop: scaled against the stage ---------- */
 @media (min-width: 1025px) {
@@ -1209,7 +1190,6 @@
   /* the rail FITS the stage; it does not scroll. If something does not fit,
    * that is a sizing bug to fix, not a scrollbar to add. */
   .gp-region-lineup { gap: var(--s-gap); min-height: 0; overflow: hidden; }
-  .gp-region-lineup .gp-rollbox { flex: 0 0 auto; }
 
   /* The matchup is the rail's ELASTIC element; everything else is fixed.
    * Type 2 alone does not guarantee a fit -- text carries a legibility floor,
@@ -1246,11 +1226,6 @@
     border-radius: var(--s-r-sub);
   }
   .gp-region-lineup .gp-matchup-art img { width: 100%; height: 100%; object-fit: contain; }
-  /* MatchupPanel carries its own Pitch/Advantage/Swing/Result row, and
-   * RollControls carries the same four cells beside the roll button. Two
-   * identical readouts stacked is noise; keep the one next to the control
-   * that produces the numbers. */
-  .gp-region-lineup .gp-matchup > .gp-roll { display: none; }
   .gp-region-lineup .gp-matchup-who { text-align: center; }
   .gp-region-lineup .gp-matchup-vs { align-self: center; }
 
@@ -1263,15 +1238,6 @@
   .gp-lineup-strip .gp-lineup-row { flex: 1 1 0; gap: calc(var(--u) * 0.265); }
   .gp-lineup-strip .gp-lineup-order { font-size: max(9px, calc(var(--u) * 0.796)); color: var(--s-gray-muted); }
 
-  /* decisions keep a fixed height so the board does not shift between pitches
-   * as calls come and go */
-  .gp-calls {
-    flex: 0 0 auto;
-    min-height: calc(var(--u) * 12.655);   /* 143 / 1130 */
-    gap: calc(var(--u) * 0.708);
-  }
-  .gp-calls-list { gap: calc(var(--u) * 0.531); }
-  .gp-calls-rest { font-size: max(10px, calc(var(--u) * 0.885)); }
 }
 
 /* ---------- mobile: plain pixels, its own composition ---------- */
@@ -1307,9 +1273,6 @@
   .gp-region-rail .gp-tool { gap: 4px; padding: 0 4px; font-size: 10px; letter-spacing: 0.03em; }
   .gp-region-rail .gp-tool svg { width: 15px; height: 15px; }
   .gp-region-rail .gp-tool-count { font-size: 10px; }
-  .gp-calls { gap: 6px; }
-  .gp-calls-list { gap: 6px; }
-  .gp-calls-rest { font-size: 11px; }
 }
 
 /* ---- sandbox banner (the /sandbox route only) -------------------- */
@@ -1497,40 +1460,93 @@ button.gp-lineup-card img { width: 100%; height: 100%; object-fit: cover; displa
 .gp-drawer-who .gp-drawer-ctrl.is-tired { color: var(--s-bad); }
 .gp-drawer-who .gp-drawer-was { color: var(--s-bad); }
 
-/* ---- the last roll, under the roll button ---- */
-.gp-rollresult {
-  border: 1px solid var(--s-line); border-left-width: 4px;
-  border-radius: var(--s-r-sub); background: var(--s-panel-lift);
-  padding: 8px 10px; display: flex; align-items: center; gap: 10px;
-  flex: 0 0 auto; min-width: 0;
-  animation: gp-rollresult-in 220ms ease-out;
+/* ---- the At-bat card: the last roll, the at-bat's steps, the calls and Roll ----
+ * Stacked by default (die + what happened, the steps, the actions); when the
+ * card is wide enough the actions take a column of their own on the right.
+ * A size query on the card itself, so the same rules serve the phone, the
+ * desktop band under the cards and the narrow centre column of a wide window. */
+.gp-atbat {
+  container: gpatbat / inline-size;
+  border: 1px solid var(--s-line); border-left-width: 4px; border-radius: var(--s-r-sub);
+  background: var(--s-panel-lift); min-width: 0;
 }
-.gp-rollresult.is-offense { border-left-color: var(--s-adv-hitter); }
-.gp-rollresult.is-defense { border-left-color: var(--s-adv-pitcher); }
-.gp-rollresult.is-neutral { border-left-color: var(--s-gold); }
-.gp-rollresult-die {
-  flex: 0 0 auto; width: 54px; height: 54px; border-radius: 10px;
+.gp-atbat.is-offense { border-left-color: var(--s-adv-hitter); }
+.gp-atbat.is-defense { border-left-color: var(--s-adv-pitcher); }
+.gp-atbat.is-neutral { border-left-color: var(--s-gold); }
+.gp-atbat-grid {
+  display: grid; grid-template-columns: auto minmax(0, 1fr);
+  grid-template-areas: "die body" "steps steps" "actions actions";
+  gap: 10px 12px; padding: 10px 12px; align-items: center;
+}
+.gp-atbat-die {
+  grid-area: die; width: 54px; height: 54px; border-radius: 10px;
   display: grid; place-items: center; align-content: center;
   background: var(--s-ink); border: 2px solid var(--s-gold);
+  animation: gp-atbat-in 220ms ease-out;
 }
-.gp-rollresult-die small { font-size: 9px; font-weight: 800; color: var(--s-gray-muted); line-height: 1; }
-.gp-rollresult-die strong { font-size: 28px; font-weight: 900; color: var(--s-gold-bright); line-height: 1.05; }
-.gp-rollresult-main { display: grid; gap: 3px; min-width: 0; flex: 1 1 auto; text-align: left; }
-.gp-rollresult-title { font-size: 11.5px; color: var(--s-gray); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.gp-rollresult-title .s-lbl { margin-right: 4px; }
-.gp-rollresult-outcome { margin: 0; font-size: 14.5px; font-weight: 800; color: var(--s-cream); line-height: 1.25; }
-.gp-rollresult-math { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 2px 8px; font-size: 11.5px; color: var(--s-gray); }
-.gp-rollresult-math li.is-total { color: var(--s-gold-bright); font-weight: 800; }
-.gp-rollresult-math li.is-decisive { color: var(--s-gold-bright); font-weight: 800; }
-.gp-rollresult-math li em { font-style: normal; font-size: 9.5px; font-weight: 800; text-transform: uppercase; color: var(--s-ink); background: var(--s-gold-bright); padding: 0 4px; border-radius: 4px; }
-.gp-rollresult-natural { margin: 0; font-size: 11.5px; font-weight: 800; color: var(--s-gold-bright); }
-@keyframes gp-rollresult-in { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
-@media (prefers-reduced-motion: reduce) { .gp-rollresult { animation: none; } }
+.gp-atbat-die small { font-size: 9px; font-weight: 800; color: var(--s-gray-muted); line-height: 1; }
+.gp-atbat-die strong { font-size: 28px; font-weight: 900; color: var(--s-gold-bright); line-height: 1.05; }
+.gp-atbat-die.is-empty { border-color: var(--s-line); }
+.gp-atbat-die.is-empty strong { color: var(--s-gray-muted); }
+.gp-atbat-body { grid-area: body; display: grid; gap: 3px; min-width: 0; text-align: left; animation: gp-atbat-in 220ms ease-out; }
+.gp-atbat-title { font-size: 11.5px; color: var(--s-gray); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gp-atbat-title .s-lbl { margin-right: 4px; }
+.gp-atbat-outcome { margin: 0; font-size: 15px; font-weight: 800; color: var(--s-cream); line-height: 1.25; }
+.gp-atbat-outcome.is-empty { color: var(--s-gray-muted); font-weight: 600; font-style: italic; }
+.gp-atbat-math { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 2px 8px; font-size: 12px; color: var(--s-gray); }
+.gp-atbat-math li.is-total, .gp-atbat-math li.is-decisive { color: var(--s-gold-bright); font-weight: 800; }
+.gp-atbat-math li em { font-style: normal; font-size: 9.5px; font-weight: 800; text-transform: uppercase; color: var(--s-ink); background: var(--s-gold-bright); padding: 0 4px; border-radius: 4px; }
+.gp-atbat-natural { margin: 0; font-size: 12px; font-weight: 800; color: var(--s-gold-bright); }
+
+/* the steps: a progress line, lit as the at-bat moves along */
+.gp-atbat-steps {
+  grid-area: steps; list-style: none; margin: 0; padding: 8px 0 0;
+  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
+  border-top: 1px solid var(--s-line-soft);
+}
+.gp-atbat-steps li { position: relative; display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 0; }
+.gp-atbat-steps li + li::before {
+  content: ""; position: absolute; left: -4px; top: 7px; width: 7px; height: 7px;
+  transform: rotate(45deg); border-top: 1px solid var(--s-line); border-right: 1px solid var(--s-line);
+}
+.gp-atbat-steps .s-lbl { font-size: 9px; color: var(--s-gray-muted); }
+.gp-atbat-steps strong { font-size: 16px; font-weight: 800; color: var(--s-gray-muted); line-height: 1.1; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gp-atbat-steps li.is-done strong { color: var(--s-cream); }
+.gp-atbat-steps li.is-current .s-lbl { color: var(--s-gold-bright); }
+.gp-atbat-steps li.is-current strong { color: var(--s-gold-bright); }
+.gp-atbat-steps li strong.is-hitter { color: var(--s-adv-hitter); font-size: 13px; }
+.gp-atbat-steps li strong.is-pitcher { color: var(--s-adv-pitcher); font-size: 13px; }
+
+/* the actions: the calls, then Roll (or who is being waited on) */
+.gp-atbat-actions { grid-area: actions; display: grid; gap: 8px; min-width: 0; }
+.gp-atbat-calls { display: grid; gap: 6px; }
+.gp-atbat-calls > .s-lbl { font-size: 9px; color: var(--s-gold-bright); }
+.gp-atbat-calls-list { display: flex; flex-wrap: wrap; gap: 6px; }
+.gp-atbat-calls-list > .gp-action { flex: 1 1 auto; min-height: 36px; padding: 0 12px; white-space: nowrap; }
+.gp-atbat-calls-list > .gp-action::before { content: ""; display: inline-block; width: 7px; height: 7px; margin-right: 6px; border-radius: 50%; background: var(--s-adv-hitter); vertical-align: 1px; }
+.gp-atbat-calls-list > .gp-action.is-defence::before { background: var(--s-adv-pitcher); }
+.gp-atbat-roll { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.gp-atbat-roll > .gp-action { flex: 1 1 auto; min-height: 44px; }
+.gp-atbat-roll > .gp-roll-hint { flex: 0 1 50%; line-height: 1.3; }
+.gp-atbat-roll > .gp-roll-wait, .gp-atbat-roll > .gp-actions-msg { flex: 1 1 auto; margin: 0; padding: 4px 0; text-align: center; }
+.gp-atbat-roll:empty { display: none; }
+.gp-atbat-actions:not(:has(> *:not(:empty))) { display: none; }
+
+@container gpatbat (min-width: 620px) {
+  .gp-atbat-grid {
+    grid-template-columns: auto minmax(0, 1fr) minmax(220px, 36%);
+    grid-template-areas: "die body actions" "steps steps actions";
+  }
+  .gp-atbat-actions { align-self: stretch; align-content: center; padding-left: 12px; border-left: 1px solid var(--s-line-soft); }
+  .gp-atbat-roll { flex-direction: column; align-items: stretch; }
+  .gp-atbat-roll > .gp-roll-hint { flex: 0 0 auto; text-align: center; }
+}
+@keyframes gp-atbat-in { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .gp-atbat-die, .gp-atbat-body { animation: none; } }
 @media (max-width: 1024px) {
-  .gp-rollresult { padding: 10px 12px; }
-  .gp-rollresult-die { width: 60px; height: 60px; }
-  .gp-rollresult-outcome { font-size: 16px; }
-  .gp-rollresult-math { font-size: 13px; }
+  .gp-atbat-die { width: 60px; height: 60px; }
+  .gp-atbat-outcome { font-size: 16px; }
+  .gp-atbat-math { font-size: 13px; }
 }
 
 /* ---- the recap: two lines rather than one truncated one ---- */
@@ -1565,14 +1581,6 @@ button.gp-lineup-card img { width: 100%; height: 100%; object-fit: cover; displa
 .gp-region-rail .gp-log-list li { font-size: 12.5px; line-height: 1.4; }
 .gp-region-rail .gp-decision-title h2 { font-size: 1rem; }
 .gp-region-rail .gp-decision { padding: 14px 15px; }
-
-/* On the desktop stage the last-roll card says everything the four-cell
- * Pitch / Adv / Swing / Result row said, and more -- and the rail has no
- * height to spare at 700px. The roll card replaces the row there; on a phone
- * the matchup keeps its own row, as before. */
-@media (min-width: 1025px) {
-  .gp-region-lineup .gp-rollbox > .gp-roll { display: none; }
-}
 
 /* ---- the game log as a final, published play-by-play ---- */
 .gp-log-half { display: grid; gap: 2px; }
@@ -1641,10 +1649,7 @@ button.gp-lineup-card img { width: 100%; height: 100%; object-fit: cover; displa
  * compact version (step 4). Widths read the stage's width (cqw), not its
  * height: about 518 / field / 288 at 1440, 640 / field / 360 at 1920.
  * The batter and pitcher cards are sized by the rail's HEIGHT (the matchup
- * is the rail's elastic element), so their cap is raised and the decisions
- * box below them is given a fixed, compact height -- one row of calls, or the
- * empty line. Fixed rather than collapsing, so the cards do not resize every
- * time calls come and go between turns.
+ * is the rail's elastic element), so their cap is raised.
  * ===================================================================== */
 @media (min-width: 1025px) {
   .gp-stage {
@@ -1653,25 +1658,12 @@ button.gp-lineup-card img { width: 100%; height: 100%; object-fit: cover; displa
   }
   .gp-region-lineup .gp-matchup-art { max-height: calc(var(--u) * 36); }
   /* A floor for very short windows: the matchup keeps its art floor plus its
-   * name and rating lines, and the rail scrolls rather than letting the
+   * name and stat lines, and the rail scrolls rather than letting the
    * names overprint each other (seen at 1100x700 with the sandbox toolbar). */
   .gp-region-lineup .gp-matchup { min-height: calc(var(--u) * 11 + 110px); }
   .gp-region-lineup { overflow-y: auto; }
-  /* One row of calls or the empty line, at one height either way. */
-  .gp-calls { min-height: 0; height: calc(var(--u) * 8.7); overflow: hidden; }
-  /* The batter and pitcher cards take whatever height the rail has left, so
-   * everything else in the rail holds one height through the whole game: the
-   * roll row whether or not it has a button, the last roll whether its
-   * breakdown takes one line or two. Otherwise the cards resize between
-   * turns. */
-  .gp-region-lineup .gp-rollbox { min-height: var(--s-control-h); display: grid; align-content: center; }
-  .gp-region-lineup .gp-rollresult { height: calc(var(--u) * 10.5); overflow: hidden; }
-  .gp-calls-list { flex-wrap: nowrap; }
-  .gp-calls-list > .gp-action { flex: 0 1 auto; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 }
 
-.gp-rollresult.is-empty { border-left-color: var(--s-line); }
-.gp-rollresult-outcome.is-empty { color: var(--s-gray-muted); font-weight: 600; font-style: italic; }
 
 /* =====================================================================
  * Elements 2.0, stage 1 (2026-10-30): cards and field own the screen.
@@ -1774,10 +1766,9 @@ button.gp-lineup-card img { width: 100%; height: 100%; object-fit: cover; displa
 
 /* =====================================================================
  * Elements 2.0, stage 2 (2026-10-31): the matchup column as a grid.
- * Rows, top to bottom: the two cards (the only elastic row), Roll, the last
- * roll, the calls, the batting-order tray. Every row but the cards holds one
- * height for the whole game, so the cards are the same size on every phase
- * -- Ready, Roll pitch, Roll swing, a long result or a short one.
+ * Rows, top to bottom: the two cards (the only elastic row), the At-bat card
+ * (the last roll, the at-bat's steps, the calls and Roll), the batting-order
+ * tray.
  *
  * The cards lose their panel frame, role labels and padding: the art is the
  * point. Each side is a size container, and the art takes the largest
@@ -1787,21 +1778,17 @@ button.gp-lineup-card img { width: 100%; height: 100%; object-fit: cover; displa
   .gp-region-lineup {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: minmax(0, 1fr) var(--s-control-h) var(--s2-result-h) var(--s2-calls-h) auto;
+    grid-template-rows: minmax(0, 1fr) auto auto;
     gap: var(--s2-gap);
     overflow: hidden;
     --s2-gap: max(6px, calc(var(--u) * 0.8));
-    --s2-result-h: max(64px, calc(var(--u) * 7.6));
-    --s2-calls-h: max(34px, calc(var(--u) * 4));
     --s2-who-h: max(42px, calc(var(--u) * 4.9));
     /* the stat block under each card (LiveStatLines.tsx) */
     --s2-pstats-h: 62px;
   }
   .gp-region-lineup > .gp-matchup { grid-row: 1; }
-  .gp-region-lineup > .gp-rollbox { grid-row: 2; }
-  .gp-region-lineup > .gp-rollresult { grid-row: 3; }
-  .gp-region-lineup > .gp-calls { grid-row: 4; }
-  .gp-region-lineup > .gp-lineup-strip { grid-row: 5; }
+  .gp-region-lineup > .gp-atbat { grid-row: 2; }
+  .gp-region-lineup > .gp-lineup-strip { grid-row: 3; }
 
   /* ---- the cards ---- */
   .gp-region-lineup .gp-matchup {
@@ -1830,50 +1817,7 @@ button.gp-lineup-card img { width: 100%; height: 100%; object-fit: cover; displa
   .gp-region-lineup .gp-matchup-who { display: flex; align-items: baseline; justify-content: center; gap: 6px; max-width: 100%; }
   .gp-region-lineup .gp-matchup-who > .s-lbl { display: none; }
   .gp-region-lineup .gp-matchup-who strong { font-size: max(13px, calc(var(--u) * 1.4)); }
-  .gp-region-lineup .gp-matchup-rates { justify-content: center; flex-wrap: nowrap; gap: 10px; white-space: nowrap; }
   .gp-region-lineup .gp-pstats { flex: 0 0 var(--s2-pstats-h); height: var(--s2-pstats-h); width: min(100cqw, (100cqh - var(--s2-who-h) - var(--s2-pstats-h) - 4px) * 820 / 1150); min-width: min(100cqw, 200px); align-content: center; }
-
-  /* ---- Roll: one row at one height; the Ready hint sits beside the button ---- */
-  .gp-region-lineup .gp-rollbox {
-    display: flex; align-items: center; gap: 10px;
-    height: var(--s-control-h); min-height: 0;
-  }
-  .gp-region-lineup .gp-rollbox > .gp-action { flex: 1 1 auto; min-height: 0; height: 100%; }
-  .gp-region-lineup .gp-rollbox > .gp-roll-hint {
-    flex: 0 1 46%; line-height: 1.3;
-    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
-  }
-  .gp-region-lineup .gp-rollbox > .gp-roll-wait,
-  .gp-region-lineup .gp-rollbox > .gp-actions-msg { flex: 1 1 auto; margin: 0; padding: 0; text-align: center; }
-
-  /* ---- the last roll: die, title, the outcome in one line, the math ---- */
-  .gp-region-lineup .gp-rollresult { height: auto; min-height: 0; padding: 6px 10px; overflow: hidden; }
-  .gp-region-lineup .gp-rollresult-die { width: calc(var(--s2-result-h) - 16px); height: calc(var(--s2-result-h) - 16px); max-width: 60px; max-height: 60px; }
-  .gp-region-lineup .gp-rollresult-main { gap: 1px; }
-  /* Two lines when there is no math row under it, one when there is; the row
-   * is a fixed height either way, so a long result never moves the cards. */
-  .gp-region-lineup .gp-rollresult-outcome {
-    display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden;
-    line-height: 1.2;
-  }
-  .gp-region-lineup .gp-rollresult-main:has(.gp-rollresult-math) .gp-rollresult-outcome { -webkit-line-clamp: 1; }
-  .gp-region-lineup .gp-rollresult-math { flex-wrap: nowrap; overflow: hidden; white-space: nowrap; }
-  .gp-rollresult-math li.gp-rollresult-natural { font-size: inherit; }
-
-  /* ---- calls: one row, no label; buttons share the width, never cut ---- */
-  .gp-region-lineup .gp-calls {
-    height: auto; min-height: 0; padding: 0; gap: 0;
-    background: none; border: 0; box-shadow: none; overflow: visible;
-    justify-content: center;
-  }
-  .gp-region-lineup .gp-calls > .s-lbl { display: none; }
-  .gp-region-lineup .gp-calls-list { flex-wrap: nowrap; gap: calc(var(--u) * 0.6); height: 100%; }
-  .gp-region-lineup .gp-calls-list > .gp-action {
-    flex: 1 1 0; min-width: 0; min-height: 0; height: 100%;
-    padding: 0 6px; white-space: normal; line-height: 1.1; overflow: visible; text-overflow: clip;
-    font-size: max(10.5px, calc(var(--u) * 1.15));
-  }
-  .gp-region-lineup .gp-calls-rest { align-self: center; }
 
   /* ---- the tray: nine whole cards in one row, the order number on the card ---- */
   .gp-region-lineup .gp-lineup-strip { padding: 0; background: none; border: 0; box-shadow: none; }
@@ -1897,7 +1841,7 @@ button.gp-lineup-card img { width: 100%; height: 100%; object-fit: cover; displa
   /* ---- panels: anything the manager opened -- a decision, the log, the
    * bullpen, the bench, the final box score -- takes the whole column. The
    * one panel that opens on its own, the half-inning summary, takes only the
-   * cards, so Roll, the last roll, the calls and the order stay usable under
+   * cards, so the At-bat card and the order stay usable under
    * it and nobody has to close it to keep playing. ---- */
   .gp-region-lineup > .gp-mp { grid-column: 1; grid-row: 1 / -1; }
   /* An explicit end line: for an absolutely positioned grid item, an `auto`
@@ -1929,9 +1873,8 @@ button.gp-lineup-card img { width: 100%; height: 100%; object-fit: cover; displa
  *  - Nothing under the batter and pitcher cards: the card prints the name,
  *    hand and ratings, and the field shows the live (fatigue-adjusted) OB and
  *    CTRL on its at-bat and mound cards.
- *  - The live roll (Pitch / Advantage / Swing / Result) and the calls share
- *    one slot under the cards. Calls are pre-pitch only, exactly when the roll
- *    is still empty, so they swap in place: no row of their own, no click.
+ *  - One At-bat card under the cards: the last roll, the at-bat's steps
+ *    (Pitch / Advantage / Swing / Result), the calls and Roll.
  *  - The tray shows the position alone under each card; the card prints OB.
  *
  * Scoped to .gp-screen.is-d2, which is set only when the game bar is in the
@@ -2048,24 +1991,16 @@ button.gp-lineup-card img { width: 100%; height: 100%; object-fit: cover; displa
    * screen now (it stays on tablet and phone) */
   .gp-screen.is-d2 .gp-stage > .gp-wip { display: none; }
 
-  /* ---- the matchup column: cards / slot / Roll + last roll / tray ---- */
+  /* ---- the matchup column: cards / At-bat card / tray ---- */
   .gp-screen.is-d2 .gp-region-lineup {
     --s2-who-h: 0px;
-    --d2-slot-h: max(44px, calc(var(--u) * 5.2));
-    --d2-band-h: max(60px, calc(var(--u) * 8.4));
-    grid-template-columns: minmax(150px, 32%) minmax(0, 1fr);
-    grid-template-rows: minmax(0, 1fr) var(--d2-slot-h) var(--d2-band-h) auto;
-    grid-template-areas: "match match" "slot slot" "roll result" "tray tray";
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) auto auto;
+    grid-template-areas: "match" "atbat" "tray";
   }
-  /* the matchup spans the card row and the slot row; its live roll sits in the slot */
-  .gp-screen.is-d2 .gp-region-lineup > .gp-matchup {
-    grid-row: 1 / 3; grid-column: 1 / -1;
-    display: grid; grid-template-rows: minmax(0, 1fr) var(--d2-slot-h); row-gap: var(--s2-gap);
-  }
-  .gp-screen.is-d2 .gp-region-lineup .gp-matchup-who,
-  .gp-screen.is-d2 .gp-region-lineup .gp-matchup-rates { display: none; }
-  .gp-screen.is-d2 .gp-region-lineup > .gp-rollbox { grid-area: roll; height: 100%; }
-  .gp-screen.is-d2 .gp-region-lineup > .gp-rollresult { grid-area: result; }
+  .gp-screen.is-d2 .gp-region-lineup > .gp-matchup { grid-area: match; }
+  .gp-screen.is-d2 .gp-region-lineup .gp-matchup-who { display: none; }
+  .gp-screen.is-d2 .gp-region-lineup > .gp-atbat { grid-area: atbat; }
   .gp-screen.is-d2 .gp-region-lineup > .gp-lineup-strip { grid-area: tray; }
 
   /* the cards: depth and a sheen, no frame */
@@ -2081,84 +2016,53 @@ button.gp-lineup-card img { width: 100%; height: 100%; object-fit: cover; displa
     background: linear-gradient(130deg, rgba(255, 255, 255, .09) 0%, transparent 26%);
   }
 
-  /* the live roll: Pitch -> Advantage -> Swing -> Result */
-  .gp-screen.is-d2 .gp-region-lineup .gp-matchup > .gp-roll {
-    display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0; padding: 0; height: 100%;
-    border: 0; border-radius: 10px; overflow: hidden; background: #111215; box-shadow: 0 0 0 1px var(--d2-line);
+  /* the At-bat card: a lower third -- the die as a block, the headline in
+   * the condensed face, Roll a gold pill, the calls as two-sided pills */
+  .gp-screen.is-d2 .gp-atbat {
+    border: 0; border-radius: 10px; overflow: hidden;
+    background: linear-gradient(90deg, #15171b 0%, #121316 100%); box-shadow: 0 0 0 1px rgba(255, 255, 255, .06);
   }
-  .gp-screen.is-d2 .gp-matchup > .gp-roll .gp-roll-cell {
-    position: relative; display: flex; align-items: baseline; justify-content: center; align-content: center; gap: 8px;
-    padding: 0 6px; align-self: center;
+  .gp-screen.is-d2 .gp-atbat-grid { padding: 0 12px 0 0; row-gap: 8px; }
+  .gp-screen.is-d2 .gp-atbat-die { align-self: stretch; height: auto; min-height: 64px; width: 72px; border: 0; border-radius: 0; background: var(--d2-gold-hi); }
+  .gp-screen.is-d2 .gp-atbat.is-defense .gp-atbat-die { background: var(--d2-def); }
+  .gp-screen.is-d2 .gp-atbat-die.is-empty { background: #1e2026; }
+  .gp-screen.is-d2 .gp-atbat-die small { color: #3a2e0c; }
+  .gp-screen.is-d2 .gp-atbat-die strong { color: #111; font-family: var(--d2-cond); font-size: 32px; }
+  .gp-screen.is-d2 .gp-atbat-die.is-empty small, .gp-screen.is-d2 .gp-atbat-die.is-empty strong { color: var(--d2-dim); }
+  .gp-screen.is-d2 .gp-atbat-body { padding-top: 8px; }
+  .gp-screen.is-d2 .gp-atbat-title .s-lbl { background: #fff; color: #111; padding: 1px 6px; border-radius: 2px; font-size: 9px; }
+  .gp-screen.is-d2 .gp-atbat-outcome { display: flex; flex-wrap: wrap; align-items: baseline; column-gap: 10px; row-gap: 2px; }
+  .gp-screen.is-d2 .gp-atbat-sep { display: none; }
+  .gp-screen.is-d2 .gp-atbat-head {
+    font-family: var(--d2-cond); font-size: max(22px, calc(var(--u) * 3)); font-weight: 800; text-transform: uppercase;
+    letter-spacing: .03em; color: var(--d2-text); line-height: 1;
   }
-  .gp-screen.is-d2 .gp-matchup > .gp-roll .gp-roll-cell + .gp-roll-cell::before {
-    content: ""; position: absolute; left: -6px; top: 50%; width: 10px; height: 10px; transform: translateY(-50%) rotate(45deg);
-    border-top: 1px solid rgba(255, 255, 255, .18); border-right: 1px solid rgba(255, 255, 255, .18);
-  }
-  .gp-screen.is-d2 .gp-matchup > .gp-roll .s-lbl { font-size: 9px; color: var(--d2-dim); letter-spacing: .12em; }
-  .gp-screen.is-d2 .gp-matchup > .gp-roll strong { font-family: var(--d2-cond); font-size: max(20px, calc(var(--u) * 2.9)); font-weight: 800; color: var(--d2-text); }
-  .gp-screen.is-d2 .gp-matchup > .gp-roll strong.is-hitter { color: var(--d2-off); font-size: 16px; }
-  .gp-screen.is-d2 .gp-matchup > .gp-roll strong.is-pitcher { color: var(--d2-def); font-size: 16px; }
-
-  /* the calls take the live roll's slot while there are any */
-  .gp-screen.is-d2 .gp-region-lineup > .gp-calls {
-    grid-area: slot; z-index: 2;
-    display: flex; flex-direction: row; align-items: center; gap: 10px; padding: 0 4px 0 12px;
-    border-radius: 10px; background: #111215; box-shadow: 0 0 0 1px rgba(226, 178, 58, .22);
-  }
-  .gp-screen.is-d2 .gp-region-lineup > .gp-calls.is-empty { display: none; }
-  .gp-screen.is-d2 .gp-region-lineup.has-calls .gp-matchup > .gp-roll { visibility: hidden; }
-  .gp-screen.is-d2 .gp-region-lineup > .gp-calls > .s-lbl { display: block; flex: 0 0 auto; font-size: 9px; color: var(--d2-gold-hi); }
-  .gp-screen.is-d2 .gp-region-lineup .gp-calls-list { flex: 1 1 auto; height: calc(100% - 10px); }
-  .gp-screen.is-d2 .gp-region-lineup .gp-calls-list > .gp-action {
-    border-radius: 999px; border: 1px solid var(--d2-line); background: transparent;
-    color: var(--d2-text); font-weight: 700; letter-spacing: .02em; text-transform: none;
-    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
-    transition: border-color 140ms, transform 140ms;
-  }
-  .gp-screen.is-d2 .gp-region-lineup .gp-calls-list > .gp-action:hover:not(:disabled) { border-color: currentColor; transform: translateY(-1px); }
-  /* offence and defence read as two sides */
-  .gp-screen.is-d2 .gp-calls-list > .gp-action::before { content: ""; width: 7px; height: 7px; border-radius: 50%; flex: 0 0 auto; background: var(--d2-off); }
-  .gp-screen.is-d2 .gp-calls-list > .gp-action.is-defence::before { background: var(--d2-def); }
-
-  /* Roll: a gold pill */
-  .gp-screen.is-d2 .gp-region-lineup .gp-rollbox > .gp-roll-hint { display: none; }
-  .gp-screen.is-d2 .gp-region-lineup .gp-rollbox > .gp-action {
-    border-radius: 999px; border: 0; height: 100%; min-height: 0;
+  .gp-screen.is-d2 .gp-atbat.is-offense .gp-atbat-head { color: var(--d2-gold-hi); }
+  .gp-screen.is-d2 .gp-atbat-facts { font-size: 13.5px; font-weight: 600; color: var(--d2-dim); }
+  .gp-screen.is-d2 .gp-atbat-steps { padding: 8px 0 8px 12px; border-top-color: var(--d2-line); }
+  .gp-screen.is-d2 .gp-atbat-steps strong { font-family: var(--d2-cond); font-size: 19px; }
+  .gp-screen.is-d2 .gp-atbat-steps li strong.is-hitter { color: var(--d2-off); font-size: 15px; }
+  .gp-screen.is-d2 .gp-atbat-steps li strong.is-pitcher { color: var(--d2-def); font-size: 15px; }
+  .gp-screen.is-d2 .gp-atbat-actions { padding-block: 10px; }
+  .gp-screen.is-d2 .gp-atbat-roll > .gp-roll-hint { display: none; }
+  .gp-screen.is-d2 .gp-atbat-roll > .gp-action {
+    border-radius: 999px; border: 0; min-height: 42px;
     background: linear-gradient(180deg, var(--d2-gold-hi), var(--d2-gold)); color: #15120a;
     font-family: var(--d2-cond); font-size: 18px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase;
     box-shadow: 0 6px 18px var(--d2-gold-glow), 0 1px 0 rgba(255, 255, 255, .4) inset;
     transition: transform 120ms var(--d2-ease), box-shadow 120ms var(--d2-ease);
   }
-  .gp-screen.is-d2 .gp-region-lineup .gp-rollbox > .gp-action:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 10px 24px var(--d2-gold-glow); }
-  .gp-screen.is-d2 .gp-region-lineup .gp-rollbox > .gp-action:disabled { opacity: .5; box-shadow: none; }
-
-  /* the last roll as a lower third: the die, the headline, its facts */
-  .gp-screen.is-d2 .gp-region-lineup .gp-rollresult {
-    border: 0; border-radius: 4px; padding: 0 14px 0 0; gap: 12px; overflow: hidden;
-    background: linear-gradient(90deg, #15171b 0%, #121316 100%); box-shadow: 0 0 0 1px rgba(255, 255, 255, .06);
-    animation: gp-d2-reveal 260ms var(--d2-ease);
+  .gp-screen.is-d2 .gp-atbat-roll > .gp-action:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 10px 24px var(--d2-gold-glow); }
+  .gp-screen.is-d2 .gp-atbat-roll > .gp-action:disabled { opacity: .5; box-shadow: none; }
+  .gp-screen.is-d2 .gp-atbat-calls > .s-lbl { color: var(--d2-gold-hi); }
+  .gp-screen.is-d2 .gp-atbat-calls-list > .gp-action {
+    min-height: 32px; border-radius: 999px; border: 1px solid var(--d2-line); background: transparent;
+    color: var(--d2-text); font-weight: 700; letter-spacing: .02em; text-transform: none;
+    transition: border-color 140ms, transform 140ms;
   }
-  .gp-screen.is-d2 .gp-region-lineup .gp-rollresult-die {
-    height: 100%; max-height: none; width: auto; max-width: none; aspect-ratio: 1; border: 0; border-radius: 0; background: var(--d2-gold-hi);
-  }
-  .gp-screen.is-d2 .gp-rollresult-die small { color: #3a2e0c; }
-  .gp-screen.is-d2 .gp-rollresult-die strong { color: #111; font-family: var(--d2-cond); font-size: 30px; }
-  .gp-screen.is-d2 .gp-rollresult.is-defense .gp-rollresult-die { background: var(--d2-def); }
-  .gp-screen.is-d2 .gp-rollresult.is-empty .gp-rollresult-die { display: none; }
-  .gp-screen.is-d2 .gp-rollresult.is-empty { padding-left: 14px; }
-  .gp-screen.is-d2 .gp-rollresult-title .s-lbl { background: #fff; color: #111; padding: 1px 6px; border-radius: 2px; font-size: 9px; }
-  .gp-screen.is-d2 .gp-region-lineup .gp-rollresult-main { container: gprr / inline-size; }
-  .gp-screen.is-d2 .gp-region-lineup .gp-rollresult-outcome {
-    display: flex; align-items: baseline; gap: 10px; white-space: nowrap; overflow: hidden; -webkit-line-clamp: unset;
-  }
-  .gp-screen.is-d2 .gp-rollresult-sep { display: none; }
-  .gp-screen.is-d2 .gp-rollresult-head {
-    font-family: var(--d2-cond); font-size: max(24px, calc(var(--u) * 3.3)); font-weight: 800; text-transform: uppercase;
-    letter-spacing: .03em; color: var(--d2-text); line-height: 1; flex: 0 0 auto;
-  }
-  .gp-screen.is-d2 .gp-rollresult.is-offense .gp-rollresult-head { color: var(--d2-gold-hi); }
-  .gp-screen.is-d2 .gp-rollresult-outcome.is-empty .gp-rollresult-head { font-family: inherit; font-size: inherit; text-transform: none; color: inherit; font-weight: 600; }
-  .gp-screen.is-d2 .gp-rollresult-facts { font-size: 13.5px; font-weight: 600; color: var(--d2-dim); overflow: hidden; text-overflow: ellipsis; }
+  .gp-screen.is-d2 .gp-atbat-calls-list > .gp-action:hover:not(:disabled) { border-color: currentColor; transform: translateY(-1px); }
+  .gp-screen.is-d2 .gp-atbat-calls-list > .gp-action::before { background: var(--d2-off); }
+  .gp-screen.is-d2 .gp-atbat-calls-list > .gp-action.is-defence::before { background: var(--d2-def); }
 
   /* the tray: whole cards in a recessed rail, the position alone under each */
   .gp-screen.is-d2 .gp-region-lineup .gp-lineup-strip {
@@ -2193,17 +2097,7 @@ button.gp-lineup-card img { width: 100%; height: 100%; object-fit: cover; displa
   .gp-screen.is-d2 .gp-region-lineup > .gp-toast { grid-column: 1 / -1; grid-row: 1 / 2; }
 }
 
-/* A narrow result band stacks the headline over its facts instead of
- * cutting the facts off. */
-@container gprr (max-width: 330px) {
-  .gp-screen.is-d2 .gp-rollresult-title,
-  .gp-screen.is-d2 .gp-rollresult-math { display: none; }
-  .gp-screen.is-d2 .gp-region-lineup .gp-rollresult-outcome { flex-direction: column; align-items: flex-start; gap: 2px; }
-  .gp-screen.is-d2 .gp-rollresult-head { white-space: normal; font-size: min(20px, 21cqw); line-height: 1.05; }
-  .gp-screen.is-d2 .gp-rollresult-facts { white-space: normal; line-height: 1.2; font-size: 12px; }
-}
-
-/* ---- short, wide windows: batter | live roll, Roll, result | pitcher ----
+/* ---- short, wide windows: batter | At-bat card | pitcher ----
  * Past ~1.88:1 both the field and two stacked cards are height-bound, so the
  * column takes all the width the field can't use and rearranges rather than
  * shrinking the cards. (A query on the screen: a container can't restyle
@@ -2211,43 +2105,29 @@ button.gp-lineup-card img { width: 100%; height: 100%; object-fit: cover; displa
 @container gpscreen (min-aspect-ratio: 188 / 100) {
   .gp-screen.is-d2 .gp-stage { --s-rail-left: calc(100cqw - 100cqh + 49px); }
   .gp-screen.is-d2 .gp-region-lineup {
-    grid-template-columns: minmax(0, 1fr) minmax(190px, 27%) minmax(0, 1fr);
-    grid-template-rows: minmax(0, 1fr) var(--d2-band-h) auto auto;
-    grid-template-areas: "bat slot pit" "bat roll pit" "bat res pit" "tray tray tray";
+    grid-template-columns: minmax(0, 1fr) minmax(220px, 30%) minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) auto;
+    grid-template-areas: "bat atbat pit" "tray tray tray";
   }
   .gp-screen.is-d2 .gp-region-lineup > .gp-matchup,
   .gp-screen.is-d2 .gp-region-lineup .gp-matchup-sides { display: contents; }
   .gp-screen.is-d2 .gp-region-lineup .gp-matchup-side:first-child { grid-area: bat; }
   .gp-screen.is-d2 .gp-region-lineup .gp-matchup-side:last-child { grid-area: pit; }
-  .gp-screen.is-d2 .gp-region-lineup .gp-matchup > .gp-roll { grid-area: slot; align-self: end; height: auto; grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .gp-screen.is-d2 .gp-region-lineup .gp-matchup > .gp-roll .gp-roll-cell { flex-direction: column; align-items: center; gap: 1px; padding: 6px 2px; min-width: 0; }
-  .gp-screen.is-d2 .gp-region-lineup .gp-matchup > .gp-roll .gp-roll-cell + .gp-roll-cell::before { display: none; }
-  .gp-screen.is-d2 .gp-matchup > .gp-roll .s-lbl { font-size: 8px; letter-spacing: .08em; }
-  .gp-screen.is-d2 .gp-matchup > .gp-roll strong { font-size: 18px; }
-  .gp-screen.is-d2 .gp-matchup > .gp-roll strong.is-hitter,
-  .gp-screen.is-d2 .gp-matchup > .gp-roll strong.is-pitcher { font-size: 13px; }
-  .gp-screen.is-d2 .gp-region-lineup > .gp-rollresult { grid-area: res; height: auto; min-height: 92px; padding: 0 10px 0 0; }
-  .gp-screen.is-d2 .gp-region-lineup > .gp-calls { grid-area: slot; align-self: end; flex-direction: column; align-items: stretch; padding: 8px; height: auto; }
-  .gp-screen.is-d2 .gp-region-lineup > .gp-calls > .s-lbl { text-align: center; }
-  .gp-screen.is-d2 .gp-region-lineup .gp-calls-list { flex-direction: column; height: auto; gap: 6px; }
-  .gp-screen.is-d2 .gp-region-lineup .gp-calls-list > .gp-action { flex: 0 0 34px; height: 34px; }
-  /* the half-inning summary covers the whole matchup band; Roll, the last
-   * roll and any calls stay docked on top of it, so the next pitch or call is
-   * never behind it. Its foot is padded by what is docked: the Roll band, the
-   * last roll, and the calls box (--d2-calls is how many calls there are). */
-  .gp-screen.is-d2 .gp-region-lineup > .gp-mp.is-over-cards {
-    grid-row: 1 / 4; grid-column: 1 / -1;
-    padding-bottom: calc(var(--d2-band-h) + 104px + 2 * var(--s2-gap) + min(var(--d2-calls, 0), 1) * 38px + var(--d2-calls, 0) * 40px);
-  }
-  .gp-screen.is-d2 .gp-region-lineup:has(> .gp-mp.is-over-cards) > .gp-rollbox,
-  .gp-screen.is-d2 .gp-region-lineup:has(> .gp-mp.is-over-cards) > .gp-rollresult,
-  .gp-screen.is-d2 .gp-region-lineup:has(> .gp-mp.is-over-cards) > .gp-calls { position: relative; z-index: 21; }
+  .gp-screen.is-d2 .gp-region-lineup > .gp-atbat { align-self: center; }
+  /* the half-inning summary covers the cards; the At-bat card between them
+   * stays docked on top, so the next pitch or call is never behind it. */
+  .gp-screen.is-d2 .gp-region-lineup > .gp-mp.is-over-cards { grid-row: 1 / 2; grid-column: 1 / -1; }
+  .gp-screen.is-d2 .gp-region-lineup:has(> .gp-mp.is-over-cards) > .gp-atbat { position: relative; z-index: 21; }
 }
 
-@keyframes gp-d2-reveal { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+/* a wide At-bat card: the die block runs the card's full height */
+@container gpatbat (min-width: 620px) {
+  .gp-screen.is-d2 .gp-atbat-die { grid-row: 1 / 3; }
+  .gp-screen.is-d2 .gp-atbat-steps { grid-column: 2; padding-left: 0; }
+}
 @keyframes gp-d2-panel { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) {
-  .gp-screen.is-d2 .gp-rollresult, .gp-screen.is-d2 .gp-mp { animation: none; }
+  .gp-screen.is-d2 .gp-mp { animation: none; }
   .gp-screen.is-d2 *, .gp-gamebar * { transition: none !important; }
 }
 

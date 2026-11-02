@@ -9,7 +9,7 @@ import GameMenu from './GameMenu'
 import { type LogEvent } from './GameLogPanel'
 import { playOf } from './playRecord'
 import { CardZoomProvider } from './CardZoom'
-import RollResult from './RollResult'
+import AtBatCard from './AtBatCard'
 import LiveBoxScore from './LiveBoxScore'
 import HalfInningTransition from './HalfInningTransition'
 import PostGameBoard from './PostGameBoard'
@@ -20,7 +20,7 @@ import { awaitingOffenseReady, sideToAct } from '../turnOrder'
 import type { useGameplayActions } from './useGameplayActions'
 import type { HalfInningTransition as HalfInningTransitionModel } from '../halfInningTransition'
 import type { GameSide, GameState } from '../types'
-import { useCallback, useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { useHeaderSlot } from '../../components/headerSlot'
 import { useMediaQuery } from '../../lib/useMediaQuery'
@@ -299,45 +299,37 @@ export default function GameplayScreenView({
       <div className="gp-layout">
         {/* The left rail is the manager's column: who is up, the roll, who is
             pitching, the batting order, and the calls available right now. */}
-        <section className={`gp-region gp-region-lineup${sideActions.length ? ' has-calls' : ''}`} aria-label="Matchup and lineup"
-          style={{ '--d2-calls': sideActions.length } as CSSProperties}>
+        <section className="gp-region gp-region-lineup" aria-label="Matchup and lineup">
           <MatchupPanel state={state} />
 
-          <RollControls
+          {/* Only the calls legal for this state render at all. An action
+              belonging to the other manager is not shown disabled -- that is
+              permanent noise on a screen you look at every pitch. */}
+          <AtBatCard
             state={state}
-            saving={saving}
-            hasDecision={Boolean(decision)}
-            canAct={myTurn}
-            waitingOn={twoPlayer && !myTurn && toAct ? state.managers[toAct].managerName : null}
-            onReady={() => void declareReady()}
-            onRollPitch={() => void rollPitch()}
-            onRollSwing={() => void rollSwing()}
-            onNoPitch={() => void noPitch()}
+            events={events}
+            calls={sideActions.map((a) => (
+              <button key={a.id} className={`gp-action gp-action-secondary ${OFFENCE_ACTIONS.has(a.id) ? 'is-offence' : 'is-defence'}`} disabled={saving}
+                title={a.detail} onClick={() => void startAction(a.id)}>{a.label}</button>
+            ))}
+            controls={
+              <RollControls
+                state={state}
+                saving={saving}
+                hasDecision={Boolean(decision)}
+                canAct={myTurn}
+                waitingOn={twoPlayer && !myTurn && toAct ? state.managers[toAct].managerName : null}
+                onReady={() => void declareReady()}
+                onRollPitch={() => void rollPitch()}
+                onRollSwing={() => void rollSwing()}
+                onNoPitch={() => void noPitch()}
+              />
+            }
           />
-
-          <RollResult events={events} />
 
           <div className="gp-panel gp-lineup-strip">
             <LineupRail state={state} />
           </div>
-
-          {/* Only the calls legal for this state render at all. An action
-              belonging to the other manager is not shown disabled -- that is
-              permanent noise on a screen you look at every pitch. The box
-              keeps a fixed height so the Type 2 board does not shift between
-              pitches as calls come and go. On desktop (D2) the calls take the
-              live roll's slot under the cards: calls are pre-pitch only,
-              exactly when that roll is still empty, so the two swap in place. */}
-          <section className={`gp-panel gp-calls${sideActions.length ? '' : ' is-empty'}`} aria-label="Manager decisions">
-            <b className="s-lbl">{barInHeader ? 'Before the pitch' : 'Manager decisions'}</b>
-            <div className="gp-calls-list">
-              {sideActions.map((a) => (
-                <button key={a.id} className={`gp-action gp-action-secondary ${OFFENCE_ACTIONS.has(a.id) ? 'is-offence' : 'is-defence'}`} disabled={saving}
-                  title={a.detail} onClick={() => void startAction(a.id)}>{a.label}</button>
-              ))}
-            </div>
-            {sideActions.length === 0 && <p className="gp-calls-rest">No decisions this pitch.</p>}
-          </section>
 
           {panel === 'decision' && decision && (
             <ManagerPanel state={state} title={decision.title}
