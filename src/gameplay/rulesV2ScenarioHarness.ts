@@ -239,48 +239,28 @@ export function runRulesV2ScenarioMatrix(initial: GameState): ScenarioReport {
   })
 
   // ---------------------------------------------------------------- Infield In (Decisions 2-4)
-  const II_AVAILABLE: Array<[string, Partial<Record<Base, number>>]> = [['1B', { first: 1 }], ['2B', { second: 2 }], ['3B', { third: 3 }], ['1B2B', { first: 1, second: 2 }], ['1B3B', { first: 1, third: 3 }], ['2B3B', { second: 2, third: 3 }], ['LOADED', { first: 1, second: 2, third: 3 }]]
+  // Offered only with a runner on 3B and fewer than two out (Anthony,
+  // 2026-11-01, replacing Decision 2's runner-on-any-base availability).
+  const II_AVAILABLE: Array<[string, Partial<Record<Base, number>>]> = [['3B', { third: 3 }], ['1B3B', { first: 1, third: 3 }], ['2B3B', { second: 2, third: 3 }], ['LOADED', { first: 1, second: 2, third: 3 }]]
   for (const [id, runners] of II_AVAILABLE) {
     test(`V2-II-AVAIL-${id}`, 'Infield In', `Infield In offered with runners ${id} and fewer than two out; not with two out`, () => {
       assert(preActions(v2(initial, { runners, outs: 1 })).includes('INFIELD_IN'), 'Should be offered.')
       assert(!preActions(v2(initial, { runners, outs: 2 })).includes('INFIELD_IN'), 'Not with two out.')
     })
   }
-  test('V2-II-AVAIL-EMPTY', 'Infield In', 'Infield In is not offered with the bases empty', () => {
-    assert(!preActions(v2(initial)).includes('INFIELD_IN'), 'Not with empty bases.')
-  })
+  const II_UNAVAILABLE: Array<[string, Partial<Record<Base, number>>]> = [['EMPTY', {}], ['1B', { first: 1 }], ['2B', { second: 2 }], ['1B2B', { first: 1, second: 2 }]]
+  for (const [id, runners] of II_UNAVAILABLE) {
+    test(`V2-II-UNAVAIL-${id}`, 'Infield In', `Infield In is not offered with runners ${id} (no runner on 3B)`, () => {
+      assert(!preActions(v2(initial, { runners, outs: 0 })).includes('INFIELD_IN'), 'Not without a runner on third.')
+    })
+  }
   const infieldIn = (s: GameState) => confirm(beginPrePitchDecision(s, 'INFIELD_IN'), 'CONFIRM_INFIELD_IN')
   const gbInfieldIn = (runners: Partial<Record<Base, number>>, outs: 0 | 1 = 0) => {
     const before = v2(initial, { runners, outs })
     return { before, after: swing(infieldIn(before), 'GB') }
   }
-  test('V2-II-GB-1B', 'Infield In', 'R1 only, GB: lead runner forced out at 2B, batter safe at 1B on a fielder\'s choice', () => {
-    const { before, after } = gbInfieldIn({ first: 1 })
-    const s = confirm(after, 'HOLD_RUNNERS')
-    assert(keyAt(s, 'first') === runnerKeyOf(before, 0) && !keyAt(s, 'second') && s.outs === 1, `Bases ${JSON.stringify(s.bases)} outs ${s.outs}.`)
-    assert(lastPlay(s).batting?.credit === 'fielders_choice', 'FC.')
-  })
-  test('V2-II-GB-1B2B', 'Infield In', 'R1 + R2, GB: lead runner out at 3B, R1 to 2B, batter safe at 1B', () => {
-    const { before, after } = gbInfieldIn({ first: 1, second: 2 })
-    const s = confirm(after, 'HOLD_RUNNERS')
-    assert(keyAt(s, 'first') === runnerKeyOf(before, 0) && keyAt(s, 'second') === runnerKeyOf(before, 1) && !keyAt(s, 'third') && s.outs === 1, `Bases ${JSON.stringify(s.bases)}.`)
-  })
-  test('V2-II-GB-2B-HOLD', 'Infield In', 'R2 only, GB, hold: runner holds, batter out', () => {
-    const { before, after } = gbInfieldIn({ second: 2 })
-    assert(optionIds(after).includes('CONTACT_PLAY'), 'Contact play is offered on a hold state.')
-    const s = confirm(after, 'HOLD_RUNNERS')
-    assert(keyAt(s, 'second') === runnerKeyOf(before, 2) && s.outs === 1, 'Holds, batter out.')
-  })
-  test('V2-II-GB-2B-CONTACT', 'Infield In', 'R2 only, contact play, roll 1: everyone safe -- R2 to 3B, batter on 1B, no out', () => {
-    const { before, after } = gbInfieldIn({ second: 2 })
-    const s = roll(confirm(after, 'CONTACT_PLAY'), 1)
-    assert(keyAt(s, 'third') === runnerKeyOf(before, 2) && keyAt(s, 'first') === runnerKeyOf(before, 0) && s.outs === 0, `Bases ${JSON.stringify(s.bases)}.`)
-  })
-  test('V2-II-GB-2B-CONTACT-OUT', 'Infield In', 'R2 only, contact play, roll 20: R2 out at 3B, batter safe on a fielder\'s choice', () => {
-    const { before, after } = gbInfieldIn({ second: 2 })
-    const s = roll(confirm(after, 'CONTACT_PLAY'), 20)
-    assert(!keyAt(s, 'third') && !keyAt(s, 'second') && keyAt(s, 'first') === runnerKeyOf(before, 0) && s.outs === 1, `Bases ${JSON.stringify(s.bases)}.`)
-  })
+  // Infield In needs a runner on 3B, so the Rulebook's 1B-only, 2B-only and
+  // 1B + 2B outcomes cannot arise from a declaration and are not tested here.
   test('V2-II-GB-1B3B-HOLD', 'Infield In', 'R1 + R3, hold (Anthony, 2026-11-01): batter safe at 1B, R1 forced to 2B, R3 holds, no out, no run -- bases loaded', () => {
     const { before, after } = gbInfieldIn({ first: 1, third: 3 }, 1)
     const s = confirm(after, 'HOLD_RUNNERS')
@@ -300,10 +280,10 @@ export function runRulesV2ScenarioMatrix(initial: GameState): ScenarioReport {
     const s = confirm(after, 'HOLD_RUNNERS')
     assert(s.score.away === 0 && s.outs === 1 && keyAt(s, 'third') === runnerKeyOf(before, 2) && keyAt(s, 'first') === runnerKeyOf(before, 0), `Bases ${JSON.stringify(s.bases)}.`)
   })
-  test('V2-II-PU-SINGLE', 'Infield In', 'R1, Infield In, PU: becomes a single, runners +1, credited as a hit', () => {
-    const before = v2(initial, { runners: { first: 1 } })
+  test('V2-II-PU-SINGLE', 'Infield In', 'R3, Infield In, PU: becomes a single, runners +1 (R3 scores), credited as a hit', () => {
+    const before = v2(initial, { runners: { third: 3 } })
     const s = swing(infieldIn(before), 'PU')
-    assert(keyAt(s, 'second') === runnerKeyOf(before, 1) && keyAt(s, 'first') === runnerKeyOf(before, 0) && s.outs === 0, 'Single.')
+    assert(keyAt(s, 'first') === runnerKeyOf(before, 0) && !keyAt(s, 'third') && s.score.away === 1 && s.outs === 0, `Single: bases ${JSON.stringify(s.bases)}, score ${s.score.away}.`)
     assert(lastPlay(s).batting?.credit === 'single', 'Credited as a single.')
   })
   test('V2-II-TWO-OUT-AT-SWING', 'Infield In', 'Decision 3: Infield In declared, then two out by the swing -- a PU is an out', () => {
@@ -312,9 +292,9 @@ export function runRulesV2ScenarioMatrix(initial: GameState): ScenarioReport {
     assert(s.half === 'bottom', 'PU was the third out.')
   })
   test('V2-II-EMPTY-AT-SWING', 'Infield In', 'Decision 3: Infield In declared, then the bases emptied -- a FB is an out', () => {
-    const declared = infieldIn(v2(initial, { runners: { first: 1 }, outs: 0 }))
+    const declared = infieldIn(v2(initial, { runners: { third: 3 }, outs: 0 }))
     const s = swing({ ...declared, bases: { first: null, second: null, third: null } }, 'FB')
-    assert(s.outs === 1 && !keyAt(s, 'first'), 'FB is an out.')
+    assert(s.outs === 1 && !keyAt(s, 'first') && s.score.away === 0, 'FB is an out.')
   })
 
   // ---------------------------------------------------------------- ground balls, GIDP, defensive attempts (D3, Decisions 7 and 11)

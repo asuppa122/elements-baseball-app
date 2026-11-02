@@ -171,7 +171,7 @@ export const DIGITAL_RULE_REVIEW_MARKERS: DigitalRuleReviewMarker[] = [
     afterText: "When there are runners on base with less than 2 out, the defensive GM may opt to declare “infield-in” prior to any die rolls in an at bat, which results in the following.",
     status: 'approved',
     title: "Approved Rule Amendment — 2026-11-01",
-    text: "Approved (2026-11-01): Infield In may be declared with a runner on any base and fewer than 2 outs — including a runner on 1B only, 2B only, or 1B & 2B — with the outcomes below. It is judged when the swing result is given: if by then there are 2 outs or the bases are empty, it has no effect.",
+    text: "Approved (2026-11-01): Infield In may be declared only with a runner on 3B and fewer than 2 outs, with the outcomes below. It is judged when the swing result is given: if by then there are 2 outs or the bases are empty, it has no effect.",
   },
   {
     id: "approved-infield-in-hold",

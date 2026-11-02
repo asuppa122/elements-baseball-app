@@ -1,15 +1,29 @@
-# v1.6.0 — Rules v2, Play-by-Play, Box Scores and Statistics (UNRELEASED — local branch, not deployed)
+# v1.6.1 — Game Screen Cleanup, Live Box Score, ERA-Style Log
 
-Built locally on branch `stats-and-gameplay-v2` under Anthony's consolidated
-authorization of 2026-11-01. **Not pushed, not deployed; the database migration
-is not applied.** Official tracking stays OFF. Rulings: `GAMEPLAY_REFERENCE_NOTES.md`
+From the first live v2 game with Will (2026-11-01).
+
+- **Stats under each card:** the batter's and pitcher's game line and season line sit in one block under their card; the header no longer carries them.
+- **Live box score:** a Box button opens the line score, batting, pitching, Elements and play-by-play over the whole screen at any point in the game.
+- **Field cards enlarge:** every card on the field opens full size (the field wrapper was swallowing the clicks).
+- **One At-bat card:** the last roll's headline, the at-bat's steps (Pitch → Adv → Swing → Result), the calls before the pitch and Roll in one card, replacing the separate roll row, last-roll box and decisions box. The roll arithmetic is no longer drawn (it is still saved).
+- **Matchup:** no longer repeats OB/BSR and CTRL/IP; the cards print them and the field keeps the live Control and On Base.
+- **Ground-ball results say where the outs were made:** "Fielder's choice — out at second", "Double play — outs at second and first".
+- **Game log, after ERA:** one plain line per roll ("Roll: (10) +5, Advantage: Chuck Smith", "Roll: (20) Rodney Scott: Double [Smith]"), each run as it scores and the score right after it.
+- **Infield In** is offered only with a runner on 3B and fewer than 2 outs (revising the runner-on-any-base availability).
+- Tablet and phone: the lineup spreads across the strip; Log / Box / Pen / Bench are one even row (their labels had been rendering at the browser's default size); the repeated roll row, wait message, recap and fielding label are gone.
+
+# v1.6.0 — Rules v2, Play-by-Play, Box Scores and Statistics
+
+Built on branch `stats-and-gameplay-v2` under Anthony's consolidated
+authorization of 2026-11-01 and deployed to production at his request the same
+day. **The database migration is not applied.** Official tracking stays OFF. Rulings: `GAMEPLAY_REFERENCE_NOTES.md`
 rulings 9–19; plan and status: `IMPLEMENTATION_PLAN.md`.
 
 **Gameplay (rules v2 — new games only; games created before finish under v1)**
 - Walk-offs end at the winning run; only a HR counts every run; the game-ending hit is credited with the bases the winning runner advanced; no extra-base decision or 1B+ steal after it (D2, D7).
 - Squeeze 1–7 for the third out completes no plate appearance; the same batter leads off (D1). Squeeze 16–19 with two outs scores no run (D8).
 - After any resolved steal attempt in a plate appearance, every manager action is locked until it ends.
-- Infield In with a runner on any base and fewer than 2 outs, judged at the swing; with R1 + R3 a ground ball loads the bases: the batter is safe, the runner on 1B goes to 2B, the runner on 3B holds, no out.
+- Infield In only with a runner on 3B and fewer than 2 outs, judged at the swing; with R1 + R3 a ground ball loads the bases: the batter is safe, the runner on 1B goes to 2B, the runner on 3B holds, no out.
 - Runs are charged to the responsible pitcher (fatigue ladder, Shutout Bonus Option B); 9.16(g) transfers; pinch runners inherit.
 - The Shutout Bonus never restores Control (D10).
 - One ground-ball implementation shared by play, tests and demos (D3) — the old copy's phantom out is gone.
@@ -17,7 +31,7 @@ rulings 9–19; plan and status: `IMPLEMENTATION_PLAN.md`.
 **Statistics**
 - Every play is recorded in a play log saved with the game; batting, pitching and fielding lines, team totals and W/L/SV/HLD/BS are derived from it (deterministic, no scorer judgment).
 - Box score (traditional, Elements, play-by-play) on the final board and at `/games/lab/:gameId/box`; Exhibition / Official labels; older games show only what they hold.
-- Live game lines beside the score; the season strip reads "No season stats yet".
+- Live game lines for the current batter and pitcher; the season line reads "No stats yet" (moved under each card in v1.6.1).
 
 **Database (local migration `20261101_gameplay_stats_and_rest_v2.sql`, not applied)**
 - Exhibition / official classification; the server rest writer's three pitcher adjustments for v2 games; empty official statistics tables with a writer that is off by two switches; an owner-only exhibition cleanup that is never run automatically.
