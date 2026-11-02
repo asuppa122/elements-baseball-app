@@ -5,9 +5,8 @@ import { playOf, type RollView } from './playRecord'
 
 /**
  * The plate appearance in one card, where both managers are already looking:
- * - the last roll -- the die, what it did and the arithmetic -- read from the
- *   saved event, so the manager who did not roll sees the same number, the
- *   same modifiers and the same result;
+ * - the last roll -- the die and what it did -- read from the saved event, so
+ *   the manager who did not roll sees the same number and the same result;
  * - the at-bat so far as four steps (Pitch, Advantage, Swing, Result), lit as
  *   they happen, so the earlier numbers are still there once the next roll
  *   replaces the last one;
@@ -23,8 +22,6 @@ function asRollView(value: unknown): RollView | null {
   const v = value as RollView
   return typeof v.roll === 'number' && typeof v.result === 'string' ? v : null
 }
-
-const signed = (n: number) => (n >= 0 ? `+${n}` : `${n}`)
 
 function LastRoll({ events }: { events: LogEvent[] }) {
   let latest: { view: RollView; version: number; summary?: string } | null = null
@@ -48,7 +45,6 @@ function LastRoll({ events }: { events: LogEvent[] }) {
   const cut = outcome.indexOf(' — ')
   const head = cut < 0 ? outcome : outcome.slice(0, cut)
   const facts = cut < 0 ? '' : outcome.slice(cut + 3)
-  const decisive = new Set(view.decisive ?? [])
 
   return (
     <>
@@ -64,20 +60,11 @@ function LastRoll({ events }: { events: LogEvent[] }) {
           <span className="gp-atbat-head">{head}</span>
           {facts && <><span className="gp-atbat-sep"> — </span><span className="gp-atbat-facts">{facts}</span></>}
         </p>
-        {(view.modifiers.length > 0 || view.versus) && (
-          <ul className="gp-atbat-math s-num" aria-label="Roll breakdown">
-            <li>d20 {view.roll}</li>
-            {view.modifiers.map((m) => (
-              <li key={m.label} className={decisive.has(m.label) ? 'is-decisive' : undefined}>
-                {m.label} {signed(m.value)}{decisive.has(m.label) && <em> decided it</em>}
-              </li>
-            ))}
-            {view.total !== undefined && <li className="is-total">= {view.total}</li>}
-            {view.versus && <li className="is-versus">vs {view.versus.label} {view.versus.value}</li>}
-            {view.natural && <li className="gp-atbat-natural">{view.natural}</li>}
-          </ul>
-        )}
-        {view.natural && view.modifiers.length === 0 && !view.versus && <p className="gp-atbat-natural">{view.natural}</p>}
+        {/* The headline is the reading (Anthony, 2026-11-01): the arithmetic
+            behind it (modifiers, total against the rating) is saved with the
+            roll but not drawn. A natural is a fact about the play, so it
+            still shows. */}
+        {view.natural && <p className="gp-atbat-natural">{view.natural}</p>}
       </div>
     </>
   )

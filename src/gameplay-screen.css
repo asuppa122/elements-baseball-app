@@ -1493,9 +1493,6 @@ button.gp-lineup-card img { width: 100%; height: 100%; object-fit: cover; displa
 .gp-atbat-title .s-lbl { margin-right: 4px; }
 .gp-atbat-outcome { margin: 0; font-size: 15px; font-weight: 800; color: var(--s-cream); line-height: 1.25; }
 .gp-atbat-outcome.is-empty { color: var(--s-gray-muted); font-weight: 600; font-style: italic; }
-.gp-atbat-math { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 2px 8px; font-size: 12px; color: var(--s-gray); }
-.gp-atbat-math li.is-total, .gp-atbat-math li.is-decisive { color: var(--s-gold-bright); font-weight: 800; }
-.gp-atbat-math li em { font-style: normal; font-size: 9.5px; font-weight: 800; text-transform: uppercase; color: var(--s-ink); background: var(--s-gold-bright); padding: 0 4px; border-radius: 4px; }
 .gp-atbat-natural { margin: 0; font-size: 12px; font-weight: 800; color: var(--s-gold-bright); }
 
 /* the steps: a progress line, lit as the at-bat moves along */
@@ -1546,7 +1543,6 @@ button.gp-lineup-card img { width: 100%; height: 100%; object-fit: cover; displa
 @media (max-width: 1024px) {
   .gp-atbat-die { width: 60px; height: 60px; }
   .gp-atbat-outcome { font-size: 16px; }
-  .gp-atbat-math { font-size: 13px; }
 }
 
 /* ---- the recap: two lines rather than one truncated one ---- */
