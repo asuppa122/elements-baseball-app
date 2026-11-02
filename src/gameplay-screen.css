@@ -1301,9 +1301,11 @@
   .gp-region-rail .gp-tool-count { font-size: 11px; }
 }
 @media (max-width: 480px) {
-  /* four across a phone: the icon above, the name and count beneath */
-  .gp-region-rail .gp-tool { flex-wrap: wrap; align-content: center; column-gap: 4px; row-gap: 3px; min-height: 54px; padding: 4px; font-size: 10px; letter-spacing: 0.06em; }
-  .gp-region-rail .gp-tool svg { flex-basis: 100%; }
+  /* four across a phone, still one line each: a smaller icon and tighter
+   * spacing rather than stacking */
+  .gp-region-rail .gp-toolbar { gap: 6px; }
+  .gp-region-rail .gp-tool { gap: 4px; padding: 0 4px; font-size: 10px; letter-spacing: 0.03em; }
+  .gp-region-rail .gp-tool svg { width: 15px; height: 15px; }
   .gp-region-rail .gp-tool-count { font-size: 10px; }
   .gp-calls { gap: 6px; }
   .gp-calls-list { gap: 6px; }
