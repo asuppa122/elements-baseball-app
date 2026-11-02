@@ -2,7 +2,8 @@ import { useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { computeGameStats, hasPlayRecord } from '../stats/gameStats'
 import type { GameSide, GameState } from '../types'
-import BoxScoreView, { STAT_DEFS } from './BoxScoreView'
+import { STAT_DEFS } from '../stats/statDefinitions'
+import BoxScoreView from './BoxScoreView'
 
 /**
  * The box score during the game: the line score, then the batting, pitching,

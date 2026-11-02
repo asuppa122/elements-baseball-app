@@ -105,7 +105,7 @@ describe('box score column help', () => {
     fireEvent.click(screen.getByRole('tab', { name: 'Advanced' }))
     const ochw = document.querySelector('abbr[title^="OCHW"]')
     expect(ochw?.getAttribute('title')).toContain('Own Chart Hit/Walk')
-    for (const h of document.querySelectorAll('.gp-box-table thead th')) {
+    for (const h of Array.from(document.querySelectorAll('.gp-box-table thead th'))) {
       if (h.textContent) expect(h.querySelector('abbr[title]'), h.textContent).not.toBeNull()
     }
     expect(screen.getByText('Key')).toBeTruthy()
