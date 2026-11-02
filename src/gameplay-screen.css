@@ -1278,9 +1278,33 @@
 @media (max-width: 1024px) {
   .gp-region-lineup { gap: 10px; overflow: visible; }
   .gp-lineup-strip { padding: 8px; }
-  .gp-lineup-strip .gp-lineup-list { gap: 4px; overflow-x: auto; }
-  .gp-lineup-strip .gp-lineup-row { flex: 0 0 auto; width: 44px; gap: 2px; }
-  .gp-lineup-strip .gp-lineup-order { font-size: 9px; color: var(--s-gray-muted); }
+  /* the nine spread across the strip's full width, as large as it allows
+   * (up to the desktop tray's size), rather than packed against the left */
+  .gp-lineup-strip .gp-lineup-list {
+    display: grid; grid-template-columns: repeat(9, minmax(30px, 1fr));
+    gap: clamp(4px, 1.4vw, 10px); overflow-x: auto; padding: 3px 3px 4px;
+  }
+  .gp-lineup-strip .gp-lineup-row { width: 100%; gap: 4px; }
+  .gp-lineup-strip .gp-lineup-card { width: 100%; max-width: 80px; height: auto; }
+  .gp-lineup-strip .gp-lineup-order { font-size: 10px; color: var(--s-gray-muted); }
+  /* the tools: one even row of equal buttons, icon, name and count on a line */
+  .gp-region-rail .gp-toolbar {
+    display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr);
+    gap: 8px; width: 100%; max-width: 560px; margin: 0 auto; padding: 0;
+  }
+  .gp-region-rail .gp-tool {
+    width: auto; min-height: 48px; padding: 0 8px;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    font-size: 11px; letter-spacing: 0.08em;
+  }
+  .gp-region-rail .gp-tool svg { flex: 0 0 auto; width: 18px; height: 18px; }
+  .gp-region-rail .gp-tool-count { font-size: 11px; }
+}
+@media (max-width: 480px) {
+  /* four across a phone: the icon above, the name and count beneath */
+  .gp-region-rail .gp-tool { flex-wrap: wrap; align-content: center; column-gap: 4px; row-gap: 3px; min-height: 54px; padding: 4px; font-size: 10px; letter-spacing: 0.06em; }
+  .gp-region-rail .gp-tool svg { flex-basis: 100%; }
+  .gp-region-rail .gp-tool-count { font-size: 10px; }
   .gp-calls { gap: 6px; }
   .gp-calls-list { gap: 6px; }
   .gp-calls-rest { font-size: 11px; }
@@ -1673,7 +1697,10 @@ button.gp-lineup-card img { width: 100%; height: 100%; object-fit: cover; displa
   display: grid; place-items: center; gap: 3px;
   border-radius: 12px; border: 1px solid var(--s-line); background: transparent;
   color: var(--s-gray); cursor: pointer;
-  font: 800 9px/1.1 inherit; letter-spacing: 0.06em; text-transform: uppercase;
+  /* not the `font` shorthand: `inherit` is invalid inside it, which threw
+   * the whole declaration away and left the labels at the browser's size */
+  font-family: inherit; font-weight: 800; font-size: 9px; line-height: 1.1;
+  letter-spacing: 0.06em; text-transform: uppercase;
 }
 .gp-tool:hover { border-color: var(--s-gold); color: var(--s-cream); }
 .gp-tool:focus-visible { outline: 2px solid var(--s-gold-bright); outline-offset: 2px; }
@@ -1733,7 +1760,6 @@ button.gp-lineup-card img { width: 100%; height: 100%; object-fit: cover; displa
 
 /* ---- tablet and phone ---- */
 @media (max-width: 767px) {
-  .gp-toolbar { flex-direction: row; justify-content: center; align-items: stretch; }
   .gp-mp {
     position: fixed; inset: auto 0 0 0; max-height: 72dvh; z-index: 40;
     border-radius: 16px 16px 0 0; border-bottom: 0;
