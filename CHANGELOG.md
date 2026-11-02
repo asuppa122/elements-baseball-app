@@ -16,6 +16,11 @@ From the first live v2 game with Will (2026-11-01).
 - **Box score tabs read Standard, Advanced and Play-by-play;** every column heading explains itself on hover ("OCHW — Own Chart Hit/Walk: …"), and the Advanced tab has a Key for phones.
 - Wide windows: the half-inning recap is no longer covered by the At-bat card.
 - Safari: Roll swing after a failed bunt appears at once on a small window (a CSS check Safari did not re-run kept it hidden until a resize).
+- **Extra bases, roll to send first (rules v2):** hit → send runners → the offence rolls to send → on 11–20 the defence picks the runner and outfielder in one step → the throw; on 1–10 nobody advances. Two out with a runner sent home skips the roll. Older games and decisions already open keep the old order.
+- **Double and triple plays name their outs** from the checks themselves ("Double play — outs at 2nd and 1st"), even when the play ends the inning; bases read 2nd / 3rd / 1st throughout.
+- **Game log order:** newest line first while the game is on; first to last once it is over. Older lines that only recorded "Resolved." now name the check.
+- **Advanced box score:** "R while pitching" is labelled ER (its tooltip says it counts every run scored while he pitched).
+- **Team Builder:** every card has a magnifier that opens it full size -- batting order, bench, rotation and bullpen rows (the thumbnail itself too), Fielding cards, the player picker and the compare strip -- without picking or moving anyone.
 - **The wheel play is announced:** "Anthony calls the wheel play." goes to the log, the offence's turn chip reads "Waiting on Anthony — Wheel Play…", and the result reads "Wheel play — lead runner Reyes out at second" (or "Sacrifice bunt beats the wheel play").
 - **The defence rolls the wheel play** on a sacrifice bunt (it is the defence's play); the no-wheel bunt is still rolled by the offence.
 - **Roll to hold is announced either way:** "Roll to hold — Beltran advances to third" or "Roll to hold — Beltran holds at second" (a hold used to read as nothing).

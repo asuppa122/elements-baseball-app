@@ -187,7 +187,7 @@ describe('describePlay summary', () => {
   it('a double play, a groundout, and a ground ball still waiting on the defence', () => {
     const before = game(); before.bases.first = reyes
     const dp = structuredClone(before); dp.bases.first = null; dp.outs = 2
-    expect(describePlay(before, dp, 'GB').summary).toBe('Double play — outs at second and first, second out')
+    expect(describePlay(before, dp, 'GB').summary).toBe('Double play — outs at 2nd and 1st, second out')
     const plain = game()
     expect(describePlay(plain, { ...structuredClone(plain), outs: 1 }, 'GB').summary).toBe('Groundout — first out')
     const open = pending(structuredClone(before), 'GROUND_BALL_RESOLUTION', { preBases: structuredClone(before.bases) })
@@ -197,7 +197,7 @@ describe('describePlay summary', () => {
   it('a walk that moves the runner, and a bases-loaded double that clears them', () => {
     const before = game(); before.bases.first = reyes
     const walk = structuredClone(before); walk.bases = { first: wright, second: reyes, third: null }
-    expect(describePlay(before, walk, 'BB').summary).toBe('Walk — Reyes to second')
+    expect(describePlay(before, walk, 'BB').summary).toBe('Walk — Reyes to 2nd')
     const loaded = game()
     loaded.bases = { first: runner('AWAY-1', 'Jose Reyes'), second: runner('AWAY-2', 'Carlos Beltran'), third: runner('AWAY-3', 'Mike Piazza') }
     const cleared = structuredClone(loaded); cleared.bases = { first: null, second: wright, third: null }; cleared.score.away = 3
@@ -229,10 +229,10 @@ describe('describePlay summary after a ground-ball decision', () => {
     const before = pending(game(), 'GB_STANDARD_SECOND_CHECK', {})
     before.outs = 1
     const dp = structuredClone(before); dp.pendingDecision = null; dp.half = 'bottom'; dp.outs = 0
-    expect(describePlay(before, dp).summary).toBe('Double play — inning over')
+    expect(describePlay(before, dp).summary).toBe('Double play — outs at 2nd and 1st, inning over')
     const fc0 = pending(game(), 'GB_STANDARD_SECOND_CHECK', {})
     const fc = structuredClone(fc0); fc.pendingDecision = null; fc.outs = 1; fc.bases.first = wright
-    expect(describePlay(fc0, fc).summary).toBe("Fielder's choice — first out")
+    expect(describePlay(fc0, fc).summary).toBe("Fielder's choice — out at 2nd, first out")
   })
 
   it("says where a fielder's choice or force was made: the runner out at the next base", () => {
@@ -241,11 +241,11 @@ describe('describePlay summary after a ground-ball decision', () => {
     const atSecond = structuredClone(before)
     atSecond.pendingDecision = null; atSecond.outs = 1
     atSecond.bases = { first: wright, second: null, third: runner('AWAY-2', 'Carlos Beltran') }
-    expect(describePlay(before, atSecond).summary).toBe("Fielder's choice — out at second, Beltran to third, first out")
+    expect(describePlay(before, atSecond).summary).toBe("Fielder's choice — out at 2nd, Beltran to 3rd, first out")
     const atThird = structuredClone(before)
     atThird.pendingDecision = null; atThird.outs = 1
     atThird.bases = { first: wright, second: runner('AWAY-1', 'Jose Reyes'), third: null }
-    expect(describePlay(before, atThird).summary).toBe("Fielder's choice — out at third, Reyes to second, first out")
+    expect(describePlay(before, atThird).summary).toBe("Fielder's choice — out at 3rd, Reyes to 2nd, first out")
   })
 })
 
@@ -262,7 +262,7 @@ describe('describePlay summary: runs and advances together', () => {
     const before = game(); before.bases.second = reyes; before.bases.first = runner('AWAY-2', 'Carlos Beltran')
     const after = structuredClone(before)
     after.bases = { first: wright, second: null, third: runner('AWAY-2', 'Carlos Beltran') }; after.score.away = 1
-    expect(describePlay(before, after, '1B').summary).toBe('Single — Reyes scores, Beltran to third')
+    expect(describePlay(before, after, '1B').summary).toBe('Single — Reyes scores, Beltran to 3rd')
   })
 })
 
@@ -272,9 +272,9 @@ describe('the runner-on-2B roll to hold is announced either way', () => {
     const s = game(); s.outs = 1; s.bases.second = r2
     const roll = pending(s, 'GB_RUNNER_2B_RTH', { preBases: structuredClone(s.bases), outs: 1, result: 'GB' })
     const advanced = describePlay(roll, resolveDecisionRoll(roll, 5))
-    expect(advanced.summary).toBe('Roll to hold — Beltran advances to third')
+    expect(advanced.summary).toBe('Roll to hold — Beltran advances to 3rd')
     const held = describePlay(roll, resolveDecisionRoll(roll, 15))
-    expect(held.summary).toBe('Roll to hold — Beltran holds at second')
+    expect(held.summary).toBe('Roll to hold — Beltran holds at 2nd')
     expect(held.lines).toContain('Carlos Beltran holds at second.')
   })
 })
@@ -292,11 +292,11 @@ describe('a double-play attempt says where it stands after each check', () => {
     expect(after.pendingDecision?.decisionType).toBe('GB_STANDARD_SECOND_CHECK')
     const outcome = after.pendingDecision!.context.firstOut ? 'out' : 'safe'
     expect(getDecisionView(after)?.description).toContain(`First check: Jose Reyes ${outcome.toUpperCase()} at 2B.`)
-    expect(describePlay(first, after).summary).toBe(`Double play attempt — Reyes ${outcome} at second, batter check next`)
+    expect(describePlay(first, after).summary).toBe(`Double play attempt — Reyes ${outcome} at 2nd, batter check next`)
   })
   it('a natural 20 is a double play at once; a natural 1 leaves everyone safe', () => {
     const first = setup()
-    expect(describePlay(first, resolveDecisionRoll(first, 20)).summary).toBe('Double play — outs at second and first, second out')
+    expect(describePlay(first, resolveDecisionRoll(first, 20)).summary).toBe('Double play — outs at 2nd and 1st, second out')
     expect(describePlay(first, resolveDecisionRoll(first, 1)).summary).toMatch(/^Ground ball, all safe/)
   })
 })
@@ -308,7 +308,7 @@ describe('the wheel play is announced to both managers, then its result', () => 
     const wheel = confirmManagerDecision(declared, ['WHEEL_PLAY'])
     expect(describePlay(declared, wheel).lines[0]).toMatch(/ calls the wheel play\.$/)
     const out = resolveDecisionRoll(wheel, 16)
-    expect(describePlay(wheel, out).summary).toBe('Wheel play — lead runner Reyes out at second, first out')
+    expect(describePlay(wheel, out).summary).toBe('Wheel play — lead runner Reyes out at 2nd, first out')
     expect(describePlay(wheel, out).lines[0]).toMatch(/bunts into the wheel play — Jose Reyes, the lead runner, is out at second\./)
     expect(describePlay(wheel, resolveDecisionRoll(wheel, 15)).summary).toMatch(/^Sacrifice bunt beats the wheel play/)
   })

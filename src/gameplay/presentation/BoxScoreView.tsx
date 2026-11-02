@@ -19,10 +19,15 @@ import type { GameSide, GameState } from '../types'
 
 type Tab = 'traditional' | 'elements' | 'plays'
 
-function Head({ label }: { label: string }) {
-  const def = STAT_DEFS[label]
+/** A heading, or [label, definition key] when one label means different things in two tables. */
+type HeadCell = string | [string, string]
+
+function Head({ cell }: { cell: HeadCell }) {
+  const [label, key] = typeof cell === 'string' ? [cell, cell] : cell
+  const def = STAT_DEFS[key]
   return def ? <abbr title={`${label} — ${def}`}>{label}</abbr> : <>{label}</>
 }
+
 const SIDES: GameSide[] = ['away', 'home']
 
 function ClassificationTag({ classification }: { classification: BoxScore['classification'] | null }) {
@@ -32,12 +37,12 @@ function ClassificationTag({ classification }: { classification: BoxScore['class
     : <span className="gp-box-tag" title="Played before the official launch: never counted in season statistics, standings or rest">Exhibition</span>
 }
 
-function Table({ caption, head, rows, foot }: { caption: string; head: string[]; rows: Array<Array<string | number>>; foot?: Array<string | number> }) {
+function Table({ caption, head, rows, foot }: { caption: string; head: HeadCell[]; rows: Array<Array<string | number>>; foot?: Array<string | number> }) {
   return (
     <div className="gp-box-table-wrap">
       <table className="gp-box-table">
         <caption>{caption}</caption>
-        <thead><tr>{head.map((h, i) => <th scope="col" key={h + i}><Head label={h} /></th>)}</tr></thead>
+        <thead><tr>{head.map((h, i) => <th scope="col" key={String(h) + i}><Head cell={h} /></th>)}</tr></thead>
         <tbody>{rows.map((r, i) => <tr key={i}>{r.map((c, j) => j === 0 ? <th scope="row" key={j}>{c}</th> : <td key={j}>{c}</td>)}</tr>)}</tbody>
         {foot && <tfoot><tr>{foot.map((c, j) => j === 0 ? <th scope="row" key={j}>{c}</th> : <td key={j}>{c}</td>)}</tr></tfoot>}
       </table>
@@ -141,7 +146,7 @@ export default function BoxScoreView({ state, progression, managers }: {
         <details className="gp-box-key">
           <summary>Key</summary>
           <dl>
-            {['PA', 'OBA', 'OCHO', 'PCHW', 'OBP', 'DEF', 'BF', 'ADV', 'OCHW', 'HCHO', 'R while pitching', 'DBP/DBPa', 'TBP/TBPa', 'CS/SBa', 'OFA'].map((k) => (
+            {['PA', 'OBA', 'OCHO', 'PCHW', 'OBP', 'DEF', 'BF', 'ADV', 'OCHW', 'HCHO', 'ER (Advanced)', 'DBP/DBPa', 'TBP/TBPa', 'CS/SBa', 'OFA'].map((k) => (
               <div key={k}><dt>{k}</dt><dd>{STAT_DEFS[k]}</dd></div>
             ))}
           </dl>
@@ -152,7 +157,7 @@ export default function BoxScoreView({ state, progression, managers }: {
         <div className="gp-box-side" key={side}>
           <Table caption={`${teamName(side)} — advanced batting`} head={['', 'PA', 'OBA', 'OCHO', 'PCHW', 'OBP', 'DEF']}
             rows={stats.batting[side].map((l) => [name(l.cardKey), l.PA, l.OBA, l.OCHO, l.PCHW, rate(l.H + l.BB, l.PA), (stats.fielding[side].find((f) => f.cardKey === l.cardKey)?.positions ?? []).join(' · ') || '—'])} />
-          <Table caption={`${teamName(side)} — advanced pitching`} head={['', 'BF', 'ADV', 'OCHW', 'HCHO', 'R while pitching']}
+          <Table caption={`${teamName(side)} — advanced pitching`} head={['', 'BF', 'ADV', 'OCHW', 'HCHO', ['ER', 'ER (Advanced)']]}
             rows={stats.pitching[side].map((l) => [name(l.cardKey), l.BF, l.ADV, l.OCHW, l.HCHO, l.runsWhilePitching])} />
           <Table caption={`${teamName(side)} — defence`} head={['', 'DBP/DBPa', 'TBP/TBPa', 'CS/SBa', 'OFA']}
             rows={stats.fielding[side].filter((f) => f.DBPa || f.TBPa || f.CS || f.SBa || f.OFA).map((f) => [name(f.cardKey), `${f.DBP}/${f.DBPa}`, `${f.TBP}/${f.TBPa}`, `${f.CS}/${f.SBa}`, f.OFA])} />

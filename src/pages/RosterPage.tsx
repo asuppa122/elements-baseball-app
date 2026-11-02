@@ -124,6 +124,32 @@ const attributeLabels: Partial<Record<DrawerSort, string>> = {
   defense: 'Fielding',
 }
 
+/**
+ * The magnifier on every card in Team Builder. Most cards are themselves the
+ * button that picks or moves the player, so this is a separate target in the
+ * corner: it enlarges the card and never picks, moves or removes anything.
+ */
+function ZoomBadge({ card, onZoom }: { card: CardRecord; onZoom: (card: CardRecord) => void }) {
+  const open = (event: { preventDefault: () => void; stopPropagation: () => void }) => {
+    event.preventDefault()
+    event.stopPropagation()
+    onZoom(card)
+  }
+  return (
+    <span
+      role="button"
+      tabIndex={0}
+      className="roster-zoom-badge"
+      title={`Enlarge ${card.player_name}'s card`}
+      aria-label={`Enlarge ${card.player_name}'s card`}
+      onClick={open}
+      onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') open(event) }}
+    >
+      <svg viewBox="0 0 20 20" width="12" height="12" aria-hidden="true"><circle cx="8.5" cy="8.5" r="5.5" fill="none" stroke="currentColor" strokeWidth="2.2" /><path d="M13 13l4.5 4.5" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" /></svg>
+    </span>
+  )
+}
+
 function numericCardValue(card: CardRecord, attribute: DrawerSort): number | null {
   if (attribute === 'points') return getCardPoints(card)
   if (attribute === 'year') return getCardYear(card)
@@ -514,6 +540,9 @@ function RosterPage() {
     useState(false)
   const [hoverCardKey, setHoverCardKey] =
     useState<string | null>(null)
+  // The card shown full size, opened from a row's thumbnail.
+  const [zoomCard, setZoomCard] =
+    useState<CardRecord | null>(null)
   const [selectedSubstituteKey, setSelectedSubstituteKey] =
     useState<string | null>(null)
   const [loading, setLoading] =
@@ -1901,7 +1930,18 @@ function RosterPage() {
 
           {card ? (
             <>
-              <span className="roster-player-thumb">
+              <span
+                className="roster-player-thumb is-zoomable"
+                title={`Enlarge ${card.player_name}'s card`}
+                onClick={(event) => {
+                  // Inside the row's own button: the thumbnail enlarges the
+                  // card instead of selecting the row.
+                  event.preventDefault()
+                  event.stopPropagation()
+                  setZoomCard(card)
+                }}
+              >
+                <ZoomBadge card={card} onZoom={setZoomCard} />
                 {card.image_url ? (
                   <img
                     src={getCardImageUrl(card.image_url, 'thumb') ?? card.image_url}
@@ -2074,7 +2114,8 @@ function RosterPage() {
             setSearch('')
           }}
         >
-          <span className="roster-field-card-image">
+          <span className="roster-field-card-image roster-zoom-host">
+            <ZoomBadge card={card} onZoom={setZoomCard} />
             {card.image_url ? (
               <img
                 src={getCardImageUrl(card.image_url, 'grid') ?? card.image_url}
@@ -2242,6 +2283,19 @@ function RosterPage() {
 
   return (
     <div className={`app roster-app roster-workspace roster-workspace--${section}`}>
+      {zoomCard && (
+        <div className="roster-card-zoom" role="dialog" aria-modal="true" aria-label={`${zoomCard.player_name} card`}
+          onClick={() => setZoomCard(null)}
+          onKeyDown={(event) => { if (event.key === 'Escape') setZoomCard(null) }}>
+          <figure onClick={(event) => event.stopPropagation()}>
+            {zoomCard.image_url
+              ? <img src={getCardImageUrl(zoomCard.image_url, 'original') ?? zoomCard.image_url} alt={`${zoomCard.player_name} card`} referrerPolicy="no-referrer" />
+              : <div className="roster-card-zoom-missing">No card image</div>}
+            <figcaption>{zoomCard.player_name}</figcaption>
+          </figure>
+          <button type="button" className="roster-card-zoom-close" autoFocus onClick={() => setZoomCard(null)} aria-label="Close card">×</button>
+        </div>
+      )}
       <aside className="roster-side-nav">
         <button
           type="button"
@@ -2790,7 +2844,8 @@ function RosterPage() {
               <section className="roster-compare-strip">
                 <div className="roster-compare-side">
                   <span>Current</span>
-                  <div className="roster-compare-card">
+                  <div className="roster-compare-card roster-zoom-host">
+                    {currentCard && <ZoomBadge card={currentCard} onZoom={setZoomCard} />}
                     {currentCard?.image_url ? (
                       <img
                         src={getCardImageUrl(currentCard.image_url, 'thumb') ?? currentCard.image_url}
@@ -2808,7 +2863,8 @@ function RosterPage() {
                 </div>
                 <div className="roster-compare-side">
                   <span>{currentCard ? 'Substitute' : 'Add Player'}</span>
-                  <div className="roster-compare-card preview">
+                  <div className="roster-compare-card preview roster-zoom-host">
+                    {previewCard && <ZoomBadge card={previewCard} onZoom={setZoomCard} />}
                     {previewCard?.image_url ? (
                       <img
                         src={getCardImageUrl(previewCard.image_url, 'thumb') ?? previewCard.image_url}
@@ -2940,7 +2996,8 @@ function RosterPage() {
                     }}
                     key={card.card_key}
                   >
-                    <div className="roster-card-image">
+                    <div className="roster-card-image roster-zoom-host">
+                      <ZoomBadge card={card} onZoom={setZoomCard} />
                       {card.image_url ? (
                         <img
                           src={getCardImageUrl(card.image_url, 'grid') ?? card.image_url}

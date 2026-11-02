@@ -13,8 +13,8 @@ const managers = { away: 'Will', home: 'Anthony' }
 const runner = (cardKey: string, playerName: string) => ({ cardKey, playerName })
 const base = { inning: 1, half: 'top', batter: 'Joe Morgan', pitcher: 'Chuck Smith', score: { away: 0, home: 0 }, resultingScore: { away: 0, home: 0 } }
 
-function texts(events: LogEvent[]) {
-  render(<GameLogPanel events={events} managers={managers} />)
+function texts(events: LogEvent[], final = false) {
+  render(<GameLogPanel events={events} managers={managers} final={final} />)
   return screen.getAllByRole('listitem').map((li) => li.textContent)
 }
 
@@ -26,7 +26,7 @@ describe('game log', () => {
     }])).toEqual(['Roll: (10) +5, Advantage: Chuck Smith'])
   })
 
-  it('a swing names the batter, the result and the pitcher; the runs follow with the score', () => {
+  it('a swing names the batter, the result and the pitcher; the runs follow with the score (read first to last, as after the game)', () => {
     const lines = texts([{
       state_version: 2, event_type: 'SWING_RESOLVED',
       payload: {
@@ -36,7 +36,7 @@ describe('game log', () => {
         resultingScore: { away: 3, home: 0 },
         rollView: { title: 'Swing', roll: 20, modifiers: [], result: 'HR — homers', tone: 'offense' },
       },
-    }])
+    }], true)
     expect(lines).toEqual([
       'Roll: (20) Joe Morgan: Home run [Smith]',
       'Rodney Scott: Scored',
@@ -70,5 +70,21 @@ describe('game log', () => {
   it('leaves out steps that are not plays', () => {
     render(<GameLogPanel managers={managers} events={[{ state_version: 1, event_type: 'OFFENSE_READY', payload: { ...base } }]} />)
     expect(screen.getByText('No plays yet.')).toBeTruthy()
+  })
+})
+
+describe('game log order', () => {
+  const pitch = (v: number, half: 'top' | 'bottom', roll: number) => ({
+    state_version: v, event_type: 'PITCH_ROLLED',
+    payload: { ...base, half, roll, rollView: { title: 'Pitch', roll, modifiers: [{ label: 'C', value: 5 }], result: '', tone: 'defense' } },
+  })
+  const events = [pitch(1, 'top', 3), pitch(2, 'top', 4), pitch(3, 'bottom', 5), pitch(4, 'bottom', 6)]
+  it('newest first during the game: the latest line is at the very top', () => {
+    expect(texts(events).map((t) => t?.match(/\((\d+)\)/)?.[1])).toEqual(['6', '5', '4', '3'])
+  })
+  it('first to last once the game is over', () => {
+    render(<GameLogPanel events={events} managers={managers} final />)
+    expect(screen.getAllByRole('listitem').map((li) => li.textContent?.match(/\((\d+)\)/)?.[1])).toEqual(['3', '4', '5', '6'])
+    expect(screen.getAllByRole('heading').map((h) => h.textContent)).toEqual(['Top 1st · Will batting', 'Bottom 1st · Anthony batting'])
   })
 })

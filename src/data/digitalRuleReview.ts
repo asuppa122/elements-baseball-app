@@ -166,6 +166,14 @@ export const DIGITAL_RULE_REVIEW_MARKERS: DigitalRuleReviewMarker[] = [
     text: "Approved (2026-11-01): double-play and triple-play attempts are never made on a runner heading toward home. With Infield In, the only out at home plate on a GB result is the bases-loaded force described below.",
   },
   {
+    id: "approved-extra-base-order",
+    sectionId: "section-7",
+    afterText: "The offensive GM completes a “Roll-To-See” or RTS to determine if the attempt to take extra bases is even possible.",
+    status: 'approved',
+    title: "Approved Rule Amendment — 2026-11-01",
+    text: "Approved (2026-11-01, rules v2 games): the order is hit → the offensive GM sends runners → the offensive GM rolls the RTS first. On 1–10 no runner takes an extra base and the play is over. On 11–20 the defensive GM then selects, in one step, the runner to throw at and the outfielder (LF, CF or RF), and completes the outfield fielding check. With 2 outs and any runner sent home, the RTS is skipped and the defensive GM goes straight to that selection.",
+  },
+  {
     id: "approved-infield-in-availability",
     sectionId: "section-7",
     afterText: "When there are runners on base with less than 2 out, the defensive GM may opt to declare “infield-in” prior to any die rolls in an at bat, which results in the following.",

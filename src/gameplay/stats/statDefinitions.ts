@@ -16,7 +16,7 @@ export const STAT_DEFS: Record<string, string> = {
   ADV: 'Advantage: plate appearances in which the pitcher had the advantage, automatic ones included',
   OCHW: 'Own Chart Hit/Walk: hits and walks allowed with the pitcher\'s advantage (on his own chart), plus intentional walks',
   HCHO: 'Hitter Chart Out: chart outs with the batter\'s advantage (on the hitter\'s chart)',
-  'R while pitching': 'Every run that scored while he was on the mound, charged to him or not',
+  'ER (Advanced)': 'Elements ER: every run that scored while he was on the mound, charged to him or not (the Standard tab\'s ER counts only the earned runs charged to him)',
   'DBP/DBPa': 'Double plays turned / double-play attempts, per fielder taking part',
   'TBP/TBPa': 'Triple plays turned / triple-play attempts, per fielder taking part',
   'CS/SBa': 'As catcher: runners caught stealing / stolen-base attempts against him',

@@ -1,3 +1,4 @@
+import { gameEnded } from '../gameEnd'
 import { useState, type ReactNode } from 'react'
 import { battingSide } from '../gameBoundaryEngine'
 import { threeBatterMinimum } from '../pitcherMound'
@@ -242,7 +243,7 @@ export default function RosterDrawers({
   return (
     <div className="gp-drawers">
       <Section id="log" label="Game log" count={`${playCount(events)} plays`} open={open === 'log'} onToggle={toggle}>
-        <GameLogPanel events={events} managers={{ away: state.managers.away.managerName, home: state.managers.home.managerName }} />
+        <GameLogPanel events={events} managers={{ away: state.managers.away.managerName, home: state.managers.home.managerName }} final={gameEnded(state.status)} />
       </Section>
       <Section id="pen" label="Bullpen" count={`${mine.bullpen.length} available`} open={open === 'pen'} onToggle={toggle}>
         {drawer('pen')}

@@ -186,9 +186,11 @@ export function describePlay(before: GameState, after: GameState, chartResult?: 
     lines.push(safe
       ? `${throwTarget.runner.playerName} ${tag}${throwTarget.to === 'HOME' ? 'scores, beating the throw home' : `beats the throw to ${to}`} from ${pos} ${of}.`
       : `${pos} ${of} throws out ${throwTarget.runner.playerName} at ${to}${tag ? ' on the tag-up' : ''}.`)
+  } else if (kind === 'EXTRA_BASE_RTS' && after.pendingDecision?.decisionType === 'EXTRA_BASE_THROW_SELECTION') {
+    lines.push('Roll to send passes — the runners go, and the defence picks its throw.')
   } else if ((kind === 'EXTRA_BASE_RTS' || kind === 'TAG_UP_RTS') && !after.pendingDecision && half && after.outs === before.outs) {
     // A failed roll-to-see: no throw, the play stands as it was.
-    if (BASES.every((b) => before.bases[b]?.cardKey === after.bases[b]?.cardKey) && runs === 0) lines.push('No chance to take the extra base — runners hold.')
+    if (BASES.every((b) => before.bases[b]?.cardKey === after.bases[b]?.cardKey) && runs === 0) lines.push(kind === 'EXTRA_BASE_RTS' ? 'Roll to send fails — runners hold.' : 'No chance to take the extra base — runners hold.')
   }
 
   // ---- runner movement, lead runner first, then the batter
@@ -324,7 +326,16 @@ const CHART_NOUN: Record<string, string> = {
   '1B': 'Single', '1B+': 'Single', '2B': 'Double', '3B': 'Triple', HR: 'Home run',
 }
 const ORDINAL_OUT = ['', 'first out', 'second out', 'third out']
-const BASE_SHORT: Record<Base, string> = { first: 'first', second: 'second', third: 'third' }
+const BASE_SHORT: Record<Base, string> = { first: '1st', second: '2nd', third: '3rd' }
+/** Bases as the summary line writes them: "out at 2nd". */
+const ORD: Record<string, string> = { first: '1st', second: '2nd', third: '3rd', home: 'home' }
+const outsPhrase = (at: string[]) => `${at.length === 1 ? 'out' : 'outs'} at ${at.length === 1 ? at[0] : `${at.slice(0, -1).join(', ')} and ${at.at(-1)}`}`
+/** The bases a double- or triple-play attempt checks, in the order it checks them. */
+const ATTEMPT_TARGETS: Record<string, Array<{ base: Base | 'batter'; at: string }>> = {
+  STANDARD: [{ base: 'first', at: '2nd' }, { base: 'batter', at: '1st' }],
+  '3B1B': [{ base: 'second', at: '3rd' }, { base: 'batter', at: '1st' }],
+  TRIPLE: [{ base: 'second', at: '3rd' }, { base: 'first', at: '2nd' }, { base: 'batter', at: '1st' }],
+}
 
 /** describePlay's facts as one compact line for the roll area. */
 function summarize(f: {
@@ -368,7 +379,7 @@ function summarize(f: {
     head = f.after.waitingFor === 'SWING_ROLL' ? 'Bunt fails — swing away'
       : lead?.[1] ? 'Wheel play'
       : f.kind === 'SAC_BUNT_WHEEL_RTS' ? 'Sacrifice bunt beats the wheel play' : 'Sacrifice bunt'
-    if (lead?.[1]) wheelOut = `lead runner ${last(lead[1].playerName)} out at ${FORCE_AT[lead[0]]}`
+    if (lead?.[1]) wheelOut = `lead runner ${last(lead[1].playerName)} out at ${ORD[FORCE_AT[lead[0]]]}`
   }
   else if (f.kind === 'SQUEEZE_BUNT_ROLL') head = 'Squeeze'
   else if (f.kind === 'CATCHER_FIELDING_ROLL' || f.kind === 'ONE_BASE_PLUS_STOLEN_BASE' || f.kind === 'SECOND_STEAL_HOME_ROLL') {
@@ -393,10 +404,30 @@ function summarize(f: {
   const pre = attempt?.context?.preBases as GameState['bases'] | undefined
   if (attempt && pre) {
     const who = (r: BaseRunnerState | null) => (r ? last(r.playerName) : 'Runner')
-    if (attempt.decisionType === 'GB_STANDARD_SECOND_CHECK') facts.push(`${who(pre.first)} ${attempt.context.firstOut ? 'out' : 'safe'} at second`, 'batter check next')
-    else if (attempt.decisionType === 'GB_3B1B_SECOND_CHECK') facts.push(`${who(pre.second)} ${attempt.context.leadOut ? 'out' : 'safe'} at third`, 'batter check next')
-    else if (attempt.decisionType === 'GB_TRIPLE_SECOND_CHECK') facts.push(`${who(pre.second)} out at third`, 'second check next')
-    else if (attempt.decisionType === 'GB_TRIPLE_THIRD_CHECK') facts.push(`${who(pre.second)} out at third`, `${who(pre.first)} out at second`, 'batter check next')
+    if (attempt.decisionType === 'GB_STANDARD_SECOND_CHECK') facts.push(`${who(pre.first)} ${attempt.context.firstOut ? 'out' : 'safe'} at 2nd`, 'batter check next')
+    else if (attempt.decisionType === 'GB_3B1B_SECOND_CHECK') facts.push(`${who(pre.second)} ${attempt.context.leadOut ? 'out' : 'safe'} at 3rd`, 'batter check next')
+    else if (attempt.decisionType === 'GB_TRIPLE_SECOND_CHECK') facts.push(`${who(pre.second)} out at 3rd`, 'second check next')
+    else if (attempt.decisionType === 'GB_TRIPLE_THIRD_CHECK') facts.push(`${who(pre.second)} out at 3rd`, `${who(pre.first)} out at 2nd`, 'batter check next')
+  }
+  // A double- or triple-play attempt that has finished: its outs come from
+  // the checks themselves, so they are named even when the inning ends and
+  // the bases clear -- the checks run in order and stop at the third out, so
+  // the outs are the attempt's targets, less any runner an earlier check
+  // already left safe, taken in order.
+  const dpCheck = /^GB_(STANDARD|3B1B|TRIPLE)_(FIRST|SECOND|THIRD)_CHECK$/.exec(f.kind ?? '')
+  const attemptOver = dpCheck && !(attempt && /_CHECK$/.test(attempt.decisionType))
+  if (attemptOver && f.outsAdded > 0) {
+    const c = f.before.pendingDecision?.context ?? {}
+    const prior = (c.preBases ?? f.before.bases) as GameState['bases']
+    const leftSafe = new Set<string>()
+    if (dpCheck[1] === 'STANDARD' && c.firstOut === false) leftSafe.add('2nd')
+    if (dpCheck[1] === '3B1B' && c.leadOut === false) leftSafe.add('3rd')
+    const outs = ATTEMPT_TARGETS[dpCheck[1]].filter((t) => !leftSafe.has(t.at)).slice(0, f.outsAdded).map((t) => t.at)
+    facts.push(outsPhrase(outs))
+    for (const t of ATTEMPT_TARGETS[dpCheck[1]]) {
+      const r = t.base === 'batter' ? null : prior[t.base]
+      if (r && leftSafe.has(t.at)) facts.push(`${last(r.playerName)} safe at ${t.at}`)
+    }
   }
   // The roll to hold on the runner from 2B: advanced or held, said first.
   let rthRunner: string | null = null
@@ -405,23 +436,21 @@ function summarize(f: {
     const now = where(f.after, r2.cardKey)
     if (now === 'third' || now === 'second') {
       rthRunner = r2.playerName
-      facts.push(now === 'third' ? `${last(r2.playerName)} advances to third` : `${last(r2.playerName)} holds at second`)
+      facts.push(now === 'third' ? `${last(r2.playerName)} advances to 3rd` : `${last(r2.playerName)} holds at 2nd`)
     }
   }
   // Where a ground ball's outs were made: "Fielder's choice — out at second".
   // A runner who is gone and did not score was forced at the next base; the
   // batter is out at first. A plain groundout (the batter alone, at first)
   // already says so. Unknowable once the inning has ended and the bases clear.
-  if (groundBall && f.half && f.outsAdded > 0 && !f.after.pendingDecision) {
+  if (groundBall && !attemptOver && f.half && f.outsAdded > 0 && !f.after.pendingDecision) {
     const outAt: string[] = []
     for (const b of ['third', 'second', 'first'] as Base[]) {
       const r = f.before.bases[b]
-      if (r && !where(f.after, r.cardKey) && !f.scored.includes(r.playerName)) outAt.push(FORCE_AT[b])
+      if (r && !where(f.after, r.cardKey) && !f.scored.includes(r.playerName)) outAt.push(ORD[FORCE_AT[b]])
     }
-    if (f.batterKey && !where(f.after, f.batterKey) && !f.scored.some((n) => n === f.before.pregame[f.before.half === 'top' ? 'away' : 'home'].roster?.cards[f.batterKey!]?.playerName)) outAt.push('first')
-    if (outAt.length && !(outAt.length === 1 && outAt[0] === 'first' && head === 'Groundout')) {
-      facts.push(`${outAt.length === 1 ? 'out' : 'outs'} at ${outAt.length === 1 ? outAt[0] : `${outAt.slice(0, -1).join(', ')} and ${outAt.at(-1)}`}`)
-    }
+    if (f.batterKey && !where(f.after, f.batterKey) && !f.scored.some((n) => n === f.before.pregame[f.before.half === 'top' ? 'away' : 'home'].roster?.cards[f.batterKey!]?.playerName)) outAt.push('1st')
+    if (outAt.length && !(outAt.length === 1 && outAt[0] === '1st' && head === 'Groundout')) facts.push(outsPhrase(outAt))
   }
   const scoredHere = f.scored.filter((n) => !head!.startsWith(last(n)))
   if (scoredHere.length === 1) facts.push(`${last(scoredHere[0])} scores`)

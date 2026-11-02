@@ -5,7 +5,8 @@ import { playOf, type RollView } from './playRecord'
 /**
  * The game log, kept the way a scorer at the table would: one plain line per
  * roll -- who rolled, what came up, what it did -- under half-inning headings,
- * the current half-inning on top (Anthony, 2026-11-01, after ERA's log):
+ * newest first while the game is on -- the latest line at the very top --
+ * and first to last once it is over (Anthony, 2026-11-01, after ERA's log):
  *
  *   Roll: (10) +5, Advantage: Chuck Smith
  *   Roll: (20) Rodney Scott: Double [Smith]
@@ -80,7 +81,9 @@ function linesFor(event: LogEvent, managers?: { away: string; home: string }): L
   } else if (view) {
     // A decision roll -- a steal, a throw, a ground ball's out, an extra base.
     const mods = view.modifiers.map((m) => `${m.label} ${signed(m.value)}`).join(', ')
-    const what = play?.summary ?? view.result
+    // An older event with no summary recorded only "Out — Resolved."; name the check instead.
+    const verdict = view.result.split(' — ')[0]
+    const what = play?.summary ?? (view.result.endsWith('Resolved.') ? `${view.title}: ${verdict}` : view.result)
     out.push({ key, kind: 'roll', text: `Roll: (${view.roll})${mods ? ` ${mods}` : ''}, ${what}${view.total !== undefined ? ` (${view.total})` : ''}${view.natural ? ` — ${view.natural}` : ''}` })
   } else if (play) {
     out.push({ key, kind: 'play', text: play.summary ?? play.lines.join(' ') })
@@ -105,9 +108,15 @@ function linesFor(event: LogEvent, managers?: { away: string; home: string }): L
   return out
 }
 
-export default function GameLogPanel({ events, managers }: { events: LogEvent[]; managers?: { away: string; home: string } }) {
-  // One heading per half-inning, in order of play; the half-innings are then
-  // listed latest first so the current one is on top, read top to bottom.
+export default function GameLogPanel({ events, managers, final = false }: {
+  events: LogEvent[]
+  managers?: { away: string; home: string }
+  /** The game is over: read it from the first pitch to the last. */
+  final?: boolean
+}) {
+  // One heading per half-inning, in order of play. During the game the whole
+  // log is turned over -- half-innings and the lines inside them -- so the
+  // newest line is the first one read.
   const groups: Array<{ label: string; lines: Line[] }> = []
   let count = 0
   for (const event of events) {
@@ -122,7 +131,10 @@ export default function GameLogPanel({ events, managers }: { events: LogEvent[];
     if (last && last.label === label) last.lines.push(...lines)
     else groups.push({ label, lines: [...lines] })
   }
-  groups.reverse()
+  if (!final) {
+    groups.reverse()
+    for (const g of groups) g.lines.reverse()
+  }
 
   return (
     <section className="gp-log" aria-label="Game log">
@@ -131,7 +143,7 @@ export default function GameLogPanel({ events, managers }: { events: LogEvent[];
         ? <p className="gp-avail-empty">No plays yet.</p>
         : groups.map((g, i) => (
           <div className="gp-log-half" key={`${g.label}-${i}`}>
-            {g.label && <h3 className="gp-log-inning">{g.label}{i === 0 ? ' (Current)' : ''}</h3>}
+            {g.label && <h3 className="gp-log-inning">{g.label}{i === 0 && !final ? ' (Current)' : ''}</h3>}
             <ol className="gp-log-list">
               {g.lines.map((l) => (
                 <li key={l.key} className={`gp-log-line is-${l.kind}`}>{l.text}</li>

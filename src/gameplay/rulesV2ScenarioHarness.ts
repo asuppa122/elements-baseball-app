@@ -2,6 +2,7 @@ import { beginPrePitchDecision, confirmManagerDecision, getDecisionView, getPreP
 import { resolveCoreResult, type CoreChartResult } from './coreGame'
 import { effectivePitcherControl } from './fatigueEngine'
 import { openPlay, startPlayLog } from './playLog'
+import { describePlay } from './presentation/playRecord'
 import { pitcherInstanceKey } from './pitcherStateKey'
 import { changePitcher } from './pitcherMound'
 import type { ScenarioReport, ScenarioResult } from './scenarioHarness'
@@ -295,6 +296,44 @@ export function runRulesV2ScenarioMatrix(initial: GameState): ScenarioReport {
     const declared = infieldIn(v2(initial, { runners: { third: 3 }, outs: 0 }))
     const s = swing({ ...declared, bases: { first: null, second: null, third: null } }, 'FB')
     assert(s.outs === 1 && !keyAt(s, 'first') && s.score.away === 0, 'FB is an out.')
+  })
+
+  // ---------------------------------------------------------------- extra bases: roll to send first (Anthony, 2026-11-01)
+  // Hit -> the offence sends -> the offence rolls to send -> on 11-20 the
+  // defence picks runner and outfielder in one step -> the throw; on 1-10
+  // nobody takes an extra base. Two out with a runner sent home: no roll.
+  const offenceOf = (st: GameState): GameSide => (st.half === 'top' ? 'away' : 'home')
+  const sendAll = (st: GameState) => confirmManagerDecision(confirm(st, 'ATTEMPT_EXTRA_BASES'), optionIds(confirm(st, 'ATTEMPT_EXTRA_BASES')))
+  const sendLead = (st: GameState) => { const sel = confirm(st, 'ATTEMPT_EXTRA_BASES'); return confirmManagerDecision(sel, [optionIds(sel)[0]]) }
+  test('V2-XB-RTS-FIRST', 'Extra bases', 'R2, single, send: the offence rolls to send first; on a pass the defence picks runner + outfielder, then the throw', () => {
+    const before = v2(initial, { runners: { second: 2 } })
+    const sent = sendLead(swing(before, '1B'))
+    assert(sent.pendingDecision?.decisionType === 'EXTRA_BASE_RTS' && sent.pendingDecision.actingSide === offenceOf(before), `First step: ${sent.pendingDecision?.decisionType} by ${sent.pendingDecision?.actingSide}.`)
+    const passed = roll(sent, 15)
+    assert(passed.pendingDecision?.decisionType === 'EXTRA_BASE_THROW_SELECTION' && passed.pendingDecision.actingSide !== offenceOf(before), `After a pass: ${passed.pendingDecision?.decisionType}.`)
+    assert(optionIds(passed).every((id) => id.includes('@@')) && optionIds(passed).length >= 1, 'Runner and outfielder are chosen together.')
+    assert(describePlay(sent, passed).summary === 'Roll to send passes — the runners go, and the defence picks its throw', `Announced: ${describePlay(sent, passed).summary}.`)
+    const thrown = confirm(passed, optionIds(passed)[0])
+    assert(thrown.pendingDecision?.decisionType === 'OUTFIELD_FIELDING_ROLL', `Then the throw: ${thrown.pendingDecision?.decisionType}.`)
+    const safe = roll(thrown, 1)
+    assert(safe.score.away + safe.score.home === 1 && !safe.pendingDecision, 'Natural 1: the runner scores.')
+  })
+  test('V2-XB-RTS-FAIL', 'Extra bases', 'Roll to send 1-10: nobody takes an extra base and the play is over', () => {
+    const before = v2(initial, { runners: { second: 2 } })
+    const s = roll(sendLead(swing(before, '1B')), 5)
+    assert(!s.pendingDecision && keyAt(s, 'third') === runnerKeyOf(before, 2) && s.score.away + s.score.home === 0, `Bases ${JSON.stringify(s.bases)}.`)
+  })
+  test('V2-XB-TWO-OUT-HOME', 'Extra bases', 'Two out with a runner sent home: no roll to send -- straight to the defence\'s runner + outfielder pick', () => {
+    const before = v2(initial, { runners: { second: 2 }, outs: 2 })
+    const s = sendLead(swing(before, '1B'))
+    assert(s.pendingDecision?.decisionType === 'EXTRA_BASE_THROW_SELECTION' && s.pendingDecision.context.rtsSkipped === true, `Got ${s.pendingDecision?.decisionType}.`)
+  })
+  test('V2-XB-MULTI-RTS-FIRST', 'Extra bases', 'R1 + R2, single, both sent: the roll to send still comes before the defence picks its runner', () => {
+    const before = v2(initial, { runners: { first: 1, second: 2 } })
+    const s = sendAll(swing(before, '1B'))
+    assert(s.pendingDecision?.decisionType === 'EXTRA_BASE_RTS', `Got ${s.pendingDecision?.decisionType}.`)
+    const passed = roll(s, 15)
+    assert(new Set(optionIds(passed).map((id) => id.split('@@')[0])).size === 2, 'Both runners can be thrown at.')
   })
 
   // ---------------------------------------------------------------- ground balls, GIDP, defensive attempts (D3, Decisions 7 and 11)
