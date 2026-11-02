@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { buildNonGbCoverageFixture } from '../../rulebookCoverage'
-import { beginPrePitchDecision, confirmManagerDecision, getPrePitchActions, resolveDecisionRoll } from '../../decisionEngine'
+import { beginPrePitchDecision, confirmManagerDecision, getDecisionView, getPrePitchActions, resolveDecisionRoll } from '../../decisionEngine'
 import { decisionRollView, describePlay } from '../playRecord'
 import type { BaseRunnerState, GameState, PendingDecision } from '../../types'
 
@@ -276,5 +276,27 @@ describe('the runner-on-2B roll to hold is announced either way', () => {
     const held = describePlay(roll, resolveDecisionRoll(roll, 15))
     expect(held.summary).toBe('Roll to hold — Beltran holds at second')
     expect(held.lines).toContain('Carlos Beltran holds at second.')
+  })
+})
+
+describe('a double-play attempt says where it stands after each check', () => {
+  const setup = () => {
+    const r1 = runner('AWAY-1', 'Jose Reyes')
+    const s = game(); s.outs = 0; s.bases.first = r1
+    return pending(s, 'GB_STANDARD_FIRST_CHECK', { preBases: structuredClone(s.bases), combo: '1B+2B+SS', outs: 0, result: 'GB' })
+  }
+  it('after the first check, the next window and the result both say whether the lead runner was out or safe', () => {
+    const first = setup()
+    // A middle roll leaves the batter check to come, whichever way it went.
+    const after = resolveDecisionRoll(first, 12)
+    expect(after.pendingDecision?.decisionType).toBe('GB_STANDARD_SECOND_CHECK')
+    const outcome = after.pendingDecision!.context.firstOut ? 'out' : 'safe'
+    expect(getDecisionView(after)?.description).toContain(`First check: Jose Reyes ${outcome.toUpperCase()} at 2B.`)
+    expect(describePlay(first, after).summary).toBe(`Double play attempt — Reyes ${outcome} at second, batter check next`)
+  })
+  it('a natural 20 is a double play at once; a natural 1 leaves everyone safe', () => {
+    const first = setup()
+    expect(describePlay(first, resolveDecisionRoll(first, 20)).summary).toBe('Double play — outs at second and first, second out')
+    expect(describePlay(first, resolveDecisionRoll(first, 1)).summary).toMatch(/^Ground ball, all safe/)
   })
 })

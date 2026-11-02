@@ -341,7 +341,11 @@ function summarize(f: {
     // The roll that finishes a ground ball the defence chose how to play: say
     // what the whole play came to, not the first runner that moved.
     const batterSafe = Boolean(f.batterKey && where(f.after, f.batterKey))
-    head = f.after.pendingDecision?.decisionType.startsWith('GB_') ? (f.outsAdded ? 'Force out' : 'Ground ball')
+    const nextCheck = f.after.pendingDecision?.decisionType
+    head = nextCheck && /^GB_(STANDARD|3B1B|TRIPLE)_(SECOND|THIRD)_CHECK$/.test(nextCheck) ? (nextCheck.includes('TRIPLE') ? 'Triple play attempt' : 'Double play attempt')
+      : f.after.pendingDecision?.decisionType.startsWith('GB_') ? (f.outsAdded ? 'Force out' : 'Ground ball')
+      : f.outsAdded >= 3 ? 'Triple play'
+      : f.outsAdded === 2 ? 'Double play'
       : f.kind === 'GB_RUNNER_2B_RTH' ? 'Roll to hold'
       : f.kind === 'GB_TRIPLE_THIRD_CHECK' && f.outsAdded ? 'Triple play'
       : /_SECOND_CHECK$/.test(f.kind) && f.outsAdded && !batterSafe ? 'Double play'
@@ -365,6 +369,17 @@ function summarize(f: {
   if (!head) return undefined
 
   const facts: string[] = []
+  // A double- or triple-play attempt partway through: where the earlier
+  // checks stand -- nothing is on the board until the attempt finishes.
+  const attempt = f.after.pendingDecision
+  const pre = attempt?.context?.preBases as GameState['bases'] | undefined
+  if (attempt && pre) {
+    const who = (r: BaseRunnerState | null) => (r ? last(r.playerName) : 'Runner')
+    if (attempt.decisionType === 'GB_STANDARD_SECOND_CHECK') facts.push(`${who(pre.first)} ${attempt.context.firstOut ? 'out' : 'safe'} at second`, 'batter check next')
+    else if (attempt.decisionType === 'GB_3B1B_SECOND_CHECK') facts.push(`${who(pre.second)} ${attempt.context.leadOut ? 'out' : 'safe'} at third`, 'batter check next')
+    else if (attempt.decisionType === 'GB_TRIPLE_SECOND_CHECK') facts.push(`${who(pre.second)} out at third`, 'second check next')
+    else if (attempt.decisionType === 'GB_TRIPLE_THIRD_CHECK') facts.push(`${who(pre.second)} out at third`, `${who(pre.first)} out at second`, 'batter check next')
+  }
   // The roll to hold on the runner from 2B: advanced or held, said first.
   let rthRunner: string | null = null
   if (f.kind === 'GB_RUNNER_2B_RTH' && f.half && f.before.bases.second) {

@@ -81,7 +81,7 @@ function linesFor(event: LogEvent, managers?: { away: string; home: string }): L
     // A decision roll -- a steal, a throw, a ground ball's out, an extra base.
     const mods = view.modifiers.map((m) => `${m.label} ${signed(m.value)}`).join(', ')
     const what = play?.summary ?? view.result
-    out.push({ key, kind: 'roll', text: `Roll: (${view.roll})${mods ? ` ${mods}` : ''}, ${what}${view.total !== undefined ? ` (${view.total})` : ''}` })
+    out.push({ key, kind: 'roll', text: `Roll: (${view.roll})${mods ? ` ${mods}` : ''}, ${what}${view.total !== undefined ? ` (${view.total})` : ''}${view.natural ? ` — ${view.natural}` : ''}` })
   } else if (play) {
     out.push({ key, kind: 'play', text: play.summary ?? play.lines.join(' ') })
   } else {
