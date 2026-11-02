@@ -300,3 +300,16 @@ describe('a double-play attempt says where it stands after each check', () => {
     expect(describePlay(first, resolveDecisionRoll(first, 1)).summary).toMatch(/^Ground ball, all safe/)
   })
 })
+
+describe('the wheel play is announced to both managers, then its result', () => {
+  it('the call is said before the roll; a successful wheel names the lead runner out; a failed one says the bunt beat it', () => {
+    const s = game(); s.outs = 0; s.bases.first = runner('AWAY-1', 'Jose Reyes')
+    const declared = confirmManagerDecision(beginPrePitchDecision(s, 'SAC_BUNT'), ['CONFIRM_SAC_BUNT'])
+    const wheel = confirmManagerDecision(declared, ['WHEEL_PLAY'])
+    expect(describePlay(declared, wheel).lines[0]).toMatch(/ calls the wheel play\.$/)
+    const out = resolveDecisionRoll(wheel, 16)
+    expect(describePlay(wheel, out).summary).toBe('Wheel play — lead runner Reyes out at second, first out')
+    expect(describePlay(wheel, out).lines[0]).toMatch(/bunts into the wheel play — Jose Reyes, the lead runner, is out at second\./)
+    expect(describePlay(wheel, resolveDecisionRoll(wheel, 15)).summary).toMatch(/^Sacrifice bunt beats the wheel play/)
+  })
+})

@@ -15,7 +15,7 @@ import HalfInningTransition from './HalfInningTransition'
 import PostGameBoard from './PostGameBoard'
 import DecisionBoard from './DecisionBoard'
 import { narrate } from './playNarration'
-import { getPrePitchActions } from '../decisionEngine'
+import { getDecisionView, getPrePitchActions } from '../decisionEngine'
 import { awaitingOffenseReady, sideToAct } from '../turnOrder'
 import type { useGameplayActions } from './useGameplayActions'
 import type { HalfInningTransition as HalfInningTransitionModel } from '../halfInningTransition'
@@ -66,9 +66,12 @@ function TurnStatus({ state, mine, toAct }: { state: GameState; mine: boolean; t
     : awaitingOffenseReady(state) ? 'ready up'
     : state.waitingFor === 'PITCH_ROLL' ? 'pitch'
     : state.waitingFor === 'SWING_ROLL' ? 'swing' : 'move'
+  // The other manager's decision is named, so a call like the wheel play is
+  // known the moment it is made, not only once it is rolled.
+  const deciding = !mine && state.pendingDecision ? getDecisionView(state)?.title : null
   return mine
     ? <p className="gp-turn is-mine" role="status">Your move — {what}</p>
-    : <p className="gp-turn" role="status">Waiting on {state.managers[toAct].managerName} to {what}…</p>
+    : <p className="gp-turn" role="status">Waiting on {state.managers[toAct].managerName}{deciding ? ` — ${deciding}` : ` to ${what}`}…</p>
 }
 
 function basesLabel(state: GameState): string {

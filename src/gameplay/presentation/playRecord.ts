@@ -154,10 +154,17 @@ export function describePlay(before: GameState, after: GameState, chartResult?: 
   else if (kind === 'SAC_BUNT_RTS' || kind === 'SAC_BUNT_WHEEL_RTS') {
     const batterOut = batterKey && !where(after, batterKey) && outsAdded > 0
     const leadOut = outsAdded > (batterOut ? 1 : 0)
+    const lead = leadOut ? BASES.map((b) => [b, before.bases[b]] as const).find(([, r]) => r && !where(after, r.cardKey)) : undefined
     if (after.waitingFor === 'SWING_ROLL') lines.push(`${batter}'s bunt attempt fails — he must swing on the pitcher's chart.`)
+    else if (leadOut && kind === 'SAC_BUNT_WHEEL_RTS' && lead?.[1]) lines.push(`${batter} bunts into the wheel play — ${lead[1].playerName}, the lead runner, is out at ${FORCE_AT[lead[0]]}.`)
     else if (leadOut) lines.push(`${batter} bunts, but the lead runner is cut down.`)
     else if (batterOut) lines.push(`${batter} lays down a successful sacrifice bunt.`)
     else if (outsAdded === 0) lines.push(`${batter} bunts and everyone is safe.`)
+  } else if (kind === 'SAC_BUNT_DEFENSE' && after.pendingDecision) {
+    // The defence's answer to the bunt, said to both managers before it is rolled.
+    const fielding = after.managers[defense].managerName
+    if (after.pendingDecision.decisionType === 'SAC_BUNT_WHEEL_RTS') lines.push(`${fielding} calls the wheel play.`)
+    else if (after.pendingDecision.decisionType === 'SAC_BUNT_RTS') lines.push(`${fielding} plays the bunt straight up — no wheel play.`)
   } else if (kind === 'SQUEEZE_BUNT_ROLL') lines.push(`${batter} squares to squeeze.`)
   else if (kind === 'CATCHER_FIELDING_ROLL' || kind === 'ONE_BASE_PLUS_STOLEN_BASE') {
     const target = kind === 'CATCHER_FIELDING_ROLL' ? throwTarget?.runner : ctx.target as BaseRunnerState | undefined
@@ -329,6 +336,7 @@ function summarize(f: {
   const last = (name: string) => name.split(' ').slice(-1)[0] || name
   let head: string | null = null
   let groundBall = false
+  let wheelOut: string | null = null
   if (f.chartResult === 'GB') {
     groundBall = true
     head = f.after.pendingDecision ? 'Ground ball'
@@ -352,7 +360,16 @@ function summarize(f: {
       : batterSafe ? (f.outsAdded ? "Fielder's choice" : 'Ground ball, all safe')
       : f.outsAdded ? 'Groundout' : 'Ground ball'
   } else if (f.kind === 'INTENTIONAL_WALK_CONFIRM') head = 'Intentional walk'
-  else if (f.kind === 'SAC_BUNT_RTS' || f.kind === 'SAC_BUNT_WHEEL_RTS') head = f.after.waitingFor === 'SWING_ROLL' ? 'Bunt fails — swing away' : 'Sacrifice bunt'
+  else if (f.kind === 'SAC_BUNT_RTS' || f.kind === 'SAC_BUNT_WHEEL_RTS') {
+    // A successful wheel play: the lead runner is the one out.
+    const lead = f.half && f.kind === 'SAC_BUNT_WHEEL_RTS' && f.outsAdded > 0
+      ? BASES.map((b) => [b, f.before.bases[b]] as const).find(([, r]) => r && !where(f.after, r.cardKey) && !f.scored.includes(r.playerName))
+      : undefined
+    head = f.after.waitingFor === 'SWING_ROLL' ? 'Bunt fails — swing away'
+      : lead?.[1] ? 'Wheel play'
+      : f.kind === 'SAC_BUNT_WHEEL_RTS' ? 'Sacrifice bunt beats the wheel play' : 'Sacrifice bunt'
+    if (lead?.[1]) wheelOut = `lead runner ${last(lead[1].playerName)} out at ${FORCE_AT[lead[0]]}`
+  }
   else if (f.kind === 'SQUEEZE_BUNT_ROLL') head = 'Squeeze'
   else if (f.kind === 'CATCHER_FIELDING_ROLL' || f.kind === 'ONE_BASE_PLUS_STOLEN_BASE' || f.kind === 'SECOND_STEAL_HOME_ROLL') {
     const target = f.kind === 'CATCHER_FIELDING_ROLL' ? f.throwTarget?.runner : f.ctx.target as BaseRunnerState | undefined
@@ -369,6 +386,7 @@ function summarize(f: {
   if (!head) return undefined
 
   const facts: string[] = []
+  if (wheelOut) facts.push(wheelOut)
   // A double- or triple-play attempt partway through: where the earlier
   // checks stand -- nothing is on the board until the attempt finishes.
   const attempt = f.after.pendingDecision
