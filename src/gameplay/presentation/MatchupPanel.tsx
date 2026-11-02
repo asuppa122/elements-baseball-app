@@ -1,6 +1,6 @@
 import { effectiveCurrentHitterOnBase, effectiveCurrentPitcherControl } from '../engine'
 import { currentHitterOnBaseAdjustment, currentPitcherControlAdjustment } from './inGameFatigueDisplay'
-import { SeasonStrip } from './LiveStatLines'
+import PlayerStatBlock from './LiveStatLines'
 import RatingReadout from './RatingReadout'
 import { CardArt } from './CardZoom'
 import { batsLabel, throwsLabel } from './handedness'
@@ -56,7 +56,7 @@ export default function MatchupPanel({ state }: { state: GameState }) {
             <RatingReadout label="OB" effective={effectiveCurrentHitterOnBase(state)} adjustment={currentHitterOnBaseAdjustment(state)} />
             <span className="s-sub s-num">BSR {batter?.hitter.baserunning ?? '—'}</span>
           </div>
-          <SeasonStrip role="batter" />
+          <PlayerStatBlock state={state} role="batter" />
         </div>
 
         <div className="gp-matchup-vs" aria-hidden="true">vs</div>
@@ -67,7 +67,7 @@ export default function MatchupPanel({ state }: { state: GameState }) {
             <RatingReadout label="CTRL" effective={effectiveCurrentPitcherControl(state)} adjustment={currentPitcherControlAdjustment(state)} />
             <span className="s-sub s-num">IP {pitcher?.pitcher.ip ?? '—'}</span>
           </div>
-          <SeasonStrip role="pitcher" />
+          <PlayerStatBlock state={state} role="pitcher" />
         </div>
       </div>
 

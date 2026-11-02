@@ -818,6 +818,9 @@
   pointer-events: none;
   width: max-content;
 }
+/* the label and position never catch a click meant for the field, but the
+ * card itself enlarges like every other card in the game */
+.gp-fc .gp-card-art-btn { pointer-events: auto; }
 
 .gp-fc-art {
   width: 54px;
@@ -1730,7 +1733,7 @@ button.gp-lineup-card img { width: 100%; height: 100%; object-fit: cover; displa
 
 /* ---- tablet and phone ---- */
 @media (max-width: 767px) {
-  .gp-toolbar { flex-direction: row; justify-content: center; }
+  .gp-toolbar { flex-direction: row; justify-content: center; align-items: stretch; }
   .gp-mp {
     position: fixed; inset: auto 0 0 0; max-height: 72dvh; z-index: 40;
     border-radius: 16px 16px 0 0; border-bottom: 0;
@@ -1763,6 +1766,8 @@ button.gp-lineup-card img { width: 100%; height: 100%; object-fit: cover; displa
     --s2-result-h: max(64px, calc(var(--u) * 7.6));
     --s2-calls-h: max(34px, calc(var(--u) * 4));
     --s2-who-h: max(42px, calc(var(--u) * 4.9));
+    /* the stat block under each card (LiveStatLines.tsx) */
+    --s2-pstats-h: 62px;
   }
   .gp-region-lineup > .gp-matchup { grid-row: 1; }
   .gp-region-lineup > .gp-rollbox { grid-row: 2; }
@@ -1788,7 +1793,7 @@ button.gp-lineup-card img { width: 100%; height: 100%; object-fit: cover; displa
   .gp-region-lineup .gp-matchup-card { flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; gap: 4px; width: 100%; min-height: 0; }
   .gp-region-lineup .gp-matchup-art {
     flex: 0 0 auto;
-    width: min(100cqw, (100cqh - var(--s2-who-h)) * 820 / 1150);
+    width: min(100cqw, (100cqh - var(--s2-who-h) - var(--s2-pstats-h) - 4px) * 820 / 1150);
     height: auto; min-height: 0; max-height: none;
     aspect-ratio: 820 / 1150;
   }
@@ -1798,6 +1803,7 @@ button.gp-lineup-card img { width: 100%; height: 100%; object-fit: cover; displa
   .gp-region-lineup .gp-matchup-who > .s-lbl { display: none; }
   .gp-region-lineup .gp-matchup-who strong { font-size: max(13px, calc(var(--u) * 1.4)); }
   .gp-region-lineup .gp-matchup-rates { justify-content: center; flex-wrap: nowrap; gap: 10px; white-space: nowrap; }
+  .gp-region-lineup .gp-pstats { flex: 0 0 var(--s2-pstats-h); height: var(--s2-pstats-h); width: min(100cqw, (100cqh - var(--s2-who-h) - var(--s2-pstats-h) - 4px) * 820 / 1150); min-width: min(100cqw, 200px); align-content: center; }
 
   /* ---- Roll: one row at one height; the Ready hint sits beside the button ---- */
   .gp-region-lineup .gp-rollbox {

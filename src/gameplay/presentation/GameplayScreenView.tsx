@@ -2,7 +2,6 @@ import { battingSide } from '../gameBoundaryEngine'
 import DefBar from './DefBar'
 import GameField from './GameField'
 import LineupRail from './LineupRail'
-import LiveGameLines from './LiveStatLines'
 import MatchupPanel from './MatchupPanel'
 import RosterDrawers from './RosterDrawers'
 import RollControls from './RollControls'
@@ -11,6 +10,7 @@ import { type LogEvent } from './GameLogPanel'
 import { playOf } from './playRecord'
 import { CardZoomProvider } from './CardZoom'
 import RollResult from './RollResult'
+import LiveBoxScore from './LiveBoxScore'
 import HalfInningTransition from './HalfInningTransition'
 import PostGameBoard from './PostGameBoard'
 import DecisionBoard from './DecisionBoard'
@@ -20,7 +20,7 @@ import { awaitingOffenseReady, sideToAct } from '../turnOrder'
 import type { useGameplayActions } from './useGameplayActions'
 import type { HalfInningTransition as HalfInningTransitionModel } from '../halfInningTransition'
 import type { GameSide, GameState } from '../types'
-import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
+import { useCallback, useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { useHeaderSlot } from '../../components/headerSlot'
 import { useMediaQuery } from '../../lib/useMediaQuery'
@@ -235,7 +235,12 @@ export default function GameplayScreenView({
     const timer = window.setTimeout(() => setNoticeShown(''), 3000)
     return () => window.clearTimeout(timer)
   }, [notice])
+  // The box score is a window over the whole screen, not the panel: it never
+  // takes the panel from a decision, and closing it returns to the same view.
+  const [boxOpen, setBoxOpen] = useState(false)
+  const closeBox = useCallback(() => setBoxOpen(false), [])
   const toggleTool = (next: ManagerTool) => {
+    if (next === 'box') { setBoxOpen((open) => !open); return }
     if (next === 'final') setFinalDismissed(false)
     setTool((current) => (current === next ? null : next))
   }
@@ -245,7 +250,7 @@ export default function GameplayScreenView({
     <ManagerToolbar
       state={state}
       events={events}
-      open={panel === 'decision' ? 'call' : panel === 'drawers' ? drawerTool : panel === 'final' ? 'final' : null}
+      open={boxOpen ? 'box' : panel === 'decision' ? 'call' : panel === 'drawers' ? drawerTool : panel === 'final' ? 'final' : null}
       onOpen={toggleTool}
       decisionPending={Boolean(decision)}
       decisionMine={decisionMine}
@@ -266,7 +271,6 @@ export default function GameplayScreenView({
         // by the last roll under the cards, so the header carries no recap.
         <div className="gp-gamebar" aria-label="Game situation">
           <Scorebug state={state} />
-          <LiveGameLines state={state} />
           {twoPlayer && <TurnStatus state={state} mine={myTurn} toAct={toAct} />}
           <div className="gp-gamebar-tools">
             {toolbar}
@@ -280,7 +284,6 @@ export default function GameplayScreenView({
            column below is strictly the field. */
         <header className="gp-panel gp-topbar" aria-label="Game situation">
           <Scorebug state={state} />
-          <LiveGameLines state={state} />
           <i className="gp-topbar-rule" aria-hidden="true" />
           <PlayRecap events={events} />
           <i className="gp-topbar-rule" aria-hidden="true" />
@@ -421,6 +424,7 @@ export default function GameplayScreenView({
 
       </div>
       </div>
+      {boxOpen && <LiveBoxScore state={state} onClose={closeBox} />}
     </main>
     </CardZoomProvider>
   )

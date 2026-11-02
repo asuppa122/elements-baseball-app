@@ -1,5 +1,5 @@
-/* Box score, play-by-play, live game lines and the season strip
- * (BoxScoreView.tsx, LiveStatLines.tsx). Same tokens as the post-game board.
+/* Box score, play-by-play, the live box score and the player stat block
+ * (BoxScoreView.tsx, LiveBoxScore.tsx, LiveStatLines.tsx). Same tokens as the post-game board.
  * Wide tables scroll inside their own frame with the player column pinned --
  * the line score's treatment -- so the page never scrolls sideways and type
  * is never shrunk to fit. */
@@ -46,25 +46,55 @@
 .gp-box-legacy div { display: flex; flex-direction: column; gap: 2px; }
 .gp-box-legacy span { color: var(--gp-text-muted); font-size: 0.82rem; }
 
-/* Live game lines beside the scorebug: two stacked compact lines. */
-.gp-live-lines { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-.gp-live-line { display: flex; align-items: baseline; gap: 6px; margin: 0; font-size: 0.74rem; color: var(--gp-text-muted); white-space: nowrap; min-width: 0; }
-.gp-live-name { color: var(--gp-text); font-weight: 700; overflow: hidden; text-overflow: ellipsis; max-width: 11em; }
-.gp-live-stats { display: inline-flex; gap: 9px; }
-.gp-live-stats i { font-style: normal; font-size: 0.62rem; margin-left: 2px; letter-spacing: 0.04em; opacity: 0.8; }
-
-/* Season strip under each player card. */
-.gp-season-strip { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px; margin: 4px 0 0; font-size: 0.72rem; color: var(--gp-text-muted); }
-
-@media (max-width: 1024px) {
-  /* Tablet and phone: the header row wraps, so the two lines take a full row of their own. */
-  .gp-topbar .gp-live-lines { flex-basis: 100%; order: 10; }
+/* Under each player card: this game's line, then the season line. Each
+ * stat is its value over its label, so seven of them fit the narrowest card
+ * column without wrapping. */
+.gp-pstats {
+  display: grid; gap: 4px; width: 100%; box-sizing: border-box;
+  padding: 6px 10px; border: 1px solid var(--gp-border); border-radius: 10px;
+  background: rgba(255, 255, 255, 0.03);
 }
+.gp-pstats-row { display: flex; align-items: center; gap: 10px; min-width: 0; min-height: 18px; }
+.gp-pstats-row > .s-lbl { flex: 0 0 3.8em; font-size: 9px; letter-spacing: 0.12em; color: var(--gp-text-muted); }
+.gp-pstats-row.is-season { border-top: 1px solid var(--gp-border); padding-top: 4px; }
+.gp-pstats-cells { flex: 1 1 auto; display: flex; justify-content: space-between; gap: 4px; min-width: 0; }
+.gp-pstats-cells > span { display: flex; flex-direction: column; align-items: center; min-width: 0; line-height: 1.05; }
+.gp-pstats-cells strong { font-size: 15px; font-weight: 800; color: var(--gp-text); }
+.gp-pstats-cells i { font-style: normal; font-size: 8.5px; letter-spacing: 0.06em; color: var(--gp-text-muted); }
+.gp-pstats-none { font-size: 12px; color: var(--gp-text-muted); }
+
+/* The box score during the game: a window over the whole screen. */
+.gp-livebox {
+  position: fixed; inset: 0; z-index: 900; overflow-y: auto;
+  display: grid; justify-items: center; align-items: start;
+  padding: max(16px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom));
+  background: rgba(6, 8, 6, 0.82);
+}
+.gp-livebox-sheet {
+  position: relative; box-sizing: border-box; width: min(1100px, 100%); min-width: 0;
+  display: flex; flex-direction: column; gap: 18px;
+  padding: 20px; border: 1px solid var(--gp-border); border-radius: 14px;
+  background: var(--gp-panel); color: var(--gp-text);
+}
+.gp-livebox-close {
+  position: absolute; top: 10px; right: 10px; width: 44px; height: 44px; border-radius: 50%;
+  border: 1px solid var(--gp-border); background: transparent; color: var(--gp-text); font-size: 26px; line-height: 1; cursor: pointer;
+}
+.gp-livebox-close:focus-visible { outline: 2px solid var(--gp-accent-bright); outline-offset: 2px; }
+.gp-livebox .gp-box-table-wrap:first-of-type { margin-right: 52px; }
+.gp-live-linescore tbody th, .gp-live-linescore thead th:first-child { text-align: left; color: var(--gp-text); }
+.gp-live-linescore .is-total { color: var(--gp-text); font-weight: 800; }
+/* Wide screens: the two teams side by side, as in a newspaper box. */
+@media (min-width: 900px) {
+  .gp-livebox .gp-box { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 24px; }
+  .gp-livebox .gp-box > :not(.gp-box-side) { grid-column: 1 / -1; }
+}
+
 @media (max-width: 480px) {
   .gp-box-tabs button { flex: 1 1 auto; }
   /* Seven batting columns fit a 375px phone without scrolling; wider tables still scroll in their frame. */
   .gp-box-table th, .gp-box-table td { padding: 6px 6px; }
   .gp-box-table tbody th, .gp-box-table tfoot th, .gp-box-table thead th:first-child { padding-right: 10px; }
-  .gp-live-name { max-width: 8em; }
+  .gp-livebox-sheet { padding: 16px 12px; }
   .gp-box-plays ol li { font-size: 0.84rem; }
 }

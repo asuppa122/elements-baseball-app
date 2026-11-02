@@ -1,8 +1,9 @@
 // @vitest-environment jsdom
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { fireEvent, render, screen, within } from '@testing-library/react'
 import BoxScoreView from '../BoxScoreView'
-import LiveGameLines, { SeasonStrip } from '../LiveStatLines'
+import PlayerStatBlock from '../LiveStatLines'
+import LiveBoxScore from '../LiveBoxScore'
 import { asRecordedGame, playRecordedGameToEnd } from '../../sandbox/recordedGame'
 import { computeGameStats } from '../../stats/gameStats'
 import { reconcileBoxScore } from '../../stats/reconcile'
@@ -11,10 +12,10 @@ import midgame from '../../sandbox/states/midgame.json'
 import final from '../../sandbox/states/final.json'
 
 /**
- * The box score, live lines and season strip render what the statistics
- * module computed -- totals equal to the final score, the Exhibition label,
- * the legacy notice for games without a play log, and "No season stats yet"
- * before launch.
+ * The box score, the live box score window and the player stat block render
+ * what the statistics module computed -- totals equal to the final score, the
+ * Exhibition label, the legacy notice for games without a play log, and "No
+ * stats yet" for the season before launch.
  */
 const recorded = playRecordedGameToEnd(midgame as unknown as GameState)
 
@@ -60,21 +61,39 @@ describe('BoxScoreView', () => {
   })
 })
 
-describe('live lines and season strip', () => {
-  it('two stacked lines for the current batter and pitcher in a recorded game', () => {
-    render(<LiveGameLines state={asRecordedGame(midgame as unknown as GameState)} />)
-    expect(document.querySelectorAll('.gp-live-line').length).toBe(2)
+describe('player stat block under each card', () => {
+  it("the current batter's and pitcher's game lines in a recorded game", () => {
+    const state = asRecordedGame(midgame as unknown as GameState)
+    render(<><PlayerStatBlock state={state} role="batter" /><PlayerStatBlock state={state} role="pitcher" /></>)
     expect(screen.getByText('AB')).toBeTruthy()
+    expect(screen.getByText('RBI')).toBeTruthy()
     expect(screen.getByText('IP')).toBeTruthy()
+    expect(screen.getByText('ER')).toBeTruthy()
   })
 
-  it('nothing for a game without a play log', () => {
-    const { container } = render(<LiveGameLines state={midgame as unknown as GameState} />)
-    expect(container.textContent).toBe('')
+  it('says the game line is not recorded for a game without a play log', () => {
+    render(<PlayerStatBlock state={midgame as unknown as GameState} role="batter" />)
+    expect(screen.getByText('Not recorded')).toBeTruthy()
+    expect(screen.queryByText('AB')).toBeNull()
   })
 
-  it('the season strip shows no exhibition numbers before launch', () => {
-    render(<SeasonStrip role="pitcher" />)
-    expect(screen.getByText('No season stats yet')).toBeTruthy()
+  it('shows no exhibition numbers as a season before launch', () => {
+    render(<PlayerStatBlock state={asRecordedGame(midgame as unknown as GameState)} role="pitcher" />)
+    expect(screen.getByText('No stats yet')).toBeTruthy()
+  })
+})
+
+describe('live box score window', () => {
+  it('shows the line score with runs per team and closes on Escape', () => {
+    const onClose = vi.fn()
+    render(<LiveBoxScore state={recorded} onClose={onClose} />)
+    const dialog = screen.getByRole('dialog', { name: 'Box score' })
+    const line = within(dialog).getByRole('table', { name: 'Line score' })
+    const rows = within(line).getAllByRole('row')
+    expect(rows[1].textContent).toContain(String(recorded.score.away))
+    expect(rows[2].textContent).toContain(String(recorded.score.home))
+    expect(within(dialog).getByRole('tab', { name: 'Play-by-play' })).toBeTruthy()
+    fireEvent.keyDown(window, { key: 'Escape' })
+    expect(onClose).toHaveBeenCalled()
   })
 })
