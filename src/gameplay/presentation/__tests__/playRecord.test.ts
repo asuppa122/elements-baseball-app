@@ -265,3 +265,16 @@ describe('describePlay summary: runs and advances together', () => {
     expect(describePlay(before, after, '1B').summary).toBe('Single — Reyes scores, Beltran to third')
   })
 })
+
+describe('the runner-on-2B roll to hold is announced either way', () => {
+  it('1–10 the runner advances to third; 11–20 he holds at second -- and the hold is said, not left out', () => {
+    const r2 = runner('AWAY-2', 'Carlos Beltran')
+    const s = game(); s.outs = 1; s.bases.second = r2
+    const roll = pending(s, 'GB_RUNNER_2B_RTH', { preBases: structuredClone(s.bases), outs: 1, result: 'GB' })
+    const advanced = describePlay(roll, resolveDecisionRoll(roll, 5))
+    expect(advanced.summary).toBe('Roll to hold — Beltran advances to third')
+    const held = describePlay(roll, resolveDecisionRoll(roll, 15))
+    expect(held.summary).toBe('Roll to hold — Beltran holds at second')
+    expect(held.lines).toContain('Carlos Beltran holds at second.')
+  })
+})

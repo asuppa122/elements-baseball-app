@@ -228,6 +228,13 @@ export function describePlay(before: GameState, after: GameState, chartResult?: 
     } else lines.push(gb ? `${m.name} is forced out at ${FORCE_AT[m.from as Base]}.` : `${m.name} is out.`)
   }
 
+  // ---- the runner-on-2B roll to hold: say the result either way, or a hold
+  // reads as nothing having happened
+  if (kind === 'GB_RUNNER_2B_RTH' && half) {
+    const r2 = before.bases.second
+    if (r2 && where(after, r2.cardKey) === 'second') lines.push(`${r2.playerName} holds at second.`)
+  }
+
   // ---- the tally
   if (runs > 0) {
     const team = after.managers[offense].managerName
@@ -335,6 +342,7 @@ function summarize(f: {
     // what the whole play came to, not the first runner that moved.
     const batterSafe = Boolean(f.batterKey && where(f.after, f.batterKey))
     head = f.after.pendingDecision?.decisionType.startsWith('GB_') ? (f.outsAdded ? 'Force out' : 'Ground ball')
+      : f.kind === 'GB_RUNNER_2B_RTH' ? 'Roll to hold'
       : f.kind === 'GB_TRIPLE_THIRD_CHECK' && f.outsAdded ? 'Triple play'
       : /_SECOND_CHECK$/.test(f.kind) && f.outsAdded && !batterSafe ? 'Double play'
       : batterSafe ? (f.outsAdded ? "Fielder's choice" : 'Ground ball, all safe')
@@ -357,6 +365,16 @@ function summarize(f: {
   if (!head) return undefined
 
   const facts: string[] = []
+  // The roll to hold on the runner from 2B: advanced or held, said first.
+  let rthRunner: string | null = null
+  if (f.kind === 'GB_RUNNER_2B_RTH' && f.half && f.before.bases.second) {
+    const r2 = f.before.bases.second
+    const now = where(f.after, r2.cardKey)
+    if (now === 'third' || now === 'second') {
+      rthRunner = r2.playerName
+      facts.push(now === 'third' ? `${last(r2.playerName)} advances to third` : `${last(r2.playerName)} holds at second`)
+    }
+  }
   // Where a ground ball's outs were made: "Fielder's choice — out at second".
   // A runner who is gone and did not score was forced at the next base; the
   // batter is out at first. A plain groundout (the batter alone, at first)
@@ -376,7 +394,7 @@ function summarize(f: {
   if (scoredHere.length === 1) facts.push(`${last(scoredHere[0])} scores`)
   else if (scoredHere.length === 2) facts.push(`${last(scoredHere[0])} and ${last(scoredHere[1])} score`)
   else if (scoredHere.length > 2) facts.push(`${scoredHere.length} runs score`)
-  const moved = f.advanced.filter((m) => !head!.startsWith(last(m.name)))
+  const moved = f.advanced.filter((m) => !head!.startsWith(last(m.name)) && m.name !== rthRunner)
   if (moved.length === 1) facts.push(`${last(moved[0].name)} to ${BASE_SHORT[moved[0].to]}`)
   else if (moved.length > 1) facts.push('runners advance')
   if (f.after.status === 'complete') facts.push('ballgame')
