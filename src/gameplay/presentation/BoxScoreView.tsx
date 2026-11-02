@@ -5,7 +5,7 @@ import { describePlay } from '../stats/playDescriptions'
 import type { GameSide, GameState } from '../types'
 
 /**
- * The persistent box score: traditional view, Elements view and the full
+ * The persistent box score: standard view, advanced (Elements) view and the full
  * play-by-play, all derived from the game's saved play log (stats/boxScore.ts).
  * A game played before the play log existed shows only what its state reliably
  * holds and says so -- nothing is reconstructed. Exhibition games are labelled;
@@ -111,7 +111,7 @@ export default function BoxScoreView({ state, progression, managers }: {
       <div className="gp-box-tabs" role="tablist" aria-label="Box score views">
         {(['traditional', 'elements', 'plays'] as Tab[]).map((t) => (
           <button key={t} type="button" role="tab" aria-selected={tab === t} className={tab === t ? 'is-active' : undefined} onClick={() => setTab(t)}>
-            {t === 'traditional' ? 'Box' : t === 'elements' ? 'Elements' : 'Play-by-play'}
+            {t === 'traditional' ? 'Standard' : t === 'elements' ? 'Advanced' : 'Play-by-play'}
           </button>
         ))}
       </div>
@@ -133,9 +133,9 @@ export default function BoxScoreView({ state, progression, managers }: {
 
       {tab === 'elements' && SIDES.map((side) => (
         <div className="gp-box-side" key={side}>
-          <Table caption={`${teamName(side)} — Elements batting`} head={['', 'PA', 'OBA', 'OCHO', 'PCHW', 'OBP', 'DEF']}
+          <Table caption={`${teamName(side)} — advanced batting`} head={['', 'PA', 'OBA', 'OCHO', 'PCHW', 'OBP', 'DEF']}
             rows={stats.batting[side].map((l) => [name(l.cardKey), l.PA, l.OBA, l.OCHO, l.PCHW, rate(l.H + l.BB, l.PA), (stats.fielding[side].find((f) => f.cardKey === l.cardKey)?.positions ?? []).join(' · ') || '—'])} />
-          <Table caption={`${teamName(side)} — Elements pitching`} head={['', 'BF', 'ADV', 'OCHW', 'HCHO', 'R while pitching']}
+          <Table caption={`${teamName(side)} — advanced pitching`} head={['', 'BF', 'ADV', 'OCHW', 'HCHO', 'R while pitching']}
             rows={stats.pitching[side].map((l) => [name(l.cardKey), l.BF, l.ADV, l.OCHW, l.HCHO, l.runsWhilePitching])} />
           <Table caption={`${teamName(side)} — defence`} head={['', 'DBP/DBPa', 'TBP/TBPa', 'CS/SBa', 'OFA']}
             rows={stats.fielding[side].filter((f) => f.DBPa || f.TBPa || f.CS || f.SBa || f.OFA).map((f) => [name(f.cardKey), `${f.DBP}/${f.DBPa}`, `${f.TBP}/${f.TBPa}`, `${f.CS}/${f.SBa}`, f.OFA])} />

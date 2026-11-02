@@ -75,7 +75,7 @@ const SCENARIOS: Scenario[] = [
   {
     key: 'recorded-final',
     label: 'Recorded final',
-    blurb: 'The same game played to the end by a seeded die (first legal choice at every decision): the full box score, Elements view and play-by-play.',
+    blurb: 'The same game played to the end by a seeded die (first legal choice at every decision): the full box score, standard and advanced views and play-by-play.',
     state: playRecordedGameToEnd(midgame as unknown as GameState),
   },
 ]

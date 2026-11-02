@@ -55,3 +55,20 @@ describe('the defence\'s outfielder choice names the runner and his BsR as the t
     expect(getDecisionView(state)?.description).toContain('Throw on John Hines going home: BsR 20 (14 +3 extra base, +3 two out)')
   })
 })
+
+describe('the double-play choices name each check and the runner\'s BsR', () => {
+  it('a standard double play lists the runner to 2B and the batter to 1B with their BsR', async () => {
+    const { getDecisionView } = await import('../../decisionEngine')
+    const midgame = (await import('../../sandbox/states/midgame.json')).default as unknown as import('../../types').GameState
+    const state = structuredClone(midgame)
+    state.outs = 0
+    const r1 = { cardKey: 'R1', playerName: 'Jose Reyes', baserunning: 16, stolenBase: 10 }
+    state.bases = { first: r1, second: null, third: null }
+    state.pendingDecision = {
+      id: 'test', decisionType: 'GROUND_BALL_RESOLUTION', actingSide: state.half === 'top' ? 'home' : 'away', legalActions: [],
+      context: { preBases: structuredClone(state.bases), outs: 0, result: 'GB', infieldIn: false },
+    } as unknown as typeof state.pendingDecision
+    const dp = getDecisionView(state)?.options.find((o) => o.id === 'ATTEMPT_STANDARD_DBP')
+    expect(dp?.detail).toMatch(/Checks: Jose Reyes BsR 16 to 2B, then .+ BsR \d+ to 1B\./)
+  })
+})

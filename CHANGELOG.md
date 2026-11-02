@@ -11,6 +11,9 @@ From the first live v2 game with Will (2026-11-01).
 - **Game log, after ERA:** one plain line per roll ("Roll: (10) +5, Advantage: Chuck Smith", "Roll: (20) Rodney Scott: Double [Smith]"), each run as it scores and the score right after it.
 - **Infield In** is offered only with a runner on 3B and fewer than 2 outs (revising the runner-on-any-base availability).
 - **Decisions say what happened:** a decision the play raised (send the runners, the ground-ball choice, a throw) opens with "Just happened — John Barnes: Double — Dean to third", since the panel covers the At-bat card.
+- **Double- and triple-play choices name each check and the runner's BsR** ("Checks: Jose Reyes BsR 16 to 2B, then … BsR 12 to 1B"); the infield-combination choice says who it is against.
+- **Box score tabs read Standard, Advanced and Play-by-play.**
+- Wide windows: the half-inning recap is no longer covered by the At-bat card.
 - **The defence rolls the wheel play** on a sacrifice bunt (it is the defence's play); the no-wheel bunt is still rolled by the offence.
 - **Roll to hold is announced either way:** "Roll to hold — Beltran advances to third" or "Roll to hold — Beltran holds at second" (a hold used to read as nothing).
 - **The defence's outfielder choice names the runner and his BsR as the throw faces it:** "Throw on John Hines going home: BsR 20 (14 +3 extra base, +3 two out)"; tag-up throw options list each runner's BsR.
