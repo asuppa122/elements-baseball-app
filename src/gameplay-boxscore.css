@@ -72,6 +72,10 @@
 .gp-pstats-cells strong { font-size: 15px; font-weight: 800; color: var(--gp-text); }
 .gp-pstats-cells i { font-style: normal; font-size: 8.5px; letter-spacing: 0.06em; color: var(--gp-text-muted); }
 .gp-pstats-none { font-size: 12px; color: var(--gp-text-muted); }
+.gp-pstats-now { margin-left: auto; font-size: 11px; font-weight: 800; letter-spacing: 0.06em; color: var(--gp-text-muted); white-space: nowrap; }
+.gp-pstats-now strong { font-size: 15px; color: var(--gp-text); }
+.gp-pstats-now strong.is-changed { color: var(--gp-accent-bright); }
+.gp-pstats-now small { font-size: 10px; font-weight: 600; letter-spacing: 0; }
 
 /* The box score during the game: a window over the whole screen. */
 .gp-livebox {

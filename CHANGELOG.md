@@ -2,7 +2,7 @@
 
 From the first live v2 game with Will (2026-11-01).
 
-- **Stats under each card:** the batter's and pitcher's game line and season line sit in one block under their card; the header no longer carries them.
+- **Stats under each card:** the batter's and pitcher's game line and season line sit in one block under their card; the header no longer carries them. The block also shows the live On Base / Control (fatigue included, with the card's number when they differ).
 - **Live box score:** a Box button opens the line score, batting, pitching, Elements and play-by-play over the whole screen at any point in the game.
 - **Field cards enlarge:** every card on the field opens full size (the field wrapper was swallowing the clicks).
 - **One At-bat card:** the last roll's headline, the at-bat's steps (Pitch → Adv → Swing → Result), the calls before the pitch and Roll in one card, replacing the separate roll row, last-roll box and decisions box. The roll arithmetic is no longer drawn (it is still saved).

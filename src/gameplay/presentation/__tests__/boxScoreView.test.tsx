@@ -111,3 +111,12 @@ describe('box score column help', () => {
     expect(screen.getByText('Key')).toBeTruthy()
   })
 })
+
+describe('the stat block carries the live rating', () => {
+  it('the batter block shows his current On Base, the pitcher block his current Control', () => {
+    const state = asRecordedGame(midgame as unknown as GameState)
+    render(<><PlayerStatBlock state={state} role="batter" /><PlayerStatBlock state={state} role="pitcher" /></>)
+    expect(screen.getByTitle('Current On Base').textContent).toMatch(/^OB \d+/)
+    expect(screen.getByTitle('Current Control').textContent).toMatch(/^C -?\d+/)
+  })
+})

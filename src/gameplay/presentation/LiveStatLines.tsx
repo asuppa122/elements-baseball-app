@@ -1,4 +1,5 @@
-import type { GameState } from '../types'
+import { effectiveCurrentHitterOnBase, effectiveCurrentPitcherControl } from '../engine'
+import type { GameSide, GameState } from '../types'
 import { liveLinesFor } from './liveLines'
 
 /**
@@ -10,7 +11,27 @@ import { liveLinesFor } from './liveLines'
  * - "Season": official Elements statistics only. None exist before launch, so
  *   it reads "No stats yet" and an exhibition game's numbers are never shown
  *   as a season.
+ * - The live rating, at the end of the season row: the batter's On Base and
+ *   the pitcher's Control as they stand now, fatigue included, with the
+ *   printed number when they differ (the same reading as the field labels).
  */
+
+function CurrentRating({ state, role }: { state: GameState; role: 'batter' | 'pitcher' }) {
+  const offense: GameSide = state.half === 'top' ? 'away' : 'home'
+  const side: GameSide = role === 'batter' ? offense : offense === 'home' ? 'away' : 'home'
+  const key = role === 'batter' ? state.plateAppearance.batterCardKey : state.plateAppearance.pitcherCardKey
+  const card = key ? state.pregame[side].roster?.cards[key] : null
+  if (!card) return null
+  const printed = role === 'batter' ? card.hitter.onBase : card.pitcher.control
+  const now = role === 'batter' ? effectiveCurrentHitterOnBase(state) : effectiveCurrentPitcherControl(state)
+  const label = role === 'batter' ? 'OB' : 'C'
+  return (
+    <span className="gp-pstats-now s-num" title={role === 'batter' ? 'Current On Base' : 'Current Control'}>
+      {label} <strong className={printed !== null && now !== printed ? 'is-changed' : undefined}>{now}</strong>
+      {printed !== null && now !== printed && <small> (card {printed})</small>}
+    </span>
+  )
+}
 
 export default function PlayerStatBlock({ state, role }: { state: GameState; role: 'batter' | 'pitcher' }) {
   const lines = liveLinesFor(state)
@@ -27,6 +48,7 @@ export default function PlayerStatBlock({ state, role }: { state: GameState; rol
       <div className="gp-pstats-row is-season">
         <b className="s-lbl">Season</b>
         <span className="gp-pstats-none">No stats yet</span>
+        <CurrentRating state={state} role={role} />
       </div>
     </div>
   )
