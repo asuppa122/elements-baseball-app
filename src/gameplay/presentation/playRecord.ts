@@ -321,13 +321,16 @@ function summarize(f: {
 }): string | undefined {
   const last = (name: string) => name.split(' ').slice(-1)[0] || name
   let head: string | null = null
+  let groundBall = false
   if (f.chartResult === 'GB') {
+    groundBall = true
     head = f.after.pendingDecision ? 'Ground ball'
       : f.outsAdded >= 2 ? 'Double play'
       : f.batterKey && where(f.after, f.batterKey) ? 'Ground ball, safe at first'
       : f.outsAdded ? 'Groundout' : 'Ground ball'
   } else if (f.chartResult) head = CHART_NOUN[f.chartResult] ?? f.chartResult
   else if (f.kind === 'GROUND_BALL_RESOLUTION' || f.kind?.startsWith('GB_')) {
+    groundBall = true
     // The roll that finishes a ground ball the defence chose how to play: say
     // what the whole play came to, not the first runner that moved.
     const batterSafe = Boolean(f.batterKey && where(f.after, f.batterKey))
@@ -354,6 +357,21 @@ function summarize(f: {
   if (!head) return undefined
 
   const facts: string[] = []
+  // Where a ground ball's outs were made: "Fielder's choice — out at second".
+  // A runner who is gone and did not score was forced at the next base; the
+  // batter is out at first. A plain groundout (the batter alone, at first)
+  // already says so. Unknowable once the inning has ended and the bases clear.
+  if (groundBall && f.half && f.outsAdded > 0 && !f.after.pendingDecision) {
+    const outAt: string[] = []
+    for (const b of ['third', 'second', 'first'] as Base[]) {
+      const r = f.before.bases[b]
+      if (r && !where(f.after, r.cardKey) && !f.scored.includes(r.playerName)) outAt.push(FORCE_AT[b])
+    }
+    if (f.batterKey && !where(f.after, f.batterKey) && !f.scored.some((n) => n === f.before.pregame[f.before.half === 'top' ? 'away' : 'home'].roster?.cards[f.batterKey!]?.playerName)) outAt.push('first')
+    if (outAt.length && !(outAt.length === 1 && outAt[0] === 'first' && head === 'Groundout')) {
+      facts.push(`${outAt.length === 1 ? 'out' : 'outs'} at ${outAt.length === 1 ? outAt[0] : `${outAt.slice(0, -1).join(', ')} and ${outAt.at(-1)}`}`)
+    }
+  }
   const scoredHere = f.scored.filter((n) => !head!.startsWith(last(n)))
   if (scoredHere.length === 1) facts.push(`${last(scoredHere[0])} scores`)
   else if (scoredHere.length === 2) facts.push(`${last(scoredHere[0])} and ${last(scoredHere[1])} score`)

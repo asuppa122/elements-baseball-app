@@ -187,7 +187,7 @@ describe('describePlay summary', () => {
   it('a double play, a groundout, and a ground ball still waiting on the defence', () => {
     const before = game(); before.bases.first = reyes
     const dp = structuredClone(before); dp.bases.first = null; dp.outs = 2
-    expect(describePlay(before, dp, 'GB').summary).toBe('Double play — second out')
+    expect(describePlay(before, dp, 'GB').summary).toBe('Double play — outs at second and first, second out')
     const plain = game()
     expect(describePlay(plain, { ...structuredClone(plain), outs: 1 }, 'GB').summary).toBe('Groundout — first out')
     const open = pending(structuredClone(before), 'GROUND_BALL_RESOLUTION', { preBases: structuredClone(before.bases) })
@@ -233,6 +233,19 @@ describe('describePlay summary after a ground-ball decision', () => {
     const fc0 = pending(game(), 'GB_STANDARD_SECOND_CHECK', {})
     const fc = structuredClone(fc0); fc.pendingDecision = null; fc.outs = 1; fc.bases.first = wright
     expect(describePlay(fc0, fc).summary).toBe("Fielder's choice — first out")
+  })
+
+  it("says where a fielder's choice or force was made: the runner out at the next base", () => {
+    const before = pending(game(), 'GB_SINGULAR_RFO', {})
+    before.bases = { first: runner('AWAY-1', 'Jose Reyes'), second: runner('AWAY-2', 'Carlos Beltran'), third: null }
+    const atSecond = structuredClone(before)
+    atSecond.pendingDecision = null; atSecond.outs = 1
+    atSecond.bases = { first: wright, second: null, third: runner('AWAY-2', 'Carlos Beltran') }
+    expect(describePlay(before, atSecond).summary).toBe("Fielder's choice — out at second, Beltran to third, first out")
+    const atThird = structuredClone(before)
+    atThird.pendingDecision = null; atThird.outs = 1
+    atThird.bases = { first: wright, second: runner('AWAY-1', 'Jose Reyes'), third: null }
+    expect(describePlay(before, atThird).summary).toBe("Fielder's choice — out at third, Reyes to second, first out")
   })
 })
 
